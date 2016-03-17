@@ -1,0 +1,135 @@
+SRCDIR = .
+
+UTILDIR = $(SRCDIR)/../post_utils
+UTILLIB = $(UTILDIR)/post/libutil.a
+
+FFTWDIR = /usr/include
+FFTWLIB = /usr/lib/libfftw.a
+
+MATHDIR = $(SRCDIR)/../math
+MATHLIB = $(MATHDIR)/dp/libstd_math.a
+
+TIMEDIR = $(SRCDIR)/../time
+TIMELIB = $(TIMEDIR)/dp/libdate_time.a
+
+BLSDIR = $(SRCDIR)/../bls
+BLSLIB = $(BLSDIR)/dp/libbls.a
+
+PJTINC = $(SRCDIR)/../include
+SERVER = /usr/local/bin
+
+INCS = -I$(SRCDIR) -I$(PJTINC) -I$(TIMEDIR) -I$(MATHDIR) -I$(UTILDIR) \
+	-I$(FFTWDIR) -I$(BLSDIR) \
+	-I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include 
+
+CC = gcc -Wall
+
+CFLAGS = -ggdb -DUNIX -DCDATE="\"`date`\"" $(INCS) 
+LD = gcc
+
+TASK_EXECS = fft corr stokes pp amp stats
+EXECS = ravi_cmd_processor ravi_cmd_launcher $(TASK_EXECS)
+
+all: $(TASK_EXECS)
+	cp $(TASK_EXECS) ${SERVER}
+
+clean: 
+	rm -f *.o;
+	rm -f *.a;
+	rm -f *.exe;
+	rm -f *.FITS;
+	rm -f $(EXECS);
+
+install:
+	cp $(TASK_EXECS) ${SERVER}
+	
+RAVI_CMD_PROCESSOR_SRCS = ravi_cmd_processor.c
+SRCS += $(RAVI_CMD_PROCESSOR_SRCS)
+RAVI_CMD_PROCESSOR_OBJS = $(RAVI_CMD_PROCESSOR_SRCS:.c=.o)
+RAVI_CMD_PROCESSOR_LIBS = $(UTILLIB)
+ravi_cmd_processor:  $(RAVI_CMD_PROCESSOR_LIBS) $(RAVI_CMD_PROCESSOR_OBJS) 
+	$(LD) $(RAVI_CMD_PROCESSOR_OBJS) $(RAVI_CMD_PROCESSOR_LIBS) -lm -lglib-2.0 -o $@
+
+RAVI_CMD_LAUNCHER_SRCS = ravi_cmd_launcher.c
+SRCS += $(RAVI_CMD_LAUNCHER_SRCS)
+RAVI_CMD_LAUNCHER_OBJS = $(RAVI_CMD_LAUNCHER_SRCS:.c=.o)
+RAVI_CMD_LAUNCHER_LIBS = $(UTILLIB)
+ravi_cmd_launcher:  $(RAVI_CMD_LAUNCHER_LIBS) $(RAVI_CMD_LAUNCHER_OBJS) 
+	$(LD) $(RAVI_CMD_LAUNCHER_OBJS) $(RAVI_CMD_LAUNCHER_LIBS) -lm -lglib-2.0 -o $@
+
+
+FFT_SRCS = fft.c poly_phase.c get_vdr_samples.c swap_double.c header.c
+SRCS += $(FFT_SRCS)
+FFT_OBJS = $(FFT_SRCS:.c=.o)
+FFT_LIBS = $(TIMELIB) $(UTILLIB) $(MATHLIB) $(FFTWLIB) $(BLSLIB)
+fft:  $(FFT_LIBS) $(FFT_OBJS) 
+	$(LD) $(FFT_OBJS) $(FFT_LIBS) -lcfitsio -lm -o $@
+
+AMP_SRCS = amp.c get_vdr_samples.c
+SRCS += $(AMP_SRCS)
+AMP_OBJS = $(AMP_SRCS:.c=.o)
+AMP_LIBS = $(TIMELIB) $(UTILLIB) $(MATHLIB) $(FFTWLIB) $(BLSLIB)
+amp:  $(AMP_LIBS) $(AMP_OBJS)
+	$(LD) $(AMP_OBJS) $(AMP_LIBS) -lm -o $@
+
+STATS_SRCS = stats.c poly_phase.c get_vdr_samples.c header.c swap_double.c
+SRCS += $(STATS_SRCS)
+STATS_OBJS = $(STATS_SRCS:.c=.o)
+STATS_LIBS = $(TIMELIB) $(UTILLIB) $(MATHLIB) $(FFTWLIB) $(BLSLIB)
+stats:  $(STATS_LIBS) $(STATS_OBJS)
+	$(LD) $(STATS_OBJS) $(STATS_LIBS) -lm -lcfitsio -o $@
+
+CORR_SRCS = corr.c poly_phase.c
+SRCS += $(CORR_SRCS)
+CORR_OBJS = $(CORR_SRCS:.c=.o)
+CORR_LIBS = $(TIMELIB) $(UTILLIB) $(MATHLIB) $(FFTWLIB) $(BLSLIB)
+corr:  $(CORR_LIBS) $(CORR_OBJS) 
+	$(LD) $(CORR_OBJS) $(CORR_LIBS) -lm -o $@
+	
+STOKES_SRCS = stokes.c poly_phase.c
+SRCS += $(STOKES_SRCS)
+STOKES_OBJS = $(STOKES_SRCS:.c=.o)
+STOKES_LIBS = $(TIMELIB) $(UTILLIB) $(MATHLIB) $(FFTWLIB) $(BLSLIB)
+stokes:  $(STOKES_LIBS) $(STOKES_OBJS) 
+	$(LD) $(STOKES_OBJS) $(STOKES_LIBS) -lm -o $@ 
+	
+PP_SRCS = poly_phase.c
+SRCS += $(PP_SRCS)
+PP_OBJS = $(PP_SRCS:.c=.o)
+PP_LIBS = $(MATHLIB) $(FFTWLIB)
+pp:  $(PP_LIBS) $(PP_OBJS) 
+	$(CC) $(CFLAGS) -DPP_TEST $(PP_SRCS) $(PP_LIBS) -lm -o $@
+
+CH_SRCS = check_header.c swap_double.c header.c get_vdr_samples.c
+CH_OBJS = $(CH_SRCS:.c=.o)
+check_header: $(CH_OBJS)
+	gcc -I ../bls -I ../time -I ../utils -I ../include \
+	check_header.c swap_double.c header.c get_vdr_samples.c \
+	 $(BLSLIB) \
+	-L ../time/dp -ldate_time \
+	-L ../math/dp -lstd_math -lm \
+	-o check_header
+
+HD_SRCS = header_dict.c
+header_dict: header_dict.o
+	gcc -I ../bls -I ../time -I ../utils -I ../include \
+	${HD_SRCS} \
+	-L ../bls/dp -lbls \
+	-L ../time/dp -ldate_time \
+	-L ../math/dp -lstd_math -lm \
+	-o header_dict
+
+$(UTILLIB): FORCE
+	cd $(UTILDIR); $(MAKE) all
+
+get_vdr_record.so: get_vdr_record.o
+	gcc -c get_vdr_record.c
+
+FORCE:
+
+# use gcc -MM to generate non-system include file dependencies
+# use sed to add ".depend" as a target which depends on ALL included files
+.depend: $(SRCS) Makefile
+	$(CC) -MM $(CFLAGS) $(SRCS) | sed 's/^\([^# ]\)/.depend \1/' >$@
+
+include .depend

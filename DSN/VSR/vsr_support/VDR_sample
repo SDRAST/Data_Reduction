@@ -1,0 +1,79 @@
+kuiper@venus-ravi2:/usr/local/ravi/post_proc$ ./check_header -l localhost /mnt/PESD_data/vsr1a.1w1.10-113-2200.raw
+print_rcd>>>
+         type VSRD
+         rec len 2000152
+         rec ver 3
+         soft ver 25
+         spc id 13
+         vsr id 0
+         schan id 2
+         bps 8
+         sample rate 1000
+         sdplr  0
+         prdx_dss_id 0
+         prdx_sc_id 0
+         prdx_pass_num 0
+         prdx_uplink_band X
+         prdx_downlink_band X
+         trk_mode 1
+         uplink_dss_id 0
+         ddc_lo 306
+         rf_to_if_lo 8100
+         data_error 0
+         year 2010
+         doy 113
+         sec 79800
+         data_time_offset 31
+         frov== 8430000000.000000
+         fro 0.000000
+         frr 0.000000
+         sfro -24000000.000000
+         rf_freq 8406000000.000000
+         schan_accum_phase 0.000000
+         schan_phase_poly 0.000000
+         schan_phase_poly -0.000000
+         schan_phase_poly 0.000000
+         schan_phase_poly 0.000000
+         schan_label 8
+         schan_label 4
+         schan_label 0
+         schan_label 6
+print_rcd>>>
+Record data size = 2000000
+Total record size = 2000152
+Samples per record = 1000000
+8 bits per sample
+Getting record
+Got record
+8 bits per sample
+2 samples per 32 bit word
+Allocating FFT data size = 1024
+Getting data
+Got data
+ -1.5 -11.5
+ -2.5  -7.5
+-35.5  -8.5
+ 70.5   6.5
+ 33.5 -29.5
+-54.5 -22.5
+ 53.5   1.5
+ 54.5  -5.5
+-58.5  49.5
+ 56.5  30.5
+ 58.5  18.5
+-27.5   0.5
+-25.5  27.5
+ 22.5  10.5
+-28.5 -61.5
+-12.5  13.5
+
+The data as int8:
+kuiper@venus-ravi2:/mnt/PESD_data$ od -j 152 -N 32 -t d1 /mnt/PESD_data/vsr1a.1w1.10-113-2200.raw
+0000230  -17  -12   -7   -2   16   -8  -15   -3
+         -50   -9    6  -36   34    6   41   70
+0000250  -63  -30   13   33   37  -23    9  -55
+         -51    1   35   53   80   -6  -13   54
+
+kuiper@venus-ravi2:/mnt/PESD_data$ od -j 152 -N 32 -x /mnt/PESD_data/vsr1a.1w1.10-113-2200.raw
+0000230 f4ef fef9 f810 fdf1 f7ce dc06 0622 4629
+0000250 e2c1 210d e925 c909 01cd 3523 fa50 36f3
