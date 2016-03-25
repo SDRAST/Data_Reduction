@@ -15,10 +15,9 @@ are optional. (As per Mark Calabretta email of Wed 2010/11/10
 
 A typical sequence for making an SDFITS data file is::
   
-  import Observatory as O
+  #import Observatory as O
   import Data_Reduction.FITS as F
   import Data_Reduction.FITS.SDFITS as SDF
-  
   prihdu, hdr, cols = F.init_SDFITS(tel,num_scans)
   
   tel.FITS_init_frontends(hdr,cols,num_scans)
