@@ -1,0 +1,5 @@
+# no compiled python
+*.pyc
+
+# no backups
+*~

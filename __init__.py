@@ -2,44 +2,147 @@
 """
 Modules to support data reduction in Python.
 """
-from numpy import array, loadtxt
+# standard Python modules
 import logging
 import datetime
 import scipy.fftpack
 
-module_logger = logging.getLogger(__name__)
+# import from standard Python modules
+from os.path import basename
+from numpy import array, loadtxt
 
-def nearest_index(np_array,value):
+from support import nearest_index # for older code
+from support.text import select_files
+
+logger = logging.getLogger(__name__)
+
+def get_obs_session(raw=False, project=None, datafmt=None, dss=None,
+                    date=None):
   """
-  Return the index of the element of the array with the nearest value
-
-  Note
-  ====
-  This has a problem with arrays of datetime.datetime() objects.
-
-  @param np_array : an array of value
-  @type  np_array : numpy array
-
-  @param value : a single value
-  @type  value : the same type as values in np_array
-
-  @return: index of item in np_array closest to value
+  Asks user for parameters to locate observation session paths
+  
+  This expects two directory trees to exist.  For raw data::
+  /usr/local/RA_data/HDF5/
+    dssXX/
+      YEAR/
+        DOY/
+  and for pickled data::
+  /usr/local/projects/PROJECT/Data/
+    dssXX/
+      YEAR/
+        DOY/
+  
+  Returns project, DSS, year, DOY.
   """
-  # Convert to to numpy array if necessary
-  if type(np_array) == list:
-    np_array = array(np_array)
-  # find the index of the array value nearest the test value
-  if type(value) == datetime.datetime:
-    data_array = date2num(np_array)
-    ref_value = date2num(value)
-    index = abs(data_array-ref_value).argmin()
+  if project:
+    projectpath = "/usr/local/projects/"+project+"/"
   else:
-    index = abs(np_array-value).argmin()
-  # discard points beyond the ends of the array
-  if value < np_array[0] or value > np_array[-1]:
-    return -1
+    projectpath = select_files("/usr/local/projects/*",
+                               text="Select a project by index: ", single=True)
+    project = basename(projectpath)
+    projectpath += "/"
+  logger.debug("get_obs_session: project path: %s", projectpath)
+  if raw:
+    rawdatapath = "/usr/local/RA_data/"
+    if datafmt:
+      rawfmtpath = "/usr/local/RA_data/"+datafmt
+    else:
+      rawfmtpath = select_files(rawdatapath+"[A-Z]*",
+                           text="Select a data format by index: ", single=True)
+    rawfmt = basename(rawfmtpath)
+    currentpath = rawfmtpath+"/"
   else:
-    return index
+    rawfmt = None
+    currentpath = projectpath+"Data/"
+  logger.debug("get_obs_session: current path: %s", currentpath)
+  if dss:
+    dsspath = currentpath+"dss"+str(dss)+"/"
+  else:
+    dsspath = select_files(currentpath+"/dss*",
+                           text="Select a station by index: ", single=True)    
+    dss = int(basename(dsspath)[-2:])
+  logger.debug("get_obs_session: DSS path: %s", dsspath)
+  if date:
+    items = date.split('/')
+    yr = int(items[0])
+    doy = int(items[1])
+  else:
+    yrpath = select_files(dsspath+"/20*",
+                                  text="Select a year by index: ", single=True)
+    logger.debug("get_obs_session: year path: %s", yrpath)
+    yr = int(basename(yrpath))
+    yrpath += "/"
+    doypath = select_files(yrpath+"/*",
+                                   text="Select a day BY INDEX: ", single=True)
+    doy = int(basename(doypath))
+    doypath += '/'
+    logger.debug("get_obs_session: DOY path: %s", doypath)
+  logger.debug("get_obs_session: for %s, DSS%d, %4d/%03d, raw data is %s",
+                    project, dss, yr, doy, rawfmt)
+  return project,dss,yr,doy,rawfmt
+
+def get_obs_dirs(project, station, year, DOY, raw=None):
+  """
+  Returns the directories where data and working files are kept
+  
+  @param project : project code string, e.g., RRL
+  @type  project : str
+  
+  @param station : DSN station number
+  @type  station : int
+  
+  @param year : year of observation
+  @type  year : int
+  
+  @param DOY : day of year of observations
+  @type  DOY : int
+  
+  @param raw : raw data file format
+  @type  raw : str
+  """
+  logger.debug("get_obs_dirs: for %s, DSS%d, %4d/%03d, raw data is %s",
+                    project, station, year, DOY, raw)
+  obspath = "dss%2d/%4d/%03d/" %  (station,year,DOY)
+  projdatapath = "/usr/local/projects/"+project+"/Data/"+obspath
+  projworkpath = "/usr/local/projects/"+project+"/Work/Observations/"+obspath
+  if raw:
+    rawdatapath = "/usr/local/RA_data/"+raw+"/"+obspath
+  else:
+    rawdatapath = None
+  return projdatapath, projworkpath, rawdatapath
+
+def select_data_files(datapath, name_pattern, load_hdf=False):
+  """
+  Provide the user with menu to select data files.
+  
+  @param datapath : path to top of the tree where the DSS subdirectories are
+  @type  datapath : str
+  
+  @param name_pattern : pattern for selecting file names, e.g. source
+  @type  name_pattern : str
+  
+  @param load_hdf : use RA_data/HDF5 directory if True
+  @type  load_hdf : bool
+  
+  @return: list of str
+  """
+  # Get the data files to be processed
+  if name_pattern:
+    name_pattern = "*"+opts.name_pattern.strip('*')+"*"
+  else:
+    name_pattern = "*"
+  logger.debug("select_data_files: for pattern %s", name_pattern)
+  if load_hdf:
+    datafiles = select_files(datapath+name_pattern+".spec.h5")
+  else:
+    datafiles = select_files(datapath+name_pattern+"[0-9].pkl")
+  if datafiles == []:
+    logger.error("select_data_files: Is the data directory mounted?")
+    raise RuntimeError('No data files found.')  
+  if type(datafiles) == str:
+    datafiles = [datafiles]
+  logger.info("select_data_files: to be processed: %s", datafiles)
+  return datafiles
 
 def load_csv_with_header(filename,delimiter=""):
   """
