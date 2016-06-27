@@ -5,7 +5,7 @@ This provides functions for making and reading spreadsheets from GAVRT t-files.
 This assumes that only one IF-mode channel is used, since solar emission is so
 strong.
 
-Functions:
+Functions::
   column_ID_dict(worksheet)
     Create a dictionary of column number indexed by column name
   create_boresight_analysis_sheet(wb)
@@ -34,9 +34,9 @@ from pylab import *
 
 from openpyxl import load_workbook, Workbook
 from openpyxl.reader.excel import InvalidFileException
-from openpyxl_support import *
+from support.excel import *
 from Data_Reduction import nearest_index
-from Planning.DSN_schedules.excel import set_column_dimensions
+from DSMS.schedule.excel import set_column_dimensions
 from support import unique
 
 diag = True
@@ -370,7 +370,7 @@ def get_segment_filename(project_path,date_info,sheet):
   """
   Gets the spreadsheet filename for a data segment
 
-  @param date_info : result from DateTime.get_date()
+  @param date_info : result from DatesTimes.get_date()
   @type  date_info : list (str, int, int, int, int)
 
   @param sheet : data segment metasheet name

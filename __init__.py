@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 Modules to support data reduction in Python.
+
+A lot of the modules in DSN need work because of the change from Observatory
+to MonitorControl.
 """
 # standard Python modules
 import logging
@@ -22,17 +25,17 @@ def get_obs_session(raw=False, project=None, datafmt=None, dss=None,
   Asks user for parameters to locate observation session paths
   
   This expects two directory trees to exist.  For raw data::
-  /usr/local/RA_data/HDF5/
-    dssXX/
-      YEAR/
-        DOY/
+    /usr/local/RA_data/HDF5/
+      dssXX/
+        YEAR/
+          DOY/
   and for pickled data::
-  /usr/local/projects/PROJECT/Data/
-    dssXX/
-      YEAR/
-        DOY/
+    /usr/local/projects/PROJECT/Data/
+      dssXX/
+        YEAR/
+          DOY/
   
-  Returns project, DSS, year, DOY.
+  @return: project, DSS, year, DOY.
   """
   if project:
     projectpath = "/usr/local/projects/"+project+"/"

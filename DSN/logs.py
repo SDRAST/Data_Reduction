@@ -10,7 +10,7 @@ from time import gmtime
 from glob import glob
 
 from Astronomy import day_of_year
-from DateTime import *
+from DatesTimes import *
 from Data_Reduction.DSN import eaclogdir,raclogdir,vsrLogDir,raviLogDir
 from Data_Reduction.DSN import vsrScriptDir,vsr_atJobsDir,ravi_atJobsDir
 from Data_Reduction.DSN import ravi_data_dir

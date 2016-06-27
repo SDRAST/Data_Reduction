@@ -2,13 +2,13 @@
 """
 hyperfine_fit -  Fit Gaussian lines to hyperfine components
 
-Functions needed to fit data:
+Functions needed to fit data::
   ammonia_data()
   model()
   error_func()
 
 Here is the basic procedure, assuming that the data are in arrays
-x(in MHz) and y:
+x(in MHz) and y::
   plot(x,y)                          # to see what to expect
   set_model(line)                    # see ammonia_data
   parameter_guess = [.3,-0.6,width]  # Put in appropriate numbers

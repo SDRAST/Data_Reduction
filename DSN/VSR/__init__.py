@@ -92,7 +92,7 @@ This unpacks with ">4s l 11h 2s 2s 7h 2l 10d 16s"
 """
 
 import struct
-import DateTime as DT
+import DatesTimes as DT
 import time
 from glob import glob
 from Data_Reduction.DSN import obs_dir, ravi_data_dir

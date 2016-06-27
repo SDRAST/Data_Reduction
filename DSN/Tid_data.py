@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
+"""
+Handles old Tidbinbilla data files
+
+NEEDS MAJOR UPDATES FROM MODULE Observatory TO MonitorControl
+"""
 import Astronomy as A
 from time import strftime
 import Physics as P
-import Observatory as O
+#import Observatory as O
 import Data_Reduction.FITS.SDFITS as SDF
 
 diag = False

@@ -6,11 +6,11 @@ import logging
 
 from openpyxl import load_workbook, Workbook
 from openpyxl.reader.excel import InvalidFileException
-from openpyxl_support import *
+from support.excel import *
 
 from Astronomy import calendar_date, day_of_year, julian_date
 from Astronomy.solar import calc_solar
-from DateTime import mpldate2doy
+from DatesTimes import mpldate2doy
 
 mylogger = logging.getLogger("__main__."+__name__)
 
