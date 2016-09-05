@@ -5,7 +5,7 @@ FFTWLIB = /usr/lib/libfftw.a
 
 SERVER = /usr/local/bin
 
-INCS = -I$(SRCDIR) -I/usr/include/python2.6
+INCS = -I$(SRCDIR) -I/usr/include/python2.7
 
 CC = gcc -Wall
 CC_SWITCHES =   -g -c -fPIC
@@ -15,7 +15,7 @@ SHLIB_SUFFIX =  .so
 CFLAGS = -ggdb -DUNIX -DCDATE="\"`date`\"" $(INCS) 
 LD = gcc
 
-PYINC = /usr/include/python2.6
+PYINC = /usr/include/python2.7
 PYLIB = /usr/bin
 
 
@@ -23,7 +23,7 @@ vdr_support.so: vdr_support.c
 	gcc vdr_support.c  ${CC_SWITCHES} \
 	-I$(PYINC) -L$(PYLIB)
 	${SHLIB_LD} vdr_support.o \
-	-lpython2.6 -o vdr_support.so
+	-lpython2.7 -o vdr_support.so
 
 clean: 
 	rm -f *.o;

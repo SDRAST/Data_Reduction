@@ -1,3 +1,8 @@
-# compiled Python
+# no compiled python
 *.pyc
 
+# no relocatable libraries
+*.so
+
+# no backups
+*~

@@ -59,7 +59,7 @@ A STATS file begins with a header.  The data lines consist of
   - column (subchannel + 5): skewness
 where subchannel = 0, 1.
 """
-from DateTime import *
+from DatesTimes import *
 from time import *
 from glob import glob
 from Data_Reduction.DSN import obs_dir, \

@@ -82,11 +82,11 @@ from os.path import basename, exists
 from numpy   import append, array, dtype, empty, zeros
 import logging
 
-from text import user_input, select_files # <====== causes redundant import
+from support.text import user_input, select_files # <====== causes redundant import
 import Astronomy as A # <====== causes redundant import
 # Astronomy imports glob as a module so we must redine it as a function
 from glob    import glob
-import DateTime as DT
+import DatesTimes as DT
 from VSR import find_VSR_log_block_times
 import VSR.vsr_support as V
 
