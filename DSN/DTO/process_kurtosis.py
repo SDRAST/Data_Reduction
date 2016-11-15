@@ -120,11 +120,11 @@ class KurtosisProcessor(NamedClass):
       """
       D = numpy.array(data).reshape((1024,4))
       power = {}
-      power['I'] = numpy.append(D[:512,3],D[:512,2])
-      power['Q'] = numpy.append(D[512:,3],D[512:,2])
+      power['I'] = numpy.append(D[:512,0],D[:512,1])
+      power['Q'] = numpy.append(D[512:,0],D[512:,1])
       kurt = {}
-      kurt['I'] = numpy.append(D[:512,1],D[:512,0])
-      kurt['Q'] = numpy.append(D[512:,1],D[512:,0])
+      kurt['I'] = numpy.append(D[:512,2],D[:512,3])/4096.
+      kurt['Q'] = numpy.append(D[512:,2],D[512:,3])/4096.
       return power, kurt
 
     pkt_buf = self.data_queue.get()
@@ -155,6 +155,7 @@ if __name__ == "__main__":
   durations = []
   pkt_cnt_sec = []
   raw_pkt_cnt = []
+  begin = time.time()
   for count in range(10):
     packet = {}
     npkts=10000
@@ -166,13 +167,15 @@ if __name__ == "__main__":
     pkt_cnt_sec.append([packet[0]['pkt cnt sec'], packet[npkts-1]['pkt cnt sec']])
     raw_pkt_cnt.append([packet[0]['raw pkt cnt'], packet[npkts-1]['raw pkt cnt']])
   kp.quit()
-  print "Times to acquire 10,000 packets:"
-  print durations
-  print "   dif pkt_cnt_sec     dif raw_pkt_cnt"
+  print 'pckts packets duration'
   for count in range(10):
     if pkt_cnt_sec[count][1] < pkt_cnt_sec[count][0]:
       pkt_cnt_sec[count][1] += 2**15
     if raw_pkt_cnt[count][1] < raw_pkt_cnt[count][0]:
       raw_pkt_cnt[count][1] += 2**15
-    print count, pkt_cnt_sec[count][1]-pkt_cnt_sec[count][0], raw_pkt_cnt[count][1]-raw_pkt_cnt[count][0]
+    print("%5d %5d %8.5f" % (pkt_cnt_sec[count][1]-pkt_cnt_sec[count][0],
+                             raw_pkt_cnt[count][1]-raw_pkt_cnt[count][0],
+                             durations[count]))
+  print "Total",time.time()-begin,"s"
+
    
