@@ -18,8 +18,13 @@ if __name__ == "__main__":
   buf =  9000 # maximum packet size
   port = 4001
   port1 = 4000
-  host = '10.0.0.12' #'193.166.43.24'
-  host1 = '10.0.0.13' #'193.166.42.23'
+  thishost = socket.gethostname()
+  if thishost == 'gpu1':
+    host = '10.0.0.12' # roach1
+    host1 = '10.0.0.13' #'193.166.42.23'
+  elif thishost == 'gpu2':
+    host = '10.0.0.2' # roach2
+    host1 = '10.0.0.3'
 
   s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
   s1 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -35,6 +40,7 @@ if __name__ == "__main__":
   tn.write("?wordwrite adc_reg_arm 0 1\n")
 
   i=1;
+  starttime = time.time()
   while (1):
     try: 
       filename = "/var/tmp/%s_%d" % (tmp2, i)
@@ -58,10 +64,12 @@ if __name__ == "__main__":
           print 'Socket timeout...'
           break
         except (KeyboardInterrupt):
+          print "%d packets in %d seconds" % (i,time.time()-start)
           exit()
       i=i+1
       outfile.close()
     except (KeyboardInterrupt):
+      print "%d packets in %d seconds" % (i,time.time()-start)
       exit()  
    
     if outfile: outfile.close()

@@ -18,8 +18,13 @@ if __name__ == "__main__":
   buf =  9000 # maximum packet size
   port = 4001
   port1 = 4000
-  host = '10.0.0.12' #'193.166.43.24'
-  host1 = '10.0.0.13' #'193.166.42.23'
+  thishost = socket.gethostname()
+  if thishost == 'gpu1':
+    host = '10.0.0.12' #'193.166.43.24'
+    host1 = '10.0.0.13' #'193.166.42.23'
+  elif thishost == 'gpu2':
+    host = '10.0.0.2'
+  
 
   s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
   s1 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -43,8 +48,10 @@ if __name__ == "__main__":
       outfile1 = open (filename1, "wb")
       while (time.time()-start < 60*i):
         try:
+          print "Waiting..."
           data, addr = s.recvfrom(8192)
           data1, addr1 = s1.recvfrom(8192)
+          print "Got it!"
           #seq = int(data[1],2)
           #print "seq: %u" % seq 
           #print "%u" int(data[0],2)
