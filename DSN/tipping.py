@@ -9,15 +9,17 @@ Older files (like 2014) have only one reading and it may be dBm instead of Tsys
 """
 import logging
 import numpy
+import sys
 
 from collections import OrderedDict
 from os.path import basename
 from pylab import *
 from scipy.optimize import curve_fit
-#from support import nearest_index
 
 
 from Radio_Astronomy import dBm_to_watts
+from support.logs import init_logging, get_loglevel
+from support.options import initiate_option_parser
 from support.process import search_response
 
 logdir  = "/home/ops/roach_data/sao_test_data/log_dir/"
@@ -164,7 +166,7 @@ def fit_airmasses(e,t):
   min_am_index, max_am_index = extract_simple(am)
   slope = []
   intercept = []
-  for chan in range(len(t[0]):
+  for chan in range(len(t[0])):
     pw = t[chan]
     coefs = polyfit(am[min_am_index:max_am_index],
                     pw[min_am_index:max_am_index], 1)
@@ -174,10 +176,41 @@ def fit_airmasses(e,t):
   
   
 if __name__ == "__main__":
+  examples = """
+  python tipping.py -h|--help
+    show help
+  """
   # for local testing
   # these data have only one reading, and in dBm not Tsys
   #logdir = "/home/kuiper/Projects/AGN/TAMS/Observations/2014-123/tipping_doy123/"
+  # parse the arguments
+  from optparse import OptionParser
+
+  class MyParser(OptionParser):
+    """
+    Subclass of OptionParser which does not mess up examples formatting
+    """
+    def format_epilog(self, formatter):
+      """
+      Don't use textwrap; just return the string.
+      """
+      return self.epilog
   
+  logging.basicConfig(level=logging.WARNING)
+  mylogger = logging.getLogger()
+
+  p = initiate_option_parser(__doc__, examples)
+  #p = MyParser(epilog=examples)
+  #p.set_usage('tipping.py [options]')
+  #p.set_description(__doc__)
+
+  opts, args = p.parse_args(sys.argv[1:])
+  mylogger = init_logging(mylogger,
+                          loglevel = logging.INFO,
+                          consolevel = get_loglevel(opts.loglevel),
+                          logname = "/usr/local/logs/tipping.log")
+  
+  sys.exit()
   tipfiles = sort_by_time(logdir, tiplogs)
   numfiles = len(tipfiles.keys())
   #index = randint(numfiles)
