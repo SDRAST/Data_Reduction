@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+A lot of modules under this need fixing up because of change from package 
+Observatory to MonitorControl
+"""
 import datetime
 from glob import glob
 from os.path import basename
@@ -9,10 +13,10 @@ from matplotlib.pylab import date2num
 import logging
 
 import Astronomy
-from openpyxl_support import get_row_number
+from support.excel import get_row_number
 from Data_Reduction import nearest_index
 from Data_Reduction.DSN.GAVRT.solar import create_metadata_sheet
-from Planning.DSN_schedules.excel import set_column_dimensions
+from DSMS.excel import set_column_dimensions
 
 mylogger = logging.getLogger("__main__."+__name__)
 
@@ -113,7 +117,7 @@ def zenith_gain(freq):
   @param freq : frequency in MHz
   @type  freq : float
 
-  @return
+  @return: float
   """
   parfile = open(project_path
                  + "DSS-28_technical/efficiency_vs_freq_pars.pkl","r")
@@ -167,10 +171,10 @@ def extract_data(datatype, wb, start, stop, meta_column, files):
   @type  wb : workbook instance
 
   @param start : datetime of first data point
-  @type  start_index : mpl datenum
+  @type  start : mpl datenum
 
-  @param stop_index : datetime of last data point
-  @type  stop_index : mpl datenum
+  @param stop : datetime of last data point
+  @type  stop : mpl datenum
 
   @return: metadata worksheet instance
   """

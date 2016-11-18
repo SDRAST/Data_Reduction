@@ -13,12 +13,14 @@ The order of events in filling antenna data tables should be:
  4. fill the table DSSxx.TSYS
 The order is important because primary keys must be generated before foreign
 keys can be created to refer to them.
+
+NEEDS MAJOR UPDATES FROM MODULE Observatory TO MonitorControl
 """
 from os.path import basename
 import Astronomy as A
-import DateTime as DT
+import DatesTimes as DT
 import time as T
-import Mysql as sql
+import Data_Reduction.DSN.GAVRT.Mysql as sql
 from Observatory.mysql import *
 from Data_Reduction.DSN.EAC import *
 from numpy import *

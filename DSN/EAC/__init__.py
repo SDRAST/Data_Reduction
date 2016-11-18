@@ -1,6 +1,6 @@
 """Support for obtaining EAC data from the antenna database"""
 
-import Mysql as sql
+import Data_Reduction.DSN.GAVRT.Mysql as sql
 
 def check_for_pointing_cmd(db,dss,UnixTime):
   # Is there a pointing_cmd record for this time?

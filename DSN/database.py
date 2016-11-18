@@ -8,7 +8,7 @@ criteria.  They may just be a front end for a MySql query.
 import sys
 import time as T
 
-import Mysql as sql
+import Data_Reduction.DSN.GAVRT.Mysql as sql
 from numpy import isnan
 
 diag = False

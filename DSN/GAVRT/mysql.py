@@ -153,28 +153,29 @@ def extract_boresight_data(year,doy):
   obtained from table 'xpwr'.  The source, scan axis and channel are obtained
   from table 'xpwr_cfg'.  The receiver data are obtained from table 'rss_cfg'.
 
-  Returns a dictionary like this:
-  {'utc':        list of datetime.timedelta,
-   'epoch':      list of float,
-   'az':         list of float,
-   'el':         list of value,
-   'chan':       list of int,
-   'tsrc':       list of float,
-   'axis':       list of str,
-   'source':     list of str,
-   'xpwr_cfg_id: list of int',
-   'xscan_id':   list of int,
-   'source_id':  list of int,
-   'rx':         list of dict}
-  An 'rx' dict looks like this:
-  { 2: {'if_bw':    float,
-        'if_mode':  str,
-        'pol':      str,
-        'sky_freq': float,
-        'utc':      datetime.timedelta},
-    4: { ... },
-    ....
-    16: { ... }}
+  Returns a dictionary like this::
+    {'utc':        list of datetime.timedelta,
+     'epoch':      list of float,
+     'az':         list of float,
+     'el':         list of value,
+     'chan':       list of int,
+     'tsrc':       list of float,
+     'axis':       list of str,
+     'source':     list of str,
+     'xpwr_cfg_id: list of int',
+     'xscan_id':   list of int,
+     'source_id':  list of int,
+     'rx':         list of dict}
+     
+  An 'rx' dict looks like this::
+    { 2: {'if_bw':    float,
+          'if_mode':  str,
+          'pol':      str,
+          'sky_freq': float,
+          'utc':      datetime.timedelta},
+      4: { ... },
+      ....
+      16: { ... }}
 
   @param year : year of observation
   @type  year : int

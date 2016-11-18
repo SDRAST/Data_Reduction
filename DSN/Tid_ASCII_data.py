@@ -8,6 +8,8 @@ ASCII format by the HP 9825 controller.  The data are written in
 scientific notation.  The precision is such that the frequencies
 are given to the nearest 10 kHz.  As a result, computed velocities
 may be as much as 0.3 km/s off.
+
+NEEDS MAJOR UPDATES FROM MODULE Observatory TO MonitorControl
 """
 #import Astronomy as A
 #import Physics as P
