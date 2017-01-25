@@ -30,7 +30,7 @@ def get_obs_session(raw=False, project=None, datafmt=None, dss=None,
         YEAR/
           DOY/
   and for pickled data::
-    /usr/local/projects/PROJECT/Data/
+    /usr/local/project_data/
       dssXX/
         YEAR/
           DOY/
@@ -56,7 +56,7 @@ def get_obs_session(raw=False, project=None, datafmt=None, dss=None,
     currentpath = rawfmtpath+"/"
   else:
     rawfmt = None
-    currentpath = projectpath+"Data/"
+    currentpath = projectpath+"/"
   logger.debug("get_obs_session: current path: %s", currentpath)
   if dss:
     dsspath = currentpath+"dss"+str(dss)+"/"
@@ -106,8 +106,8 @@ def get_obs_dirs(project, station, year, DOY, raw=None):
   logger.debug("get_obs_dirs: for %s, DSS%d, %4d/%03d, raw data is %s",
                     project, station, year, DOY, raw)
   obspath = "dss%2d/%4d/%03d/" %  (station,year,DOY)
-  projdatapath = "/usr/local/projects/"+project+"/Data/"+obspath
-  projworkpath = "/usr/local/projects/"+project+"/Work/Observations/"+obspath
+  projdatapath = "/usr/local/project_data/"+project+"/"+obspath
+  projworkpath = "/usr/local/projects/"+project+"/Observations/"+obspath
   if raw:
     rawdatapath = "/usr/local/RA_data/"+raw+"/"+obspath
   else:
