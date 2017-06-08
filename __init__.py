@@ -19,8 +19,7 @@ from support.text import select_files
 
 logger = logging.getLogger(__name__)
 
-def get_obs_session(raw=False, project=None, datafmt=None, dss=None,
-                    date=None):
+def get_obs_session(datafmt=None, project=None, dss=None, date=None):
   """
   Asks user for parameters to locate observation session paths
   
@@ -35,34 +34,50 @@ def get_obs_session(raw=False, project=None, datafmt=None, dss=None,
         YEAR/
           DOY/
   
+  @param raw : if True data will come from /usr/local/RA_data/
+  @type  raw : bool
+  
+  @param datafmt : optional "HDF5" or "SDFITS" or ... for sub-directory
+  @type  datafmt : str
+  
+  @param project : optional name as defined in /usr/local/projects
+  @type  project : str
+  
+  @param dss : optional station number
+  @type  dss : int
+  
+  @param date : optional YYYY/DDD
+  @type  date : str
+  
   @return: project, DSS, year, DOY.
   """
+  # get the path to the project directory
   if project:
     projectpath = "/usr/local/projects/"+project+"/"
   else:
     projectpath = select_files("/usr/local/projects/*",
                                text="Select a project by index: ", single=True)
     project = basename(projectpath)
-    projectpath += "/"
+    if projectpath[-1] != "/":
+      projectpath += "/"
   logger.debug("get_obs_session: project path: %s", projectpath)
-  if raw:
-    rawdatapath = "/usr/local/RA_data/"
-    if datafmt:
-      rawfmtpath = "/usr/local/RA_data/"+datafmt
-    else:
-      rawfmtpath = select_files(rawdatapath+"[A-Z]*",
+  # get the path to the raw data
+  rawdatapath = "/usr/local/RA_data/"
+  if datafmt:
+    rawfmtpath = "/usr/local/RA_data/"+datafmt
+  else:
+    rawfmtpath = select_files(rawdatapath+"[A-Z]*",
                            text="Select a data format by index: ", single=True)
-    rawfmt = basename(rawfmtpath)
-    currentpath = rawfmtpath+"/"
-  else:
-    rawfmt = None
-    currentpath = projectpath+"/"
-  logger.debug("get_obs_session: current path: %s", currentpath)
+  rawfmt = basename(rawfmtpath)
+  rawfmtpath = rawfmtpath+"/"
+  logger.debug("get_obs_session: raw data path: %s", rawfmtpath)
+  # get the path to the project DSS sub-directory
   if dss:
-    dsspath = currentpath+"dss"+str(dss)+"/"
+    dsspath = projectpath+"Observations/dss"+str(dss)+"/"
   else:
-    dsspath = select_files(currentpath+"/dss*",
-                           text="Select a station by index: ", single=True)    
+    dsspath = select_files(projectpath+"Observations/dss*",
+                           text="Select a station by index: ", single=True)
+    logger.debug("get_obs_session: selected: %s", dsspath)
     dss = int(basename(dsspath)[-2:])
   logger.debug("get_obs_session: DSS path: %s", dsspath)
   if date:
@@ -72,19 +87,23 @@ def get_obs_session(raw=False, project=None, datafmt=None, dss=None,
   else:
     yrpath = select_files(dsspath+"/20*",
                                   text="Select a year by index: ", single=True)
-    logger.debug("get_obs_session: year path: %s", yrpath)
-    yr = int(basename(yrpath))
-    yrpath += "/"
-    doypath = select_files(yrpath+"/*",
+    if yrpath:
+      logger.debug("get_obs_session: year path: %s", yrpath)
+      yr = int(basename(yrpath))
+      yrpath += "/"
+      doypath = select_files(yrpath+"/*",
                                    text="Select a day BY INDEX: ", single=True)
-    doy = int(basename(doypath))
-    doypath += '/'
-    logger.debug("get_obs_session: DOY path: %s", doypath)
+      doy = int(basename(doypath))
+      doypath += '/'
+      logger.debug("get_obs_session: DOY path: %s", doypath)
+    else:
+      logger.warning("get_obs_session: no data for dss%2d", dss)
+      return project, None, 0, 0, None
   logger.debug("get_obs_session: for %s, DSS%d, %4d/%03d, raw data is %s",
                     project, dss, yr, doy, rawfmt)
-  return project,dss,yr,doy,rawfmt
+  return project, dss, yr, doy, datafmt
 
-def get_obs_dirs(project, station, year, DOY, raw=None):
+def get_obs_dirs(project, station, year, DOY, datafmt="SDFITS"):
   """
   Returns the directories where data and working files are kept
   
@@ -100,21 +119,18 @@ def get_obs_dirs(project, station, year, DOY, raw=None):
   @param DOY : day of year of observations
   @type  DOY : int
   
-  @param raw : raw data file format
-  @type  raw : str
+  @param datafmt : raw data format
+  @type  datafmt : str
   """
-  logger.debug("get_obs_dirs: for %s, DSS%d, %4d/%03d, raw data is %s",
-                    project, station, year, DOY, raw)
+  logger.debug("get_obs_dirs: type %s for %s, DSS%d, %4d/%03d",
+               datafmt, project, station, year, DOY)
   obspath = "dss%2d/%4d/%03d/" %  (station,year,DOY)
   projdatapath = "/usr/local/project_data/"+project+"/"+obspath
   projworkpath = "/usr/local/projects/"+project+"/Observations/"+obspath
-  if raw:
-    rawdatapath = "/usr/local/RA_data/"+raw+"/"+obspath
-  else:
-    rawdatapath = None
+  rawdatapath = "/usr/local/RA_data/"+datafmt+"/"+obspath
   return projdatapath, projworkpath, rawdatapath
 
-def select_data_files(datapath, name_pattern, load_hdf=False):
+def select_data_files(datapath, name_pattern=None, load_hdf=False):
   """
   Provide the user with menu to select data files.
   
@@ -130,8 +146,9 @@ def select_data_files(datapath, name_pattern, load_hdf=False):
   @return: list of str
   """
   # Get the data files to be processed
+  logger.debug("select_data_files: looking in %s", datapath)
   if name_pattern:
-    name_pattern = "*"+opts.name_pattern.strip('*')+"*"
+    name_pattern = "*"+name_pattern.strip('*')+"*"
   else:
     name_pattern = "*"
   logger.debug("select_data_files: for pattern %s", name_pattern)
