@@ -20,7 +20,7 @@ from DSMS.excel import set_column_dimensions
 
 mylogger = logging.getLogger("__main__."+__name__)
 
-def load_tfile_data(filename,start=None,stop=None,dss=28):
+def load_tfile_data(filename, start=None, stop=None, dss=28):
   """
   Load data from a GAVRT t-file
 
@@ -144,17 +144,21 @@ def DSS28_beamwidth(freq):
   """
   return 0.54/freq
 
-def get_session_t_files(project_path,date_info):
+def get_session_t_files(project_path, date_info):
   """
   """
-  session_path = project_path+"Data/"+date_info[0]
+  session_path = project_path+"Observations/dss28/%4d/%03d/" % (date_info[1],date_info[4])
+  mylogger.debug("get_session_t_files: session path is %s", session_path)
   wb_name = "%4d-%03d.xlsx" % (date_info[1],date_info[4])
+  mylogger.debug("get_session_t_files: workbook name is %s", wb_name)
   wb_file = session_path+"/"+wb_name
-  f1 = glob(session_path+"/t12*.?")
+  mylogger.debug("get_session_t_files: filename is %s", wb_file)
+  f1 = glob(session_path+"/t12*.?") # for chans 2, 4, 6, 8
   f1.sort()
-  f2 = glob(session_path+"/t12*.??")
+  f2 = glob(session_path+"/t12*.??") # for chans 10, 12, 14, 16
   f2.sort()
   files = f1+f2
+  mylogger.debug("get_session_t_files: found files %s", files)
   return files
 
 def extract_data(datatype, wb, start, stop, meta_column, files):

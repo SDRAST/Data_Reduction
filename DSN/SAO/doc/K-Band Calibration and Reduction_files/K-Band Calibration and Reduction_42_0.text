@@ -1,0 +1,4 @@
+reduce_rrl_psw.py:197: RuntimeWarning: divide by zero encountered in divide
+  ratio1 = on1data/off2data
+reduce_rrl_psw.py:197: RuntimeWarning: invalid value encountered in divide
+  ratio1 = on1data/off2data
