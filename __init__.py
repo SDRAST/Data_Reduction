@@ -62,7 +62,8 @@ def get_obs_session(raw=False, project=None, datafmt=None, dss=None,
     dsspath = currentpath+"dss"+str(dss)+"/"
   else:
     dsspath = select_files(currentpath+"/dss*",
-                           text="Select a station by index: ", single=True)    
+                           text="Select a station by index: ", single=True)
+    logger.debug("get_obs_session: selection returned: %s", dsspath)
     dss = int(basename(dsspath)[-2:])
   logger.debug("get_obs_session: DSS path: %s", dsspath)
   if date:
@@ -114,7 +115,7 @@ def get_obs_dirs(project, station, year, DOY, raw=None):
     rawdatapath = None
   return projdatapath, projworkpath, rawdatapath
 
-def select_data_files(datapath, name_pattern, load_hdf=False):
+def select_data_files(datapath, name_pattern="", load_hdf=False):
   """
   Provide the user with menu to select data files.
   
@@ -131,12 +132,14 @@ def select_data_files(datapath, name_pattern, load_hdf=False):
   """
   # Get the data files to be processed
   if name_pattern:
-    name_pattern = "*"+opts.name_pattern.strip('*')+"*"
+    # only one * at ont and back of pattern
+    name_pattern = "*"+name_pattern.strip('*')+"*"
   else:
     name_pattern = "*"
   logger.debug("select_data_files: for pattern %s", name_pattern)
   if load_hdf:
-    datafiles = select_files(datapath+name_pattern+".spec.h5")
+    allfiles = datapath+name_pattern+".spec.h5" + datapath+name_pattern+".hdf5"
+    datafiles = select_files(allfiles)
   else:
     datafiles = select_files(datapath+name_pattern+"[0-9].pkl")
   if datafiles == []:
