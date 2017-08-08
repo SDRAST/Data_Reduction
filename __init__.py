@@ -6,12 +6,13 @@ A lot of the modules in DSN need work because of the change from Observatory
 to MonitorControl.
 """
 # standard Python modules
-import logging
 import datetime
+import logging
+import re
 import scipy.fftpack
 
 # import from standard Python modules
-from os.path import basename
+from os.path import basename, splitext
 from numpy import array, loadtxt
 
 from support import nearest_index # for older code
@@ -103,7 +104,7 @@ def get_obs_session(datafmt=None, project=None, dss=None, date=None):
                     project, dss, yr, doy, rawfmt)
   return project, dss, yr, doy, datafmt
 
-def get_obs_dirs(project, station, year, DOY, datafmt="SDFITS"):
+def get_obs_dirs(project, station, year, DOY, datafmt=None):
   """
   Returns the directories where data and working files are kept
   
@@ -127,12 +128,27 @@ def get_obs_dirs(project, station, year, DOY, datafmt="SDFITS"):
   obspath = "dss%2d/%4d/%03d/" %  (station,year,DOY)
   projdatapath = "/usr/local/project_data/"+project+"/"+obspath
   projworkpath = "/usr/local/projects/"+project+"/Observations/"+obspath
-  rawdatapath = "/usr/local/RA_data/"+datafmt+"/"+obspath
+  if datafmt:
+    rawdatapath = "/usr/local/RA_data/"+datafmt+"/"+obspath
+  else:
+    rawdatapath = ""
   return projdatapath, projworkpath, rawdatapath
 
 def select_data_files(datapath, name_pattern="", load_hdf=False):
   """
   Provide the user with menu to select data files.
+  
+  Finding the right data store is complicated. As originally coded::
+    * If the input files are .h5 the load_hdf=True and the directory area is
+      RA_data/HDF5/.
+    * If the input files are .pkl (obsolete) then load_hdf=False and the
+      directory area is project_data/<project>/.
+  Now we need to add the possibility of getting datafiles from RA_data/FITS/.
+  Now the location of the data are implicit in 'datapath'::
+    * If datapath is ...RA_data/HDF5/... then the files could be .h5 (Ashish)
+      or .hdf5 (Dean).
+    * If datapath is ...RA_data/FITS/... then the extent is .fits.
+    * If datapath is ...project_data... then the extent is .pkl
   
   @param datapath : path to top of the tree where the DSS subdirectories are
   @type  datapath : str
@@ -148,18 +164,34 @@ def select_data_files(datapath, name_pattern="", load_hdf=False):
   # Get the data files to be processed
   logger.debug("select_data_files: looking in %s", datapath)
   if name_pattern:
-    # only one * at ont and back of pattern
-    name_pattern = "*"+name_pattern.strip('*')+"*"
+    name,extent = splitext(name_pattern)
+    if extent.isalpha(): # a proper extent with no wildcards
+      # take name pattern as is
+      pass
+    else:
+      # only one * at front and back of pattern
+      name_pattern = "*"+name_pattern.strip('*')+"*"
   else:
+    # no pattern specified.  All files.
     name_pattern = "*"
   logger.debug("select_data_files: for pattern %s", name_pattern)
-  if load_hdf:
-    allfiles = datapath+name_pattern+".spec.h5" + datapath+name_pattern+".hdf5"
-    datafiles = select_files(allfiles)
-  else:
+  if re.search('HDF5', datapath):
+    load_hdf = True
+  elif re.search('project_data', datapath):
+    load_hdf = False
     datafiles = select_files(datapath+name_pattern+"[0-9].pkl")
+  elif re.search('FITS', datapath):
+    datafiles = select_files(datapath+name_pattern+".fits")
+  if load_hdf:
+    full = datapath+name_pattern+".h*5"
+  else:
+    full = datapath+name_pattern
+  logger.debug("select_data_files: from: %s", full)
+  datafiles = select_files(full)
+
+  logger.debug("select_data_files: found %s", datafiles)
   if datafiles == []:
-    logger.error("select_data_files: Is the data directory mounted?")
+    logger.error("select_data_files: None found. Is the data directory mounted?")
     raise RuntimeError('No data files found.')  
   if type(datafiles) == str:
     datafiles = [datafiles]
