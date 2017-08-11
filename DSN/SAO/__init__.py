@@ -8,7 +8,7 @@ import re
 from numpy import array, ndarray, zeros
 from os.path import basename, exists
 
-from DatesTimes import logger as dtl
+from DatesTimes import module_logger as dtl
 dtl.setLevel(logging.WARNING)
 from Data_Reduction import get_obs_dirs, get_obs_session, select_data_files
 from MonitorControl.BackEnds.ROACH1.SAOspec import SAOhdf5
@@ -306,4 +306,15 @@ class SAOexaminer(object):
     d.frame = frame
     d.channels = (ch1,ch2)
     return d
+
+#################################### Methods ##################################
+
+def parse_filename(fname):
+  """
+  Parse an SAO .hf5 filename for date and source
+  """
+  parts = fname[7:-8].split('.')
+  UNIXtime = float('.'.join(parts[:2]))
+  sourcename = '.'.join(parts[2:])
+  return UNIXtime, sourcename
 

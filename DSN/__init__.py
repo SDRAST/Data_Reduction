@@ -2,6 +2,8 @@
 """
 Functions for scripts, logs and data files on the EAC, RAC, RAVI and VSR.
 
+A lot of stuff here is either obsolete or no longer accurate
+
 This package has functions to generate scripts, download and parse DSN logs,
 and manage data files. The module also initializes path names relative
 to a root directory whose default is::
@@ -88,7 +90,7 @@ import Astronomy as A # <====== causes redundant import
 from glob    import glob
 import DatesTimes as DT
 from VSR import find_VSR_log_block_times
-import VSR.vsr_support as V
+#import VSR.vsr_support as V
 
 mylogger = logging.getLogger("__main__."+__name__)
 

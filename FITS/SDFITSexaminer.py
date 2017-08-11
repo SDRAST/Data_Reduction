@@ -3,14 +3,22 @@ Provides class to examine DSN SDFITS data files
 """
 import datetime
 import logging
+import astropy.units as u
 
+from astropy.coordinates import FK4, FK5, SkyCoord
 from numpy import array, ndarray
 
+# Third party packages
+from novas import compat as novas
+from novas.compat import eph_manager
+
+from Astronomy import MJD, v_sun
 from Astronomy.redshift import doppler_radio, doppler_optical, doppler_relat
 from MonitorControl.BackEnds import get_freq_array
+from MonitorControl.Configurations.coordinates import DSS
 from support import mkdir_if_needed, nearest_index
 
-
+jd_start, jd_end, number = eph_manager.ephem_open()
 logger = logging.getLogger(__name__)
 
 class Data(object):
@@ -54,7 +62,7 @@ class DSNFITSexaminer(object):
   """
   Class for examining SAOdataset objects
   """
-  def __init__(self, FITSextension=None, dss=None):
+  def __init__(self, FITSextension):
     """
     Create an SAOexaminer object
     
@@ -73,46 +81,59 @@ class DSNFITSexaminer(object):
       beam_switched_average - average spectra for all the scan
       load_ephemeris        - get the ephemeris for the designated source
     
+    Example::
+      In [2]: run interactive.py --project=67P --DSS=43 --date=2015/204 \
+                                 --console_loglevel=debug
+      In [3]: E = examiner[0]
+      In [4]: N = examiner[0].switched_spectra(0,1)
+      In [5]: window = E.extract_window(0, spectrum=N, xlimits=(-100,100))
+      In [6]: plot(window.x, window.y[0,:], label="Pol 1")
+      In [7]: plot(window.x, window.y[1,:], label="Pol 2")
+      In [8]: legend()
+      In [9]: grid()
+      In [10]: xlabel("V$_{LSR}$ (km/s)")
+      In [11]: ylabel("T$_{ant}$/T$_{sys}$")
+    
     @param FITSextension : SDFITS file BINTABLE extension
     @type  FITSextension : pyfits HDU
+    
+    @param dss : DSN station number
+    @type  dss : int
     """
     self.logger = logging.getLogger(logger.name+'.DSNFITSexaminer')
-    if FITSextension and dss:
-      self.avg_diff = {}
-      self.dataset = FITSextension.data
-      self.nscans, self.nbeams, self.nrecs, self.npols, nra, ndec, self.nchans \
+    self.dss = int(FITSextension.header['TELESCOP'].split('-')[1])
+    self.avg_diff = {}
+    self.dataset = FITSextension.data
+    self.nscans, self.nbeams, self.nrecs, self.npols, nra, ndec, self.nchans \
           = self.dataset['SPECTRUM'].shape
-      self.header = FITSextension.header
-      self.tau = {}      # cumulative integration time
-      self.frame = None
-      self.dss = dss
-      # the following is a HACK until all the SDFITS files are fixed
-      try:
-        self.SB = self.dataset['SIDEBAND']
-      except KeyError:
-        if self.dataset['CDELT1'][0] > 0:
-          self.SB = 'U'
-        else:
-          self.SB = 'L'
-    else:
-      self.logger.error("__init__: extension and dss are required")
-      raise RuntimeError("insufficient arguments")
+    self.header = FITSextension.header
+    self.tau = {}      # cumulative integration time
+    self.frame = None
+    # the following is a HACK until all the SDFITS files are fixed
+    try:
+      self.SB = self.dataset['SIDEBAND']
+    except KeyError:
+      if self.dataset['CDELT1'][0] > 0:
+        self.SB = 'U'
+      else:
+        self.SB = 'L'
   
-  def extract_window(self, row, xlimits, frame="RADI-LSR"):
+  def extract_window(self, row, spectrum=None, xlimits=(0,32767), frame="RADI-LSR"):
     """
     Extracts a subset of a avg_diff spectrum
     """
+    # This computes values for the entire 32768 point spectrum
     if frame:
       if frame == "RADI-LSR":
-        x = self.compute_X_axis("RADI-LSR")
+        x = self.compute_X_axis(row, "RADI-LSR")
       elif frame == "RADI-OBJ":
         if re.match('67P', self.dataset['OBJECT'][0]):
           vspline = self.load_ephemeris('67P')
-          x = self.compute_X_axis("RADI-OBJ", vspline=vspline)
+          x = self.compute_X_axis(row, "RADI-OBJ", vspline=vspline)
         else:
           self.logger.error("extract_window: no ephemeris for %s", self.object)
       else:
-        x = self.compute_X_axis(frame)
+        x = self.compute_X_axis(row, frame)
     else:
       frame = self.frame
     self.logger.debug("extract_window: x=%s", x)
@@ -125,14 +146,23 @@ class DSNFITSexaminer(object):
     else:
       ch1 = nearest_index(x, x2)
       ch2 = nearest_index(x, x1)
-    #for pol in self.avg_diff.keys():
-    #  extract[pol] = self.avg_diff[pol][ch1:ch2]
-    d = Data(x[ch1:ch2], self.dataset['SPECTRUM'][row][:,:,:,0,0,ch1:ch2])
+    if spectrum == None:
+      # get the whole 6D spectrum array
+      spectrum = self.dataset['SPECTRUM'][row]
+    if len(spectrum.shape) == 6:
+      s = spectrum[:,:,:,0,0,ch1:ch2]
+    elif len(spectrum.shape) == 4:
+      s = spectrum[:,:,:,ch1:ch2]
+    elif len(spectrum.shape) == 3:
+      s = spectrum[:,:,ch1:ch2]
+    elif len(spectrum.shape) == 2:
+      s = spectrum[:,ch1:ch2]
+    d = Data(x[ch1:ch2], s)
     d.frame = frame
     d.channels = (ch1,ch2)
     return d
   
-  def compute_X_axis(self, frame, ref_freq=None, vspline=None, 
+  def compute_X_axis(self, row, frame, ref_freq=None, vspline=None, 
                      obstime=None):
     """
     Computes the appropriate X-axis for the averaged difference spectrum.
@@ -154,7 +184,9 @@ class DSNFITSexaminer(object):
     @type  vspline : function
     
     @param obstime : the time at which the spline is to be evaluated
-    @type  obstime : UNIX seconds):
+    @type  obstime : UNIX seconds)
+    
+    @return: numpy.ndarray
     """
     if not obstime:
       index = (0,0,0,0,0,0,0)
@@ -175,18 +207,18 @@ class DSNFITSexaminer(object):
       x = self.rel_freq_units(frame=frame, ref_freq=f_ref)
       vobj = None
     elif frame == "FREQ-LSR":
-      vobj = self.V_LSR(obstime, self.dss) # km/s
+      vobj = self.V_LSR(row) # km/s
       C = c/1000 # km/s
-      delf = -self.V_LSR(obstime, self.dss)*f_ref/C
+      delf = -self.V_LSR(row)*f_ref/C
       self.logger.debug(" compute_X_axis: freq offset = %f", delf)
       x = self.rel_freq_units(frame="FREQ-OBS", ref_freq=f_ref)-delf
     elif frame == "RADI-OBS":
       # radial velocity referred to the observer
-      vobj = self.V_LSR(obstime, self.dss)
+      vobj = self.V_LSR(row)
       x = self.rel_freq_units(frame=frame, ref_freq=f_ref)
     elif frame == "RADI-LSR":
       x = self.rel_freq_units(frame=frame, ref_freq=f_ref, 
-                              v_frame=self.V_LSR(obstime, self.dss))
+                              v_frame=self.V_LSR(row))
       vobj = v_ref
       self.logger.debug("compute_X_axis: vobj = %.2f", vobj)
     elif frame == "RADI-OBJ":
@@ -199,7 +231,7 @@ class DSNFITSexaminer(object):
       else:
         vobj = self.header['VELOCITY']
         x = self.rel_freq_units(frame=frame, ref_freq=f_ref,
-                                v_frame=self.V_LSR(obstime, self.dss) + vobj)
+                                v_frame=self.V_LSR(row) + vobj)
     else:
       self.logger.warning(" frame %s is not valid", frame)
       return
@@ -247,6 +279,7 @@ class DSNFITSexaminer(object):
                                                 # to the reference frequency
     v_ref = self.dataset['VELOCITY'][row]       # velocity of the object in LSR
     self.logger.info("rel_freq_units: reference velocity is %.3f", v_ref)
+    self.logger.info("rel_freq_units: frame velocity is %.3f", v_frame)
     self.frame = frame
     if frame == "CHAN-OBS":
       return range(len(rel_freqs))
@@ -284,6 +317,63 @@ class DSNFITSexaminer(object):
       return (basefreq - freqs)/1e6
     else:
       raise RuntimeError("freqs: sideband %s not not valid", self.SB)
+  
+  def V_LSR(self, row):
+    """
+    Computes the velocity of the local standard of rest w.r.t. the observer
+    
+    @param dt : date/time of the observation
+    @type  dt : datetime object
+    
+    @param dss : DSN station
+    @type  dss : int
+    
+    @return: float (km/s)
+    """
+    try:
+      if self.dataset['EQUINOX'][row] == 1950:
+        position = SkyCoord(self.dataset['CRVAL2'][row],
+                           self.dataset['CRVAL3'][row],
+                           frame=FK4, unit=(u.hourangle, u.deg))
+    except KeyError:
+      # assume J2000
+      pass
+    else:
+      position = SkyCoord(self.dataset['CRVAL2'][row],
+                         self.dataset['CRVAL3'][row],
+                         frame=FK5, unit=(u.hourangle, u.deg))
+    ra = position.ra.hour
+    dec = position.dec.deg
+    self.logger.debug("V_LSR: ra = %f, dec = %f", ra, dec)
+    cat_entry = novas.make_cat_entry(self.dataset["OBJECT"][0],"", 0, ra, dec,
+                                     0, 0, 0, 0)
+    source = novas.make_object(2, 0, self.dataset["OBJECT"][0], cat_entry)
+    longdeg = self.header['SITELONG']
+    self.logger.debug("V_LSR: longitude in degrees = %f", longdeg)
+    if longdeg > 180:
+      longdeg -= 360
+    self.logger.debug("V_LSR: longitude in degrees = %f", longdeg)
+    
+    DSS43 = novas.make_observer_on_surface(self.header['SITELAT'],
+                                           longdeg,
+                                           self.header['SITEELEV'], 0, 0)
+    dt = datetime.datetime.fromtimestamp(
+                                    self.dataset['UNIXtime'][row][0,0,0,0,0,0])
+    self.logger.debug("V_LSR: computing for %s", dt.ctime())
+    jd = novas.julian_date(dt.year,dt.month,dt.day,dt.hour+dt.minute/60.)
+    mjd = MJD(dt.year,dt.month,dt.day)
+    earth = novas.make_object(0, 3, 'Earth', None)
+    urthpos,urthvel = novas.ephemeris((jd,0), earth, origin=0)
+    (obspos,obsvel) = novas.geo_posvel(jd,0,DSS43,0)
+    self.logger.debug("V_LSR: Earth velocity = %s", urthvel)
+    self.logger.debug("V_LSR: observer velocity = %s", obsvel)
+    totvel = tuple(array(urthvel)+array(obsvel))
+    self.logger.debug("V_LSR: total velocity = %s", totvel)
+    (srcpos,srcvel) = novas.starvectors(cat_entry)
+    self.logger.debug("V_LSR: source velocity = %s", srcvel)
+    V = novas.rad_vel(source, srcpos, srcvel, totvel,0,0,0)
+    self.logger.debug("V_LSR: velocity of LSR = %.2f km/s", V)
+    return V+v_sun(mjd, position.ra.hour, position.dec.deg)
    
   
   def get_spectra(self, row):

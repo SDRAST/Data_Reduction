@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""A package for managing FITS files.
+"""
+A package for managing FITS files.
 
 The core module creates and operates on SDFITS-format files.
 
@@ -23,15 +24,15 @@ creating a simple 1-table file is this:
      This also initializes a table header with required information.
      There are optional named arguments:
        - 'header=' allows additional header parameters to be included;
-        -this is in the form of a CardList() instance
-        -default None
+         -this is in the form of a CardList() instance
+         -default None
        - 'nrows=' specifies the number of rows in the table; default 0
        - 'fill=' specifies the initial value to put in the rows; default 0
        - 'tbtype=' specifies the table type; default 'BinTableHDU'
   5. Create an HDU list with the primary HDU and the table::
-     hdulist = pyfits.HDUList([hdu, tbhdu])
+       hdulist = pyfits.HDUList([hdu, tbhdu])
      Additional tables may be appended with::
-     hdulist.append(tb2hdu)
+       hdulist.append(tb2hdu)
 """
 import pyfits
 import numpy
@@ -39,30 +40,38 @@ import logging
 
 mylogger = logging.getLogger(__name__)
 
-diag = False
+##################################### Classes #################################
 
-def save_scan_data(scan,dateobs,source,interval,antenna,be,spectrum,row):
+
+
+##################################### Methods #################################
+
+def save_scan_data(row, scan, dateobs, source, interval, antenna, be,
+                   spectrum):
   """
   Save a scan to the FITS table
   
-  This collect relevant backend data to write to FITS data table.
+  This collect relevant backend data to write to FITS data table. It is for a
+  "standard" (e.g. ASAP-compatible) SDFITS file initialized with the steps in
+  this module's docstring.
 
-  @param scan : int -
-    Scan number
+  @param scan : Scan number
+  @type  scan : int
 
-  @param dateobs : string -
-    ISO format time
+  @param dateobs : ISO format time
+  @type  dateobs : str
 
-  @param source : string -
-    Source name
+  @param source : Source name
+  @type  source : str
 
-  @param interval : float -
-    Integration time
+  @param interval : Integration time
+  @type  interval : float
 
-  @param antenna : dictionary -
-    Antenna parameters like RA and decl.
+  @param antenna : Antenna parameters like RA and decl.
+  @type  antenna : dict
 
-  @param be : Backend instance
+  @param be : Backend parameters
+  @type  be : dict
 
   @param spectrum : dictionary
     Spectra indexed by polarization
@@ -79,10 +88,10 @@ def save_scan_data(scan,dateobs,source,interval,antenna,be,spectrum,row):
   tbdata[row].setfield('CRVAL3',antenna['dec'])
   tbdata[row].setfield('CRPIX3',0)
   for be in backends:
-    tbdata[row].setfield('BANDWIDT',be.bandwidth)
-    tbdata[row].setfield('MAXIS1',  be.num_chan)
-    tbdata[row].setfield('FREQRES', be.freqres)
-    for pol in be.polarizations:
+    tbdata[row].setfield('BANDWIDT',be["bandwidth"])
+    tbdata[row].setfield('MAXIS1',  be["num_chan"])
+    tbdata[row].setfield('FREQRES', be["freqres"])
+    for pol in be['polarizations']:
       tbdata[row].setfield('DATA',spectrum[pol])
       tbdata[row].setfield('STOKES',pol)
       row += 1
