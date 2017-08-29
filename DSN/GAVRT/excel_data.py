@@ -36,8 +36,8 @@ from openpyxl import load_workbook, Workbook
 from openpyxl.reader.excel import InvalidFileException
 from support.excel import *
 from Data_Reduction import nearest_index
-from DSMS.schedule.excel import set_column_dimensions
-from support import unique
+#from support.excel import set_column_dimensions
+from support.lists import unique
 
 diag = True
 
@@ -657,10 +657,10 @@ def pagename(f,p):
   """
   return ("%5.2f-%3s" % (f,p)).strip()
 
-def get_session_workbook(project_path,date_info):
+def get_session_workbook(project_path, date_info):
   """
   """
-  session_path = project_path+"Data/"+date_info[0]
+  session_path = project_path+"Observations/dss28/%4d/%03d/" % (date_info[1],date_info[4])
   wb_name = "%4d-%03d.xlsx" % (date_info[1],date_info[4])
   wb_file = session_path+"/"+wb_name
   return wb_name, wb_file

@@ -14,7 +14,7 @@ from DatesTimes import mpldate2doy
 
 mylogger = logging.getLogger("__main__."+__name__)
 
-def load_spreadsheet(filename,sheet='Metadata'):
+def load_spreadsheet(filename, sheet='Metadata'):
   """
   Load the observations spreadsheet
 
@@ -25,18 +25,18 @@ def load_spreadsheet(filename,sheet='Metadata'):
   try:
     wb = load_workbook(filename)
   except IOError, details:
-    mylogger.error("Loading spreadsheet failed with IO error.",exc_info=True)
+    mylogger.error("load_spreadsheet: Loading spreadsheet failed with IO error.",exc_info=True)
     return None,None
   except AttributeError, details:
-    mylogger.error("Loading spreadsheet failed with attribute error",
+    mylogger.error("load_spreadsheet: Loading spreadsheet failed with attribute error",
                    exc_info=True)
     return None,None
   except InvalidFileException, details:
-    mylogger.error("File does not exist.",exc_info=True)
+    mylogger.error("load_spreadsheet: File "+filename+" does not exist.",exc_info=True)
     return None,None
   else:
     sheet_names = wb.get_sheet_names()
-    mylogger.debug("Sheets: %s",str(sheet_names))
+    mylogger.debug("load_spreadsheet: Sheets: %s",str(sheet_names))
     obs_ws = wb.get_sheet_by_name(sheet)
     return wb,obs_ws
 
@@ -114,7 +114,7 @@ def load_meta_sheet(wb,obs_ws):
   obs_col_names = get_column_names(obs_ws)
   # make a reverse lookup table
   meta_column = {}
-  mylogger.debug("Worksheet %s columns: %s", obs_ws.title, str(obs_col_names))
+  mylogger.debug("load_meta_sheet: Worksheet %s columns: %s", obs_ws.title, str(obs_col_names))
   for col in obs_col_names.keys():
     meta_column[obs_col_names[col]]  = get_column_id(obs_ws,obs_col_names[col])
   return obs_col_names, meta_column
@@ -139,21 +139,23 @@ def get_meta_data(meta_ws, meta_column, files):
   """
   freq = {}
   pol = {}
-  IFmode = {}
+  # IFmode = {}
   first = {}
   last = {}
   start = {}
   stop = {}
+  mylogger.debug("get_meta_data: from worksheet %s", meta_ws)
+  mylogger.debug("get_meta_data: for files %s", files)
   for filename in files:
     bname = basename(filename)
     row = get_row_number(meta_ws, meta_column['File'], bname)
-    mylogger.debug("%s metadata are in row %d", bname, row)
+    mylogger.debug("get_meta_data: %s metadata are in row %d", bname, row)
     freq[bname]   = \
       meta_ws.cell(row=row, column=meta_column['Freq'] ).value
     pol[bname]    = \
       meta_ws.cell(row=row, column=meta_column['Pol']  ).value
-    IFmode[bname] = \
-      meta_ws.cell(row=row, column=meta_column['IF mode']  ).value
+    #IFmode[bname] = \
+    #  meta_ws.cell(row=row, column=meta_column['IF mode']  ).value
     first[bname]  = \
       meta_ws.cell(row=row, column=meta_column['First']  ).value
     last[bname]   = \
@@ -168,7 +170,8 @@ def get_meta_data(meta_ws, meta_column, files):
   jd = julian_date(mean_time.year,doy) + \
        (mean_time.hour + mean_time.minute/60.)/24.
   solar_data = calc_solar(jd)
-  return freq,pol,IFmode,first,last,start,stop,mean_time,solar_data
+  # return freq,pol,IFmode,first,last,start,stop,mean_time,solar_data
+  return freq,pol,first,last,start,stop,mean_time,solar_data
 
 def get_file_freqs_and_pols(ws, meta_column, files):
   """
@@ -178,7 +181,9 @@ def get_file_freqs_and_pols(ws, meta_column, files):
 
   @param files : list of filenames
   """
-  freq,pol,IFmode,first,last,start,stop,mean_time,solar_data = \
+  #freq,pol,IFmode,first,last,start,stop,mean_time,solar_data = \
+  #  get_meta_data(ws, meta_column, files)
+  freq,pol,first,last,start,stop,mean_time,solar_data = \
     get_meta_data(ws, meta_column, files)
   filename_dict = {}
   for fn in files:

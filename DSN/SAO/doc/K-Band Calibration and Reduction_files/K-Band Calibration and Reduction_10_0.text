@@ -1,0 +1,3 @@
+-c:9: RuntimeWarning: divide by zero encountered in divide
+-c:10: RuntimeWarning: divide by zero encountered in divide
+-c:10: RuntimeWarning: invalid value encountered in divide

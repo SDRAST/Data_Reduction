@@ -9,19 +9,18 @@ to MonitorControl.
 import datetime
 import logging
 import math
+import re
 import scipy.fftpack
 
-# import from standard Python modules
-from os.path import basename
 from numpy import array, loadtxt, ndarray
+from os.path import basename, splitext
 
 from support import nearest_index # for older code
 from support.text import select_files
 
 logger = logging.getLogger(__name__)
 
-def get_obs_session(raw=False, project=None, datafmt=None, dss=None,
-                    date=None):
+def get_obs_session(datafmt=None, project=None, dss=None, date=None):
   """
   Asks user for parameters to locate observation session paths
   
@@ -31,39 +30,55 @@ def get_obs_session(raw=False, project=None, datafmt=None, dss=None,
         YEAR/
           DOY/
   and for pickled data::
-    /usr/local/projects/PROJECT/Data/
+    /usr/local/project_data/
       dssXX/
         YEAR/
           DOY/
   
+  @param raw : if True data will come from /usr/local/RA_data/
+  @type  raw : bool
+  
+  @param datafmt : optional "HDF5" or "SDFITS" or ... for sub-directory
+  @type  datafmt : str
+  
+  @param project : optional name as defined in /usr/local/projects
+  @type  project : str
+  
+  @param dss : optional station number
+  @type  dss : int
+  
+  @param date : optional YYYY/DDD
+  @type  date : str
+  
   @return: project, DSS, year, DOY.
   """
+  # get the path to the project directory
   if project:
     projectpath = "/usr/local/projects/"+project+"/"
   else:
     projectpath = select_files("/usr/local/projects/*",
                                text="Select a project by index: ", single=True)
     project = basename(projectpath)
-    projectpath += "/"
+    if projectpath[-1] != "/":
+      projectpath += "/"
   logger.debug("get_obs_session: project path: %s", projectpath)
-  if raw:
-    rawdatapath = "/usr/local/RA_data/"
-    if datafmt:
-      rawfmtpath = "/usr/local/RA_data/"+datafmt
-    else:
-      rawfmtpath = select_files(rawdatapath+"[A-Z]*",
+  # get the path to the raw data
+  rawdatapath = "/usr/local/RA_data/"
+  if datafmt:
+    rawfmtpath = "/usr/local/RA_data/"+datafmt
+  else:
+    rawfmtpath = select_files(rawdatapath+"[A-Z]*",
                            text="Select a data format by index: ", single=True)
-    rawfmt = basename(rawfmtpath)
-    currentpath = rawfmtpath+"/"
-  else:
-    rawfmt = None
-    currentpath = projectpath+"Data/"
-  logger.debug("get_obs_session: current path: %s", currentpath)
+  rawfmt = basename(rawfmtpath)
+  rawfmtpath = rawfmtpath+"/"
+  logger.debug("get_obs_session: raw data path: %s", rawfmtpath)
+  # get the path to the project DSS sub-directory
   if dss:
-    dsspath = currentpath+"dss"+str(dss)+"/"
+    dsspath = projectpath+"Observations/dss"+str(dss)+"/"
   else:
-    dsspath = select_files(currentpath+"/dss*",
-                           text="Select a station by index: ", single=True)    
+    dsspath = select_files(projectpath+"Observations/dss*",
+                           text="Select a station by index: ", single=True)
+    logger.debug("get_obs_session: selected: %s", dsspath)
     dss = int(basename(dsspath)[-2:])
   logger.debug("get_obs_session: DSS path: %s", dsspath)
   if date:
@@ -73,19 +88,23 @@ def get_obs_session(raw=False, project=None, datafmt=None, dss=None,
   else:
     yrpath = select_files(dsspath+"/20*",
                                   text="Select a year by index: ", single=True)
-    logger.debug("get_obs_session: year path: %s", yrpath)
-    yr = int(basename(yrpath))
-    yrpath += "/"
-    doypath = select_files(yrpath+"/*",
+    if yrpath:
+      logger.debug("get_obs_session: year path: %s", yrpath)
+      yr = int(basename(yrpath))
+      yrpath += "/"
+      doypath = select_files(yrpath+"/*",
                                    text="Select a day BY INDEX: ", single=True)
-    doy = int(basename(doypath))
-    doypath += '/'
-    logger.debug("get_obs_session: DOY path: %s", doypath)
+      doy = int(basename(doypath))
+      doypath += '/'
+      logger.debug("get_obs_session: DOY path: %s", doypath)
+    else:
+      logger.warning("get_obs_session: no data for dss%2d", dss)
+      return project, None, 0, 0, None
   logger.debug("get_obs_session: for %s, DSS%d, %4d/%03d, raw data is %s",
                     project, dss, yr, doy, rawfmt)
-  return project,dss,yr,doy,rawfmt
+  return project, dss, yr, doy, datafmt
 
-def get_obs_dirs(project, station, year, DOY, raw=None):
+def get_obs_dirs(project, station, year, DOY, datafmt=None):
   """
   Returns the directories where data and working files are kept
   
@@ -101,23 +120,35 @@ def get_obs_dirs(project, station, year, DOY, raw=None):
   @param DOY : day of year of observations
   @type  DOY : int
   
-  @param raw : raw data file format
-  @type  raw : str
+  @param datafmt : raw data format
+  @type  datafmt : str
   """
-  logger.debug("get_obs_dirs: for %s, DSS%d, %4d/%03d, raw data is %s",
-                    project, station, year, DOY, raw)
+  logger.debug("get_obs_dirs: type %s for %s, DSS%d, %4d/%03d",
+               datafmt, project, station, year, DOY)
   obspath = "dss%2d/%4d/%03d/" %  (station,year,DOY)
-  projdatapath = "/usr/local/projects/"+project+"/Data/"+obspath
-  projworkpath = "/usr/local/projects/"+project+"/Work/Observations/"+obspath
-  if raw:
-    rawdatapath = "/usr/local/RA_data/"+raw+"/"+obspath
+  projdatapath = "/usr/local/project_data/"+project+"/"+obspath
+  projworkpath = "/usr/local/projects/"+project+"/Observations/"+obspath
+  if datafmt:
+    rawdatapath = "/usr/local/RA_data/"+datafmt+"/"+obspath
   else:
-    rawdatapath = None
+    rawdatapath = ""
   return projdatapath, projworkpath, rawdatapath
 
-def select_data_files(datapath, name_pattern, load_hdf=False):
+def select_data_files(datapath, name_pattern="", load_hdf=False):
   """
   Provide the user with menu to select data files.
+  
+  Finding the right data store is complicated. As originally coded::
+    * If the input files are .h5 the load_hdf=True and the directory area is
+      RA_data/HDF5/.
+    * If the input files are .pkl (obsolete) then load_hdf=False and the
+      directory area is project_data/<project>/.
+  Now we need to add the possibility of getting datafiles from RA_data/FITS/.
+  Now the location of the data are implicit in 'datapath'::
+    * If datapath is ...RA_data/HDF5/... then the files could be .h5 (Ashish)
+      or .hdf5 (Dean).
+    * If datapath is ...RA_data/FITS/... then the extent is .fits.
+    * If datapath is ...project_data... then the extent is .pkl
   
   @param datapath : path to top of the tree where the DSS subdirectories are
   @type  datapath : str
@@ -131,17 +162,36 @@ def select_data_files(datapath, name_pattern, load_hdf=False):
   @return: list of str
   """
   # Get the data files to be processed
+  logger.debug("select_data_files: looking in %s", datapath)
   if name_pattern:
-    name_pattern = "*"+opts.name_pattern.strip('*')+"*"
+    name,extent = splitext(name_pattern)
+    if extent.isalpha(): # a proper extent with no wildcards
+      # take name pattern as is
+      pass
+    else:
+      # only one * at front and back of pattern
+      name_pattern = "*"+name_pattern.strip('*')+"*"
   else:
+    # no pattern specified.  All files.
     name_pattern = "*"
   logger.debug("select_data_files: for pattern %s", name_pattern)
-  if load_hdf:
-    datafiles = select_files(datapath+name_pattern+".spec.h5")
-  else:
+  if re.search('HDF5', datapath):
+    load_hdf = True
+  elif re.search('project_data', datapath):
+    load_hdf = False
     datafiles = select_files(datapath+name_pattern+"[0-9].pkl")
+  elif re.search('FITS', datapath):
+    datafiles = select_files(datapath+name_pattern+".fits")
+  if load_hdf:
+    full = datapath+name_pattern+".h*5"
+  else:
+    full = datapath+name_pattern
+  logger.debug("select_data_files: from: %s", full)
+  datafiles = select_files(full)
+
+  logger.debug("select_data_files: found %s", datafiles)
   if datafiles == []:
-    logger.error("select_data_files: Is the data directory mounted?")
+    logger.error("select_data_files: None found. Is the data directory mounted?")
     raise RuntimeError('No data files found.')  
   if type(datafiles) == str:
     datafiles = [datafiles]
