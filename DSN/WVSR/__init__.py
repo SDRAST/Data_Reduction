@@ -32,17 +32,22 @@ logger = logging.getLogger(__name__)
 def get_last_scr_file(obsdir, pol):
   """
   """
+  logger.debug("get_last_scr_file: looking in %s", obsdir)
   files = glob(obsdir+"*"+pol+".scr")
-  files.sort()
-  return files[-1]  
+  logger.debug("get_last_scr_file: found %s", files)
+  if files == []:
+    return None
+  else:
+    files.sort()
+    return files[-1]  
 
 def get_frequency(text):
   """
   """
   if text[-1].isdigit():
-    freq = int(text[:-1])
+    freq = float(text[:-1])
   elif text[-1] == "M":
-    freq = int(float(text[:-1]))*1e6
+    freq = float(text[:-1])*1e6
   else:
     raise RuntimeError("Unknown FROV suffix %s", text[-1])
   return freq
