@@ -75,8 +75,8 @@ import time
 
 # import from local modules
 from Data_Reduction import get_obs_dirs, get_obs_session, select_data_files
-from Data_Reduction.FITS.plot import DSNFITSplotter
-#from Data_Reduction.FITS.SDFITSexaminer import DSNFITSexaminer
+#from Data_Reduction.FITS.plot import DSNFITSplotter
+from Data_Reduction.FITS.SDFITSexaminer import DSNFITSexaminer
 from support.logs import initiate_option_parser, init_logging, get_loglevel
 
 
@@ -141,7 +141,7 @@ if __name__ == "__main__":
   for datafile in datafiles:
     hdulist = pyfits.open(datafile)
     header[dfindex] = hdulist[0].header
-    examiner[dfindex]  = DSNFITSplotter(hdulist[1])
+    examiner[dfindex]  = DSNFITSexaminer(hdulist[1])
     # redefine project work path
     #   eventually this should put output with the correct project but right
     #   now, the 67P project was misnamed at observe time

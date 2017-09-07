@@ -60,7 +60,7 @@ class DSNFITSplotter(DSNFITSexaminer):
     @type  average : bool
     
     """
-    self.logger.debug("plot_spectrum: spectrum is type %s", type(spectrum)
+    self.logger.debug("plot_spectrum: spectrum is type %s", type(spectrum))
     if type(spectrum) == Data:
       # this is a window into the original spectrum
       x = spectrum.x
