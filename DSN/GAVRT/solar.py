@@ -6,13 +6,13 @@ import logging
 
 from openpyxl import load_workbook, Workbook
 from openpyxl.reader.excel import InvalidFileException
-from support.excel import *
 
 from Astronomy import calendar_date, day_of_year, julian_date
 from Astronomy.solar import calc_solar
 from DatesTimes import mpldate2doy
+from support.excel import *
 
-mylogger = logging.getLogger("__main__."+__name__)
+logger = logging.getLogger(__name__)
 
 def load_spreadsheet(filename, sheet='Metadata'):
   """
@@ -25,18 +25,18 @@ def load_spreadsheet(filename, sheet='Metadata'):
   try:
     wb = load_workbook(filename)
   except IOError, details:
-    mylogger.error("load_spreadsheet: Loading spreadsheet failed with IO error.",exc_info=True)
+    logger.error("load_spreadsheet: Loading spreadsheet failed with IO error.",exc_info=True)
     return None,None
   except AttributeError, details:
-    mylogger.error("load_spreadsheet: Loading spreadsheet failed with attribute error",
+    logger.error("load_spreadsheet: Loading spreadsheet failed with attribute error",
                    exc_info=True)
     return None,None
   except InvalidFileException, details:
-    mylogger.error("load_spreadsheet: File "+filename+" does not exist.",exc_info=True)
+    logger.error("load_spreadsheet: File "+filename+" does not exist.",exc_info=True)
     return None,None
   else:
     sheet_names = wb.get_sheet_names()
-    mylogger.debug("load_spreadsheet: Sheets: %s",str(sheet_names))
+    logger.debug("load_spreadsheet: Sheets: %s",str(sheet_names))
     obs_ws = wb.get_sheet_by_name(sheet)
     return wb,obs_ws
 
@@ -76,25 +76,24 @@ def open_metadata_spreadsheet(filename,create_if_needed=True):
   try:
     wb = load_workbook(filename)
   except IOError, details:
-    print "Loading spreadsheet failed with IO error."
-    print details
-    sys.exit(1)
+    logger.error("open_metadata_spreadsheet: loading failed with IO error: %s", str(details))
+    raise IOError
   except AttributeError, details:
-    print "Loading spreadsheet failed with attribute error"
-    print details
-    sys.exit(1)
+    logger.error("open_metadata_spreadsheet: loading failed with attribute error: %s", str(details))
+    raise AttributeError
   except InvalidFileException, details:
-    print "File does not exist."
+    logger.warning("open_metadata_spreadsheet: file does not exist.")
     if create_if_needed:
-      print "Creating it."
+      logger.info("open_metadata_spreadsheet: creating workbook.")
       wb = Workbook()
+      logger.debug("open_metadata_spreadsheet: sheets: %s", wb.get_sheet_names())
       obs_ws = wb.get_active_sheet()
       create_metadata_sheet(obs_ws,"Metadata")
     else:
       return None,None
   else:
     sheet_names = wb.get_sheet_names()
-    mylogger.debug("Sheets: %s",str(sheet_names))
+    logger.debug("open_metadata_spreadsheet: sheets: %s",str(sheet_names))
     obs_ws = wb.get_sheet_by_name('Metadata')
   return wb,obs_ws
 
@@ -114,7 +113,7 @@ def load_meta_sheet(wb,obs_ws):
   obs_col_names = get_column_names(obs_ws)
   # make a reverse lookup table
   meta_column = {}
-  mylogger.debug("load_meta_sheet: Worksheet %s columns: %s", obs_ws.title, str(obs_col_names))
+  logger.debug("load_meta_sheet: Worksheet %s columns: %s", obs_ws.title, str(obs_col_names))
   for col in obs_col_names.keys():
     meta_column[obs_col_names[col]]  = get_column_id(obs_ws,obs_col_names[col])
   return obs_col_names, meta_column
@@ -144,12 +143,12 @@ def get_meta_data(meta_ws, meta_column, files):
   last = {}
   start = {}
   stop = {}
-  mylogger.debug("get_meta_data: from worksheet %s", meta_ws)
-  mylogger.debug("get_meta_data: for files %s", files)
+  logger.debug("get_meta_data: from worksheet %s", meta_ws)
+  logger.debug("get_meta_data: for files %s", files)
   for filename in files:
     bname = basename(filename)
     row = get_row_number(meta_ws, meta_column['File'], bname)
-    mylogger.debug("get_meta_data: %s metadata are in row %d", bname, row)
+    logger.debug("get_meta_data: %s metadata are in row %d", bname, row)
     freq[bname]   = \
       meta_ws.cell(row=row, column=meta_column['Freq'] ).value
     pol[bname]    = \

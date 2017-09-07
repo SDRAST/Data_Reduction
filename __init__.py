@@ -8,12 +8,12 @@ to MonitorControl.
 # standard Python modules
 import datetime
 import logging
+import math
 import re
 import scipy.fftpack
 
-# import from standard Python modules
+from numpy import array, loadtxt, ndarray
 from os.path import basename, splitext
-from numpy import array, loadtxt
 
 from support import nearest_index # for older code
 from support.text import select_files
@@ -243,7 +243,6 @@ def unpack_to_complex(rawdata):
   data = real + 1j*imag
   return data
 
-
 def sideband_separate(data):
   """
   Converts a complex array time series and returns two reals with USB and LSB
@@ -253,3 +252,55 @@ def sideband_separate(data):
   usb = (data.real + scipy.fftpack.hilbert(data).imag)
   lsb = (scipy.fftpack.hilbert(data).real + data.imag)
   return lsb,usb
+
+
+def reduce_spectrum_channels(spectrum, num_chan=1024,
+                            linefreq=None, bandwidth=None, max_vel_width=None):
+  """
+  Reduce the number of channels in the spectrum.
+  
+  The default option is to reduce the spectrum to a specified number of
+  channels with a default of 1024. The input spectrum is presumed to have
+  2**N channels so that num_chan/num_chan_in is an integer. If linefreq,
+  bandwidth and max_vel_width are given, the number of channels is computed
+  and overrides the argument num_chan.
+  
+  @param spectrum : spetrum values
+  @type  spectrum : list or nparray
+  
+  @param num_chan : optional number of channels to be returned (default: 2^10)
+  @type  num_chan : int
+  
+  @param linefreq : optional line frequency in MHz
+  @type  linefreq : float or int
+  
+  @param bandwidth : optional width of the spectrum in MHz
+  @type  bandwidth : float or int
+  
+  @param max_vel_width : optional maximum channel width in km/s
+  @type  max_vel_width : float
+  """
+  if type(spectrum) == ndarray:
+    num_chans_in = spectrum.shape[0]
+  else:
+    num_chans_in = len(spectrum)
+  logger.debug("reduce_spectrum_channels: %d channels in", num_chans_in)
+  logger.debug("reduce_spectrum_channels: input: %s", spectrum)
+  if linefreq and bandwidth and max_vel_width:
+    # compute number of output channels
+    kmpspMHz = 300000./linefreq
+    BW_kmps = bandwidth*kmpspMHz
+    est_num_chan_out = BW_kmps/max_vel_width
+    logger.debug("reduce_spectrum_channels: estimated num chans out = %d",
+                 est_num_chan_out)
+    num_chan = 2**int(math.ceil(math.log(est_num_chan_out,2)))
+  logger.debug("reduce_spectrum_channels: %d channels out", num_chan)
+  num_chan_avg = num_chans_in/num_chan
+  logger.debug("reduce_spectrum_channels: averaging %d channels", num_chan_avg)
+  if num_chan_avg:
+    specout = array([spectrum[index*num_chan_avg:(index+1)*num_chan_avg].mean()
+                                                 for index in range(num_chan)])
+    logger.debug("reduce_spectrum_channels: new values: %s", specout)
+    return specout
+  else:
+    return None

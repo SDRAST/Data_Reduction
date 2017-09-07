@@ -2,6 +2,9 @@
 """
 This provides functions for making and reading spreadsheets from GAVRT t-files.
 
+These may now be obsolete because we don't turn data in the DSS-28 EAC database
+into spreadsheet.
+
 This assumes that only one IF-mode channel is used, since solar emission is so
 strong.
 
