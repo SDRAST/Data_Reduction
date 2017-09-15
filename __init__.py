@@ -253,6 +253,17 @@ def sideband_separate(data):
   lsb = (scipy.fftpack.hilbert(data).real + data.imag)
   return lsb,usb
 
+def get_num_chans(linefreq, bandwidth, max_vel_width):
+  """
+  compute number of output channels for the specified resolution
+  """
+  kmpspMHz = 300000./linefreq
+  BW_kmps = bandwidth*kmpspMHz
+  est_num_chan_out = BW_kmps/max_vel_width
+  logger.debug("get_num_chans: estimated num chans out = %d",
+               est_num_chan_out)
+  return 2**int(math.ceil(math.log(est_num_chan_out,2)))
+    
 
 def reduce_spectrum_channels(spectrum, num_chan=1024,
                             linefreq=None, bandwidth=None, max_vel_width=None):
@@ -265,7 +276,7 @@ def reduce_spectrum_channels(spectrum, num_chan=1024,
   bandwidth and max_vel_width are given, the number of channels is computed
   and overrides the argument num_chan.
   
-  @param spectrum : spetrum values
+  @param spectrum : spectrum values
   @type  spectrum : list or nparray
   
   @param num_chan : optional number of channels to be returned (default: 2^10)
@@ -286,14 +297,13 @@ def reduce_spectrum_channels(spectrum, num_chan=1024,
     num_chans_in = len(spectrum)
   logger.debug("reduce_spectrum_channels: %d channels in", num_chans_in)
   logger.debug("reduce_spectrum_channels: input: %s", spectrum)
-  if linefreq and bandwidth and max_vel_width:
-    # compute number of output channels
-    kmpspMHz = 300000./linefreq
-    BW_kmps = bandwidth*kmpspMHz
-    est_num_chan_out = BW_kmps/max_vel_width
-    logger.debug("reduce_spectrum_channels: estimated num chans out = %d",
-                 est_num_chan_out)
-    num_chan = 2**int(math.ceil(math.log(est_num_chan_out,2)))
+  if num_chan:
+    num_chans = num_chan
+  elif linefreq and bandwidth and max_vel_width:
+    num_chans = get_num_chans(linefreq, bandwidth, max_vel_width)
+  else:
+    logger.error("reduce_spectrum_channels: could not get number of channels")
+    return None
   logger.debug("reduce_spectrum_channels: %d channels out", num_chan)
   num_chan_avg = num_chans_in/num_chan
   logger.debug("reduce_spectrum_channels: averaging %d channels", num_chan_avg)
