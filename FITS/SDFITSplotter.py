@@ -1,6 +1,7 @@
 """
 Provides a subclass to DSNFITSexaminer for plotting data.
 """
+
 import logging
 import numpy as np
 import re
@@ -20,13 +21,108 @@ plotsymbols = ['o','v','^','<','>','s','p','D']
 class DSNFITSplotter(DSNFITSexaminer):
   """
   """
-  def __init__(self, FITSextension):
+  def __init__(self, datafile):
     """
     """
-    mylogger = logging.getLogger(logger.name+".Plotter")
-    DSNFITSexaminer.__init__(self, FITSextension)
+    mylogger = logging.getLogger(logger.name+"DSNFITSplotter")
+    DSNFITSexaminer.__init__(self, datafile)
     self.logger = mylogger
+    self.plotter = {}
+    for key in self.tables.keys():
+      table = self.tables[key]
+      self.logger.debug("__init__: processing %s", table)
+      self.plotter[key] = self.Plotter(self, table)
     self.logger.debug("__init__: completed")
+  
+  class Plotter(DSNFITSexaminer.Table):
+    """
+    """
+    def __init__(self, parent, table):
+      """
+      """
+      DSNFITSexaminer.Table.__init__(self, parent, table)
+      
+    def plot_PS_spectra(self, scans=[]):
+      """
+      Plot position switched spectra
+      """
+      if scans == []:
+        scans = self.scan_keys
+      for cycle in self.cycle_keys:
+        figure()
+        for scan in scans[::2]:
+          try:
+            indices = self.get_indices(scan, cycle)
+          except ValueError, details:
+            self.logger.warning("plot_PS_spectra: %s", str(details))
+            continue
+          row = indices[0]
+          v = self.compute_X_axis(row, frame='RADI-LSR')
+          on  = self.data['SPECTRUM'][indices]
+          try:
+            off =  self.data['SPECTRUM'][self.get_indices(scan+1, cycle)]
+          except ValueError, details:
+            self.logger.warning("plot_PS_spectra: %s", str(details))
+            continue
+          spectrum = (on-off)/off
+          label = "("+str(scan)+"-"+str(scan+1)+")/"+str(scan+1)
+          plot(v, spectrum, label=label)
+        grid()
+        xlabel("$V_{lsr}$ (km/s)")
+        legend()
+        heading = "DSS-"+str(self.dss)+" "+self.data['DATE-OBS'][row]
+        heading += " %8.3f MHz" % (self.data['OBSFREQ'][row]/1e6)
+        title(heading)
+        show()
+    
+    def plot_Tsys(self):
+      """
+      We need to figure out how to plot
+      
+      If there is no time axis then there is a time and a Tsys for every scan,
+      cycle and pol, that is, four plots over rows.
+      
+      If there is a time axis then there is also a time and Tsys for every 
+      record
+      """
+      # Output the run of system temperatures as a diagnostic:
+      for cycle in self.cycle_keys:
+        cycle_idx = self.cycle_keys.index(cycle)
+        fig, ax = subplots(self.props['num beams'],self.props['num IFs'])
+        cindex = 0 # count for color selection
+        for beam in range(self.props['num beams']):
+          for pol in range(self.props['num IFs']):
+            # just get the shape of the data cube
+            indices = self.get_indices()
+            if len(indices) == 6:
+              # row, beam, record, IF, dec, RA, time
+              plottimes = \
+               UnixTime_to_MPL(self.data['UNIXtime'][:,beam,:,cycle_idx,0,0,0])
+              tsys = self.data['TSYS'][:,beam,:,cycle_idx,0,0,0]
+            elif len(indices) == 4:
+              # row, IF, dec, RA, time
+              plottimes = UnixTime_to_MPL(self.data['UNIXtime'][:])
+              tsys = self.data['TSYS'][:,cycle_idx,0,0,0]
+            else:
+              self.logger.error("plot_Tsys: %d axes is invalid", len(indices))
+              raise RuntimeError("invalid number of data axes")
+            # draw the line
+            ax[beam][pol].plot_date(plottimes[:len(tsys)], tsys, linestyle='-')
+            # show the samples
+            if beam == 0 and pol == 0:
+              ax[beam][pol].plot_date(plottimes, tsys,
+                        label="Pol "+str(pol) + " Beam "+str(beam))
+            else:
+              ax[beam][pol].plot_date(plottimes, tsys)
+            cindex += 1
+            ylabel(r"T$_{sys}$ (K)")
+            legend(loc='best', fontsize='xx-small', numpoints=1)
+            grid()
+            titlestr = clean_TeX(self.data['DATE-OBS'][0])
+            title(titlestr)
+        fig.autofmt_xdate()
+
+  #  still to be converted
       
   def plot_spectrum(self, spectrum=None, row=0, frame='RADI-LSR', xlimits=None, 
                           ylimits=None, average=False):
@@ -60,7 +156,7 @@ class DSNFITSplotter(DSNFITSexaminer):
     @type  average : bool
     
     """
-    self.logger.debug("plot_spectrum: spectrum is type %s", type(spectrum)
+    self.logger.debug("plot_spectrum: spectrum is type %s", type(spectrum))
     if type(spectrum) == Data:
       # this is a window into the original spectrum
       x = spectrum.x
@@ -94,7 +190,8 @@ class DSNFITSplotter(DSNFITSexaminer):
           self.logger.error("plot_spectrum: no ephemeris for %s", self.object)
           raise RuntimeException("cannot compute velocity of %s" % source)
       else:
-        x = 
+        x = spectrum.compute_X_axis(row=row)[ch1:ch2]
+        y = spectrum[ch1:ch2]
     self.logger.debug("plot_spectrum: x = %s", x)
     self.logger.debug("plot_spectrum: y = %s", y)
     

@@ -255,7 +255,7 @@ def sideband_separate(data):
 
 def get_num_chans(linefreq, bandwidth, max_vel_width):
   """
-  compute number of output channels for the specified resolution
+  compute the base 2 number of output channels for the specified resolution
   """
   kmpspMHz = 300000./linefreq
   BW_kmps = bandwidth*kmpspMHz
@@ -264,53 +264,57 @@ def get_num_chans(linefreq, bandwidth, max_vel_width):
                est_num_chan_out)
   return 2**int(math.ceil(math.log(est_num_chan_out,2)))
     
-
-def reduce_spectrum_channels(spectrum, num_chan=1024,
-                            linefreq=None, bandwidth=None, max_vel_width=None):
+def reduce_spectrum_channels(spectrum, refval, refpix, delta, num_chan=1024):
   """
   Reduce the number of channels in the spectrum.
   
   The default option is to reduce the spectrum to a specified number of
   channels with a default of 1024. The input spectrum is presumed to have
-  2**N channels so that num_chan/num_chan_in is an integer. If linefreq,
-  bandwidth and max_vel_width are given, the number of channels is computed
-  and overrides the argument num_chan.
-  
+  2**N channels so that num_chan/num_chan_in is an integer.
+    
   @param spectrum : spectrum values
   @type  spectrum : list or nparray
+  
+  @param refval : X-axis value at the reference pixel of 'spectrum'
+  @type  refval : float
+  
+  @param refpix : reference pixel for 'spectrum'
+  @type  refpix : int
+  
+  @param delta : interval between pixels on the X-axis
+  @type  delta : float
   
   @param num_chan : optional number of channels to be returned (default: 2^10)
   @type  num_chan : int
   
-  @param linefreq : optional line frequency in MHz
-  @type  linefreq : float or int
-  
-  @param bandwidth : optional width of the spectrum in MHz
-  @type  bandwidth : float or int
-  
-  @param max_vel_width : optional maximum channel width in km/s
-  @type  max_vel_width : float
+  @return: numpy.array
   """
+  if math.log(num_chan,2) % 1:
+    raise RuntimeError("num_chan = %d is not a power of 2", num_chan)
   if type(spectrum) == ndarray:
     num_chans_in = spectrum.shape[0]
   else:
     num_chans_in = len(spectrum)
+  if math.log(num_chans_in,2) % 1:
+    raise RuntimeError("input spectrum length = %d is not a power of 2",
+                                                                  num_chans_in)
   logger.debug("reduce_spectrum_channels: %d channels in", num_chans_in)
-  logger.debug("reduce_spectrum_channels: input: %s", spectrum)
-  if num_chan:
-    num_chans = num_chan
-  elif linefreq and bandwidth and max_vel_width:
-    num_chans = get_num_chans(linefreq, bandwidth, max_vel_width)
-  else:
-    logger.error("reduce_spectrum_channels: could not get number of channels")
-    return None
-  logger.debug("reduce_spectrum_channels: %d channels out", num_chan)
+  
   num_chan_avg = num_chans_in/num_chan
+  newrefpix = refpix/num_chan_avg
+  logger.debug("reduce_spectrum_channels: refpix from %d to %d",
+               refpix, newrefpix)
+
+  newdelta = delta*num_chan_avg
+  logger.debug("reduce_spectrum_channels: delta from %.3f to %.3f",
+               delta, newdelta)
+  newrefval = refval+newdelta/2
+  logger.debug("reduce_spectrum_channels: refval from %.3f to %.3f",
+               refval, newrefval)
   logger.debug("reduce_spectrum_channels: averaging %d channels", num_chan_avg)
-  if num_chan_avg:
-    specout = array([spectrum[index*num_chan_avg:(index+1)*num_chan_avg].mean()
+  
+  specout = array([spectrum[index*num_chan_avg:(index+1)*num_chan_avg].mean()
                                                  for index in range(num_chan)])
-    logger.debug("reduce_spectrum_channels: new values: %s", specout)
-    return specout
-  else:
-    return None
+  logger.debug("reduce_spectrum_channels: %d channels out", num_chan)
+  return specout, newrefval, newrefpix, newdelta
+

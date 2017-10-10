@@ -68,17 +68,26 @@ TTYPE53 = 'SPECTRUM'
 TFORM53 = '917504E '                                                            
 TDIM53  = '(32768,1,1,2,7,2)'                                                       
 """
+# temporary for astropy and numpy mismatch
+import IPython
+IPython.version_info = IPython.release.version.split('.')
+IPython.version_info.append('')
+
 import glob
 import logging
+import os
 import pyfits
 import time
 
+from pylab import *
+
 # import from local modules
 from Data_Reduction import get_obs_dirs, get_obs_session, select_data_files
-from Data_Reduction.FITS.plot import DSNFITSplotter
-#from Data_Reduction.FITS.SDFITSexaminer import DSNFITSexaminer
+from Data_Reduction.FITS.DSNFITS import get_table_stats
+from Data_Reduction.FITS.SDFITSplotter import DSNFITSplotter
 from support.logs import initiate_option_parser, init_logging, get_loglevel
-
+      
+      
 
 examples = """
 Examples
@@ -138,28 +147,9 @@ if __name__ == "__main__":
 
   header = {}; examiner = {}; n_scans = {}; scan_keys = {}; sttm = {}
   dfindex = 0
+  mylogger.info("interactive found %d datafiles", len(datafiles))
   for datafile in datafiles:
-    hdulist = pyfits.open(datafile)
-    header[dfindex] = hdulist[0].header
-    examiner[dfindex]  = DSNFITSplotter(hdulist[1])
-    # redefine project work path
-    #   eventually this should put output with the correct project but right
-    #   now, the 67P project was misnamed at observe time
-    project = examiner[dfindex].header['PROJID']
-    n_scans[dfindex] = len(examiner[dfindex].dataset)
-    scan_keys[dfindex] = range(n_scans[dfindex])
-    first_scan = scan_keys[dfindex][0]
-    # This will go at the top of each figure
-    sttm[dfindex] = time.gmtime(
-      examiner[dfindex].dataset[first_scan]['UNIXtime'][0,0,0,0,0,0])
-    title = "%4d/%02d/%02d (%03d) %02d:%02d" % (sttm[dfindex].tm_year,
-                                                sttm[dfindex].tm_mon,
-                                                sttm[dfindex].tm_mday,
-                                                sttm[dfindex].tm_yday,
-                                                sttm[dfindex].tm_hour,
-                                                sttm[dfindex].tm_min)
-    source = examiner[dfindex].dataset['OBJECT'][first_scan]
-    mylogger.info("Dataset %d is for project %s on %s with source %s",
-                  dfindex, project, title, source)
+    mylogger.debug("interactive opening %s", os.path.basename(datafile))
+    examiner[dfindex]  = DSNFITSplotter(datafile)
     dfindex += 1
 
