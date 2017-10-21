@@ -54,7 +54,11 @@ def get_frequency(text):
   
 def get_WVSR_parameters(scrdata):
   """
+  get WVSR data from script file.
+  
+  Obsolete!  Should come from log files
   """  
+  metadata = {}
   bandwidth = {}
   bits_per_sample = {}
   sfro = {}
@@ -65,10 +69,12 @@ def get_WVSR_parameters(scrdata):
     if parts[0].upper() == "RF_TO_IF_LO":
       # the RF to IF LO used to calculate baseband frequencies.
       rf_to_if_lo = parts[-1]
+      metadata['rf_to_if_lo'] = rf_to_if_lo
       continue
     elif parts[0].upper() == "FROV":
       # sky frequency to be used instead of what is in the predicts
       freq_override = get_frequency(parts[-1])
+      metada
       continue
     elif parts[0].upper() == "SFRO":
       # sets the specified WVSR channel frequency offset to the specified
@@ -86,6 +92,8 @@ def get_WVSR_parameters(scrdata):
       bits_per_sample[chan] = int(parts[3])
     elif parts[0].upper() == "DDCLO":
       chan = int(parts[1])
+    elif parts[0].upper() == "EXPID":
+      pass
   ch_freq = {}
   if int(rf_to_if_lo)*1e6 != freq_override:
     logger.warning("get_WVSR_parameters: RF_TO_IF_LO does not match FROV")

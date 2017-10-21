@@ -8,7 +8,7 @@ import re
 from numpy import array, ndarray, zeros
 from os.path import basename, exists
 
-from DatesTimes import module_logger as dtl
+from DatesTimes import logger as dtl
 dtl.setLevel(logging.WARNING)
 from Data_Reduction import get_obs_dirs, get_obs_session, select_data_files
 from MonitorControl.BackEnds.ROACH1.SAOspec import SAOhdf5

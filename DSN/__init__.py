@@ -48,7 +48,6 @@ from os.path import basename, exists
 from time    import asctime,ctime,gmtime,localtime,sleep,strptime
 
 import DatesTimes as DT
-from VSR import find_VSR_log_block_times
 
 mylogger = logging.getLogger("__main__."+__name__)
 

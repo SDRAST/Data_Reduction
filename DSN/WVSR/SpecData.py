@@ -67,7 +67,7 @@ def get_channel_IDs(metadata):
         chan_keys.append(key)
   chan_keys.sort()
   if len(chan_keys):
-    logger.debug("get_FFT_data: found %d channels from %s to %s",
+    logger.debug("get_Fchannel_IDs: found %d channels from %s to %s",
                  len(chan_keys), chan_keys[0], chan_keys[-1])
   return chan_keys
   
@@ -202,16 +202,16 @@ def read_FFT_file(datafilename):
   """
   try:
     datafile = open(datafilename,"r")
-    logger.debug("get_data: getting data file %s", datafile)
+    logger.debug("read_FFT_file: getting data file %s", datafile)
   except IOError, details:
     # Probably missing FFT files
-    logger.warning(" no FFT data for because %s", str(details))
+    logger.warning("read_FFT_file: no FFT data for because %s", str(details))
     return None
   firstline = datafile.readline()
   datafile.close()
   #logger.debug("get_data: first line: %s", firstline)
   if firstline == "" or firstline.split()[0] == "Error":
-    logger.warning("get_data: post-processor could not open WVSR file")
+    logger.warning("read_FFT_file: post-processor could not open WVSR file")
     return None
   try:
     data = loadtxt(datafilename, 
@@ -219,10 +219,10 @@ def read_FFT_file(datafilename):
                                        'IF2-phase', 'I', 'Q', 'U', 'V', 'P',
                                        'count','index'),
                              'formats': 10*['f4']+2*['i4']})
-    logger.debug("get_data: loaded data from %s", datafilename)
+    logger.debug("read_FFT_file: loaded data from %s", datafilename)
     return data
   except ValueError:
-    logger.warning("get_data: could not convert %s", datafilename)
+    logger.warning("read_FFT_file: could not convert %s", datafilename)
     return None
   
 

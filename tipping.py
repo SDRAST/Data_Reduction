@@ -95,10 +95,10 @@ def fit_tipping_data(tipfiles, index, Tamb=290):
   
   @return: float (receiver temperature), float (atmospheric opacity)
   """
-  def opacity_fitting(x, a, tau):
+  def opacity_fitting(x, a, Tatm, tau):
     x_rad = numpy.deg2rad(x)
     x_sec = 1/(numpy.cos((numpy.pi/2) - x_rad))
-    return a + Tamb*(1 - numpy.exp(-tau*x_sec))
+    return a + Tatm*(1 - numpy.exp(-tau*x_sec))
     
   filename = tipfiles.keys()[index]
   e,t = get_tipping_data(filename)
