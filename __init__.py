@@ -15,12 +15,13 @@ import scipy.fftpack
 from numpy import array, loadtxt, ndarray
 from os.path import basename, splitext
 
+from scipy import array, argmin, argmax, mean, sqrt, var
 from support import nearest_index # for older code
 from support.text import select_files
 
 logger = logging.getLogger(__name__)
 
-def get_obs_session(datafmt=None, project=None, dss=None, date=None):
+def get_obs_session(project=None, dss=None, date=None):
   """
   Asks user for parameters to locate observation session paths
   
@@ -62,16 +63,7 @@ def get_obs_session(datafmt=None, project=None, dss=None, date=None):
     if projectpath[-1] != "/":
       projectpath += "/"
   logger.debug("get_obs_session: project path: %s", projectpath)
-  # get the path to the raw data
-  rawdatapath = "/usr/local/RA_data/"
-  if datafmt:
-    rawfmtpath = "/usr/local/RA_data/"+datafmt
-  else:
-    rawfmtpath = select_files(rawdatapath+"[A-Z]*",
-                           text="Select a data format by index: ", single=True)
-  rawfmt = basename(rawfmtpath)
-  rawfmtpath = rawfmtpath+"/"
-  logger.debug("get_obs_session: raw data path: %s", rawfmtpath)
+
   # get the path to the project DSS sub-directory
   if dss:
     dsspath = projectpath+"Observations/dss"+str(dss)+"/"
@@ -101,8 +93,8 @@ def get_obs_session(datafmt=None, project=None, dss=None, date=None):
       logger.warning("get_obs_session: no data for dss%2d", dss)
       return project, None, 0, 0, None
   logger.debug("get_obs_session: for %s, DSS%d, %4d/%03d, raw data is %s",
-                    project, dss, yr, doy, rawfmt)
-  return project, dss, yr, doy, datafmt
+                    project, dss, yr, doy)
+  return project, dss, yr, doy
 
 def get_obs_dirs(project, station, year, DOY, datafmt=None):
   """
@@ -317,4 +309,73 @@ def reduce_spectrum_channels(spectrum, refval, refpix, delta, num_chan=1024):
                                                  for index in range(num_chan)])
   logger.debug("reduce_spectrum_channels: %d channels out", num_chan)
   return specout, newrefval, newrefpix, newdelta
+  
+def trim_extremes(data):
+  """
+  Remove extreme values from a data array.
+
+  Extreme values are those greater than 10x the standard deviation
+  and are 'skinny'.: numpy array
+
+  @param data : numpy array
+  """
+  data_array = array(data)
+  amean   = mean(data_array)
+  avar    = var(data_array)
+  astdev  = sqrt(avar)
+  amax = data_array.max()
+  amin = data_array.min()
+  # Check the maximum
+  if abs(amax-amean) > 10*astdev:
+    index = argmax(data_array)
+    if is_skinny(data_array,index):
+      data_array = clobber(data_array,index)
+  # check the minimum
+  if abs(amin-amean) > 10*astdev:
+    index = argmin(data_array)
+    if is_skinny(data_array,index):
+      data_array = clobber(data_array,index)
+  return data_array
+
+def is_skinny(data_array,index):
+  """
+  Test whether a data value is an isolated outlier
+
+  Returns True if the data values adjacent to the test value are
+  less that 1/10 of the test value, i.e., the data point is a spike
+
+  @param data_array : numpy array
+
+  @param index : int
+
+  @return: boolean
+  """
+  amean   = mean(data_array)
+  test_value = abs(data_array[index]-amean)
+  if index == 0:
+    ref_value = abs(data_array[index+1] - amean)
+  elif index == len(data_array)-1:
+    ref_value = abs(data_array[index-1] - amean)
+  else:
+    ref_value = (data_array[index-1] + data_array[index+1])/2. - amean
+  if test_value > 10 * ref_value:
+    return True
+  else:
+    return False
+
+def clobber(data_array,index):
+  """
+  Replace a data array value with the adjacent value(s)
+
+  @param data_array : numpy array
+
+  @param index : int
+  """
+  if index == 0:
+    data_array[index] = data_array[index+1]
+  elif index == len(data_array)-1:
+    data_array[index] = data_array[index-1]
+  else:
+    data_array[index] = (data_array[index-1] + data_array[index+1])/2.
+  return data_array
 

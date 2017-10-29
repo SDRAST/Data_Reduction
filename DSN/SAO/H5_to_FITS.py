@@ -70,9 +70,6 @@ class FITSfile_from_SAO(FITSfile):
     """
     mylogger = logging.getLogger(logger.name+".FITSfile")
     mylogger.debug(" creating for %s", tel.name)
-    #self.make_prihdu()
-    #self.add_site_data(self.prihdu.header, tel)
-    #self.logger.debug(" Initial header: %s", self.prihdu.header)
     FITSfile.__init__(self, tel)
     self.logger = mylogger
 
@@ -160,10 +157,6 @@ class FITSfile_from_SAO(FITSfile):
     
     self.exthead = self.make_basic_header()
     # start the extension header
-    #tbhead  = pyfits.Header() ## tbhdu.header
-    #tbhead['extname'] = ("SINGLE DISH", "required keyword value")
-    #tbhead['nmatrix'] = (1,"one DATA column")
-    #tbhead['veldef']  = ('FREQ-OBS', "raw receiver frequency")
     self.exthead['projid']  = project
     self.exthead['observer'] = observer
     self.exthead['FRONTEND'] = equipment['FrontEnd'].name
@@ -214,17 +207,6 @@ class FITSfile_from_SAO(FITSfile):
                                  npols, 'STOKES',  'I',
                                  comment="polarization code: -8 ... 4")
     #   time axis
-    #     Elapsed seconds since the start of UT day
-    #     subtract seconds at midnight
-    first_ds = dataset.header['date_obs'][0]
-    start = dataset.header['start'] - time.mktime(time.strptime(
-                                                   first_ds[0][0], "%Y-%m-%d"))
-    #hdrindex = scans.index(scans[-1])
-    #last_ds = dataset.header['date_obs'][hdrindex]
-    #end   = dataset.header['end'] - time.mktime(time.strptime(
-    #                                                last_ds[0][0], "%Y-%m-%d"))
-    #interval = (end-start)/nrecs
-    
     axis+=1; self.make_data_axis(self.exthead, self.columns, axis,
                                  nrecs, 'TIME', 'E', unit='s',
                                  comment='Python time.time() value')

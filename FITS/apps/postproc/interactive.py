@@ -75,6 +75,7 @@ IPython.version_info.append('')
 
 import glob
 import logging
+import numpy
 import os
 import pyfits
 import time
@@ -84,13 +85,78 @@ from matplotlib.font_manager import FontProperties
 
 # import from local modules
 from Data_Reduction import get_obs_dirs, get_obs_session, select_data_files
+from Data_Reduction.SLATool import SessionAnalyzer
 from Data_Reduction.FITS.DSNFITS import get_table_stats
 from Data_Reduction.FITS.SDFITSplotter import DSNFITSplotter
+from Radio_Astronomy import rms_noise
+from support.lists import unique
 from support.logs import initiate_option_parser, init_logging, get_loglevel
       
 fontP = FontProperties()
 fontP.set_size('x-small')      
 
+def show_sources(examiners):
+  """
+  """
+  sources = []
+  keys = examiners.keys()
+  for key in keys:
+    sources += examiners[key].get_sources()
+  return unique(sources)
+  
+def get_average(examiners, source='67P_CG_201'):
+  """
+  """
+  rowfmt = "%03d %5s   %d  %5.1f  %6.1f  %6.4f  %6.4f   %4.2f"
+  first_spectrum = {0:True, 1:True}
+  sum_y = {0:0, 1:0}
+  sum_Tsys = {0:0, 0:1}
+  sum_intgr = {0:0, 1:0}
+  for exkey in examiners.keys():
+    ex = examiners[exkey]
+    print "FITS file", os.path.basename(ex.hdulist.filename())
+    for tbkey in ex.tables.keys():
+      tb = ex.tables[tbkey]
+      table_source = tb.sources[0] # for TAMS datasets
+      if source in table_source:
+        rows = tb.get_rows('OBJECT', table_source)
+        x, y, rms, Tsys, intgr = tb.reduce_line(rows=rows)
+        print    "                              r.m.s. noise"
+        print    "DOY  time  Pol  Tsys   int.   meas'd  expect  ratio"
+        print    "--- -----  --- -----  ------  ------  ------  -----"
+        for polkey in range(2):
+          exp_rms = rms_noise(Tsys[polkey], 1020e6/32768., intgr[polkey])
+          ratio = rms[polkey]/exp_rms
+          print rowfmt % (tb.DOY, tb.timestr, polkey+1, Tsys[polkey], 
+                          intgr[polkey], rms[polkey], exp_rms, ratio)
+          if first_spectrum[polkey] and rms[polkey] != numpy.nan:
+            sum_y[polkey] = intgr[polkey]*y[polkey]
+            sum_Tsys[polkey] = Tsys[polkey]*intgr[polkey]
+            sum_intgr[polkey] = intgr[polkey]
+            len_x = len(x)
+            first_spectrum[polkey] = False
+          elif rms[polkey] != numpy.nan:
+            if len(x) != len_x:
+              print "X array size mismatch for pol",str(polkey+1)
+              continue
+            sum_y[polkey] += intgr[polkey]*y[polkey]
+            sum_Tsys[polkey] += Tsys[polkey]*intgr[polkey]
+            sum_intgr[polkey] += intgr[polkey]
+      else:
+        print source,"is not in table"
+  for polkey in range(2):
+    sum_y[polkey] /= sum_intgr[polkey]
+    sum_Tsys[polkey] /= sum_intgr[polkey]
+  return x, sum_y, sum_Tsys, sum_intgr
+
+def figure_rows_and_columns(nspectra):
+  """
+  """
+  cols = int(sqrt(nspectra))
+  rows = int(ceil(nspectra/rows))
+  return rows, cols
+  
+  
 examples = """
 Examples
 ========
@@ -99,7 +165,7 @@ Display diagnostic spectra from SDFITS files; prompt for session
 Process a specific observing session.
   run interactive.py --console_loglevel=debug --DSS=43 --project=ISM_RRL 
                         --date=2016/013
-"""  
+"""
 if __name__ == "__main__":
   p = initiate_option_parser(__doc__, examples)
   p.usage='data_summary.py [options] [data_directory]'
@@ -138,20 +204,47 @@ if __name__ == "__main__":
                  consolevel = get_loglevel(loglevel),
                  logname = args.logpath+"FITS_interactive.log")
 
+  if args.date:
+    yearstr, doystr = args.date.split('/')
+    year = int(yearstr)
+    DOY = int(doystr)
+  else:
+    year = None
+    DOY = None
+  sa = SessionAnalyzer(project=args.project, year=year, DOY=DOY)
+
+
+"""
+  if args.date:
+    yearstr,doystr = args.date.split('/')
+    year = int(yearstr)
+    DOY = int(doystr)
+    projectdatapath, projworkpath, datapath = get_obs_dirs(args.project,
+                                                           args.dss, year, DOY,
+                                                           datafmt="FITS")
+  else:
+    session = get_obs_session(dss=args.dss, project=args.project,
+                              date=args.date, datafmt="FITS")
+    projectdatapath, projworkpath, datapath = get_obs_dirs(*session)
+    
+  examiner = {}
   # Get a list of datafiles
-  projectdatapath, projworkpath, datapath = get_obs_dirs(
-    *get_obs_session(dss=args.dss, project=args.project, date=args.date,
-                     datafmt="FITS"))
                                                    
   # get the datafiles to be processed     
   datafiles = glob.glob(datapath+args.name_pattern)
   datafiles.sort()
 
-  header = {}; examiner = {}; n_scans = {}; scan_keys = {}; sttm = {}
   dfindex = 0
-  mylogger.info("interactive found %d datafiles", len(datafiles))
+  if args.date:
+    doy = int(args.date.split('/')[1])
+  else:
+    doy = int(datapath.split('/')[-2])
+  mylogger.info("interactive found DOY %03d %d datafiles", doy, len(datafiles))
   for datafile in datafiles:
     mylogger.info("interactive opening %s", os.path.basename(datafile))
     examiner[dfindex]  = DSNFITSplotter(datafile)
+    for table_key in examiner[dfindex].tables.keys():
+      examiner[dfindex].tables[table_key].report_table()
     dfindex += 1
-
+  print "%d examiners" % len(examiner.keys())
+"""

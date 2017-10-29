@@ -1,14 +1,52 @@
 """
 Provides a subclass to DSNFITSexaminer for plotting data.
+
+Possible symbols::
+    ================    ===============================
+    character           description
+    ================    ===============================
+    ``'o'``             circle marker
+    ``'v'``             triangle_down marker
+    ``'^'``             triangle_up marker
+    ``'<'``             triangle_left marker
+    ``'>'``             triangle_right marker
+    
+    ``'s'``             square marker
+    ``'p'``             pentagon marker
+    ``'D'``             diamond marker
+    ``'h'``             hexagon1 marker
+    ``'H'``             hexagon2 marker
+    
+    ``'1'``             tri_down marker
+    ``'2'``             tri_up marker
+    ``'3'``             tri_left marker
+    ``'4'``             tri_right marker
+    ``'*'``             star marker
+    
+    ``'+'``             plus marker
+    ``'x'``             x marker
+    ``'d'``             thin_diamond marker
+    ``'|'``             vline marker
+    ``'_'``             hline marker
+    
+    ``'.'``             point marker
+    ``','``             pixel marker
+    ``'-'``             solid line style
+    ``'--'``            dashed line style
+    ``'-.'``            dash-dot line style
+    ``':'``             dotted line style
+    ================    ===============================
 """
 
 import logging
 import numpy as np
 import re
 
-from pylab import *
+from matplotlib.font_manager import FontProperties
 from os.path import basename
+from pylab import *
 
+from Data_Reduction import trim_extremes
 from Data_Reduction.FITS.SDFITSexaminer import DSNFITSexaminer
 from DatesTimes import UnixTime_to_MPL
 from Math.least_squares import savitzky_golay
@@ -16,16 +54,28 @@ from support.text import clean_TeX
 
 logger = logging.getLogger(__name__)
 plotcolors = ['b','g','r','m','c']
-plotsymbols = ['o','v','^','<','>','s','p','D']
-    
+
+plotsymbols = ['o','v','^','<','>',
+               's','p','D','h','H',
+               '1','2','3','4','*',
+               '+',"x","d","|","_"]
+
+fontP = FontProperties()
+fontP.set_size('x-small')      
+
 class DSNFITSplotter(DSNFITSexaminer):
   """
   """
-  def __init__(self, datafile):
+  def __init__(self, parent=None, FITSfile=None, hdulist=None):
     """
+    Create a new DSNFITSplotter object from an HDU list
+    
+    If invoked from within another object, then parent should be 'self'.
+    Either a FITS file or an HDU list must be provided.
     """
-    mylogger = logging.getLogger(logger.name+"DSNFITSplotter")
-    DSNFITSexaminer.__init__(self, datafile)
+    mylogger = logging.getLogger(logger.name+".DSNFITSplotter")
+    DSNFITSexaminer.__init__(self, parent=parent, FITSfile=FITSfile,
+                             hdulist=hdulist)
     self.logger = mylogger
     self.plotter = {}
     for key in self.tables.keys():
@@ -39,25 +89,127 @@ class DSNFITSplotter(DSNFITSexaminer):
     """
     def __init__(self, parent, table):
       """
+      Initialization was already done for Table superclass
       """
-      #DSNFITSexaminer.Table.__init__(self, parent, table)
-      pass
+      for attr in table.__dict__.keys():
+        self.__setattr__(attr, table.__getattribute__(attr))
+      self.logger = logging.getLogger(parent.logger.name+".Plotter")
+
+    def figure_rows_and_columns(self, nspectra):
+      """
+      """
+      cols = int(sqrt(nspectra))
+      rows = int(ceil(float(nspectra)/cols))
+      self.logger.debug("figure_rows_and_columns: %d rows, %d columns",
+                        rows, cols)
+      return rows, cols
       
-    def init_multiplot(self, title, nrows, ncols): 
+    def init_multiplot(self, title, nrows, ncols, **kwargs): 
       """
       multiple plots sharing common X and Y axis, no space between them
       """
+      if kwargs.has_key("width"):
+        width = ncols * kwargs["width"] # inches
+      else:
+        width = ncols * 4
+      if kwargs.has_key("heigth"):
+        height = nrows * kwargs["width"] # inches
+      else:
+        height = nrows * 4
       fig, ax = subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True)
-      width = ncols * 3 # inches
-      height = nrows * 3 # inches
       fig.set_size_inches(width, height, forward=True)
       fig.subplots_adjust(wspace=0, hspace=0) # no space between plots in a row
       fig.suptitle(title)
       return fig, ax
-      
-    def plot_PS_spectra(self, scans=[]):
+    
+    def show_spectra(self, rows=None):
+      """
+      """
+      if rows == None:
+        spectra = self.get_spectra(self.row_keys)
+      else:
+        spectra = self.get_spectra(rows)
+      nrows, ncols = self.figure_rows_and_columns(len(spectra))
+      fig, ax = self.init_multiplot("Basic Spectra", nrows, ncols)
+      for row in range(nrows):
+        for col in range(ncols):
+          specidx = row*ncols + col
+          scan = self.data['SCAN'][specidx]
+          self.logger.debug("show_spectra: doing row %d column %d spectrum %d",
+                            row, col, specidx)
+          spec = spectra[specidx]
+          nbeams, nrecs, npols, nchans = spec.shape
+          for rec in range(nrecs):
+            symbol = plotsymbols[rec % 20]
+            for beam in range(nbeams):
+              for pol in range(npols):
+                color = plotcolors[beam*npols+pol % 5]
+                trimmed = trim_extremes(spec[beam, rec, pol])
+                ax[row][col].plot(trimmed, color+',',
+                          label="rec"+str(rec)+" B"+str(beam+1)+"P"+str(pol+1))
+          ax[row][col].grid(True)
+          ax[row][col].text(0.5, 0.95, 'scan '+str(scan),
+                            transform=ax[row][col].transAxes,
+                            horizontalalignment='center', 
+                            verticalalignment='top')
+          if row == nrows-1:
+            for tick in ax[row][col].get_xticklabels():
+              tick.set_rotation(45)
+          if col == 0:
+            ax[row][col].set_ylabel("Power (counts)")
+      lines, labels = ax[0][0].get_legend_handles_labels()
+      fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
+      show()
+    
+    def plot_BPSW_spectra(self, spectra=None, rows=None):
+      """
+      """
+      if spectra:
+        npairs = len(spectra)
+      elif rows :
+        rows = self.row_keys
+        spectra = self.BPSW_spectra(rows)
+        npairs = len(spectra)
+      else:
+        rows = self.row_keys
+        spectra = self.BPSW_spectra(rows)
+        npairs = len(spectra)
+      pairs = range(npairs)
+      nrows, ncols = self.figure_rows_and_columns(len(spectra))
+      fig, ax = self.init_multiplot("BPSW Spectra", nrows, ncols)
+      for row in range(nrows):
+        for col in range(ncols):
+          pair = row*ncols + col
+          spec = spectra[pair]
+          nrecs, npols, nchans = spec.shape
+          for rec in range(nrecs):
+            symbol = plotsymbols[rec % 20]
+            for pol in range(npols):
+              color = plotcolors[pol % 5]
+              trimmed = trim_extremes(spec[rec, pol])
+              ax[row][col].plot(trimmed, color+',',
+                          label="rec"+str(rec)+" P"+str(pol+1))
+          ax[row][col].grid(True)
+          ax[row][col].text(0.5, 0.95, 'pair '+str(pair+1),
+                            transform=ax[row][col].transAxes,
+                            horizontalalignment='center', 
+                            verticalalignment='top')
+          if row == nrows-1:
+            for tick in ax[row][col].get_xticklabels():
+              tick.set_rotation(45)
+          if col == 0:
+            ax[row][col].set_ylabel("Normalized Power")
+      lines, labels = ax[0][0].get_legend_handles_labels()
+      fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
+      show()
+          
+    def plot_PSSW_spectra(self, scans=[]):
       """
       Plot position switched spectra
+      
+      We need to check self.data['OBSMODE']
+      
+      Calculation should be moved to 'Table' class
       """
       if scans == []:
         scans = self.scan_keys
@@ -135,12 +287,35 @@ class DSNFITSplotter(DSNFITSexaminer):
             title(titlestr)
         fig.autofmt_xdate()
 
-  #  still to be converted
+    def plot_line(self, rows=[], window=(-100,100),
+                    frame="RADI-OBJ", source='67P', savepath=None):
+      """
+      """
+      try:
+        x, y, rms, Tsys, intgr = self.reduce_line(rows=rows, window=window,
+                                   frame=frame, source=source)
+      except TypeError:
+        self.logger.error("plot_line: nothing to plot")
+      else:
+        figure()
+        plot(x, y[0], label="Pol1")
+        plot(x, y[1], label="Pol2")
+        grid()
+        xlim(*window)
+        legend(prop=fontP)
+        titlestr = source+" DSS-"+str(self.dss)+" "+self.datestr+" "+self.timestr
+        title(titlestr)
+        xlabel("$V_{LSR}$ (km s$^{-1}$")
+        ylabel("$T_{ant}$ (K)")
+        if savepath:
+          fname = titlestr.replace("/","-").replace(" ","_")+".png"
+          savefig(savepath+fname)
+        return {"rms": rms, "Tsys": Tsys, "intgr": intgr}
       
-  def plot_spectrum(self, spectrum=None, row=0, frame='RADI-LSR', xlimits=None, 
-                          ylimits=None, average=False):
+  def plot_average(self, frame='RADI-LSR', source=None,
+                   xlimits=None, ylimits=None):
     """
-    plot a DSN FITS spectrum
+    plot an averaged DSN FITS spectrum
     
     A DSN FITS spectrum is multi-dimensional with axes::
       [[beam,] [time,]], pol, [dec, RA], frequency-like
@@ -149,9 +324,6 @@ class DSNFITSplotter(DSNFITSexaminer):
     
     Note that the frame of the provided spectrum is not changed.  Only the
     X-axis is recomputed before plotting.
-    
-    @param spectrum : raw or reduced spectra
-    @type  spectrum : multi-dimensional SPECTRUM of DSN type
     
     @param row : row to be used to get observing parameters
     @type  row : int
@@ -169,7 +341,7 @@ class DSNFITSplotter(DSNFITSexaminer):
     @type  average : bool
     
     """
-    self.logger.debug("plot_spectrum: spectrum is type %s", type(spectrum))
+    
     if type(spectrum) == DSNFITSexaminer.Table.Data:
       # this is a window into the original spectrum
       x = spectrum.x
@@ -274,8 +446,31 @@ class DSNFITSplotter(DSNFITSexaminer):
     titlestr = clean_TeX(str(ds0.year)+"/"+str(ds0.doy))
     title(titlestr)
     fig.autofmt_xdate()
-    
-    
-     
-  
-  
+
+def make_legend_labels(dskeys=[], tbkeys=[], sckeys=[], bmkeys=[], plkeys=[],
+                       dskey=None, tbkey=None, sckey=None, bmkey=None, plkey=None):
+  """
+  @param dskeys : all datafile or examiner keys
+  @param tbkeys : all table keys
+  @param sckeys : all subchannel keys
+  @param bmkeys : all beam keys
+  @param plkeys : all polarization keys
+  @param dskey : datafile or examiner key
+  @param tbkey : table key
+  @param sckey : subchannel key
+  @param bmkey : beam key
+  @param plkeys :polarization key
+  """
+  label = ""
+  if dskey != None and len(dskeys) > 1:
+    label += "ds"+str(dskey+1)
+  if tbkey != None and len(tbkeys) > 1:
+    label += " tb"+str(dskey+1)
+  if sckey != None and len(sckeys) > 1:
+    label += " sc"+str(sckey+1)
+  if bmkey != None and len(bmkeys) > 1:
+    label += " B"+str(bmkey+1)
+  if plkey != None and len(plkeys) > 1:
+    label += "P"+str(plkey+1)
+  return label
+

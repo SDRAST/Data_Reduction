@@ -20,23 +20,27 @@ For files obtained from the SAO spectrometers, there is only one CYCLE but
 there are two feeds. A SPECTRUM cell has six axes::
    (freq, RA, dec, Stokes, time, beam)
 """
+import astropy.io.fits as pyfits
 import astropy.units as u
 import datetime
 import logging
 import numpy
 import os
-import pyfits
 import re
 import sys
 import time
 
 from astropy.coordinates import FK4, FK5, SkyCoord
 from copy import copy
+from matplotlib.dates import date2num
+
 from scipy import interpolate
 
 # Third party packages
 from novas import compat as novas
 from novas.compat import eph_manager
+
+import support.lists
 
 from Astronomy import c, MJD, v_sun
 from Astronomy.redshift import doppler_radio, doppler_optical, doppler_relat
@@ -47,8 +51,8 @@ from MonitorControl.BackEnds import get_freq_array
 from MonitorControl.Configurations.CDSCC.FO_patching import DistributionAssembly
 from MonitorControl.Configurations.coordinates import DSS
 from Radio_Astronomy import rms_noise
-
 from support import mkdir_if_needed, nearest_index
+
 
 jd_start, jd_end, number = eph_manager.ephem_open()
 logger = logging.getLogger(__name__)
@@ -57,51 +61,32 @@ class DSNFITSexaminer(object):
   """
   Class for examining SAOdataset objects
   """
-  def __init__(self, FITSfile):
+  def __init__(self, parent=None, FITSfile=None, hdulist=None):
     """
     Create an SAOexaminer object
     
     Attributes::
-      avg_diff     - average of all scans for each pol
-      datafiles    - list of pkl files in datapath
-      datapath     - location of project data for this observation session
-      dataset      - collection of scana and metadata taken from HDF5 file
-      logger       - logging.Logger object
-      projworkpath - obs. session sub-dir. in project directory
-      rawdatapath  - local of HDF5 files for this obs. session
-      tau          - total integration times for averaged spectra
-    
-    Methods::
-      align_spectrum
-      load_ephemeris        - get the ephemeris for the designated source
-
-    Extra Attributes of Tables::
-      RA
-      SB
-      data
-      dec
-      dss
-      header
-      num_indices
-      obsmodes
-      props
-      row_keys
-      scan_keys
-    These are in addition to the attributes of a pyfits.hdu.table.BinTableHDU
-             
-    @param FITSextension : SDFITS file BINTABLE extension
-    @type  FITSextension : pyfits HDU
-    
-    @param dss : DSN station number
-    @type  dss : int
+      file    - FITS file path and name
+      header  - file primary HDU header
+      hdulist - list of HDUs in file
+      logger  - logging.Logger object
+      tables  - private class Table (SINGLE DISH) objects
     """
+    self.parent = parent
     self.logger = logging.getLogger(logger.name+'.DSNFITSexaminer')
-    self.hdulist = pyfits.open(FITSfile)
-    # hdulist[0] has the file header
-    self.header = self.hdulist[0].header
-    self.tables = self.get_SDFITS_tables()
-    self.logger.info("__init__: %d tables found in %s",
+    if FITSfile:
+      self.hdulist = pyfits.open(FITSfile)
+      # hdulist[0] has the file header
+      self.tables = self.get_SDFITS_tables()
+      self.file = FITSfile
+      self.logger.info("__init__: %d tables found in %s",
                      len(self.tables), os.path.basename(FITSfile))
+    elif hdulist:
+      self.hdulist = hdulist
+      self.tables = self.get_SDFITS_tables()
+    else:
+      self.logger.error("__init__: requires filename or HDU list")
+    self.header = self.hdulist[0].header
        
   def get_SDFITS_tables(self):
     """
@@ -126,17 +111,78 @@ class DSNFITSexaminer(object):
         index += 1
     return tables
   
+  def get_sources(self):
+    """
+    """
+    sources = []
+    for key in self.tables.keys():
+      sources += list(self.tables[key].sources)
+    return support.lists.unique(sources)
+  
+  def save(self, filename):
+    """
+    save examiner in session directory
+    
+    If the examiner has a parent, the file is saved in the session working
+    directory. Else, if the filename includes a path, that path is used.
+    Otherwise, it is saved in the user's home directory.
+    """
+    if self.parent:
+      savepath = self.parent.projworkpath
+    elif os.path.dirname(filename):
+      savepath = os.path.dirname(filename)
+    else:
+      savepath = os.environ['HOME']
+    if filename[-5:] == ".fits":
+      savename = savepath + filename
+    else:
+      savename = savepath + filename+".fits"
+    self.logger.info('consolidate: writing %s', savename)
+     
   class Table(pyfits.BinTableHDU):
     """
+    Public Attributes::
+      BE          - Backend subclass associated with this table
+      dss         - DSN antenna
+      cycles      - list of unique cycle numbers
+      cycle_keys  - 
+      data        - contents of FITS binary table
+      frame       - reference frame for X-axis
+      header      - FITS table header
+      logger      - logging.Logger object
+      num_indices - number of indices in the SPECTRUM cube
+      obsmodes    - 
+      obs_freqs   - non-redundant list of observing frequencies in table
+      props       - table properties
+      rows        - rows with valid data
+      row_keys    - ordered list of row numbers
+      scan_keys   - ordered list of scan numbers
+      sources     - non-redundant list of sources in table
+    
+    Methods::
+      align_spectrum
+      freqs
+      load_ephemeris        - get the ephemeris for the designated source
+    These are in addition to the attributes of a pyfits.hdu.table.BinTableHDU
     """
     def __init__(self, parent, extension):
       """
+      Create a FITS table object
+    
+      @param extension : SDFITS file BINTABLE extension
+      @type  extension : pyfits HDU
+
       """
       pyfits.BinTableHDU.__init__(self, data=extension.data,
                                         header=extension.header)
       self.logger = logging.getLogger(parent.logger.name+".Table")
       self.logger.debug("__init__: created %s", self)
       # add some attributes for convenience
+      d = UnixTime_to_datetime(self.get_first_value('UNIXtime',0)).timetuple()
+      self.year = d.tm_year
+      self.DOY = d.tm_yday
+      self.datestr = "%4d/%03d" % (self.year,self.DOY)
+      self.timestr = "%02d:%02d" % (d.tm_hour, d.tm_min)
       self.dss = int(self.header['TELESCOP'].split('-')[1])
       self.logger.debug("__init__: station is DSS-%d", self.dss)
       self.scan_keys, self.cycle_keys, self.row_keys, self.obsmodes \
@@ -151,7 +197,7 @@ class DSNFITSexaminer(object):
       else:
         self.cycles = list(numpy.unique(self.data['CYCLE'][self.rows]))
       self.sources = numpy.unique(self.data['OBJECT'][self.rows])
-      self.report_table()
+      self.sources.sort()
 
     def get_rows(self, keyword, value):
       """
@@ -291,9 +337,9 @@ class DSNFITSexaminer(object):
       rel_freqs = self.freqs(row)-f_ref          # channel frequencies relative
                                                  # to the reference frequency
       v_ref = self.data['VELOCITY'][row]         # vel. of object in LSR
-      self.logger.info("rel_freq_units: reference frequency is %.3f", f_ref)
-      self.logger.info("rel_freq_units: reference velocity is %.3f", v_ref)
-      self.logger.info("rel_freq_units: frame velocity is %.3f", v_frame)
+      self.logger.debug("rel_freq_units: reference frequency is %.3f", f_ref)
+      self.logger.debug("rel_freq_units: reference velocity is %.3f", v_ref)
+      self.logger.debug("rel_freq_units: frame velocity is %.3f", v_frame)
       self.frame = frame
       if frame == "CHAN-OBS": # channel number
         return range(len(rel_freqs))
@@ -435,7 +481,7 @@ class DSNFITSexaminer(object):
       (obspos,obsvel) = novas.geo_posvel(jd,0,DSS43,0)
       self.logger.debug("V_LSR: Earth velocity = %s", urthvel)
       self.logger.debug("V_LSR: observer velocity = %s", obsvel)
-      totvel = tuple(array(urthvel)+array(obsvel))
+      totvel = tuple(numpy.array(urthvel)+numpy.array(obsvel))
       self.logger.debug("V_LSR: total velocity = %s", totvel)
       (srcpos,srcvel) = novas.starvectors(cat_entry)
       self.logger.debug("V_LSR: source velocity = %s", srcvel)
@@ -481,15 +527,15 @@ class DSNFITSexaminer(object):
       # check the data:
       #    elevations
       elevation = self.data['ELEVATIO']
-      mask = ~(isnan(elevation) | equal(elevation, 0))
-      indices = where(mask)
+      mask = ~(numpy.isnan(elevation) | numpy.equal(elevation, 0))
+      indices = numpy.where(mask)
       good_el_data = mask.any()
       if not good_el_data:
         self.logger.warning("get_good_rows: elevation data is bad")
       else:
         self.logger.debug("get_good_rows: elevations: %s", elevation)
       #    system temperature
-      if equal(self.data['TSYS'], 0.).all():
+      if numpy.equal(self.data['TSYS'], 0.).all():
         good_tsys_data = False
       else:
         good_tsys_data = True
@@ -497,31 +543,31 @@ class DSNFITSexaminer(object):
                        self.data['TSYS'])
       #    ambient temperature
       tamb = self.data['TAMBIENT']
-      mask = ~(isnan(tamb) | equal(tamb, 0))
+      mask = ~(numpy.isnan(tamb) | numpy.equal(tamb, 0))
       good_tamb_data = mask.any()
       if not good_tamb_data:
         self.logger.warning("get_good_rows: ambient temperature data is bad")
       #    pressure
       pres = self.data['PRESSURE']
-      mask = ~(isnan(pres) | equal(pres, 0))
+      mask = ~(numpy.isnan(pres) | numpy.equal(pres, 0))
       good_pres_data = mask.any()
       if not good_pres_data:
         self.logger.warning("get_good_rows: pressure data is bad")
       #    humidity
       humi = self.data['HUMIDITY']
-      mask = ~(isnan(humi) | equal(humi, 0))
+      mask = ~(numpy.isnan(humi) | numpy.equal(humi, 0))
       good_humi_data = mask.any()
       if not good_humi_data:
         self.logger.warning("get_good_rows: humidity data is bad")
       #    windspeed
       wspe = self.data['WINDSPEE']
-      mask = ~(isnan(wspe) | equal(wspe, 0))
+      mask = ~(numpy.isnan(wspe) | numpy.equal(wspe, 0))
       good_wspe_data = mask.any()
       if not good_wspe_data:
         self.logger.warning("get_good_rows: windspeed data is bad")
       #    winddir
       wdir = self.data['WINDDIRE']
-      mask = ~(isnan(wdir) | equal(wdir, 0))
+      mask = ~(numpy.isnan(wdir) | numpy.equal(wdir, 0))
       good_wdir_data = mask.any()
       if not good_wdir_data:
         self.logger.warning("get_good_rows: wind direction data is bad")
@@ -529,19 +575,44 @@ class DSNFITSexaminer(object):
       # Initialize for extracting data from simple (single value) columns
       good_data = {}
       good_data['mpltime'] = []
-      good_data['elev'] = []
-      good_data['Tambient'] = []
-      good_data['pressure'] = []
-      good_data['humidity'] = []
-      good_data['windspeed'] = []
-      good_data['winddirec'] = []
+      if good_el_data:
+        good_data['elev'] = []
+      if good_tamb_data:
+        good_data['Tambient'] = []
+      if good_pres_data:
+        good_data['pressure'] = []
+      if good_humi_data:
+        good_data['humidity'] = []
+      if good_wspe_data:
+        good_data['windspeed'] = []
+      if good_wdir_data:
+        good_data['winddirec'] = []
+      if good_tsys_data:
+        good_data['TSYS'] = {}
+      for cycle in self.cycle_keys: # this loops over subchannels
+        cycle_idx = cycle_keys.index(cycle)
+        if good_data['TSYS'].has_key(cycle_idx):
+          pass
+        else:
+          good_data['TSYS'][cycle_idx] = {}
+        for beam_idx in range(self.props["num beams"]):
+          if good_data['TSYS'][cycle_idx].has_key(beam_idx):
+            pass
+          else:
+            good_data['TSYS'][cycle_idx][beam_idx] = {}
+          for pol_idx in range(self.props["num IFs"]):
+            if good_data['TSYS'][cycle_idx][beam_idx].has_key(pol_idx):
+              pass
+            else:
+              good_data['TSYS'][cycle_idx][beam_idx][pol_idx] = [] 
       # process all scans
       for row in row_keys:
         # these are simple columns with multiple dimensions
-        midnight_unixtime = mktime(strptime(self.data['DATE-OBS'][row],
-                                          "%Y/%m/%d"))
+        midnight_unixtime = time.mktime(time.strptime(
+                                       self.data['DATE-OBS'][row], "%Y/%m/%d"))
         if self.props['time axis'] == True:
           cycle = self.data['CYCLE'][row]
+          cycle_idx = cycle - 1
           nrecs = self.props['num records'][cycle]
           for rec in range(nrecs):
             first_time = self.data['CRVAL5'][row]
@@ -552,12 +623,14 @@ class DSNFITSexaminer(object):
             good_data['elev'].append(self.data['ELEVATIO'][row,0,rec,0,0,0,0])
             for beam in [0,1]:
               for pol in [0,1]:
-                Tsys[beam][pol].append(self.data['Tsys'][row,beam,rec,pol,0,0,0])
+                good_data['TSYS'][cycle_idx][beam][pol].append(self.data['TSYS'][row,beam,rec,pol,0,0,0])
             good_data['Tambient'].append(self.data['TAMBIENT'][row,0,rec,0,0,0,0])
             good_data['pressure'].append(self.data['PRESSURE'][row,0,rec,0,0,0,0])
             good_data['humidity'].append(self.data['HUMIDITY'][row,0,rec,0,0,0,0])
-            good_data['windspeed'].append(self.data['WINDSPEE'][row,0,rec,0,0,0,0])
-            good_data['winddirec'].append(self.data['WINDDIRE'][row,0,rec,0,0,0,0])
+            if good_wspe_data:
+              good_data['windspeed'].append(self.data['WINDSPEE'][row,0,rec,0,0,0,0])
+            if good_wdir_data:
+              good_data['winddirec'].append(self.data['WINDDIRE'][row,0,rec,0,0,0,0])
         else:
           good_data['unixtime'] = self.data['UNIXtime'][row]
           datime = datetime.datetime.fromtimestamp(unixtime) # datetime object
@@ -566,8 +639,10 @@ class DSNFITSexaminer(object):
           good_data['Tambient'].append(self.data['TAMBIENT'][row])
           good_data['pressure'].append(self.data['PRESSURE'][row])
           good['humidity'].append(self.data['HUMIDITY'][row])
-          good_data['windspeed'].append(self.data['WINDSPEE'][row])
-          good_data['winddirec'].append(self.data['WINDDIRE'][row])
+          if good_wspe_data:
+            good_data['windspeed'].append(self.data['WINDSPEE'][row])
+          if good_wdir_data:
+            good_data['winddirec'].append(self.data['WINDDIRE'][row])
       return good_data
 
     def get_first_value(self, column, row):
@@ -713,10 +788,10 @@ class DSNFITSexaminer(object):
       @type  rows : list of int
       """
       nrows = len(rows)
-      if (self.data['OBSMODE'] == numpy.array(nrows*['LINEPBSW'])).all():
+      if (self.data['OBSMODE'][rows] == numpy.array(nrows*['LINEPBSW'])).all():
         # this requires a beam axis so...
         return self.data['SPECTRUM'][rows,:,:,:,0,0,:]
-      elif (self.data['OBSMODE'] == numpy.array(nrows*['LINEPSSW'])).all():
+      elif (self.data['OBSMODE'][rows] == numpy.array(nrows*['LINEPSSW'])).all():
         if self.num_indices == 6:
           return self.data['SPECTRUM'][rows,:,:,:,0,0,:]
         elif self.num_indices == 5:
@@ -729,7 +804,7 @@ class DSNFITSexaminer(object):
           # only one spectrum
           return self.data['SPECTRUM'][rows,0,0,:]
     
-    def normalized_beam_diff(self, rows):
+    def normalized_beam_diff(self, rows, remove_warning=False):
       """
       (on-source - off-source)/off_source for each record and each pol
       
@@ -754,12 +829,14 @@ class DSNFITSexaminer(object):
       """
       if self.num_indices > 4: # 5 or more axes
         spectra = self.get_spectra(rows)
-        # old TAMS spectra may have records with zero at the end
-        if (spectra[:,:,:,:,:] == 0).any() == True:
+        # old TAMS spectra may have records with zeros at the end
+        # any record may have a zero in the first 100 channels
+        while (spectra[:,:,:,:,100:] == 0).any() == True:
           # remove last records to get rid of empty records
           nrecs = spectra.shape[2]
           spectra = spectra[:,:,:-1,:,:]
-          self.logger.warning("normalized_beam_diff: removed last records")
+          if remove_warning:
+            self.logger.warning("normalized_beam_diff: removed last records")
           # compensate integration time
           n_TAMS_recs = self.data['EXPOSURE']/5
           TAMS_intgr = 5*nrecs/n_TAMS_recs
@@ -985,11 +1062,13 @@ class DSNFITSexaminer(object):
       # This computes values for the entire 32768 point spectrum
       if frame == "RADI-OBJ":
         # requires a spline computed from an ephemeris
-        if re.match('67P', self.data['OBJECT'][row]):
+        if re.match(source, self.data['OBJECT'][row]):
           vspline = self.load_ephemeris(source)
           x = self.compute_X_axis(row, "RADI-OBJ", vspline=vspline)
         else:
-          self.logger.error("extract_window: no ephemeris for %s", self.object)
+          self.logger.error("extract_window: %s does not match %s in row %d", 
+                            source, self.data['OBJECT'][row], row)
+          return None
       else:
         x = self.compute_X_axis(row, frame)
       self.logger.debug("extract_window: x=%s", x)
@@ -1044,6 +1123,22 @@ class DSNFITSexaminer(object):
       if type(intgr) == numpy.ndarray:
         d.intgr = intgr
       return d
+      
+    def reduce_line(self, rows=[], window=[-100,100], frame="RADI-OBJ",
+                    source='67P'):
+      """
+      """
+      if rows == []:
+        rows = self.row_keys
+      scanave, Tsys, intgr = self.scans_average(rows)
+      subset = self.extract_window(rows, data=scanave, Tsys=Tsys,intgr=intgr,
+                                   xlimits=window, frame=frame, source=source)
+      if subset:
+        x, y, rms = subset.remove_baseline()
+        return x, y, rms, Tsys, intgr
+      else:
+        self.logger.error("reduce_line: no data window found")
+        return None
 
     class Data(object):
       """
@@ -1120,93 +1215,10 @@ class DSNFITSexaminer(object):
             new_y[pol] = self.y[pol] - interpolate.splev(self.x[::-1], spline, der=0)[::-1]
           else:
             new_y[pol] = self.y[pol] - interpolate.splev(self.x, spline, der=0)
-        return new_y, numpy.array(rms)
-          
+        return self.x, new_y, numpy.array(rms)
+ 
       
   # convert these to Table methods as needed.
-                                      
-  def fit_mean_power_to_airmass(self, Tvac_func, replace=False):
-    """
-    fits the mean power data vs airmass to the radiative transfer equation
-    
-    This assumes that every IF has a way of measuring power. The measured power
-    is a single value along the first axis of the data array (or last index in
-    a C/Python array).  If there are multiple records then they will be
-    averaged.
-    
-    @param Tvac_func - a function for system temperature with no atmosph or CBR
-    @type  Tvac_func - function(beam,pol)
-    """
-    def opacity_fitting(x, a, tau):
-      x_rad = numpy.deg2rad(x)
-      x_sec = 1/numpy.sin(x_rad)
-      return a + tau*x_sec
-    
-    for beam_idx in range(self.props['num beams']):
-      for IFidx in range(self.props['num IFs']):
-        self.logger.debug('fit_mean_power_to_airmass: processing IF%d', IFidx+1)
-        Tvac = Tvac_func(beam=beam_idx ,pol=IFidx)
-        pol = ['L','R'][IFidx]
-        msg = "estimated %sCP zenith Tsys in vacuum= %6.2f" % (pol, Tvac)
-        self.logger.debug("fit_mean_power_to_airmass: %s", msg)
-        self.header.add_history(msg)
-        # average records here if needed.
-        subchannels = len(self.props['num cycles'])
-        self.logger.debug("fit_mean_power_to_airmass: subchannels: %s",
-                          subchannels)
-        for subchannel in subchannels:
-          subch = subchannels.index(subchannel)
-          # Get the data for this subchannel.
-          #   the following can be expressed as
-          #     mean_power = self.data['avgpower'][subch::2,IFidx,0,0,0]
-          #   or
-          #     mean_power = self.data['avgpower'][:,IFidx,0,0,0][subch::2]
-          #   or
-          #     mean_power = self.data[subch::2]['avgpower'][:,IFidx,0,0,0]
-          # assuming the first row is the same as the subchannel
-          mean_power = tabhdu.data['avgpower'][subch::2,IFidx,0,0,0]
-          elevation  = tabhdu.data['ELEVATIO'][subch::2]
-          # get an elevation array with the 'nan' and zero values removed
-          mask = ~(numpy.isnan(elevation) | numpy.equal(elevation, 0))
-          # these are the indices in the data for this subchannel
-          #     'where' and its friends return a tuple
-          indices = numpy.where(mask)[0]
-          self.logger.debug(
-             "fit_mean_power_to_airmass: good data rows for subchannel %d: %s",
-             subchannel, indices)
-          elv = elevation[mask]
-          # remove the items with the same indices from mean_power
-          pwr = mean_power[mask]
-          #self.logger.debug('fit_mean_power_to_airmass: elevations: %s', elv)
-          self.logger.debug('fit_mean_power_to_airmass: subch %d pwr shape: %s',
-                          subchannel, pwr.shape)
-         # fit the data
-          popt, pcov = curve_fit(opacity_fitting, elv, pwr, p0=[0, 0])
-          intercept, slope = popt[0], popt[1]
-          self.logger.debug(
-                         "fit_mean_power_to_airmass: intercept, slope: %f, %f",
-                         intercept, slope)
-          msg = \
-            "IF%d, subch%d gain=%9.3e counts, gain_slope=%9.3e counts/airmass"\
-              % (IFidx+1, subchannel, intercept, slope)
-          self.header.add_history(msg)
-          if replace:
-            gain = Tvac/intercept
-            K_per_am = gain*slope
-            self.logger.debug(
-           "fit_mean_power_to_airmass: convert power to Tsys for subch%s %sCP",
-                          subch+1, pol)
-            new_indices = numpy.where(tabhdu.data['CYCLE'] == subchannel)[0]
-            self.logger.debug(
-                          "fit_mean_power_to_airmass: table rows for Tsys: %s",
-                          new_indices)
-            self.logger.debug(
-                          "fit_mean_power_to_airmass: destination shape is %s",
-                          tabhdu.data['TSYS'][new_indices,IFidx,0,0,0].shape)
-            tabhdu.data['TSYS'][new_indices,IFidx,0,0,0] = gain * pwr
-          else:
-            self.logger.warning(
-                        "fit_mean_power_to_airmass: failed; Tsys not computed")
     
   def beam_switched_average(self, mode='LINE-PBSW'):
     """

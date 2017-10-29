@@ -57,6 +57,9 @@ class FITSfile(object):
     must change MAXIS4.
 
     TDIMxx is calculated from MAXIS1 through MAXISn at the end.
+    
+    @param tel : DSN station
+    @type  tel : Telescope object
     """
     self.logger = logging.getLogger(logger.name+".FITSfile")
     self.tel = tel
@@ -107,7 +110,7 @@ class FITSfile(object):
     header['TIMESYS'] = ('UTC', "DSN standard time")
     return header
   
-  def make_basic_columns(self, numrecs=1):
+  def make_basic_columns(self):
     """
     Make the minimum set of columns needed by SDFITS
 
@@ -135,9 +138,6 @@ class FITSfile(object):
 
     To these are usually appended the various beam offsets available at DSN
     antennas.  See 'make_offset_columns'.
-
-    @param numrecs : minimum of the number of records in each scan
-    @type  numrecs : 1
     """
     # create empty column data arrays
     # create required columns.
@@ -168,7 +168,6 @@ class FITSfile(object):
     # frequency switching offset
     self.columns += pyfits.ColDefs(
                      [pyfits.Column(name='FOFFREF1',  format='1E', unit='Hz')])
-    
     self.make_offset_columns()
     
   def make_offset_columns(self, numrecs=1, 
@@ -201,7 +200,13 @@ class FITSfile(object):
     On 2016 Dec 22 these were added::
       BEAMLOFF - galactic longitude offset
       BEAMBOFF - galactic latitude offset
-      BEAMGOFF - galactic cross-latitude offset\end{verbatim}
+      BEAMGOFF - galactic cross-latitude offset
+    
+    @param numrecs : number of records in a scan
+    @type  numrecs : int
+    
+    @param Aoff : include azimuth offsets
+    @type  Aoff : bool
     """
     # always required
     if numrecs > 1:
@@ -240,6 +245,7 @@ class FITSfile(object):
   def add_time_dependent_columns(self, numrecs):
     """
     create columns for the time-dependent metadata
+    
     """
     if numrecs == 1:
       time_dim = "(1,)"

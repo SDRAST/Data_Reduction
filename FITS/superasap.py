@@ -78,19 +78,22 @@ from asap import average_time, \
                  merge, \
                  asaplotbase, \
                  unique
-import pyfits
 import glob
-import os
-import re
+import logging
 import matplotlib as mpl
 import numpy as np
-import logging
+import os
+import pyfits
+import re
+
+from math import sqrt
+from matplotlib import pyplot as plt
 from os.path import isdir, basename, splitext
+from scipy import array, argmin, argmax, mean, sqrt, var
+
+from Data_Reduction import clobber, is_skinny, trim_extremes
 from Data_Reduction.FITS import fits_support
 from Data_Reduction.FITS import SDFITS as S
-from math import sqrt
-from scipy import array, argmin, argmax, mean, sqrt, var
-from matplotlib import pyplot as plt
 
 print 'If you got this message:'
 print 'QLayout: Attempting to add QLayout "" to CustomToolbarQT4Agg "", which already has a layout'
@@ -800,79 +803,6 @@ def attach_hdu(supertables, new_scantable):
             sctable.data.field(i)[scan_index]
         new_row_index += 1
   return supertable(new_scantable, HDU=new_hdu)
-
-def clobber(data_array,index):
-  """
-  Replace a data array value with the adjacent value(s)
-
-  @param data_array : numpy array
-
-  @param index : int
-  """
-  if index == 0:
-    data_array[index] = data_array[index+1]
-  elif index == len(data_array)-1:
-    data_array[index] = data_array[index-1]
-  else:
-    data_array[index] = (data_array[index-1] + data_array[index+1])/2.
-  return data_array
-
-def is_skinny(data_array,index):
-  """
-  Test whether a data value is an isolated outlier
-
-  Returns True if the data values adjacent to the test value are
-  less that 1/10 of the test value, i.e., the data point is a spike
-
-  @param data_array : numpy array
-
-  @param index : int
-
-  @return: boolean
-  """
-  amean   = mean(data_array)
-  test_value = abs(data_array[index]-amean)
-  if index == 0:
-    ref_value = abs(data_array[index+1] - amean)
-  elif index == len(data_array)-1:
-    ref_value = abs(data_array[index-1] - amean)
-  else:
-    ref_value = (data_array[index-1] + data_array[index+1])/2. - amean
-  if test_value > 10 * ref_value:
-    return True
-  else:
-    return False
-  
-def trim_extremes(data):
-  """
-  Remove extreme values from a data array.
-
-  Extreme values are those greater than 10x the standard deviation
-  and are 'skinny'.: numpy array
-
-  @param data : numpy array
-  """
-  data_array = array(data)
-  amean   = mean(data_array)
-  avar    = var(data_array)
-  astdev  = sqrt(avar)
-  amax = data_array.max()
-  amin = data_array.min()
-  # Check the maximum
-  if abs(amax-amean) > 10*astdev:
-    index = argmax(data_array)
-    #mylogger.debug("trim_extremes: testing max index")
-    if is_skinny(data_array,index):
-      data_array = clobber(data_array,index)
-      #mylogger.info("Clobbering index %d", index)
-  # check the minimum
-  if abs(amin-amean) > 10*astdev:
-    index = argmin(data_array)
-    #mylogger.debug("trim_extremess: testing min index")
-    if is_skinny(data_array,index):
-      data_array = clobber(data_array,index)
-      #mylogger.info("Clobbering index %d", index)
-  return data_array
 
 def set_plot_layout(nplots, rows=1, cols=1):
   """
