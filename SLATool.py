@@ -12,12 +12,20 @@ import numpy
 import os
 import time
 
+from matplotlib.font_manager import FontProperties
+from pylab import *
+
 from Data_Reduction import get_obs_dirs, get_obs_session
 from Data_Reduction.FITS.DSNFITS import FITSfile
-from Data_Reduction.FITS.SDFITSplotter import DSNFITSplotter
+from Data_Reduction.FITS.SDFITSplotter import DSNFITSplotter,make_legend_labels
 from DSMS import DSN_complex_of
 from MonitorControl import Observatory, Telescope
 from Radio_Astronomy import rms_noise
+
+fontP = FontProperties()
+fontP.set_size('x-small')
+
+colors = ["b", "g", "r", "c", "m", "y"]
 
 logger = logging.getLogger(__name__)
 
@@ -91,9 +99,12 @@ class SessionAnalyzer(object):
     for datafile in datafiles:
       self.logger.info("open_datafiles: %s", os.path.basename(datafile))
       examiner[dfindex]  = DSNFITSplotter(parent=self, FITSfile=datafile)
+      examiner[dfindex].datafile = datafile
       for table_key in examiner[dfindex].tables.keys():
         examiner[dfindex].tables[table_key].report_table()
       dfindex += 1
+    self.examiner_keys = examiner.keys()
+    self.examiner_keys.sort()
     self.logger.info("open_datafiles: started %d examiners" % 
                      len(examiner.keys()))
     return examiner
@@ -112,6 +123,44 @@ class SessionAnalyzer(object):
         else:
           self.sources[name] = [key]
     return self.sources.keys()
+
+  def get_good_weather_data(self):
+    """
+    finds usable weather data in all examiners
+    
+    True means that some table has good data but not necessarily all.
+    """
+    have_elev = False
+    have_Tsys = False
+    have_Tambient = False
+    have_pressure = False
+    have_humidity = False
+    have_windspeed = False
+    have_winddirec = False
+    for exkey in self.examiner_keys:
+      examiner = self.examiners[exkey]
+      self.logger.debug("tsys_summary: data file is %s", examiner.datafile)
+      # assume multiple tables are in time order
+      tablekeys = examiner.tables.keys()
+      tablekeys.sort
+      for tablekey in tablekeys:
+        table = examiner.tables[tablekey]
+        good_data = table.get_good_rows()
+        if good_data.has_key('elev'):
+          have_elev = True
+        if good_data.has_key('TSYS'):
+          have_Tsys = True
+        if good_data.has_key('Tambient'):
+          have_Tambient = True
+        if good_data.has_key('pressure'):
+          have_pressure = True
+        if good_data.has_key('humidity'):
+          have_humidity = True
+        if good_data.has_key('windspeed'):
+          have_windspeed = True
+        if good_data.has_key('winddirec'):
+          have_winddirec = True      
+    return good_data
   
   def get_average(self, source='67P_CG_201'):
     """
@@ -161,6 +210,181 @@ class SessionAnalyzer(object):
       sum_Tsys[polkey] /= sum_intgr[polkey]
     return x, sum_y, sum_Tsys, sum_intgr
     
+  def plot_elev_and_Tsys(self, figtitle, good_wx_data, savepath):
+    """
+    """
+    fig1, ax = subplots(nrows=1, ncols=2, squeeze=True)
+    ax2 = ax[0].twinx()
+    fig1.suptitle(figtitle)
+    fig1.set_size_inches(12,5, forward=True)
+    
+    # axes 0: elevation and Tsys (or avg pwr) time
+    if good_wx_data.has_key('elev') or good_wx_data.has_key('TSYS'):
+      ax[0].xaxis.set_major_formatter( DateFormatter('%H:%M') )
+    for key in self.examiner_keys:
+      table_keys = self.examiners[key].tables.keys()
+      table_keys.sort()
+      for tkey in table_keys:
+        table = self.examiners[key].tables[tkey]
+        good_wx_data = table.get_good_rows()
+        if good_wx_data.has_key('elev'):
+          # plot elevation vs time
+          ax[0].plot_date(good_wx_data['mpltime'],
+                        good_wx_data['elev'],"-k",label="elevation")
+        # axes 0, right side, plot system temperature or average power vs time
+        if good_wx_data.has_key('TSYS'):
+          for subch_idx in range(table.props['num cycles']):  # subchannels first
+            for beam in range(table.props['num beams']): # beams second
+              for pol in range(table.props['num IFs']): #pols third
+                label = make_legend_labels(dskeys=self.examiner_keys,
+                                   tbkeys=table_keys,
+                                   sckeys=range(table.props['num cycles']),
+                                   bmkeys=range(table.props['num beams']),
+                                   plkeys=range(table.props['num IFs']),
+                       dskey=key, tbkey=tkey, sckey=subch_idx, bmkey=beam, plkey=pol)
+                color_index = table.props['num beams']*(table.props['num cycles']*subch_idx + beam) + pol
+                ax2.plot_date(good_wx_data['mpltime'][subch_idx::table.props['num cycles']],
+                        good_wx_data['TSYS'][subch_idx][beam][pol], marker='.',
+                        color=colors[color_index], label=label)
+        # right axes: plot tsys or average power vs airmass
+        if good_wx_data.has_key('elev') and good_wx_data.has_key('TSYS'):
+          for subch in range(table.props['num cycles']):
+            for beam in range(table.props['num beams']):
+              for pol in range(table.props['num IFs']):
+                label = make_legend_labels(dskeys=self.examiner_keys,
+                                   tbkeys=table_keys,
+                                   sckeys=range(table.props['num cycles']),
+                                   bmkeys=range(table.props['num beams']),
+                                   plkeys=range(table.props['num IFs']),
+                       dskey=key, tbkey=tkey, sckey=subch_idx, bmkey=beam, plkey=pol)
+                color_index = table.props['num beams']*(table.props['num cycles']*subch_idx + beam) + pol
+                ax[1].plot(1/sin(pi*array(good_wx_data['elev'])/180.)[subch::table.props['num cycles']],
+                       good_wx_data['TSYS'][subch][beam][pol],
+                       color=colors[color_index],
+                       label=label)
+    if good_wx_data.has_key('elev') == False:
+      ax[0].text(0.5, 0.6,'bad elevation data',
+               horizontalalignment='center',
+               verticalalignment='center',
+               transform = ax[0].transAxes)
+    ax[0].set_xlabel("UT")
+    ax[0].set_ylabel("Elevation (deg)")
+    ax[0].grid()
+    if good_wx_data.has_key('TSYS'):
+      ax2.set_ylabel("T$_{sys}$ (K)")
+    else:
+      ax2.set_ylabel("average power")
+    ax2.grid()
+    fig1.autofmt_xdate()
+    if good_wx_data.has_key('elev') == False:
+      ax[1].text(0.5, 0.5,'bad elevation data',
+               horizontalalignment='center',
+               verticalalignment='center',
+               transform = ax[1].transAxes)         
+    ax[1].set_xlabel("Airmass")
+    ax[1].yaxis.set_major_formatter(NullFormatter())
+    ax[1].grid()
+    lines, labels = ax[1].get_legend_handles_labels()
+    fig1.legend(lines, labels, loc="upper right", ncol=1, prop = fontP)
+    fig1.show()
+    fig1.savefig(savepath+"-elev.png")
+
+  def plot_weather(self, good_wx_data, savepath):
+    """
+    """
+    fig2, wax = subplots(nrows=3, ncols=1, squeeze=True)
+    fig2.suptitle("Weather")
+    fig2.set_size_inches(6,3, forward=True)
+    fig2.subplots_adjust(hspace=0) # no space between plots in a column
+    fig2.subplots_adjust(left=0.15)
+    for key in self.examiner_keys:
+      table_keys = self.examiners[key].tables.keys()
+      table_keys.sort()
+      for tkey in table_keys:
+        table = self.examiners[key].tables[tkey]
+        good_wx_data = table.get_good_rows()
+        # left axes: temperature
+        if good_wx_data.has_key('Tambient'):
+          wax[0].plot_date(good_wx_data['mpltime'], good_wx_data['Tambient'],"-k")
+        # middle axes: pressure
+        if good_wx_data.has_key('pressure'):
+          wax[1].plot_date(good_wx_data['mpltime'], good_wx_data['pressure'],"-k")
+        # right axes: humidity
+        if good_wx_data.has_key('humidity'):
+          wax[2].plot_date(good_wx_data['mpltime'], good_wx_data['humidity'],"-k")
+    if good_wx_data.has_key('Tambient') or good_wx_data.has_key('pressure'):
+      wax[2].xaxis.set_major_formatter( DateFormatter('%H:%M') )
+    if good_wx_data.has_key('Tambient') == False:
+      wax[0].text(0.5,0.5,'bad ambient temperature data',
+                horizontalalignment='center',
+                verticalalignment='center',
+                transform = wax[0].transAxes)
+    wax[0].set_ylabel("Temp (C)")
+    wax[0].grid(True)
+    if good_wx_data.has_key('pressure'):
+      wax[1].yaxis.set_major_formatter( FormatStrFormatter('%6.2f') )
+    else:
+      wax[1].text(0.5,0.5,'bad pressure data',
+                horizontalalignment='center',
+                verticalalignment='center',
+                transform = wax[1].transAxes)
+    wax[1].grid(True)
+    wax[1].set_ylabel("Pres (mb)")
+    if good_wx_data.has_key('pressure'):
+      wax[1].yaxis.set_major_formatter( FormatStrFormatter('%6.2f') )
+    if good_wx_data.has_key('humidity') == False:
+      wax[2].text(0.5,0.5,'bad humidity data',
+                horizontalalignment='center',
+                verticalalignment='center',
+                transform = wax[2].transAxes)
+    wax[2].grid(True)
+    wax[2].set_ylabel("Humidity")
+    if good_wx_data.has_key('Tambient') or good_wx_data.has_key('pressure') or \
+      good_wx_data.has_key('humidity'):
+      fig2.autofmt_xdate()
+    fig2.show()
+    fig2.savefig(savepath+"-weather.png")
+
+  def plot_wind(self, good_wx_data, savepath):
+    """
+    """
+    fig3, wax3 = subplots(nrows=2, ncols=1, squeeze=True)
+    fig3.suptitle("Wind")
+    fig3.set_size_inches(6,4.5, forward=True)
+    fig3.subplots_adjust(hspace=0) # no space between plots in a column
+    for key in self.examiner_keys:
+      table_keys = self.examiners[key].tables.keys()
+      table_keys.sort()
+      for tkey in table_keys:
+        table = self.examiners[key].tables[tkey]
+        good_wx_data = table.get_good_rows()
+        # left axes: windspeed
+        if good_wx_data.has_key('windspeed'):
+          wax3[0].plot_date(good_wx_data['mpltime'],good_wx_data['windspeed'],"-k")
+        # right axes: wind direction
+        if good_wx_data.has_key('winddirec'):
+          wax3[1].plot_date(good_wx_data['mpltime'], good_wx_data['winddirec'],"-k")
+    if good_wx_data.has_key('windspeed') or good_wx_data.has_key('winddirec'):
+      wax3[1].xaxis.set_major_formatter( DateFormatter('%H:%M') )
+    if good_wx_data.has_key('windspeed') == False:
+      wax3[0].text(0.5,0.5,'bad wind speed data',
+                 horizontalalignment='center',
+                 verticalalignment='center',
+                 transform = wax3[0].transAxes)
+    wax3[0].set_ylabel("Speed (km/h)")
+    wax3[0].grid(True)
+    if good_wx_data.has_key('winddirec') == False:
+      wax3[1].text(0.5,0.5,'bad wind direction data',
+                 horizontalalignment='center',
+                 verticalalignment='center',
+                 transform = wax3[1].transAxes)
+    wax3[1].set_ylabel("Direction")
+    wax3[1].grid(True)
+    if good_wx_data.has_key('windspeed') or good_wx_data.has_key('winddirec'):
+      fig3.autofmt_xdate()
+    fig3.show()
+    fig3.savefig(savepath+"-wind.png")
+      
   def consolidate(self, tables=[], sources=[], bands=['22U']):
     """
     Merge selected data into a new SDFITS file
@@ -340,87 +564,4 @@ class SessionAnalyzer(object):
       self.examiners[new_exkey].file = savename
     self.logger.info("consolidate: created new examiner/plotter %d", new_exkey)
     return self.examiners[new_exkey]
-                                      
-  def fit_mean_power_to_airmass(self, Tvac_func, replace=False):
-    """
-    fits the mean power data vs airmass to the radiative transfer equation
-    
-    This assumes that every IF has a way of measuring power. The measured power
-    is a single value along the first axis of the data array (or last index in
-    a C/Python array).  If there are multiple records then they will be
-    averaged.
-    
-    @param Tvac_func - a function for system temperature with no atmosph or CBR
-    @type  Tvac_func - function(beam,pol)
-    """
-    def opacity_fitting(x, a, tau):
-      x_rad = numpy.deg2rad(x)
-      x_sec = 1/numpy.sin(x_rad)
-      return a + tau*x_sec
-    
-    for beam_idx in range(self.props['num beams']):
-      for IFidx in range(self.props['num IFs']):
-        self.logger.debug('fit_mean_power_to_airmass: processing IF%d', IFidx+1)
-        Tvac = Tvac_func(beam=beam_idx ,pol=IFidx)
-        pol = ['L','R'][IFidx]
-        msg = "estimated %sCP zenith Tsys in vacuum= %6.2f" % (pol, Tvac)
-        for ex in self.examiners.keys():
-          self.header.add_history(msg)
-          # average records here if needed.
-          subchannels = len(self.props['num cycles'])
-          self.logger.debug("fit_mean_power_to_airmass: subchannels: %s",
-                          subchannels)
-          for subchannel in subchannels:
-            subch = subchannels.index(subchannel)
-            # Get the data for this subchannel.
-            #   the following can be expressed as
-            #     mean_power = self.data['avgpower'][subch::2,IFidx,0,0,0]
-            #   or
-            #     mean_power = self.data['avgpower'][:,IFidx,0,0,0][subch::2]
-            #   or
-            #     mean_power = self.data[subch::2]['avgpower'][:,IFidx,0,0,0]
-            # assuming the first row is the same as the subchannel
-            mean_power = self.data['avgpower'][subch::2,IFidx,0,0,0]
-            elevation  = self.data['ELEVATIO'][subch::2]
-            # get an elevation array with the 'nan' and zero values removed
-            mask = ~(numpy.isnan(elevation) | numpy.equal(elevation, 0))
-            # these are the indices in the data for this subchannel
-            #     'where' and its friends return a tuple
-            indices = numpy.where(mask)[0]
-            self.logger.debug(
-             "fit_mean_power_to_airmass: good data rows for subchannel %d: %s",
-             subchannel, indices)
-            elv = elevation[mask]
-            # remove the items with the same indices from mean_power
-            pwr = mean_power[mask]
-            #self.logger.debug('fit_mean_power_to_airmass: elevations: %s', elv)
-            self.logger.debug('fit_mean_power_to_airmass: subch %d pwr shape: %s',
-                          subchannel, pwr.shape)
-            # fit the data
-            popt, pcov = curve_fit(opacity_fitting, elv, pwr, p0=[0, 0])
-            intercept, slope = popt[0], popt[1]
-            self.logger.debug(
-                         "fit_mean_power_to_airmass: intercept, slope: %f, %f",
-                         intercept, slope)
-            msg = \
-            "IF%d, subch%d gain=%9.3e counts, gain_slope=%9.3e counts/airmass"\
-                % (IFidx+1, subchannel, intercept, slope)
-            self.header.add_history(msg)
-            if replace:
-              gain = Tvac/intercept
-              K_per_am = gain*slope
-              self.logger.debug(
-           "fit_mean_power_to_airmass: convert power to Tsys for subch%s %sCP",
-                          subch+1, pol)
-              new_indices = numpy.where(self.data['CYCLE'] == subchannel)[0]
-              self.logger.debug(
-                          "fit_mean_power_to_airmass: table rows for Tsys: %s",
-                          new_indices)
-              self.logger.debug(
-                          "fit_mean_power_to_airmass: destination shape is %s",
-                          self.data['TSYS'][new_indices,IFidx,0,0,0].shape)
-              self.data['TSYS'][new_indices,IFidx,0,0,0] = gain * pwr
-            else:
-              self.logger.warning(
-                        "fit_mean_power_to_airmass: failed; Tsys not computed")
 

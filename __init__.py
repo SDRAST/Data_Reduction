@@ -92,7 +92,7 @@ def get_obs_session(project=None, dss=None, date=None):
     else:
       logger.warning("get_obs_session: no data for dss%2d", dss)
       return project, None, 0, 0, None
-  logger.debug("get_obs_session: for %s, DSS%d, %4d/%03d, raw data is %s",
+  logger.debug("get_obs_session: for %s, DSS%d, %4d/%03d",
                     project, dss, yr, doy)
   return project, dss, yr, doy
 

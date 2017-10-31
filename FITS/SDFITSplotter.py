@@ -49,7 +49,6 @@ from pylab import *
 from Data_Reduction import trim_extremes
 from Data_Reduction.FITS.SDFITSexaminer import DSNFITSexaminer
 from DatesTimes import UnixTime_to_MPL
-from Math.least_squares import savitzky_golay
 from support.text import clean_TeX
 
 logger = logging.getLogger(__name__)
@@ -311,6 +310,29 @@ class DSNFITSplotter(DSNFITSexaminer):
           fname = titlestr.replace("/","-").replace(" ","_")+".png"
           savefig(savepath+fname)
         return {"rms": rms, "Tsys": Tsys, "intgr": intgr}
+    
+    def plot_Tsys_vs_am(self, axes):
+      """
+      """
+      good_wx_data = self.get_good_rows()
+      if good_wx_data.has_key('elev') and good_wx_data.has_key('TSYS'):
+        for subch in range(self.props['num cycles']):
+          for beam in range(self.props['num beams']):
+            for pol in range(self.props['num IFs']):
+              label = make_legend_labels(
+                                        sckeys=range(self.props['num cycles']),
+                                        bmkeys=range(self.props['num beams']),
+                                        plkeys=range(self.props['num IFs']),
+                                        sckey=subch, bmkey=beam, plkey=pol)
+              color_index = self.props['num beams']*(self.props['num cycles'] \
+                           *subch + beam) + pol
+              axes.plot(1/sin(pi*array(good_wx_data['elev'])/180.)[
+                                             subch::self.props['num cycles']],
+                        good_wx_data['TSYS'][subch][beam][pol],
+                        color=plotcolors[color_index],
+                        label=label)
+      axes.set_xlabel("Airmass")
+      axes.grid()
       
   def plot_average(self, frame='RADI-LSR', source=None,
                    xlimits=None, ylimits=None):

@@ -248,7 +248,7 @@ class FITSfile(object):
     
     """
     if numrecs == 1:
-      time_dim = "(1,)"
+      time_dim = None
     else:
       # index order is spectrum, RA, dec, pol, time, beam
       time_dim = "(1,1,1,1,"+str(numrecs)+",1)" # FORTRAN order to C reverses
@@ -348,7 +348,7 @@ def get_table_stats(table):
    * each subchannel gets its own cycle
    * each on-source or off-source position gets its own scan 
   """
-  logger.debug("get_table_stats: for %s", table)
+  logger.debug("get_table_stats: for %s", table.name)
   # I suspect the following works because all are the same
   indices_for_nonzero_scans = table.data['SCAN'].nonzero()
   indices_for_nonzero_cycles = table.data['CYCLE'].nonzero()
@@ -382,7 +382,8 @@ def get_table_stats(table):
   n_rows = num_scans * num_cycles
   logger.debug("get_table_stats: %d scans of %d cycles", num_scans, num_cycles)
   if n_rows != len(table.data):
-    logger.info("get_table_stats: there is a scan without all its cycles")
+    diff = len(table.data) - n_rows
+    logger.info("get_table_stats: there are %d scans without all its cycles")
     complete_scans = []
     # select the rows with non-zero CYCLE for each of the scans
     for scan in scan_keys:
@@ -478,7 +479,7 @@ def session_props(table):
         props["num records"][cycle] = int(spectrumshape[1])
     else:
       props["num records"] = {1: 1}
-    logger.debug("session props:\n %s", props)
+    logger.debug("session_props:\n %s", props)
     return props, len(spectrumshape)
 
 def get_indices(num_indices, props,

@@ -35,6 +35,7 @@ from copy import copy
 from matplotlib.dates import date2num
 
 from scipy import interpolate
+from scipy.optimize import curve_fit
 
 # Third party packages
 from novas import compat as novas
@@ -533,14 +534,16 @@ class DSNFITSexaminer(object):
       if not good_el_data:
         self.logger.warning("get_good_rows: elevation data is bad")
       else:
-        self.logger.debug("get_good_rows: elevations: %s", elevation)
+        self.logger.debug("get_good_rows: elevations shape: %s",
+                          elevation.shape)
       #    system temperature
       if numpy.equal(self.data['TSYS'], 0.).all():
         good_tsys_data = False
+        self.logger.warning("get_good_rows: Tsys data is bad")
       else:
         good_tsys_data = True
-        self.logger.debug("get_good_rows: system temperatures: %s",
-                       self.data['TSYS'])
+        self.logger.debug("get_good_rows: system temperatures shape: %s",
+                       self.data['TSYS'].shape)
       #    ambient temperature
       tamb = self.data['TAMBIENT']
       mask = ~(numpy.isnan(tamb) | numpy.equal(tamb, 0))
@@ -589,6 +592,7 @@ class DSNFITSexaminer(object):
         good_data['winddirec'] = []
       if good_tsys_data:
         good_data['TSYS'] = {}
+      # now make the multi-level dict
       for cycle in self.cycle_keys: # this loops over subchannels
         cycle_idx = cycle_keys.index(cycle)
         if good_data['TSYS'].has_key(cycle_idx):
@@ -1139,6 +1143,116 @@ class DSNFITSexaminer(object):
       else:
         self.logger.error("reduce_line: no data window found")
         return None
+                                      
+    def fit_mean_power_to_airmass(self, Tvac_func, replace=False):
+      """
+      fits the mean power data vs airmass to the radiative transfer equation
+    
+      This assumes that every IF has a way of measuring power. The measured power
+      is a single value along the first axis of the data array (or last index in
+      a C/Python array).  If there are multiple records then they will be
+      averaged.
+    
+      @param Tvac_func - a function for system temperature with no atmosph or CBR
+      @type  Tvac_func - function(beam,pol)
+      """
+      def opacity_fitting(x, a, tau):
+        """
+        @param x : elevation in degrees
+        @type  x : numpy.array of float
+        
+        @param a : intercept
+        @type  a : float
+        
+        @param tau : slope
+        @type  tau : slope
+        """
+        x_rad = numpy.deg2rad(x)   # radians
+        x_sec = 1/numpy.sin(x_rad) # secant
+        return a + tau*x_sec
+    
+      for beam_idx in range(self.props['num beams']):
+        for IFidx in range(self.props['num IFs']):
+          self.logger.debug('fit_mean_power_to_airmass: processing IF%d', IFidx+1)
+          Tvac = Tvac_func(beam=beam_idx, pol=IFidx)
+          pol = ['L','R'][IFidx]
+          msg = "estimated %sCP zenith Tsys in vacuum= %6.2f" % (pol, Tvac)
+          self.header.add_history(msg)
+          # average records here if needed.
+          subch_IDs = range(self.props['num cycles'])
+          self.logger.debug("fit_mean_power_to_airmass: subchannels: %s",
+                          subch_IDs)
+          for subch in subch_IDs:
+            subchannel = subch+1
+            # Get the data for this subchannel.
+            #   the following can be expressed as
+            #     mean_power = self.data['avgpower'][subch::2,IFidx,0,0,0]
+            #   or
+            #     mean_power = self.data['avgpower'][:,IFidx,0,0,0][subch::2]
+            #   or
+            #     mean_power = self.data[subch::2]['avgpower'][:,IFidx,0,0,0]
+            # assuming the first row is the same as the subchannel.  We are
+            # using the first form.  In this form
+            # WVSR data has indices (row,IF,dec,RA,chan)
+            # SAO  data has indices (row,beam,time,IF,dec,RA,chan)
+            if self.props['num beams'] > 1:
+              mean_power = self.data['TSYS'][subch::2,beam_idx,:,IFidx,0,0,0]
+              elevation  = self.data['ELEVATIO'][subch::2,0,:,0,0,0,0]
+            elif self.props['time axis'] == False:
+              if 'avgpower' in self.data.columns.names:
+                mean_power = self.data['avgpower'][subch::2,IFidx,0,0,0]
+              else:
+                mean_power = self.data['TSYS'][subch::2,IFidx,0,0,0]
+              elevation  = self.data['ELEVATIO'][subch::2]
+            else:
+              self.logger.error("fit_mean_power_to_airmass: unknown data shape")
+              raise RuntimeError("unknown data shape")
+            pw_shape = mean_power.shape
+            el_shape = elevation.shape
+            self.logger.debug("fit_mean_power_to_airmass: mean_power shape is %s",
+                              pw_shape)
+            self.logger.debug("fit_mean_power_to_airmass: elevation shape is %s",
+                              el_shape)
+            if pw_shape != el_shape:
+              self.logger.error("fit_mean_power_to_airmass: shapes must be the same")
+              raise RuntimeError("shapes must be the same")
+            # get an elevation array with the 'nan' and zero values removed
+            mask = ~(numpy.isnan(elevation) | numpy.equal(elevation, 0))
+            self.logger.debug("fit_mean_power_to_airmass: mask shape is %s",
+                              mask.shape)
+            elv = elevation[mask]
+            # remove the items with the same indices from mean_power
+            pwr = mean_power[mask]
+            #self.logger.debug('fit_mean_power_to_airmass: elevations: %s', elv)
+            self.logger.debug('fit_mean_power_to_airmass: subch %d pwr shape: %s',
+                          subchannel, pwr.shape)
+            # fit the data
+            popt, pcov = curve_fit(opacity_fitting, elv, pwr, p0=[0, 0])
+            intercept, slope = popt[0], popt[1]
+            self.logger.info(
+             "fit_mean_power_to_airmass: B%dP%d sch%d intercept, slope: %f, %f",
+                         beam_idx+1, IFidx+1, subchannel, intercept, slope)
+            msg = \
+            "IF%d, subch%d gain=%9.3e counts, gain_slope=%9.3e counts/airmass"\
+                % (IFidx+1, subchannel, intercept, slope)
+            self.header.add_history(msg)
+            if replace:
+              gain = Tvac/intercept
+              K_per_am = gain*slope
+              self.logger.debug(
+           "fit_mean_power_to_airmass: convert power to Tsys for subch%s %sCP",
+                          subch+1, pol)
+              new_indices = numpy.where(self.data['CYCLE'] == subchannel)[0]
+              self.logger.debug(
+                          "fit_mean_power_to_airmass: table rows for Tsys: %s",
+                          new_indices)
+              self.logger.debug(
+                          "fit_mean_power_to_airmass: destination shape is %s",
+                          self.data['TSYS'][new_indices,IFidx,0,0,0].shape)
+              self.data['TSYS'][new_indices,IFidx,0,0,0] = gain * pwr
+            #else:
+            #  self.logger.warning(
+            #            "fit_mean_power_to_airmass: failed; Tsys not computed")
 
     class Data(object):
       """
