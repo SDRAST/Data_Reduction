@@ -175,7 +175,7 @@ if __name__ == "__main__":
                type = str,
                default = None,
                help = 'Date of observation as YEAR/DOY string')
-  p.add_argument('-D', '--DSS',
+  p.add_argument('-D', '--dss',
                dest = 'dss',
                type = int,
                default = None,
@@ -211,40 +211,5 @@ if __name__ == "__main__":
   else:
     year = None
     DOY = None
-  sa = SessionAnalyzer(project=args.project, year=year, DOY=DOY)
+  sa = SessionAnalyzer(project=args.project, dss=args.dss, year=year, DOY=DOY)
 
-
-"""
-  if args.date:
-    yearstr,doystr = args.date.split('/')
-    year = int(yearstr)
-    DOY = int(doystr)
-    projectdatapath, projworkpath, datapath = get_obs_dirs(args.project,
-                                                           args.dss, year, DOY,
-                                                           datafmt="FITS")
-  else:
-    session = get_obs_session(dss=args.dss, project=args.project,
-                              date=args.date, datafmt="FITS")
-    projectdatapath, projworkpath, datapath = get_obs_dirs(*session)
-    
-  examiner = {}
-  # Get a list of datafiles
-                                                   
-  # get the datafiles to be processed     
-  datafiles = glob.glob(datapath+args.name_pattern)
-  datafiles.sort()
-
-  dfindex = 0
-  if args.date:
-    doy = int(args.date.split('/')[1])
-  else:
-    doy = int(datapath.split('/')[-2])
-  mylogger.info("interactive found DOY %03d %d datafiles", doy, len(datafiles))
-  for datafile in datafiles:
-    mylogger.info("interactive opening %s", os.path.basename(datafile))
-    examiner[dfindex]  = DSNFITSplotter(datafile)
-    for table_key in examiner[dfindex].tables.keys():
-      examiner[dfindex].tables[table_key].report_table()
-    dfindex += 1
-  print "%d examiners" % len(examiner.keys())
-"""

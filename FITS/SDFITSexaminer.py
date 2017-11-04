@@ -117,7 +117,9 @@ class DSNFITSexaminer(object):
     """
     sources = []
     for key in self.tables.keys():
-      sources += list(self.tables[key].sources)
+      for source in self.tables[key].sources:
+        if source: # is not empty
+          sources.append(source)
     return support.lists.unique(sources)
   
   def save(self, filename):
@@ -278,17 +280,37 @@ class DSNFITSexaminer(object):
         return None
       return keys
     
-    def get_indices(self, scan=1, cycle=1, pol=1, beam=1, record=0):
+    def get_indices(self, scan=1, cycle=1, pol=1, beam=1, record=1,
+                    trimmed=False):
       """
       returns indices for getting one spectrum from SPECTRUM column
+      
+      @param scan : SCAN number
+      @type  scan : int
+  
+      @param cycle : CYLE number
+      @type  cycle : int
+  
+      @param beam : BEAM axis value
+      @type  beam : int
+  
+      @param IF : IF number or STOKES axis value
+      @type  IF : int
+  
+      @param record : 1-based TIME axis index (FITS/FORTRAN convention) 
+      @type  record : int
+  
+      @param trimmed : return tuple with 'RA' and 'dec' indices removed (always 0)
+      @type  trimmed : bool
       """
       scan_idx = self.scan_keys.index(scan)
       cycle_idx = self.cycle_keys.index(cycle)
       beam_idx = beam-1
       IF_idx = pol-1
+      record -= 1
       return get_indices(self.num_indices, self.props, scan_idx=scan_idx, 
                          cycle_idx=cycle_idx, beam_idx=beam_idx, IF_idx=IF_idx,
-                         record=record)
+                         record=record, trimmed=trimmed)
   
     def freqs(self, row=0):
       """
@@ -493,9 +515,9 @@ class DSNFITSexaminer(object):
     def make_directory(self, dest=sys.stdout):
       """
       """
-      labels = "Row Scan ch      Source       Sig Freq"
-      flines = "--- ---- -- ---------------- ---- ---------"
-      lbform = "%3d  %3d %2d %16s %5s %9.3f"
+      labels = "Row Scan ch      Source       Sig Freq      intg"
+      flines = "--- ---- -- ---------------- ---- --------- ----"
+      lbform = "%3d  %3d %2d %16s %5s %9.3f %4d"
       print >> dest, labels
       print >> dest, flines
       for row in self.rows:
@@ -503,7 +525,8 @@ class DSNFITSexaminer(object):
                                       self.data['CYCLE'][row],
                                       self.data['OBJECT'][row],
                                       self.data['SIG'][row],
-                                      self.data['OBSFREQ'][row]/1e6)        
+                                      self.data['OBSFREQ'][row]/1e6,
+                                      self.data['EPOSURE'][row])        
 
     def get_good_rows(self):
       """
@@ -614,35 +637,53 @@ class DSNFITSexaminer(object):
         # these are simple columns with multiple dimensions
         midnight_unixtime = time.mktime(time.strptime(
                                        self.data['DATE-OBS'][row], "%Y/%m/%d"))
+        scan = self.data['SCAN'][row]
+        cycle = self.data['CYCLE'][row]
+        cycle_idx = cycle - 1
         if self.props['time axis'] == True:
-          cycle = self.data['CYCLE'][row]
-          cycle_idx = cycle - 1
           nrecs = self.props['num records'][cycle]
           for rec in range(nrecs):
             first_time = self.data['CRVAL5'][row]
             rectime = first_time + rec*self.data['CDELT5'][row] # numpy.array
             unixtime = midnight_unixtime + rectime
-            datime = datetime.datetime.fromtimestamp(unixtime) # datetime.datetime
+            datime = datetime.datetime.fromtimestamp(unixtime) # datetime
             good_data['mpltime'].append(date2num(datime))
             good_data['elev'].append(self.data['ELEVATIO'][row,0,rec,0,0,0,0])
-            for beam in [0,1]:
-              for pol in [0,1]:
-                good_data['TSYS'][cycle_idx][beam][pol].append(self.data['TSYS'][row,beam,rec,pol,0,0,0])
-            good_data['Tambient'].append(self.data['TAMBIENT'][row,0,rec,0,0,0,0])
-            good_data['pressure'].append(self.data['PRESSURE'][row,0,rec,0,0,0,0])
-            good_data['humidity'].append(self.data['HUMIDITY'][row,0,rec,0,0,0,0])
+            for beam_idx in range(self.props["num beams"]):
+              beam = beam_idx+1
+              for pol_idx in range(self.props["num IFs"]):
+                pol = pol_idx+1
+                indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
+                                           beam=beam, record=rec)
+                good_data['TSYS'][cycle_idx][beam_idx][pol_idx].append(
+                                                    self.data['TSYS'][indices])
+            good_data['Tambient'].append(self.data['TAMBIENT'][indices])
+            good_data['pressure'].append(self.data['PRESSURE'][indices])
+            good_data['humidity'].append(self.data['HUMIDITY'][indices])
             if good_wspe_data:
-              good_data['windspeed'].append(self.data['WINDSPEE'][row,0,rec,0,0,0,0])
+              good_data['windspeed'].append(self.data['WINDSPEE'][indices])
             if good_wdir_data:
-              good_data['winddirec'].append(self.data['WINDDIRE'][row,0,rec,0,0,0,0])
+              good_data['winddirec'].append(self.data['WINDDIRE'][indices])
         else:
-          good_data['unixtime'] = self.data['UNIXtime'][row]
+          unixtime = self.data['UNIXtime'][row]
           datime = datetime.datetime.fromtimestamp(unixtime) # datetime object
           good_data['mpltime'].append(date2num(datime))
           good_data['elev'].append(self.data['ELEVATIO'][row])
+          for beam_idx in range(self.props["num beams"]):
+            beam = beam_idx+1
+            for pol_idx in range(self.props["num IFs"]):
+              pol = pol_idx+1
+              self.logger.debug(
+                           "get_good_rows: scan=%d, cycle=%d, beam=%d, pol=%d",
+                           scan, cycle, beam, pol)
+              indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
+                                         beam=beam)
+              self.logger.debug("get_good_rows: indices are %s", indices)
+              good_data['TSYS'][cycle_idx][beam_idx][pol_idx].append(
+                                                    self.data['TSYS'][indices])
           good_data['Tambient'].append(self.data['TAMBIENT'][row])
           good_data['pressure'].append(self.data['PRESSURE'][row])
-          good['humidity'].append(self.data['HUMIDITY'][row])
+          good_data['humidity'].append(self.data['HUMIDITY'][row])
           if good_wspe_data:
             good_data['windspeed'].append(self.data['WINDSPEE'][row])
           if good_wdir_data:
@@ -669,7 +710,7 @@ class DSNFITSexaminer(object):
           idx = len(cellshape)*[[0]]
           return self.data[column][row][idx][0]
       
-    def prepare_summary_arrays(self):
+    def prepare_summary_arrays(self, num_chans):
       """
       Initiate dict of empty spectra indexed by sub-channel, beam and polariz'n
       
@@ -691,7 +732,7 @@ class DSNFITSexaminer(object):
             for IF_idx in range(self.props["num IFs"]): 
               pol = IF_idx+1
               spectra[scan_idx][subch_idx][beam_idx][IF_idx] = \
-                                        numpy.zeros((self.props['num chans'],))
+                                                      numpy.zeros((num_chans,))
               self.logger.debug(
                "prepare_summary_arrays: for scan %d subch %d, beam %d, pol %d",
                scan, subch, beam, pol)
@@ -699,7 +740,7 @@ class DSNFITSexaminer(object):
                           spectra[scan_idx][subch_idx][beam_idx][IF_idx].shape)
       return spectra
       
-    def prepare_summary_images(self):
+    def prepare_summary_images(self, num_chans):
       """
       Initiate dict of image arrays for SPECTRUM data
       
@@ -717,7 +758,7 @@ class DSNFITSexaminer(object):
           for IF_idx in range(self.props["num IFs"]): 
             pol = IF_idx+1
             images[subch_idx][beam_idx][IF_idx] = \
-                                      numpy.zeros((self.props['num chans'], 1))
+                               numpy.zeros((num_chans, 1))
             self.logger.debug(
                        "prepare_summary_images: for subch %d, beam %d, pol %d",
                        subch, beam, pol)

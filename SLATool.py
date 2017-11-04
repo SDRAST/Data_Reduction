@@ -221,11 +221,16 @@ class SessionAnalyzer(object):
     # axes 0: elevation and Tsys (or avg pwr) time
     if good_wx_data.has_key('elev') or good_wx_data.has_key('TSYS'):
       ax[0].xaxis.set_major_formatter( DateFormatter('%H:%M') )
+    num_ex = len(self.examiner_keys)
     for key in self.examiner_keys:
       table_keys = self.examiners[key].tables.keys()
+      num_tb = len(table_keys)
       table_keys.sort()
       for tkey in table_keys:
         table = self.examiners[key].tables[tkey]
+        num_cy = table.props['num cycles']
+        num_bm = table.props['num beams']
+        num_pl = table.props['num IFs']
         good_wx_data = table.get_good_rows()
         if good_wx_data.has_key('elev'):
           # plot elevation vs time
@@ -233,31 +238,41 @@ class SessionAnalyzer(object):
                         good_wx_data['elev'],"-k",label="elevation")
         # axes 0, right side, plot system temperature or average power vs time
         if good_wx_data.has_key('TSYS'):
-          for subch_idx in range(table.props['num cycles']):  # subchannels first
-            for beam in range(table.props['num beams']): # beams second
-              for pol in range(table.props['num IFs']): #pols third
+          for subch_idx in range(num_cy):  # subchannels first
+            for beam in range(num_bm): # beams second
+              for pol in range(num_pl): #pols third
                 label = make_legend_labels(dskeys=self.examiner_keys,
-                                   tbkeys=table_keys,
-                                   sckeys=range(table.props['num cycles']),
-                                   bmkeys=range(table.props['num beams']),
-                                   plkeys=range(table.props['num IFs']),
-                       dskey=key, tbkey=tkey, sckey=subch_idx, bmkey=beam, plkey=pol)
-                color_index = table.props['num beams']*(table.props['num cycles']*subch_idx + beam) + pol
+                                           tbkeys=table_keys,
+                                           sckeys=range(num_cy),
+                                           bmkeys=range(num_bm),
+                                           plkeys=range(num_pl),
+                                           dskey=key,
+                                           tbkey=tkey, 
+                                           sckey=subch_idx,
+                                           bmkey=beam,
+                                           plkey=pol)
+                color_index = (subch_idx*num_bm + beam)*num_pl + pol
+                #color_index = num_bm*(num_bm*subch_idx + beam) + pol
                 ax2.plot_date(good_wx_data['mpltime'][subch_idx::table.props['num cycles']],
                         good_wx_data['TSYS'][subch_idx][beam][pol], marker='.',
                         color=colors[color_index], label=label)
         # right axes: plot tsys or average power vs airmass
         if good_wx_data.has_key('elev') and good_wx_data.has_key('TSYS'):
-          for subch in range(table.props['num cycles']):
-            for beam in range(table.props['num beams']):
-              for pol in range(table.props['num IFs']):
+          for subch in range(num_cy):
+            for beam in range(num_bm):
+              for pol in range(num_pl):
                 label = make_legend_labels(dskeys=self.examiner_keys,
-                                   tbkeys=table_keys,
-                                   sckeys=range(table.props['num cycles']),
-                                   bmkeys=range(table.props['num beams']),
-                                   plkeys=range(table.props['num IFs']),
-                       dskey=key, tbkey=tkey, sckey=subch_idx, bmkey=beam, plkey=pol)
-                color_index = table.props['num beams']*(table.props['num cycles']*subch_idx + beam) + pol
+                                           tbkeys=table_keys,
+                                           sckeys=range(num_cy),
+                                           bmkeys=range(num_bm),
+                                           plkeys=range(num_pl),
+                                           dskey=key,
+                                           tbkey=tkey,
+                                           sckey=subch,
+                                           bmkey=beam,
+                                           plkey=pol)
+                color_index = (subch*num_bm + beam)*num_pl + pol
+                #color_index = table.props['num beams']*(table.props['num cycles']*subch_idx + beam) + pol
                 ax[1].plot(1/sin(pi*array(good_wx_data['elev'])/180.)[subch::table.props['num cycles']],
                        good_wx_data['TSYS'][subch][beam][pol],
                        color=colors[color_index],

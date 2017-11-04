@@ -94,18 +94,39 @@ class DSNFITSplotter(DSNFITSexaminer):
         self.__setattr__(attr, table.__getattribute__(attr))
       self.logger = logging.getLogger(parent.logger.name+".Plotter")
 
-    def figure_rows_and_columns(self, nspectra):
+    #------------------------ Plotter methods ---------------------------------
+    
+    def figure_rows_and_columns(self, naxes):
       """
+      Computes number of rows and columns for 'subplots'
+      
+      @param naxes : number of subplots (axes) needed
+      @type  naxes : int
       """
-      cols = int(sqrt(nspectra))
-      rows = int(ceil(float(nspectra)/cols))
+      cols = int(sqrt(naxes))
+      rows = int(ceil(float(naxes)/cols))
       self.logger.debug("figure_rows_and_columns: %d rows, %d columns",
                         rows, cols)
       return rows, cols
       
     def init_multiplot(self, title, nrows, ncols, **kwargs): 
       """
-      multiple plots sharing common X and Y axis, no space between them
+      create multiple plots sharing common X and Y axis, no space between them
+      
+      @param title : figure title
+      @type  title : str
+      
+      @param nrows : number of rows of subplots
+      @type  nrows : int
+      
+      @param ncols : number of columns of subplots
+      @type  ncols : int
+      
+      @param width : optional keyword argument for figure width (in)
+      @type  width : float
+      
+      @param heigth : optional keyword argument for figure heigth (in)
+      @type  height : float
       """
       if kwargs.has_key("width"):
         width = ncols * kwargs["width"] # inches
@@ -121,9 +142,21 @@ class DSNFITSplotter(DSNFITSexaminer):
       fig.suptitle(title)
       return fig, ax
     
-    def show_spectra(self, rows=None):
+    def show_all_spectra(self, rows=None, IFspectra=False):
       """
+      Plot spectra from a Table
+      
+      In each subplot are all the spectra for each beam and polarization from
+      one row. If there are multiple records in a row, all records are plotted
+      (not the average over records)
+      
+      @param rows : optional list of table rows; default: all
+      @type  rows : list of int
+      
+      @param IFspectra : plot IFSPECTR if there is one; default: False
+      @type  IFspectra : bool
       """
+      # gets spectra from SPECTRUM column with RA and dec indices removed
       if rows == None:
         spectra = self.get_spectra(self.row_keys)
       else:
@@ -134,18 +167,47 @@ class DSNFITSplotter(DSNFITSexaminer):
         for col in range(ncols):
           specidx = row*ncols + col
           scan = self.data['SCAN'][specidx]
+          cycle = self.data['CYCLE'][specidx]
+          cycle_idx = self.cycle_keys.index(cycle)
           self.logger.debug("show_spectra: doing row %d column %d spectrum %d",
                             row, col, specidx)
-          spec = spectra[specidx]
-          nbeams, nrecs, npols, nchans = spec.shape
+          spec = spectra[specidx] # returns spectra from one row
+          if self.props['full Stokes']:
+            if "IFSPECTR" in self.data.columns.names and IFspectra:
+              nchans = self.props['num IFspec chans']
+              npols = self.props['num IFs']
+            else:
+              nchans = self.props['num chans']
+              npols = spec.shape[0]
+          else:
+            nchans = self.props['num chans']
+            npols = self.props['num IFs']
+          nbeams = self.props['num beams']
+          self.logger.debug("show_spectra: %d channels, %d pols", nchans, npols)
+          # THIS IS A HACK; assume both cycles have the same number of records
+          nrecs = self.props['num records'][1] # WVSR2SDFITS needs fixing.
           for rec in range(nrecs):
+            record = rec+1
             symbol = plotsymbols[rec % 20]
-            for beam in range(nbeams):
-              for pol in range(npols):
-                color = plotcolors[beam*npols+pol % 5]
-                trimmed = trim_extremes(spec[beam, rec, pol])
-                ax[row][col].plot(trimmed, color+',',
-                          label="rec"+str(rec)+" B"+str(beam+1)+"P"+str(pol+1))
+            for beam_idx in range(nbeams):
+              beam = beam_idx+1
+              for pol_idx in range(npols):
+                pol = pol_idx+1
+                # indices without row (0), RA (-1), dec (-2)
+                if len(spec.shape) == 4:
+                  indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
+                                             beam=beam, record=record,
+                                             trimmed=True)[1:]
+                elif len(spec.shape) == 2:
+                  indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
+                                             trimmed=True)[1:]
+                self.logger.debug("show_all_spectra: indices: %s", indices)
+                color = plotcolors[beam_idx*npols+pol_idx % 5]
+                trimmed = trim_extremes(spec[indices])
+                label = self.make_legend_labels(sckey=cycle_idx,
+                                                bmkey=beam_idx,
+                                                plkey=pol_idx)
+                ax[row][col].plot(trimmed, color+',', label=label)
           ax[row][col].grid(True)
           ax[row][col].text(0.5, 0.95, 'scan '+str(scan),
                             transform=ax[row][col].transAxes,
@@ -160,8 +222,30 @@ class DSNFITSplotter(DSNFITSexaminer):
       fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
       show()
     
+    def make_legend_labels(self, dskey=None, tbkey=None, sckey=None,
+                           bmkey=None, plkey=None):
+      dskeys=[]
+      tbkeys=[]
+      sckeys = range(self.props['num cycles'])
+      bmkeys = range(self.props['num beams'])
+      if self.props['full Stokes']:
+        plkeys = range(4)
+      else:
+        plkeys = range(self.props['num IFs'])
+      return make_legend_labels(dskeys=dskeys, tbkeys=tbkeys, sckeys=sckeys,
+                                bmkeys=bmkeys, plkeys=plkeys,
+                                dskey=dskey, tbkey=tbkey, sckey=sckey,
+                                bmkey=bmkey, plkey=plkey)
+                                
     def plot_BPSW_spectra(self, spectra=None, rows=None):
       """
+      plot reduced beam and position switched spectra
+      
+      @param spectra : optional dict of reduced spectra from 'BPSW_spectra()'
+      @type  spectra : numpy array
+      
+      @param rows : optional list of table rows to compute spectra; deault: all
+      @type  rows : list of int
       """
       if spectra:
         npairs = len(spectra)
@@ -208,7 +292,8 @@ class DSNFITSplotter(DSNFITSexaminer):
       
       We need to check self.data['OBSMODE']
       
-      Calculation should be moved to 'Table' class
+      @param scans : list of scan numbers, ons and offs
+      @type  scans : list of int
       """
       if scans == []:
         scans = self.scan_keys
@@ -238,10 +323,51 @@ class DSNFITSplotter(DSNFITSexaminer):
         heading += " %8.3f MHz" % (self.data['OBSFREQ'][row]/1e6)
         title(heading)
         show()
+
+    def plot_line(self, rows=[], window=(-100,100),
+                    frame="RADI-OBJ", source='67P', savepath=None):
+      """
+      plot reduced averaged spectral lines (from 'reduce_line()) for both pols
+      
+      @param rows : optional rows to include; default: all
+      @type  rows : list of int
+      
+      @param window : optional left and right limits of the X axis (-100,100)
+      @type  window : tuple of float
+      
+      @param frame : optional reference frame for Doppler calc ("RADI-OBJ")
+      @type  frame : str
+      
+      @param source : source name for Doppler calculation; default: 67P
+      @type  source : str
+      
+      @param savepath : optional path for saved image; default: no save
+      @type  savepath : str
+      """
+      try:
+        x, y, rms, Tsys, intgr = self.reduce_line(rows=rows, window=window,
+                                   frame=frame, source=source)
+      except TypeError:
+        self.logger.error("plot_line: nothing to plot")
+      else:
+        figure()
+        plot(x, y[0], label="Pol1")
+        plot(x, y[1], label="Pol2")
+        grid()
+        xlim(*window)
+        legend(prop=fontP)
+        titlestr = source+" DSS-"+str(self.dss)+" "+self.datestr+" "+self.timestr
+        title(titlestr)
+        xlabel("$V_{LSR}$ (km s$^{-1}$")
+        ylabel("$T_{ant}$ (K)")
+        if savepath:
+          fname = titlestr.replace("/","-").replace(" ","_")+".png"
+          savefig(savepath+fname)
+        return {"rms": rms, "Tsys": Tsys, "intgr": intgr}
     
     def plot_Tsys(self):
       """
-      We need to figure out how to plot
+      Plots of system tempearture for all subchannels, beams and pols
       
       If there is no time axis then there is a time and a Tsys for every scan,
       cycle and pol, that is, four plots over rows.
@@ -285,34 +411,13 @@ class DSNFITSplotter(DSNFITSexaminer):
             titlestr = clean_TeX(self.data['DATE-OBS'][0])
             title(titlestr)
         fig.autofmt_xdate()
-
-    def plot_line(self, rows=[], window=(-100,100),
-                    frame="RADI-OBJ", source='67P', savepath=None):
-      """
-      """
-      try:
-        x, y, rms, Tsys, intgr = self.reduce_line(rows=rows, window=window,
-                                   frame=frame, source=source)
-      except TypeError:
-        self.logger.error("plot_line: nothing to plot")
-      else:
-        figure()
-        plot(x, y[0], label="Pol1")
-        plot(x, y[1], label="Pol2")
-        grid()
-        xlim(*window)
-        legend(prop=fontP)
-        titlestr = source+" DSS-"+str(self.dss)+" "+self.datestr+" "+self.timestr
-        title(titlestr)
-        xlabel("$V_{LSR}$ (km s$^{-1}$")
-        ylabel("$T_{ant}$ (K)")
-        if savepath:
-          fname = titlestr.replace("/","-").replace(" ","_")+".png"
-          savefig(savepath+fname)
-        return {"rms": rms, "Tsys": Tsys, "intgr": intgr}
     
     def plot_Tsys_vs_am(self, axes):
       """
+      plot system temperature versus airmass
+      
+      @param axes : subplot to use
+      @type  axes : matplotlib.axes.Axes object
       """
       good_wx_data = self.get_good_rows()
       if good_wx_data.has_key('elev') and good_wx_data.has_key('TSYS'):
@@ -333,7 +438,9 @@ class DSNFITSplotter(DSNFITSexaminer):
                         label=label)
       axes.set_xlabel("Airmass")
       axes.grid()
-      
+
+  #--------------------------- DSNFITSplotter methods -------------------------
+  
   def plot_average(self, frame='RADI-LSR', source=None,
                    xlimits=None, ylimits=None):
     """
@@ -469,6 +576,8 @@ class DSNFITSplotter(DSNFITSexaminer):
     title(titlestr)
     fig.autofmt_xdate()
 
+#----------------------------------- module functions -------------------------
+
 def make_legend_labels(dskeys=[], tbkeys=[], sckeys=[], bmkeys=[], plkeys=[],
                        dskey=None, tbkey=None, sckey=None, bmkey=None, plkey=None):
   """
@@ -487,7 +596,7 @@ def make_legend_labels(dskeys=[], tbkeys=[], sckeys=[], bmkeys=[], plkeys=[],
   if dskey != None and len(dskeys) > 1:
     label += "ds"+str(dskey+1)
   if tbkey != None and len(tbkeys) > 1:
-    label += " tb"+str(dskey+1)
+    label += " tb"+str(tbkey+1)
   if sckey != None and len(sckeys) > 1:
     label += " sc"+str(sckey+1)
   if bmkey != None and len(bmkeys) > 1:

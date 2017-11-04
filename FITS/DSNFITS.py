@@ -383,7 +383,8 @@ def get_table_stats(table):
   logger.debug("get_table_stats: %d scans of %d cycles", num_scans, num_cycles)
   if n_rows != len(table.data):
     diff = len(table.data) - n_rows
-    logger.info("get_table_stats: there are %d scans without all its cycles")
+    logger.info("get_table_stats: there are %d scans without all its cycles",
+                diff)
     complete_scans = []
     # select the rows with non-zero CYCLE for each of the scans
     for scan in scan_keys:
@@ -483,25 +484,59 @@ def session_props(table):
     return props, len(spectrumshape)
 
 def get_indices(num_indices, props,
-                scan_idx=0, cycle_idx=0, beam_idx=0, IF_idx=0, record=0):
+                scan_idx=0, cycle_idx=0, beam_idx=0, IF_idx=0, record=0,
+                trimmed=False):
   """
-  get the row and construct a tuple for a data array index
+  get the row and construct a tuple for a FITS data array index
   
   The maximum is (beam,record,IF,0,0) which will return a spectrum or whatever
   is in the first column of the multi-dimensional array.
   
+  In FITS convention, lists start with 1. For Python, subtract 1 (if the list
+  is continuous)
+  
+  @param num_indices : number of indices in the SPECTRUM array
+  @type  num_indices : int
+  
+  @param props : table properties
+  @type  props : dict
+  
+  @param scan_idx : index in list of SCAN numbers
+  @type  scan_idx : int
+  
+  @param cycle_idx : index in list of CYLE numbers
+  @type  cycle_idx : int
+  
+  @param beam_idx : index in list of BEAM axis values
+  @type  beam_idx : int
+  
+  @param IF_idx : index in a list of IF numbers
+  @type  IF_idx : int
+  
+  @param record : index in list of TIME axis values
+  @type  record : int
+  
+  @param trimmed : return tuple with 'RA' and 'dec' indices removed (always 0)
+  @type  trimmed : bool
   """
   row = props["num cycles"]*scan_idx + cycle_idx
   if num_indices < 3:
     raise RuntimeError("minimum data array index is 'channel, RA, dec'")
   elif num_indices == 3:
-    return (row,0,0)
+    # returns row, dec, RA
+    index_tuple =  (row,0,0)
   elif num_indices == 4:
-    return (row,IF_idx,0,0)
+    # returns s row, IF, dec, RA
+    index_tuple =  (row,IF_idx,0,0)
   elif num_indices == 5:
-    return (row,record,IF_idx,0,0)
+    index_tuple =  (row,record,IF_idx,0,0)
   elif num_indices == 6:
-    return (row,beam_idx,record,IF_idx,0,0)
+    index_tuple =  (row,beam_idx,record,IF_idx,0,0)
   else:
     raise RuntimeError("cannot have more that 6 axes in SPECTRUM array")
+    index_tuple = (0,0)
+  if trimmed:
+    return index_tuple[:-2]
+  else:
+    return index_tuple
 
