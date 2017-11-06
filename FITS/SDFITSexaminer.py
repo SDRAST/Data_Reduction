@@ -45,8 +45,8 @@ import support.lists
 
 from Astronomy import c, MJD, v_sun
 from Astronomy.redshift import doppler_radio, doppler_optical, doppler_relat
-from Data_Reduction.FITS.DSNFITS import get_indices
-from Data_Reduction.FITS.DSNFITS import get_table_stats, session_props
+from Data_Reduction import clobber
+from Data_Reduction.FITS.DSNFITS import get_indices, get_table_stats 
 from DatesTimes import UnixTime_to_datetime
 from MonitorControl.BackEnds import get_freq_array
 from MonitorControl.Configurations.CDSCC.FO_patching import DistributionAssembly
@@ -191,7 +191,7 @@ class DSNFITSexaminer(object):
       self.scan_keys, self.cycle_keys, self.row_keys, self.obsmodes \
                                                         = get_table_stats(self)
       self.rows = self.data['CYCLE'].nonzero()[0] # valid data
-      self.props, self.num_indices = session_props(self)
+      self.props, self.num_indices = self.properties()
       datashape = extension.data['SPECTRUM'].shape
       self.BE = self.header['BACKEND']
       if self.BE == 'SAO spectrometer':
@@ -547,7 +547,7 @@ class DSNFITSexaminer(object):
       num_scans = len(scan_keys)
       num_cycles = len(cycle_keys)
       num_rows = len(row_keys)
-      props, num_indices = session_props(self) # session properties
+      props, num_indices = self.properties() # table properties
       # check the data:
       #    elevations
       elevation = self.data['ELEVATIO']
@@ -1295,6 +1295,119 @@ class DSNFITSexaminer(object):
             #  self.logger.warning(
             #            "fit_mean_power_to_airmass: failed; Tsys not computed")
 
+    def properties(self):
+      """
+      get table properties
+  
+      properties::
+        num chans      - number of spectrometer channels in diagnostic spectra
+        num IFs        - at most two, one per pol
+        full Stokes    - four Stkes parameters instead of an IF for each pol
+        time axis      - True if scan is divided into records
+        num beams      - number of beams
+        num records    - if 'time axis', number of records in each scan
+      Notes
+      =====
+       * In a DSN SDFITS file there is only one backend
+       * If there is a time axis, the number of records per scan may differ
+       * A subchannel is a piece of band for a spectrometer with coarse and fine
+       channels
+       * cycles are used for dfferent subchannels and for position switching
+      """
+      props = {}
+      # most parameters must be the same for all rows in a session
+      spectrumshape = self.data['SPECTRUM'][0].shape # for common dims
+      props["num cycles"] = \
+               len(numpy.unique(self.data['CYCLE'][self.data['CYCLE'] != 0]))
+      if len(spectrumshape) == 3: # (dec, RA, freq)
+        # bare minimum SPECTRUM dimensions
+        props["num chans"] = int(spectrumshape[-1])
+        props["num IFs"] = 1        # no polarization axis
+        props["num beams"] = 1      # no beam axis
+      elif len(spectrumshape) >= 4: # (at least pol, dec, RA, freq)
+        # one beam with polarization at least
+        props["num chans"] = int(spectrumshape[-1])
+        props["num IFs"] = 2
+        if spectrumshape[-4] == 4:
+          # has STOKES dimension
+          props["num beams"] = 1     # no beam axis
+          props["full Stokes"] = True
+          if 'IFSPECTR' in self.data.columns.names:
+            props["num IFs"] = 2
+            IFspecshape = self.data['IFSPECTR'][0].shape
+            props["num IFspec chans"] = int(IFspecshape[-1])
+          else: # must be 3 or less
+            props["num _IFs"] = 1
+            self.logger.warning(
+                    "properties: no IF data; will use Stokes I for monitoring")
+            props["num IFspec chans"] = props["num chans"]
+        elif spectrumshape[-4] == 2:
+          # has straight pols (L,R or H,V)
+          props["num IFs"] = 2
+          props["full Stokes"] = False
+          props["num beams"] = 1     # no beam axis
+        if len(spectrumshape) >= 5: # (time, pol, dec, RA, freq)
+          props["time axis"] = True
+          if len(spectrumshape) == 5:
+            props["num beams"] = 1     # no beam axis
+        else:
+          props["time axis"] = False
+        if len(spectrumshape) == 6: # (beam, time, pol, dec, RA, freq)
+          props["num beams"] = int(spectrumshape[0])
+        else:
+          props["num beams"] = 1
+        # time axis length may vary due to corrupted records
+        if len(spectrumshape) >= 5: # (time, pol, dec, RA, freq)
+          props["num records"] = {}
+          cycle_indices = range(props["num cycles"])
+          for cycle_idx in cycle_indices: # check each cycle
+            cycle = self.data['CYCLE'][cycle_idx]
+            spectrumshape = self.data['SPECTRUM'][cycle_idx].shape
+            # just do the first scan
+            props["num records"][cycle] = int(spectrumshape[1])
+        else:
+          props["num records"] = {}
+          for cycle in self.cycle_keys:
+            props["num records"][cycle] = 1
+        self.logger.debug("properties:\n %s", props)
+        return props, len(spectrumshape)
+
+    def remove_tones(self, rows=None):
+      """
+      """
+      if rows:
+        pass
+      else:
+        rows = self.row_keys
+      # the nearest tone below the center frequency
+      for row in rows:
+        freq_offset = self.data['OBSFREQ'][row] - \
+                                            round(self.data['OBSFREQ'][row],-6)
+        self.logger.debug("remove_tones: frequency offset = %d", freq_offset)
+        num_chans = self.props['num chans']
+        # the center of the band is the lowest channel of the upper half
+        cntr_chan = num_chans/2
+        # the nearest tone below the center channel
+        chan_offset = round(num_chans*freq_offset/self.data['BANDWIDT'][row])
+        self.logger.debug("remove_tones: channel offset = %d", chan_offset)
+        number_of_tones = int(self.data['BANDWIDT'][row]/1e6)
+        tone_spacing = self.props['num chans']/number_of_tones
+        
+        for tone in range(-number_of_tones/2, number_of_tones/2):
+          if chan_offset > 0:
+            # there are more tones above the tone nearest the center than below
+            tone += 1
+          tone_channel = cntr_chan - chan_offset + tone*tone_spacing
+          self.logger.debug("remove_tones: tone %d channel = %d",
+                            tone, tone_channel)
+          if self.props['full Stokes']:
+            pols = range(4)
+          else:
+            pols = self.props['num IFs']
+          for pol in pols:
+            self.data['SPECTRUM'][row][pol,0,0] = clobber(
+                             self.data['SPECTRUM'][row][pol,0,0], tone_channel)
+      
     class Data(object):
       """
       A subset of data extracted from an average difference spectrum

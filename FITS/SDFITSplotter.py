@@ -49,6 +49,7 @@ from pylab import *
 from Data_Reduction import trim_extremes
 from Data_Reduction.FITS.SDFITSexaminer import DSNFITSexaminer
 from DatesTimes import UnixTime_to_MPL
+from support.graphics import get_screen_resolution
 from support.text import clean_TeX
 
 logger = logging.getLogger(__name__)
@@ -96,22 +97,55 @@ class DSNFITSplotter(DSNFITSexaminer):
 
     #------------------------ Plotter methods ---------------------------------
     
-    def figure_rows_and_columns(self, naxes):
+    def figure_rows_and_columns(self, naxes, **kwargs):
       """
       Computes number of rows and columns for 'subplots'
       
       @param naxes : number of subplots (axes) needed
       @type  naxes : int
       """
-      cols = int(sqrt(naxes))
-      rows = int(ceil(float(naxes)/cols))
+      # get maximum number of rows and columns
+      screensize = get_screen_resolution()
+      widthIN, heightIN  = screensize['width']/100., screensize['height']/100.
+      freewidth, freeheight = 0.95*widthIN, 0.95*heightIN
+      self.logger.debug("figure_rows_and_columns: width available = %f in",
+                        freewidth)
+      self.logger.debug("figure_rows_and_columns: height available = %f in",
+                        freeheight)
+      if kwargs.has_key("width"):
+        width = kwargs["width"] # inches
+      else:
+        width = 4
+      if kwargs.has_key("heigth"):
+        height = kwargs["width"] # inches
+      else:
+        height = 4
+      max_cols = int(round(freewidth/width))
+      max_rows = int(round(freeheight/height))
+      self.logger.debug("figure_rows_and_columns: max cols and rows: %d,%d",
+                        max_cols, max_rows)
+      max_graphs = max_cols*max_rows
+      aspect = float(max_cols)/max_rows
+      # how many figures do we need?
+      num_figs = 1+naxes/max_graphs
+      if num_figs > 1:
+        num_cols = max_cols
+        num_rows = max_rows
+      else:
+        num_cols = int(ceil(sqrt(aspect*naxes)))
+        num_rows = int(ceil(float(naxes)/num_cols))
       self.logger.debug("figure_rows_and_columns: %d rows, %d columns",
-                        rows, cols)
-      return rows, cols
+                        num_rows, num_cols)
+      return num_figs, num_rows, num_cols, (width,height)
       
-    def init_multiplot(self, title, nrows, ncols, **kwargs): 
+    def init_multiplot(self, title, nrows, ncols, size=(4,4)): 
       """
-      create multiple plots sharing common X and Y axis, no space between them
+      create a figure with multiple plots sharing common X and Y axis
+      
+      The sublots have no space between them.
+      
+      When the number of graphs is large then multiple figures need to be 
+      created with 'init_multiplots'
       
       @param title : figure title
       @type  title : str
@@ -128,20 +162,29 @@ class DSNFITSplotter(DSNFITSexaminer):
       @param heigth : optional keyword argument for figure heigth (in)
       @type  height : float
       """
-      if kwargs.has_key("width"):
-        width = ncols * kwargs["width"] # inches
-      else:
-        width = ncols * 4
-      if kwargs.has_key("heigth"):
-        height = nrows * kwargs["width"] # inches
-      else:
-        height = nrows * 4
-      fig, ax = subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True)
-      fig.set_size_inches(width, height, forward=True)
+      width, height = size
+      fig, ax = subplots(nrows=nrows, ncols=ncols) # , sharex=True, sharey=True)
+      self.logger.debug("init_multiplot: %d rows, %d columns, size: %s",
+                        nrows, ncols, size)
+      # could also be fig.set_size_inches(size, forward=True)
+      fig.set_size_inches(ncols*width, nrows*height, forward=True)
       fig.subplots_adjust(wspace=0, hspace=0) # no space between plots in a row
       fig.suptitle(title)
       return fig, ax
-    
+
+    def init_multiplots(self, title, nfigs, nrows, ncols, size=(4,4)):
+      """
+      create multiple figures with multiple plots
+      """
+      self.logger.debug("init_multiplots: %d figs, %d rows, %d columns",
+                        nfigs, nrows, ncols)
+      figs = {}
+      axs = {}
+      for fignum in range(nfigs):
+        figs[fignum], axs[fignum] = self.init_multiplot(title, nrows, ncols,
+                                                        size=size)
+      return figs, axs
+      
     def show_all_spectra(self, rows=None, IFspectra=False):
       """
       Plot spectra from a Table
@@ -161,65 +204,77 @@ class DSNFITSplotter(DSNFITSexaminer):
         spectra = self.get_spectra(self.row_keys)
       else:
         spectra = self.get_spectra(rows)
-      nrows, ncols = self.figure_rows_and_columns(len(spectra))
-      fig, ax = self.init_multiplot("Basic Spectra", nrows, ncols)
-      for row in range(nrows):
-        for col in range(ncols):
-          specidx = row*ncols + col
-          scan = self.data['SCAN'][specidx]
-          cycle = self.data['CYCLE'][specidx]
-          cycle_idx = self.cycle_keys.index(cycle)
-          self.logger.debug("show_spectra: doing row %d column %d spectrum %d",
-                            row, col, specidx)
-          spec = spectra[specidx] # returns spectra from one row
-          if self.props['full Stokes']:
-            if "IFSPECTR" in self.data.columns.names and IFspectra:
-              nchans = self.props['num IFspec chans']
-              npols = self.props['num IFs']
+      num_graphs = len(spectra)/self.props['num cycles']
+      nfigs, nrows, ncols, size = self.figure_rows_and_columns(num_graphs)
+      figs, axs = self.init_multiplots("Basic Spectra",nfigs, nrows, ncols, size)
+      self.logger.debug("show_spectra: figure keys: %s", figs.keys())
+      self.logger.debug("show_spectra: axes   keys: %s", axs.keys())
+      for fignum in figs.keys():
+        fig = figs[fignum]
+        ax = axs[fignum]
+        for row in range(nrows):
+          for col in range(ncols):
+            specidx = nrows*ncols*fignum + ncols*row + col
+            if specidx >= len(spectra):
+              break
+            scan = self.data['SCAN'][specidx]
+            cycle = self.data['CYCLE'][specidx]
+            cycle_idx = self.cycle_keys.index(cycle)
+            self.logger.debug("show_spectra: doing row %d column %d spectrum %d",
+                              row, col, specidx)
+            spec = spectra[specidx] # returns spectra from one row
+            if self.props['full Stokes']:
+              if "IFSPECTR" in self.data.columns.names and IFspectra:
+                nchans = self.props['num IFspec chans']
+                npols = self.props['num IFs']
+              else:
+                nchans = self.props['num chans']
+                npols = spec.shape[0]
             else:
               nchans = self.props['num chans']
-              npols = spec.shape[0]
-          else:
-            nchans = self.props['num chans']
-            npols = self.props['num IFs']
-          nbeams = self.props['num beams']
-          self.logger.debug("show_spectra: %d channels, %d pols", nchans, npols)
-          # THIS IS A HACK; assume both cycles have the same number of records
-          nrecs = self.props['num records'][1] # WVSR2SDFITS needs fixing.
-          for rec in range(nrecs):
-            record = rec+1
-            symbol = plotsymbols[rec % 20]
-            for beam_idx in range(nbeams):
-              beam = beam_idx+1
-              for pol_idx in range(npols):
-                pol = pol_idx+1
-                # indices without row (0), RA (-1), dec (-2)
-                if len(spec.shape) == 4:
-                  indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
-                                             beam=beam, record=record,
-                                             trimmed=True)[1:]
-                elif len(spec.shape) == 2:
-                  indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
-                                             trimmed=True)[1:]
-                self.logger.debug("show_all_spectra: indices: %s", indices)
-                color = plotcolors[beam_idx*npols+pol_idx % 5]
-                trimmed = trim_extremes(spec[indices])
-                label = self.make_legend_labels(sckey=cycle_idx,
-                                                bmkey=beam_idx,
-                                                plkey=pol_idx)
-                ax[row][col].plot(trimmed, color+',', label=label)
-          ax[row][col].grid(True)
-          ax[row][col].text(0.5, 0.95, 'scan '+str(scan),
-                            transform=ax[row][col].transAxes,
-                            horizontalalignment='center', 
-                            verticalalignment='top')
-          if row == nrows-1:
-            for tick in ax[row][col].get_xticklabels():
-              tick.set_rotation(45)
-          if col == 0:
-            ax[row][col].set_ylabel("Power (counts)")
-      lines, labels = ax[0][0].get_legend_handles_labels()
-      fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
+              npols = self.props['num IFs']
+            nbeams = self.props['num beams']
+            self.logger.debug("show_spectra: %d channels, %d pols", nchans, npols)
+            nrecs = self.props['num records'][cycle]
+            for rec in range(nrecs):
+              record = rec+1
+              symbol = plotsymbols[rec % 20]
+              for beam_idx in range(nbeams):
+                beam = beam_idx+1
+                for pol_idx in range(npols):
+                  pol = pol_idx+1
+                  # indices without row (0), RA (-1), dec (-2)
+                  if len(spec.shape) == 4:
+                    indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
+                                               beam=beam, record=record,
+                                               trimmed=True)[1:]
+                  elif len(spec.shape) == 2:
+                    indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
+                                               trimmed=True)[1:]
+                  self.logger.debug("show_all_spectra: indices: %s", indices)
+                  color = plotcolors[beam_idx*npols+pol_idx % 5]
+                  #trimmed = trim_extremes(spec[indices])
+                  trimmed = spec[indices]
+                  label = self.make_legend_labels(sckey=cycle_idx,
+                                                  bmkey=beam_idx,
+                                                  plkey=pol_idx)
+                  ax[row][col].plot(trimmed, color+',', label=label)
+            # end loop over records
+            ax[row][col].grid(True)
+            ax[row][col].text(0.5, 0.95, 'scan '+str(scan),
+                              transform=ax[row][col].transAxes,
+                              horizontalalignment='center', 
+                              verticalalignment='top')
+            if row == nrows-1:
+              for tick in ax[row][col].get_xticklabels():
+                tick.set_rotation(45)
+            if col == 0:
+              ax[row][col].set_ylabel("Power (counts)")
+          # end loop over col
+        # end loop over row
+        lines, labels = ax[0][0].get_legend_handles_labels()
+        fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
+      # end loop over fig
       show()
     
     def make_legend_labels(self, dskey=None, tbkey=None, sckey=None,

@@ -348,7 +348,7 @@ def get_table_stats(table):
    * each subchannel gets its own cycle
    * each on-source or off-source position gets its own scan 
   """
-  logger.debug("get_table_stats: for %s", table.name)
+  #logger.debug("get_table_stats: for %s", table.name)
   # I suspect the following works because all are the same
   indices_for_nonzero_scans = table.data['SCAN'].nonzero()
   indices_for_nonzero_cycles = table.data['CYCLE'].nonzero()
@@ -376,11 +376,11 @@ def get_table_stats(table):
         "get_table_stats: number of cycles not equal to number of subchannels")
   
   scan_keys = numpy.unique(table.data['SCAN'][row_indices])
-  logger.debug("get_table_stats: good scans: %s", scan_keys)
+  #logger.debug("get_table_stats: good scans: %s", scan_keys)
   num_scans = len(scan_keys)
   
   n_rows = num_scans * num_cycles
-  logger.debug("get_table_stats: %d scans of %d cycles", num_scans, num_cycles)
+  #logger.debug("get_table_stats: %d scans of %d cycles", num_scans, num_cycles)
   if n_rows != len(table.data):
     diff = len(table.data) - n_rows
     logger.info("get_table_stats: there are %d scans without all its cycles",
@@ -394,9 +394,9 @@ def get_table_stats(table):
     logger.debug("get_table_stats: complete scans: %s", complete_scans)
     good_rows = []
     for row in row_indices:
-      logger.debug("get_table_stats: processing row %s", row)
+      #logger.debug("get_table_stats: processing row %s", row)
       this_scan = table.data['SCAN'][row]
-      logger.debug("get_table_stats: checking scan: %s", this_scan)
+      #logger.debug("get_table_stats: checking scan: %s", this_scan)
       if this_scan in complete_scans:
        good_rows.append(row)
     #logger.debug("get_table_stats: good rows: %s", good_rows)
@@ -408,80 +408,6 @@ def get_table_stats(table):
   
   obsmodes = unique(list(table.data['OBSMODE'][row_keys]))
   return scan_keys, cycle_keys, row_keys, obsmodes
-
-def session_props(table):
-  """
-  get session properties
-  
-  properties::
-    num chans      - number of spectrometer channels in diagnostic spectra
-    num IFs        - at most two, one per pol
-    full Stokes    - four Stkes parameters instead of an IF for each pol
-    time axis      - True if scan is divided into records
-    num beams      - number of beams
-    num records    - if 'time axis', number of records in each scan
-  Notes
-  =====
-   * In a DSN SDFITS file there is only one backend
-   * If there is a time axis, the number of records per scan may differ
-   * A subchannel is a piece of band for a spectrometer with coarse and fine
-     channels
-   * cycles are used for dfferent subchannels and for position switching
-  """
-  props = {}
-  # most parameters must be the same for all rows in a session
-  spectrumshape = table.data['SPECTRUM'][0].shape # for common dims
-  props["num cycles"] = \
-               len(numpy.unique(table.data['CYCLE'][table.data['CYCLE'] != 0]))
-  if len(spectrumshape) == 3: # (dec, RA, freq)
-    # bare minimum SPECTRUM dimensions
-    props["num chans"] = int(spectrumshape[-1])
-    props["num IFs"] = 1        # no polarization axis
-    props["num beams"] = 1      # no beam axis
-  elif len(spectrumshape) >= 4: # (at least pol, dec, RA, freq)
-    # one beam with polarization at least
-    props["num chans"] = int(spectrumshape[-1])
-    props["num IFs"] = 2
-    if spectrumshape[-4] == 4:
-      # has STOKES dimension
-      props["num beams"] = 1     # no beam axis
-      props["full Stokes"] = True
-      if 'IFSPECTR' in table.data.columns.names:
-        props["num IFs"] = 2
-        IFspecshape = table.data['IFSPECTR'][0].shape
-        props["num IFspec chans"] = int(IFspecshape[-1])
-      else:
-        props["num _IFs"] = 1
-        logger.warning("session_props: no IF data; will use Stokes I for monitoring")
-        props["num IFspec chans"] = props["num chans"]
-    elif spectrumshape[-4] == 2:
-      # has straight pols (L,R or H,V)
-      props["num IFs"] = 2
-      props["full Stokes"] = False
-      props["num beams"] = 1     # no beam axis
-    if len(spectrumshape) >= 5: # (time, pol, dec, RA, freq)
-      props["time axis"] = True
-      if len(spectrumshape) == 5:
-        props["num beams"] = 1     # no beam axis
-    else:
-      props["time axis"] = False
-    if len(spectrumshape) == 6: # (beam, time, pol, dec, RA, freq)
-      props["num beams"] = int(spectrumshape[0])
-    else:
-      props["num beams"] = 1
-        # time axis length may vary due to corrupted records
-    if len(spectrumshape) >= 5: # (time, pol, dec, RA, freq)
-      props["num records"] = {}
-      cycle_indices = range(props["num cycles"])
-      for cycle_idx in cycle_indices: # check each cycle
-        cycle = table.data['CYCLE'][cycle_idx]
-        spectrumshape = table.data['SPECTRUM'][cycle_idx].shape
-        # just do the first scan
-        props["num records"][cycle] = int(spectrumshape[1])
-    else:
-      props["num records"] = {1: 1}
-    logger.debug("session_props:\n %s", props)
-    return props, len(spectrumshape)
 
 def get_indices(num_indices, props,
                 scan_idx=0, cycle_idx=0, beam_idx=0, IF_idx=0, record=0,
