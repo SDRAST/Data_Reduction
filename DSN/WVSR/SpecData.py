@@ -67,8 +67,10 @@ def get_channel_IDs(metadata):
         chan_keys.append(key)
   chan_keys.sort()
   if len(chan_keys):
-    logger.debug("get_Fchannel_IDs: found %d channels from %s to %s",
+    logger.debug("get_channel_IDs: found %d channels from %s to %s",
                  len(chan_keys), chan_keys[0], chan_keys[-1])
+  else:
+    logger.debug("get_channel_IDs: found no channels")
   return chan_keys
   
 def get_FFT_data(obsdir, datadir):
