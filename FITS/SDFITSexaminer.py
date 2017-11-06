@@ -45,8 +45,8 @@ import support.lists
 
 from Astronomy import c, MJD, v_sun
 from Astronomy.redshift import doppler_radio, doppler_optical, doppler_relat
-from Data_Reduction.FITS.DSNFITS import get_indices
-from Data_Reduction.FITS.DSNFITS import get_table_stats, session_props
+from Data_Reduction import clobber
+from Data_Reduction.FITS.DSNFITS import get_indices, get_table_stats 
 from DatesTimes import UnixTime_to_datetime
 from MonitorControl.BackEnds import get_freq_array
 from MonitorControl.Configurations.CDSCC.FO_patching import DistributionAssembly
@@ -117,7 +117,9 @@ class DSNFITSexaminer(object):
     """
     sources = []
     for key in self.tables.keys():
-      sources += list(self.tables[key].sources)
+      for source in self.tables[key].sources:
+        if source: # is not empty
+          sources.append(source)
     return support.lists.unique(sources)
   
   def save(self, filename):
@@ -189,7 +191,7 @@ class DSNFITSexaminer(object):
       self.scan_keys, self.cycle_keys, self.row_keys, self.obsmodes \
                                                         = get_table_stats(self)
       self.rows = self.data['CYCLE'].nonzero()[0] # valid data
-      self.props, self.num_indices = session_props(self)
+      self.props, self.num_indices = self.properties()
       datashape = extension.data['SPECTRUM'].shape
       self.BE = self.header['BACKEND']
       if self.BE == 'SAO spectrometer':
@@ -278,17 +280,37 @@ class DSNFITSexaminer(object):
         return None
       return keys
     
-    def get_indices(self, scan=1, cycle=1, pol=1, beam=1, record=0):
+    def get_indices(self, scan=1, cycle=1, pol=1, beam=1, record=1,
+                    trimmed=False):
       """
       returns indices for getting one spectrum from SPECTRUM column
+      
+      @param scan : SCAN number
+      @type  scan : int
+  
+      @param cycle : CYLE number
+      @type  cycle : int
+  
+      @param beam : BEAM axis value
+      @type  beam : int
+  
+      @param IF : IF number or STOKES axis value
+      @type  IF : int
+  
+      @param record : 1-based TIME axis index (FITS/FORTRAN convention) 
+      @type  record : int
+  
+      @param trimmed : return tuple with 'RA' and 'dec' indices removed (always 0)
+      @type  trimmed : bool
       """
       scan_idx = self.scan_keys.index(scan)
       cycle_idx = self.cycle_keys.index(cycle)
       beam_idx = beam-1
       IF_idx = pol-1
+      record -= 1
       return get_indices(self.num_indices, self.props, scan_idx=scan_idx, 
                          cycle_idx=cycle_idx, beam_idx=beam_idx, IF_idx=IF_idx,
-                         record=record)
+                         record=record, trimmed=trimmed)
   
     def freqs(self, row=0):
       """
@@ -493,9 +515,9 @@ class DSNFITSexaminer(object):
     def make_directory(self, dest=sys.stdout):
       """
       """
-      labels = "Row Scan ch      Source       Sig Freq"
-      flines = "--- ---- -- ---------------- ---- ---------"
-      lbform = "%3d  %3d %2d %16s %5s %9.3f"
+      labels = "Row Scan ch      Source       Sig Freq      intg"
+      flines = "--- ---- -- ---------------- ---- --------- ----"
+      lbform = "%3d  %3d %2d %16s %5s %9.3f %4d"
       print >> dest, labels
       print >> dest, flines
       for row in self.rows:
@@ -503,7 +525,8 @@ class DSNFITSexaminer(object):
                                       self.data['CYCLE'][row],
                                       self.data['OBJECT'][row],
                                       self.data['SIG'][row],
-                                      self.data['OBSFREQ'][row]/1e6)        
+                                      self.data['OBSFREQ'][row]/1e6,
+                                      self.data['EPOSURE'][row])        
 
     def get_good_rows(self):
       """
@@ -524,7 +547,7 @@ class DSNFITSexaminer(object):
       num_scans = len(scan_keys)
       num_cycles = len(cycle_keys)
       num_rows = len(row_keys)
-      props, num_indices = session_props(self) # session properties
+      props, num_indices = self.properties() # table properties
       # check the data:
       #    elevations
       elevation = self.data['ELEVATIO']
@@ -614,35 +637,53 @@ class DSNFITSexaminer(object):
         # these are simple columns with multiple dimensions
         midnight_unixtime = time.mktime(time.strptime(
                                        self.data['DATE-OBS'][row], "%Y/%m/%d"))
+        scan = self.data['SCAN'][row]
+        cycle = self.data['CYCLE'][row]
+        cycle_idx = cycle - 1
         if self.props['time axis'] == True:
-          cycle = self.data['CYCLE'][row]
-          cycle_idx = cycle - 1
           nrecs = self.props['num records'][cycle]
           for rec in range(nrecs):
             first_time = self.data['CRVAL5'][row]
             rectime = first_time + rec*self.data['CDELT5'][row] # numpy.array
             unixtime = midnight_unixtime + rectime
-            datime = datetime.datetime.fromtimestamp(unixtime) # datetime.datetime
+            datime = datetime.datetime.fromtimestamp(unixtime) # datetime
             good_data['mpltime'].append(date2num(datime))
             good_data['elev'].append(self.data['ELEVATIO'][row,0,rec,0,0,0,0])
-            for beam in [0,1]:
-              for pol in [0,1]:
-                good_data['TSYS'][cycle_idx][beam][pol].append(self.data['TSYS'][row,beam,rec,pol,0,0,0])
-            good_data['Tambient'].append(self.data['TAMBIENT'][row,0,rec,0,0,0,0])
-            good_data['pressure'].append(self.data['PRESSURE'][row,0,rec,0,0,0,0])
-            good_data['humidity'].append(self.data['HUMIDITY'][row,0,rec,0,0,0,0])
+            for beam_idx in range(self.props["num beams"]):
+              beam = beam_idx+1
+              for pol_idx in range(self.props["num IFs"]):
+                pol = pol_idx+1
+                indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
+                                           beam=beam, record=rec)
+                good_data['TSYS'][cycle_idx][beam_idx][pol_idx].append(
+                                                    self.data['TSYS'][indices])
+            good_data['Tambient'].append(self.data['TAMBIENT'][indices])
+            good_data['pressure'].append(self.data['PRESSURE'][indices])
+            good_data['humidity'].append(self.data['HUMIDITY'][indices])
             if good_wspe_data:
-              good_data['windspeed'].append(self.data['WINDSPEE'][row,0,rec,0,0,0,0])
+              good_data['windspeed'].append(self.data['WINDSPEE'][indices])
             if good_wdir_data:
-              good_data['winddirec'].append(self.data['WINDDIRE'][row,0,rec,0,0,0,0])
+              good_data['winddirec'].append(self.data['WINDDIRE'][indices])
         else:
-          good_data['unixtime'] = self.data['UNIXtime'][row]
+          unixtime = self.data['UNIXtime'][row]
           datime = datetime.datetime.fromtimestamp(unixtime) # datetime object
           good_data['mpltime'].append(date2num(datime))
           good_data['elev'].append(self.data['ELEVATIO'][row])
+          for beam_idx in range(self.props["num beams"]):
+            beam = beam_idx+1
+            for pol_idx in range(self.props["num IFs"]):
+              pol = pol_idx+1
+              self.logger.debug(
+                           "get_good_rows: scan=%d, cycle=%d, beam=%d, pol=%d",
+                           scan, cycle, beam, pol)
+              indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
+                                         beam=beam)
+              self.logger.debug("get_good_rows: indices are %s", indices)
+              good_data['TSYS'][cycle_idx][beam_idx][pol_idx].append(
+                                                    self.data['TSYS'][indices])
           good_data['Tambient'].append(self.data['TAMBIENT'][row])
           good_data['pressure'].append(self.data['PRESSURE'][row])
-          good['humidity'].append(self.data['HUMIDITY'][row])
+          good_data['humidity'].append(self.data['HUMIDITY'][row])
           if good_wspe_data:
             good_data['windspeed'].append(self.data['WINDSPEE'][row])
           if good_wdir_data:
@@ -669,7 +710,7 @@ class DSNFITSexaminer(object):
           idx = len(cellshape)*[[0]]
           return self.data[column][row][idx][0]
       
-    def prepare_summary_arrays(self):
+    def prepare_summary_arrays(self, num_chans):
       """
       Initiate dict of empty spectra indexed by sub-channel, beam and polariz'n
       
@@ -691,7 +732,7 @@ class DSNFITSexaminer(object):
             for IF_idx in range(self.props["num IFs"]): 
               pol = IF_idx+1
               spectra[scan_idx][subch_idx][beam_idx][IF_idx] = \
-                                        numpy.zeros((self.props['num chans'],))
+                                                      numpy.zeros((num_chans,))
               self.logger.debug(
                "prepare_summary_arrays: for scan %d subch %d, beam %d, pol %d",
                scan, subch, beam, pol)
@@ -699,7 +740,7 @@ class DSNFITSexaminer(object):
                           spectra[scan_idx][subch_idx][beam_idx][IF_idx].shape)
       return spectra
       
-    def prepare_summary_images(self):
+    def prepare_summary_images(self, num_chans):
       """
       Initiate dict of image arrays for SPECTRUM data
       
@@ -717,7 +758,7 @@ class DSNFITSexaminer(object):
           for IF_idx in range(self.props["num IFs"]): 
             pol = IF_idx+1
             images[subch_idx][beam_idx][IF_idx] = \
-                                      numpy.zeros((self.props['num chans'], 1))
+                               numpy.zeros((num_chans, 1))
             self.logger.debug(
                        "prepare_summary_images: for subch %d, beam %d, pol %d",
                        subch, beam, pol)
@@ -1254,6 +1295,119 @@ class DSNFITSexaminer(object):
             #  self.logger.warning(
             #            "fit_mean_power_to_airmass: failed; Tsys not computed")
 
+    def properties(self):
+      """
+      get table properties
+  
+      properties::
+        num chans      - number of spectrometer channels in diagnostic spectra
+        num IFs        - at most two, one per pol
+        full Stokes    - four Stkes parameters instead of an IF for each pol
+        time axis      - True if scan is divided into records
+        num beams      - number of beams
+        num records    - if 'time axis', number of records in each scan
+      Notes
+      =====
+       * In a DSN SDFITS file there is only one backend
+       * If there is a time axis, the number of records per scan may differ
+       * A subchannel is a piece of band for a spectrometer with coarse and fine
+       channels
+       * cycles are used for dfferent subchannels and for position switching
+      """
+      props = {}
+      # most parameters must be the same for all rows in a session
+      spectrumshape = self.data['SPECTRUM'][0].shape # for common dims
+      props["num cycles"] = \
+               len(numpy.unique(self.data['CYCLE'][self.data['CYCLE'] != 0]))
+      if len(spectrumshape) == 3: # (dec, RA, freq)
+        # bare minimum SPECTRUM dimensions
+        props["num chans"] = int(spectrumshape[-1])
+        props["num IFs"] = 1        # no polarization axis
+        props["num beams"] = 1      # no beam axis
+      elif len(spectrumshape) >= 4: # (at least pol, dec, RA, freq)
+        # one beam with polarization at least
+        props["num chans"] = int(spectrumshape[-1])
+        props["num IFs"] = 2
+        if spectrumshape[-4] == 4:
+          # has STOKES dimension
+          props["num beams"] = 1     # no beam axis
+          props["full Stokes"] = True
+          if 'IFSPECTR' in self.data.columns.names:
+            props["num IFs"] = 2
+            IFspecshape = self.data['IFSPECTR'][0].shape
+            props["num IFspec chans"] = int(IFspecshape[-1])
+          else: # must be 3 or less
+            props["num _IFs"] = 1
+            self.logger.warning(
+                    "properties: no IF data; will use Stokes I for monitoring")
+            props["num IFspec chans"] = props["num chans"]
+        elif spectrumshape[-4] == 2:
+          # has straight pols (L,R or H,V)
+          props["num IFs"] = 2
+          props["full Stokes"] = False
+          props["num beams"] = 1     # no beam axis
+        if len(spectrumshape) >= 5: # (time, pol, dec, RA, freq)
+          props["time axis"] = True
+          if len(spectrumshape) == 5:
+            props["num beams"] = 1     # no beam axis
+        else:
+          props["time axis"] = False
+        if len(spectrumshape) == 6: # (beam, time, pol, dec, RA, freq)
+          props["num beams"] = int(spectrumshape[0])
+        else:
+          props["num beams"] = 1
+        # time axis length may vary due to corrupted records
+        if len(spectrumshape) >= 5: # (time, pol, dec, RA, freq)
+          props["num records"] = {}
+          cycle_indices = range(props["num cycles"])
+          for cycle_idx in cycle_indices: # check each cycle
+            cycle = self.data['CYCLE'][cycle_idx]
+            spectrumshape = self.data['SPECTRUM'][cycle_idx].shape
+            # just do the first scan
+            props["num records"][cycle] = int(spectrumshape[1])
+        else:
+          props["num records"] = {}
+          for cycle in self.cycle_keys:
+            props["num records"][cycle] = 1
+        self.logger.debug("properties:\n %s", props)
+        return props, len(spectrumshape)
+
+    def remove_tones(self, rows=None):
+      """
+      """
+      if rows:
+        pass
+      else:
+        rows = self.row_keys
+      # the nearest tone below the center frequency
+      for row in rows:
+        freq_offset = self.data['OBSFREQ'][row] - \
+                                            round(self.data['OBSFREQ'][row],-6)
+        self.logger.debug("remove_tones: frequency offset = %d", freq_offset)
+        num_chans = self.props['num chans']
+        # the center of the band is the lowest channel of the upper half
+        cntr_chan = num_chans/2
+        # the nearest tone below the center channel
+        chan_offset = round(num_chans*freq_offset/self.data['BANDWIDT'][row])
+        self.logger.debug("remove_tones: channel offset = %d", chan_offset)
+        number_of_tones = int(self.data['BANDWIDT'][row]/1e6)
+        tone_spacing = self.props['num chans']/number_of_tones
+        
+        for tone in range(-number_of_tones/2, number_of_tones/2):
+          if chan_offset > 0:
+            # there are more tones above the tone nearest the center than below
+            tone += 1
+          tone_channel = cntr_chan - chan_offset + tone*tone_spacing
+          self.logger.debug("remove_tones: tone %d channel = %d",
+                            tone, tone_channel)
+          if self.props['full Stokes']:
+            pols = range(4)
+          else:
+            pols = self.props['num IFs']
+          for pol in pols:
+            self.data['SPECTRUM'][row][pol,0,0] = clobber(
+                             self.data['SPECTRUM'][row][pol,0,0], tone_channel)
+      
     class Data(object):
       """
       A subset of data extracted from an average difference spectrum
