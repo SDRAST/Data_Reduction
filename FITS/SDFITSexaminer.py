@@ -47,7 +47,7 @@ from Astronomy import c, MJD, v_sun
 from Astronomy.redshift import doppler_radio, doppler_optical, doppler_relat
 from Data_Reduction.FITS.DSNFITS import get_indices
 from Data_Reduction.FITS.DSNFITS import get_table_stats, session_props
-from DatesTimes import UnixTime_to_datetime
+from DatesTimes import ISOtime2datetime, UnixTime_to_datetime
 from MonitorControl.BackEnds import get_freq_array
 from MonitorControl.Configurations.CDSCC.FO_patching import DistributionAssembly
 from MonitorControl.Configurations.coordinates import DSS
@@ -156,6 +156,7 @@ class DSNFITSexaminer(object):
       num_indices - number of indices in the SPECTRUM cube
       obsmodes    - 
       obs_freqs   - non-redundant list of observing frequencies in table
+      parent
       props       - table properties
       rows        - rows with valid data
       row_keys    - ordered list of row numbers
@@ -180,13 +181,36 @@ class DSNFITSexaminer(object):
                                         header=extension.header)
       self.logger = logging.getLogger(parent.logger.name+".Table")
       self.logger.debug("__init__: created %s", self)
+      self.parent = parent
       # add some attributes for convenience
-      d = UnixTime_to_datetime(self.get_first_value('UNIXtime',0)).timetuple()
+      try:
+        d = UnixTime_to_datetime(self.get_first_value('UNIXtime',0)).timetuple()
+      except KeyError:
+        # old deprecated format
+        try:
+          time_at_midnight = \
+          time.strptime(self.parent.hdulist[1].data['DATE-OBS'][0], "%Y/%m/%d")
+          d = unixtime_at_midnight + self.parent.hdulist[1].data['TIME'][0]
+        except ValueError:
+          # acceptable format
+          try:
+            time_at_midnight = \
+            time.strptime(self.parent.hdulist[1].data['DATE-OBS'][0],
+                          "%Y-%m-%d")
+            d = unixtime_at_midnight + self.parent.hdulist[1].data['TIME'][0]
+          except ValueError:
+            # ISOtime
+            d = ISOtime2datetime(
+                        self.parent.hdulist[1].data['DATE-OBS'][0]).timetuple()
       self.year = d.tm_year
       self.DOY = d.tm_yday
       self.datestr = "%4d/%03d" % (self.year,self.DOY)
       self.timestr = "%02d:%02d" % (d.tm_hour, d.tm_min)
-      self.dss = int(self.header['TELESCOP'].split('-')[1])
+      try:
+        self.dss = int(self.header['TELESCOP'].split('-')[1])
+      except IndexError:
+        # must be a space instead of a dash
+        self.dss = int(self.header['TELESCOP'].split(' ')[1])
       self.logger.debug("__init__: station is DSS-%d", self.dss)
       self.scan_keys, self.cycle_keys, self.row_keys, self.obsmodes \
                                                         = get_table_stats(self)
