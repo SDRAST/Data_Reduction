@@ -46,8 +46,8 @@ import support.lists
 from Astronomy import c, MJD, v_sun
 from Astronomy.redshift import doppler_radio, doppler_optical, doppler_relat
 from Data_Reduction import clobber
-from Data_Reduction.FITS.DSNFITS import get_indices, get_table_stats 
-from DatesTimes import UnixTime_to_datetime
+from Data_Reduction.FITS.DSNFITS import get_indices
+from DatesTimes import ISOtime2datetime, UnixTime_to_datetime
 from MonitorControl.BackEnds import get_freq_array
 from MonitorControl.Configurations.CDSCC.FO_patching import DistributionAssembly
 from MonitorControl.Configurations.coordinates import DSS
@@ -62,7 +62,8 @@ class DSNFITSexaminer(object):
   """
   Class for examining SAOdataset objects
   """
-  def __init__(self, parent=None, FITSfile=None, hdulist=None):
+  def __init__(self, parent=None, FITSfile=None, hdulist=None,
+               dataname="SPECTRUM"):
     """
     Create an SAOexaminer object
     
@@ -202,6 +203,14 @@ class DSNFITSexaminer(object):
             # ISOtime
             d = ISOtime2datetime(
                         self.parent.hdulist[1].data['DATE-OBS'][0]).timetuple()
+      # what is the data column called?
+      if 'SPECTRUM' in self.data.columns.names:
+        self.dataname = 'SPECTRUM'
+      elif 'DATA' in self.data.columns.names:
+        self.dataname = 'DATA'
+      else:
+        self.logger.error("__init__: table has no DATA or SPECTRUM column")
+        raise RuntimeError("no DATA or SPECTRUM column")
       self.year = d.tm_year
       self.DOY = d.tm_yday
       self.datestr = "%4d/%03d" % (self.year,self.DOY)
@@ -212,19 +221,104 @@ class DSNFITSexaminer(object):
         # must be a space instead of a dash
         self.dss = int(self.header['TELESCOP'].split(' ')[1])
       self.logger.debug("__init__: station is DSS-%d", self.dss)
-      self.scan_keys, self.cycle_keys, self.row_keys, self.obsmodes \
-                                                        = get_table_stats(self)
+      try:
+        self.BE = self.header['BACKEND']
+        if self.BE == 'SAO spectrometer':
+          # hack until SAO2SDFITS.py is fixed
+          self.cycles = [1]
+        else:
+          self.cycles = list(numpy.unique(self.data['CYCLE'][self.rows]))
+      except KeyError:
+        # must be a column
+        backends = self.data['BACKEND']
+        if backends[0] == '':
+          # deduce from number of channels
+          numchans = self.data[self.dataname].shape[-1]
+          if numchans == 16384:
+            self.BE = 'DAVOS'
+          elif numchans == 256:
+            self.BE = 'SpectraData'
+          else:
+            self.logger.error("__init__: no name for backend with %d channels",
+                              numchans)
+            raise RuntimeError("no name for backend")
+          self.data['CYCLE'] = numpy.ones(len(self.data))
+      # ore convenience attributes
+      self.get_table_stats()
       self.rows = self.data['CYCLE'].nonzero()[0] # valid data
       self.props, self.num_indices = self.properties()
-      datashape = extension.data['SPECTRUM'].shape
-      self.BE = self.header['BACKEND']
-      if self.BE == 'SAO spectrometer':
-        # hack until SAO2SDFITS.py is fixed
-        self.cycles = [1]
-      else:
-        self.cycles = list(numpy.unique(self.data['CYCLE'][self.rows]))
+      datashape = extension.data[self.dataname].shape
       self.sources = numpy.unique(self.data['OBJECT'][self.rows])
       self.sources.sort()
+
+    def get_table_stats(self):
+      """
+      get number of scans, cycles, rows and observing mode
+  
+      Notes
+      =====
+      * each subchannel gets its own cycle
+      * each on-source or off-source position gets its own scan 
+      """
+      #logger.debug("get_table_stats: for %s", self.name)
+      # I suspect the following works because all are the same
+      indices_for_nonzero_scans = self.data['SCAN'].nonzero()
+      indices_for_nonzero_cycles = self.data['CYCLE'].nonzero()
+      indices_for_nonzero_freqs = self.data['OBSFREQ'].nonzero()
+      # the above should probably be made into sets taking 0th element then
+      # row_indices = set(indices_for_nonzero_scans).intersection(
+      #     set(indices_for_nonzero_cycles).intersection(indices_for_nonzero_freqs)
+      indices_for_OK_obsmodes = self.data['OBSMODE'][self.data['OBSMODE'] != ""] # not used
+      # (might need to check other columns)
+      row_indices = (indices_for_nonzero_scans and indices_for_nonzero_cycles and \
+                     indices_for_nonzero_freqs)[0]
+      # the above returns a tuple with the array of indices as the first item
+      logger.debug("get_table_stats: rows without nan or zero: %s", row_indices)
+  
+      self.cycle_keys = list(numpy.unique(self.data['CYCLE'][row_indices]))
+      logger.debug("get_table_stats: nonzero cycles: %s", self.cycle_keys)
+      num_cycles = len(self.cycle_keys)
+      logger.debug("get_table_stats: %d cycles per scan", num_cycles)
+
+      # frequencies with the same first 3 digits are the same to within 300km/s
+      nonzero_subch = list(numpy.unique(self.data['OBSFREQ'][row_indices]))
+      num_subch = len(nonzero_subch)
+  
+      if num_cycles != num_subch:
+        self.logger.warning(
+        "get_table_stats: number of cycles not equal to number of subchannels")
+  
+      scan_keys = numpy.unique(self.data['SCAN'][row_indices])
+      #logger.debug("get_table_stats: good scans: %s", scan_keys)
+      num_scans = len(scan_keys)
+  
+      n_rows = num_scans * num_cycles
+      #logger.debug("get_table_stats: %d scans of %d cycles", num_scans, num_cycles)
+      if n_rows != len(self.data):
+        diff = len(self.data) - n_rows
+        logger.info("get_table_stats: there are %d scans without all its cycles",
+                    diff)
+        complete_scans = []
+        # select the rows with non-zero CYCLE for each of the scans
+        for scan in scan_keys:
+          num_rows = len(self.data['CYCLE'][self.data['SCAN'] == scan])
+          if num_rows == num_cycles:
+            complete_scans.append(scan)
+        logger.debug("get_table_stats: complete scans: %s", complete_scans)
+        good_rows = []
+        for row in row_indices:
+          #logger.debug("get_table_stats: processing row %s", row)
+          this_scan = self.data['SCAN'][row]
+          #logger.debug("get_table_stats: checking scan: %s", this_scan)
+          if this_scan in complete_scans:
+            good_rows.append(row)
+        #logger.debug("get_table_stats: good rows: %s", good_rows)
+        self.scan_keys = list(complete_scans)
+        self.row_keys = good_rows
+      else:
+        self.scan_keys = list(scan_keys)
+        self.row_keys = list(row_indices)
+      self.obsmodes = numpy.unique(self.data['OBSMODE'][self.row_keys])
 
     def get_rows(self, keyword, value):
       """
@@ -795,7 +889,7 @@ class DSNFITSexaminer(object):
       get the minimum, maximum, mean and std of values in the spectrum array
       """
       good_data = numpy.nonzero(self.data['CYCLE'])
-      all_samples = self.data['SPECTRUM'][good_data]
+      all_samples = self.data[self.dataname][good_data]
       return all_samples.min(),  all_samples.max(), \
              all_samples.mean(), all_samples.std()
 
@@ -859,19 +953,19 @@ class DSNFITSexaminer(object):
       nrows = len(rows)
       if (self.data['OBSMODE'][rows] == numpy.array(nrows*['LINEPBSW'])).all():
         # this requires a beam axis so...
-        return self.data['SPECTRUM'][rows,:,:,:,0,0,:]
+        return self.data[self.dataname][rows,:,:,:,0,0,:]
       elif (self.data['OBSMODE'][rows] == numpy.array(nrows*['LINEPSSW'])).all():
         if self.num_indices == 6:
-          return self.data['SPECTRUM'][rows,:,:,:,0,0,:]
+          return self.data[self.dataname][rows,:,:,:,0,0,:]
         elif self.num_indices == 5:
           # has a time axis
-          return self.data['SPECTRUM'][rows,:,:,0,0,:]
+          return self.data[self.dataname][rows,:,:,0,0,:]
         elif self.num_indices == 4:
           # has pol axis
-          return self.data['SPECTRUM'][rows,:,0,0,:]
+          return self.data[self.dataname][rows,:,0,0,:]
         else:
           # only one spectrum
-          return self.data['SPECTRUM'][rows,0,0,:]
+          return self.data[self.dataname][rows,0,0,:]
     
     def normalized_beam_diff(self, rows, remove_warning=False):
       """
@@ -1154,7 +1248,7 @@ class DSNFITSexaminer(object):
         spectra = data
       else:
         # extract the rows
-        spectra = self.data['SPECTRUM'][rows]
+        spectra = self.data[self.dataname][rows]
       # simplify the spectra
       #   in all cases the first ':' is for the sacn numbers
       if len(spectra.shape) == 7:
@@ -1340,7 +1434,7 @@ class DSNFITSexaminer(object):
       """
       props = {}
       # most parameters must be the same for all rows in a session
-      spectrumshape = self.data['SPECTRUM'][0].shape # for common dims
+      spectrumshape = self.data[self.dataname][0].shape # for common dims
       props["num cycles"] = \
                len(numpy.unique(self.data['CYCLE'][self.data['CYCLE'] != 0]))
       if len(spectrumshape) == 3: # (dec, RA, freq)
@@ -1386,7 +1480,7 @@ class DSNFITSexaminer(object):
           cycle_indices = range(props["num cycles"])
           for cycle_idx in cycle_indices: # check each cycle
             cycle = self.data['CYCLE'][cycle_idx]
-            spectrumshape = self.data['SPECTRUM'][cycle_idx].shape
+            spectrumshape = self.data[self.dataname][cycle_idx].shape
             # just do the first scan
             props["num records"][cycle] = int(spectrumshape[1])
         else:
@@ -1429,8 +1523,8 @@ class DSNFITSexaminer(object):
           else:
             pols = self.props['num IFs']
           for pol in pols:
-            self.data['SPECTRUM'][row][pol,0,0] = clobber(
-                             self.data['SPECTRUM'][row][pol,0,0], tone_channel)
+            self.data[self.dataname][row][pol,0,0] = clobber(
+                             self.data[self.dataname][row][pol,0,0], tone_channel)
       
     class Data(object):
       """
