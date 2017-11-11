@@ -86,7 +86,6 @@ from matplotlib.font_manager import FontProperties
 # import from local modules
 from Data_Reduction import get_obs_dirs, get_obs_session, select_data_files
 from Data_Reduction.SLATool import SessionAnalyzer
-from Data_Reduction.FITS.DSNFITS import get_table_stats
 from Data_Reduction.FITS.SDFITSplotter import DSNFITSplotter
 from Radio_Astronomy import rms_noise
 from support.lists import unique

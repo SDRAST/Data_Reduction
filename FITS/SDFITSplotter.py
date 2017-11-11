@@ -91,9 +91,11 @@ class DSNFITSplotter(DSNFITSexaminer):
       """
       Initialization was already done for Table superclass
       """
+      self.logger = logging.getLogger(parent.logger.name+".Plotter")
+      self.logger.debug("__init__: subclass of %s", table)
       for attr in table.__dict__.keys():
         self.__setattr__(attr, table.__getattribute__(attr))
-      self.logger = logging.getLogger(parent.logger.name+".Plotter")
+        self.logger.debug("__init__: copying %s", attr)
 
     #------------------------ Plotter methods ---------------------------------
     
