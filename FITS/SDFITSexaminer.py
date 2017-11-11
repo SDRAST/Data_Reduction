@@ -227,7 +227,8 @@ class DSNFITSexaminer(object):
           # hack until SAO2SDFITS.py is fixed
           self.cycles = [1]
         else:
-          self.cycles = list(numpy.unique(self.data['CYCLE'][self.rows]))
+          rows = range(len(self.data))
+          self.cycles = list(numpy.unique(self.data['CYCLE'][rows]))
       except KeyError:
         # must be a column
         backends = self.data['BACKEND']
