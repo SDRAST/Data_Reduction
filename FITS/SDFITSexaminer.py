@@ -1516,7 +1516,10 @@ class DSNFITSexaminer(object):
           if chan_offset > 0:
             # there are more tones above the tone nearest the center than below
             tone += 1
-          tone_channel = cntr_chan - chan_offset + tone*tone_spacing
+            # center freq is middle of channel N/2
+            tone_channel = cntr_chan - chan_offset-1 + tone*tone_spacing
+          else:
+            tone_channel = cntr_chan - chan_offset + tone*tone_spacing
           self.logger.debug("remove_tones: tone %d channel = %d",
                             tone, tone_channel)
           if self.props['full Stokes']:
