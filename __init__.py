@@ -260,13 +260,19 @@ def get_num_chans(linefreq, bandwidth, max_vel_width):
                est_num_chan_out)
   return 2**int(math.ceil(math.log(est_num_chan_out,2)))
     
-def reduce_spectrum_channels(spectrum, refval, refpix, delta, num_chan=1024):
+def reduce_spectrum_channels(spectrum, refval, refpix, delta,
+                             num_chan=1024, axis=0):
   """
   Reduce the number of channels in the spectrum.
   
   The default option is to reduce the spectrum to a specified number of
   channels with a default of 1024. The input spectrum is presumed to have
   2**N channels so that num_chan/num_chan_in is an integer.
+  
+  If 'spectrum' is an N-D array, then the spectrum axis is given by 'axis'
+  which defaults to 0.
+  
+  'delta' is negative for lower sideband or reversed double sideband spectra.
     
   @param spectrum : spectrum values
   @type  spectrum : list or nparray
@@ -288,7 +294,7 @@ def reduce_spectrum_channels(spectrum, refval, refpix, delta, num_chan=1024):
   if math.log(num_chan,2) % 1:
     raise RuntimeError("num_chan = %d is not a power of 2", num_chan)
   if type(spectrum) == ndarray:
-    num_chans_in = spectrum.shape[0]
+    num_chans_in = spectrum.shape[axis]
   else:
     num_chans_in = len(spectrum)
   if math.log(num_chans_in,2) % 1:
