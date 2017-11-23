@@ -33,9 +33,10 @@ import time
 from astropy.coordinates import FK4, FK5, SkyCoord
 from copy import copy
 from matplotlib.dates import date2num
-
+ 
 from scipy import interpolate
 from scipy.optimize import curve_fit
+from scipy.stats import linregress
 
 # Third party packages
 from novas import compat as novas
@@ -51,12 +52,18 @@ from DatesTimes import ISOtime2datetime, UnixTime_to_datetime
 from MonitorControl.BackEnds import get_freq_array
 from MonitorControl.Configurations.CDSCC.FO_patching import DistributionAssembly
 from MonitorControl.Configurations.coordinates import DSS
+from MonitorControl.FrontEnds.DSN import DSN_fe
+from MonitorControl.FrontEnds.K_band import K_4ch
 from Radio_Astronomy import rms_noise
 from support import mkdir_if_needed, nearest_index
+from support.dicts import make_key_if_needed
 
 
 jd_start, jd_end, number = eph_manager.ephem_open()
 logger = logging.getLogger(__name__)
+
+sw_state = {True: "sig", False: "ref"}
+polcode = {1: 'U', -1: 'L'}
 
 class DSNFITSexaminer(object):
   """
@@ -106,10 +113,7 @@ class DSNFITSexaminer(object):
         try:
           tables[index].SB = numpy.unique(tables[index].data['SIDEBAND'])
         except KeyError:
-          if tables[index].data['CDELT1'][0] > 0:
-            tables[index].SB = 'U'
-          else:
-            tables[index].SB = 'L'
+          tables[index].SB = polcode[tables[index].data['CDELT1'][0]]
         index += 1
     return tables
   
@@ -221,14 +225,19 @@ class DSNFITSexaminer(object):
         # must be a space instead of a dash
         self.dss = int(self.header['TELESCOP'].split(' ')[1])
       self.logger.debug("__init__: station is DSS-%d", self.dss)
+      self.logger.debug("__init__: front end is %s", self.header['FRONTEND'])
+      if self.header['FRONTEND'] == "K":
+        self.FE = K_4ch("K")
+      else:
+        self.FE = DSN_fe(self.header['FRONTEND'])
       try:
         self.BE = self.header['BACKEND']
         if self.BE == 'SAO spectrometer':
           # hack until SAO2SDFITS.py is fixed
-          self.cycles = [1]
+          self.cycle_keys = [1]
         else:
           rows = range(len(self.data))
-          self.cycles = list(numpy.unique(self.data['CYCLE'][rows]))
+          self.cycle_keys = list(numpy.unique(self.data['CYCLE'][rows]))
       except KeyError:
         # must be a column
         backends = self.data['BACKEND']
@@ -320,17 +329,12 @@ class DSNFITSexaminer(object):
         self.scan_keys = list(scan_keys)
         self.row_keys = list(row_indices)
       self.obsmodes = numpy.unique(self.data['OBSMODE'][self.row_keys])
-
-    def get_rows(self, keyword, value):
-      """
-      """
-      return numpy.where(self.data[keyword] == value)[0]
     
     def report_table(self):
       """
       """
       text = "%3d rows with valid data\n" % len(self.rows)
-      text += "cycles:  %s\n" % self.cycles
+      text += "cycles:  %s\n" % self.cycle_keys
       text += "frequencies: %s\n" % self.get_obs_freqs()
       text += "sources: %s\n" % self.sources
       text += "table properties:  %s" % self.props
@@ -365,11 +369,11 @@ class DSNFITSexaminer(object):
         https://casa.nrao.edu/aips2_docs/notes/236/node14.html
       """
       self.obs_freqs = {}
-      self.logger.debug("get_obs_freqs: checking cycles %s", self.cycles)
+      self.logger.debug("get_obs_freqs: checking cycles %s", self.cycle_keys)
       self.logger.debug("get_obs_freqs: OBSFREQ shape is %s",
                         self.data['OBSFREQ'].shape)
       self.logger.debug("get_obs_freqs: 'rows' shape is %s", self.rows.shape)
-      for cycle in self.cycles:
+      for cycle in self.cycle_keys:
         self.logger.debug("get_obs_freqs: getting freqs for cycle %d", cycle)
         self.obs_freqs[cycle] = self.data['OBSFREQ'][self.rows]\
                                              [numpy.equal(self.rows, cycle)][0]
@@ -410,11 +414,11 @@ class DSNFITSexaminer(object):
       @param cycle : CYLE number
       @type  cycle : int
   
+      @param pol : IF number or STOKES axis value
+      @type  pol : int
+  
       @param beam : BEAM axis value
       @type  beam : int
-  
-      @param IF : IF number or STOKES axis value
-      @type  IF : int
   
       @param record : 1-based TIME axis index (FITS/FORTRAN convention) 
       @type  record : int
@@ -634,9 +638,9 @@ class DSNFITSexaminer(object):
     def make_directory(self, dest=sys.stdout):
       """
       """
-      labels = "Row Scan ch      Source       Sig Freq      intg"
-      flines = "--- ---- -- ---------------- ---- --------- ----"
-      lbform = "%3d  %3d %2d %16s %5s %9.3f %4d"
+      labels = "Row Scan ch      Source       Sig  Freq      intg"
+      flines = "--- ---- -- ---------------- ----- --------- ----"
+      lbform = "%3d  %3d %2d %16s %5s %6.0f %s %4d"
       print >> dest, labels
       print >> dest, flines
       for row in self.rows:
@@ -645,9 +649,122 @@ class DSNFITSexaminer(object):
                                       self.data['OBJECT'][row],
                                       self.data['SIG'][row],
                                       self.data['OBSFREQ'][row]/1e6,
-                                      self.data['EPOSURE'][row])        
+                                      polcode[self.data['SIDEBAND'][row]],
+                                      self.data['EXPOSURE'][row])        
+    def validate_wx_data(self):
+      """
+      ensure that the weather data are usable
+      
+      check the data to make sure at least some are good and mask for those
+      """
+      def validate(colname):
+        """
+        """
+        data = self.data[colname]
+        mask = ~(numpy.isnan(data) | numpy.equal(data, 0))
+        return mask.any(), numpy.where(mask)
+        
+      valid_data = {}
+      indices = {}
+      #    time
+      valid_data['UNIXtime'], indices['UNIXtime'] = validate('UNIXtime')
+      
+      #    elevations
+      valid_data['ELEVATIO'], indices['ELEVATIO'] = validate('ELEVATIO')
+      if not valid_data['ELEVATIO']:
+        self.logger.warning("validate_wx_data: elevation data is bad")
 
-    def get_good_rows(self):
+      #    system temperature
+      if numpy.equal(self.data['TSYS'], 0.).all():
+        valid_data['TSYS'] = False
+        self.logger.warning("validate_wx_data: Tsys data is bad")
+      else:
+        valid_data['TSYS'] = True
+        #self.logger.debug("validate_wx_data: system temperatures shape: %s",
+        #               self.data['TSYS'].shape)
+                       
+      #    ambient temperature
+      valid_data['TAMBIENT'], indices['TAMBIENT'] = validate('TAMBIENT')
+      if not valid_data['TAMBIENT']:
+       self.logger.warning("validate_wx_data: ambient temperature data is bad")
+       
+      #    pressure
+      valid_data['PRESSURE'], indices['PRESSURE'] = validate('PRESSURE')
+      if not valid_data['PRESSURE']:
+        self.logger.warning("validate_wx_data: pressure data is bad")
+        
+      #    humidity
+      valid_data['HUMIDITY'], indices['HUMIDITY'] = validate('HUMIDITY')
+      if not valid_data['HUMIDITY']:
+        self.logger.warning("validate_wx_data: humidity data is bad")
+        
+      #    windspeed
+      valid_data['WINDSPEE'], indices['WINDSPEE'] = validate('WINDSPEE')
+      if not valid_data['WINDSPEE']:
+        self.logger.warning("validate_wx_data: windspeed data is bad")
+        
+      #    winddir
+      valid_data['WINDDIRE'], indices['WINDDIRE'] = validate('WINDDIRE')
+      if not valid_data['WINDDIRE']:
+            self.logger.warning("validate_wx_data: wind direction data is bad")
+      return valid_data, indices
+
+    def get_wx_datacubes(self):
+      """
+      Create data for analyzing environmental data.
+      
+      Returns a dict with keys 'TAMBIENT', 'WINDDIRE', 'UNIXtime', 'TSYS',
+      'HUMIDITY', 'PRESSURE', 'ELEVATIO', 'WINDSPEE'.  The data asociated with
+      each key is a dict with numpy array for (SIG state) True and for False.
+      The 'TSYS' array has four axes representing::
+        time index   - 0-based sequence in order of matplotlib datenum 
+        subchannel   - CYCLE value
+        beam         - 1-based number sequence
+        IF           - 1-based number sequence, usually representing pol
+      The other keys have only a time axis.
+      """
+      valid_data, indices =  self.validate_wx_data()
+      on_rows = self.get_rows('SIG', True)
+      of_rows = self.get_rows('SIG', False)
+      param_keys = valid_data.keys()
+      param_keys.remove('TSYS')
+      wx_data = {}
+      for key in param_keys:
+        wx_data[key] = {True: self.data[key][on_rows].flatten()}
+        if len(of_rows):
+          wx_data[key][False] = self.data[key][of_rows].flatten()
+      # now organize extra TSYS dimensions
+      if self.header['BACKEND'] == 'SAO spectrometer':          # has time axis
+        num_scans = self.data['TSYS'][on_rows].shape[0]
+        num_recs  = self.data['TSYS'][on_rows].shape[2]
+        num_on = num_scans*num_recs       # there is always SIG=True data
+        if len(self.data['SIG'][of_rows]):
+          num_states = 2
+          num_of = self.data['TSYS'][of_rows].shape[0]*self.data['TSYS'][of_rows].shape[2]
+        else:
+          datalen = num_on
+        wx_data['TSYS'] = {}
+        wx_data['TSYS'][True] = numpy.zeros((num_on,
+                                self.props['num cycles'],
+                                self.props['num beams'],
+                                self.props['num IFs']))
+        wx_data['TSYS'][False] = numpy.zeros((num_of,
+                                 self.props['num cycles'],
+                                 self.props['num beams'],
+                                 self.props['num IFs']))
+        for subch_idx in range(self.props['num cycles']):
+          for beam_idx in range(self.props['num beams']):
+            for IF_idx in range(self.props['num IFs']):
+              data_on = self.data['TSYS'][on_rows,beam_idx,:,IF_idx,0,0,0].flatten()
+              wx_data['TSYS'][True][:,subch_idx,beam_idx,IF_idx] = data_on
+              if num_states == 2:
+                data_of = self.data['TSYS'][of_rows,beam_idx,:,IF_idx,0,0,0].flatten()
+                wx_data['TSYS'][False][:,subch_idx,beam_idx,IF_idx] = data_of            
+      elif self.header['BACKEND'] == 'WVSR':
+        pass
+      return wx_data
+      
+    def get_good_wx_data(self):
       """
       eliminates rows which have bad data, like 0 for CYCLE, nan, etc
       
@@ -655,158 +772,127 @@ class DSNFITSexaminer(object):
       CYCLE value of a row to 0.
       
       The good data flags are True if there are any good data and False if
-      there are no good data for that column.
+      there are no good data for that column. They are used internally to
+      construct dicts of good data
       
-      Good data values are returned in the dict 'good_data'
+      Good data values are returned in the dict 'good_data'.  For most values,
+      there is one key.  If the observing mode is PSSW or BPSW, then this
+      key can be True (SIG) or False (REF) according to the True/False
+      value in the data['SIG'] column.
       """
-      scan_keys, cycle_keys, row_keys, obsmodes = get_table_stats(self)
-      if len(obsmodes) > 1:
+      if len(self.obsmodes) > 1:
         raise RuntimeErrror(
-                   "get_good_rows: multiple observing modes not yet supported")
-      num_scans = len(scan_keys)
-      num_cycles = len(cycle_keys)
-      num_rows = len(row_keys)
+                "get_good_wx_data: multiple observing modes not yet supported")
       props, num_indices = self.properties() # table properties
-      # check the data:
-      #    elevations
-      elevation = self.data['ELEVATIO']
-      mask = ~(numpy.isnan(elevation) | numpy.equal(elevation, 0))
-      indices = numpy.where(mask)
-      good_el_data = mask.any()
-      if not good_el_data:
-        self.logger.warning("get_good_rows: elevation data is bad")
-      else:
-        self.logger.debug("get_good_rows: elevations shape: %s",
-                          elevation.shape)
-      #    system temperature
-      if numpy.equal(self.data['TSYS'], 0.).all():
-        good_tsys_data = False
-        self.logger.warning("get_good_rows: Tsys data is bad")
-      else:
-        good_tsys_data = True
-        self.logger.debug("get_good_rows: system temperatures shape: %s",
-                       self.data['TSYS'].shape)
-      #    ambient temperature
-      tamb = self.data['TAMBIENT']
-      mask = ~(numpy.isnan(tamb) | numpy.equal(tamb, 0))
-      good_tamb_data = mask.any()
-      if not good_tamb_data:
-        self.logger.warning("get_good_rows: ambient temperature data is bad")
-      #    pressure
-      pres = self.data['PRESSURE']
-      mask = ~(numpy.isnan(pres) | numpy.equal(pres, 0))
-      good_pres_data = mask.any()
-      if not good_pres_data:
-        self.logger.warning("get_good_rows: pressure data is bad")
-      #    humidity
-      humi = self.data['HUMIDITY']
-      mask = ~(numpy.isnan(humi) | numpy.equal(humi, 0))
-      good_humi_data = mask.any()
-      if not good_humi_data:
-        self.logger.warning("get_good_rows: humidity data is bad")
-      #    windspeed
-      wspe = self.data['WINDSPEE']
-      mask = ~(numpy.isnan(wspe) | numpy.equal(wspe, 0))
-      good_wspe_data = mask.any()
-      if not good_wspe_data:
-        self.logger.warning("get_good_rows: windspeed data is bad")
-      #    winddir
-      wdir = self.data['WINDDIRE']
-      mask = ~(numpy.isnan(wdir) | numpy.equal(wdir, 0))
-      good_wdir_data = mask.any()
-      if not good_wdir_data:
-        self.logger.warning("get_good_rows: wind direction data is bad")
-        
+      # check the data to make sure at least some are good and mask for those:
+      valid_data, indices =  self.validate_wx_data()
+      
       # Initialize for extracting data from simple (single value) columns
       good_data = {}
-      good_data['mpltime'] = []
-      if good_el_data:
-        good_data['elev'] = []
-      if good_tamb_data:
-        good_data['Tambient'] = []
-      if good_pres_data:
-        good_data['pressure'] = []
-      if good_humi_data:
-        good_data['humidity'] = []
-      if good_wspe_data:
-        good_data['windspeed'] = []
-      if good_wdir_data:
-        good_data['winddirec'] = []
-      if good_tsys_data:
+      good_data['mpltime'] = {}
+      if valid_data['ELEVATIO']:
+        good_data['elev'] = {}
+      if valid_data['TAMBIENT']:
+        good_data['Tambient'] = {}
+      if valid_data['PRESSURE']:
+        good_data['pressure'] = {}
+      if valid_data['HUMIDITY']:
+        good_data['humidity'] = {}
+      if valid_data['WINDSPEE']:
+        good_data['windspeed'] = {}
+      if valid_data['WINDDIRE']:
+        good_data['winddirec'] = {}
+      if valid_data['TSYS']:
         good_data['TSYS'] = {}
-      # now make the multi-level dict
-      for cycle in self.cycle_keys: # this loops over subchannels
-        cycle_idx = cycle_keys.index(cycle)
-        if good_data['TSYS'].has_key(cycle_idx):
-          pass
+      # is there any position switching?
+      if self.data['SIG'].all():
+        # there are no reference (off source) data
+        posnsw = False
+      else:
+        posnsw = True
+      self.logger.debug("get_good_wx_data: position switching is %s", posnsw)
+      # create empty lists or dicts
+      for paramkey in good_data.keys():
+        # there are always ONs
+        if paramkey == 'TSYS':
+          good_data[paramkey][True] = {}
         else:
-          good_data['TSYS'][cycle_idx] = {}
-        for beam_idx in range(self.props["num beams"]):
-          if good_data['TSYS'][cycle_idx].has_key(beam_idx):
-            pass
+          good_data[paramkey][True] = []
+        if posnsw:
+          if paramkey == 'TSYS':
+            good_data[paramkey][False] = {}
           else:
-            good_data['TSYS'][cycle_idx][beam_idx] = {}
-          for pol_idx in range(self.props["num IFs"]):
-            if good_data['TSYS'][cycle_idx][beam_idx].has_key(pol_idx):
-              pass
-            else:
-              good_data['TSYS'][cycle_idx][beam_idx][pol_idx] = [] 
+            good_data[paramkey][False] = []
+      self.logger.debug("get_good_wx_data: initial TSYS dict is %s", good_data['TSYS'])
+      # now expand the TSYS dict
+      for sig in [True, False]:
+        for cycle in self.cycle_keys: # this loops over subchannels
+          cycle_idx = self.cycle_keys.index(cycle)
+          make_key_if_needed(good_data['TSYS'][sig], cycle_idx, value={})
+          for beam_idx in range(self.props["num beams"]):
+            make_key_if_needed(good_data['TSYS'][sig][cycle_idx], beam_idx, value={})
+            for pol_idx in range(self.props["num IFs"]):
+              make_key_if_needed(good_data['TSYS'][sig][cycle_idx][beam_idx], pol_idx, value=[])
+      self.logger.debug("get_good_wx_data: expanded TSYS dict is %s",
+                        good_data['TSYS'])
       # process all scans
-      for row in row_keys:
+      for row in self.row_keys:
         # these are simple columns with multiple dimensions
         midnight_unixtime = time.mktime(time.strptime(
                                        self.data['DATE-OBS'][row], "%Y/%m/%d"))
         scan = self.data['SCAN'][row]
         cycle = self.data['CYCLE'][row]
         cycle_idx = cycle - 1
+        sig = self.data['SIG'][row]
         if self.props['time axis'] == True:
+          # there are time-dependent values for every record
           nrecs = self.props['num records'][cycle]
           for rec in range(nrecs):
             first_time = self.data['CRVAL5'][row]
             rectime = first_time + rec*self.data['CDELT5'][row] # numpy.array
             unixtime = midnight_unixtime + rectime
             datime = datetime.datetime.fromtimestamp(unixtime) # datetime
-            good_data['mpltime'].append(date2num(datime))
-            good_data['elev'].append(self.data['ELEVATIO'][row,0,rec,0,0,0,0])
+            # round to roughly 0.1 s
+            good_data['mpltime'][sig].append(round(date2num(datime),6))
+            good_data['elev'][sig].append(self.data['ELEVATIO'][row,0,rec,0,0,0,0])
             for beam_idx in range(self.props["num beams"]):
               beam = beam_idx+1
               for pol_idx in range(self.props["num IFs"]):
                 pol = pol_idx+1
                 indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
                                            beam=beam, record=rec)
-                good_data['TSYS'][cycle_idx][beam_idx][pol_idx].append(
+                good_data['TSYS'][sig][cycle_idx][beam_idx][pol_idx].append(
                                                     self.data['TSYS'][indices])
-            good_data['Tambient'].append(self.data['TAMBIENT'][indices])
-            good_data['pressure'].append(self.data['PRESSURE'][indices])
-            good_data['humidity'].append(self.data['HUMIDITY'][indices])
-            if good_wspe_data:
-              good_data['windspeed'].append(self.data['WINDSPEE'][indices])
-            if good_wdir_data:
-              good_data['winddirec'].append(self.data['WINDDIRE'][indices])
+            good_data['Tambient'][sig].append(self.data['TAMBIENT'][row])
+            good_data['pressure'][sig].append(self.data['PRESSURE'][row])
+            good_data['humidity'][sig].append(self.data['HUMIDITY'][row])
+            if valid_data['WINDSPEE']:
+              good_data['windspeed'][sig].append(self.data['WINDSPEE'][row])
+            if valid_data['WINDDIRE']:
+              good_data['winddirec'][sig].append(self.data['WINDDIRE'][row])
         else:
           unixtime = self.data['UNIXtime'][row]
           datime = datetime.datetime.fromtimestamp(unixtime) # datetime object
-          good_data['mpltime'].append(date2num(datime))
-          good_data['elev'].append(self.data['ELEVATIO'][row])
+          # round to roughly 0.1 s
           for beam_idx in range(self.props["num beams"]):
             beam = beam_idx+1
             for pol_idx in range(self.props["num IFs"]):
               pol = pol_idx+1
-              self.logger.debug(
-                           "get_good_rows: scan=%d, cycle=%d, beam=%d, pol=%d",
-                           scan, cycle, beam, pol)
               indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
                                          beam=beam)
-              self.logger.debug("get_good_rows: indices are %s", indices)
-              good_data['TSYS'][cycle_idx][beam_idx][pol_idx].append(
+              good_data['TSYS'][sig][cycle_idx][beam_idx][pol_idx].append(
                                                     self.data['TSYS'][indices])
-          good_data['Tambient'].append(self.data['TAMBIENT'][row])
-          good_data['pressure'].append(self.data['PRESSURE'][row])
-          good_data['humidity'].append(self.data['HUMIDITY'][row])
-          if good_wspe_data:
-            good_data['windspeed'].append(self.data['WINDSPEE'][row])
-          if good_wdir_data:
-            good_data['winddirec'].append(self.data['WINDDIRE'][row])
+          if cycle == 1:
+            # these are the same for all cycles
+            good_data['mpltime'][sig].append(round(date2num(datime),6))
+            good_data['elev'][sig].append(self.data['ELEVATIO'][row])
+            good_data['Tambient'][sig].append(self.data['TAMBIENT'][row])
+            good_data['pressure'][sig].append(self.data['PRESSURE'][row])
+            good_data['humidity'][sig].append(self.data['HUMIDITY'][row])
+            if valid_data['WINDSPEE']:
+              good_data['windspeed'][sig].append(self.data['WINDSPEE'][row])
+            if valid_data['WINDDIRE']:
+              good_data['winddirec'][sig].append(self.data['WINDDIRE'][row])
       return good_data
 
     def get_first_value(self, column, row):
@@ -842,7 +928,7 @@ class DSNFITSexaminer(object):
       for scan in self.scan_keys:
         scan_idx = self.scan_keys.index(scan) # top level dict for scans
         spectra[scan_idx] = {}
-        for subch in self.cycles:
+        for subch in self.cycle_keys:
           subch_idx = subch-1
           spectra[scan_idx][subch_idx] = {} # 2e level dict is for subchannel
           for beam_idx in range(self.props["num beams"]):
@@ -868,7 +954,7 @@ class DSNFITSexaminer(object):
       then be appended to form a 2D spectrum-time plot (dynamic spectrum).
       """
       images = {}
-      for subch in self.cycles:
+      for subch in self.cycle_keys:
         subch_idx = subch-1
         images[subch_idx] = {}
         for beam_idx in range(self.props["num beams"]):
@@ -934,7 +1020,7 @@ class DSNFITSexaminer(object):
       sum_spectrum /= num_records
       return image, sum_spectrum[:,0]
    
-    def get_spectra(self, rows):
+    def get_spectra(self, rows, remove_warning=False):
       """
       returns each record for each IF as a spectrum
     
@@ -951,26 +1037,48 @@ class DSNFITSexaminer(object):
       @param rows : a list of row numbers
       @type  rows : list of int
       """
+      def remove_empty_records(spectra):
+        """
+        remove end records if any spectrum is empty
+        
+        old TAMS spectra may have records with zeros at the end, but any record
+        may have a zero in the first 100 channels
+        """
+        while (spectra[:,:,:,:,100:] == 0).any() == True:
+          # remove last records to get rid of empty records
+          nrecs = spectra.shape[2]
+          spectra = spectra[:,:,:-1,:,:]
+          if remove_warning:
+            self.logger.warning("normalized_beam_diff: removed last records")
+          # compensate integration time
+          n_TAMS_recs = self.data['EXPOSURE']/5
+          TAMS_intgr = 5*nrecs/n_TAMS_recs
+          self.data['EXPOSURE'] -= TAMS_intgr
+        return spectra
+      
       nrows = len(rows)
       if (self.data['OBSMODE'][rows] == numpy.array(nrows*['LINEPBSW'])).all():
         # this requires a beam axis so...
-        return self.data[self.dataname][rows,:,:,:,0,0,:]
+        spectra = self.data[self.dataname][rows,:,:,:,0,0,:]
       elif (self.data['OBSMODE'][rows] == numpy.array(nrows*['LINEPSSW'])).all():
         if self.num_indices == 6:
-          return self.data[self.dataname][rows,:,:,:,0,0,:]
+          spectra = self.data[self.dataname][rows,:,:,:,0,0,:]
         elif self.num_indices == 5:
           # has a time axis
-          return self.data[self.dataname][rows,:,:,0,0,:]
+          spectra = self.data[self.dataname][rows,:,:,0,0,:]
         elif self.num_indices == 4:
           # has pol axis
-          return self.data[self.dataname][rows,:,0,0,:]
+          spectra = self.data[self.dataname][rows,:,0,0,:]
         else:
           # only one spectrum
-          return self.data[self.dataname][rows,0,0,:]
+          spectra = self.data[self.dataname][rows,0,0,:]
+      return remove_empty_records(spectra)
     
-    def normalized_beam_diff(self, rows, remove_warning=False):
+    def normalized_beam_diff(self, rows):
       """
       (on-source - off-source)/off_source for each record and each pol
+      
+      This only works with spectrometers for two or more beams
       
       Example::
         In [70]: tb0.data['SPECTRUM'].shape
@@ -993,18 +1101,6 @@ class DSNFITSexaminer(object):
       """
       if self.num_indices > 4: # 5 or more axes
         spectra = self.get_spectra(rows)
-        # old TAMS spectra may have records with zeros at the end
-        # any record may have a zero in the first 100 channels
-        while (spectra[:,:,:,:,100:] == 0).any() == True:
-          # remove last records to get rid of empty records
-          nrecs = spectra.shape[2]
-          spectra = spectra[:,:,:-1,:,:]
-          if remove_warning:
-            self.logger.warning("normalized_beam_diff: removed last records")
-          # compensate integration time
-          n_TAMS_recs = self.data['EXPOSURE']/5
-          TAMS_intgr = 5*nrecs/n_TAMS_recs
-          self.data['EXPOSURE'] -= TAMS_intgr
         # spectra indices: row, beam, record, pol, freq
         diff = spectra[:,0,:,:,:]-spectra[:,1,:,:,:] # beam 1 - beam 2
         # diff indices: row, record, pol, freq
@@ -1304,7 +1400,8 @@ class DSNFITSexaminer(object):
         self.logger.error("reduce_line: no data window found")
         return None
                                       
-    def fit_mean_power_to_airmass(self, Tvac_func, replace=False):
+    def fit_mean_power_to_airmass(self, Tvac_func, first=0, last=None,
+                                  replace=False):
       """
       fits the mean power data vs airmass to the radiative transfer equation
     
@@ -1331,88 +1428,95 @@ class DSNFITSexaminer(object):
         x_sec = 1/numpy.sin(x_rad) # secant
         return a + tau*x_sec
     
+      good_wx_data = self.get_wx_datacubes()
       for beam_idx in range(self.props['num beams']):
-        for IFidx in range(self.props['num IFs']):
-          self.logger.debug('fit_mean_power_to_airmass: processing IF%d', IFidx+1)
-          Tvac = Tvac_func(beam=beam_idx, pol=IFidx)
-          pol = ['L','R'][IFidx]
-          msg = "estimated %sCP zenith Tsys in vacuum= %6.2f" % (pol, Tvac)
-          self.header.add_history(msg)
-          # average records here if needed.
-          subch_IDs = range(self.props['num cycles'])
-          self.logger.debug("fit_mean_power_to_airmass: subchannels: %s",
-                          subch_IDs)
-          for subch in subch_IDs:
-            subchannel = subch+1
-            # Get the data for this subchannel.
-            #   the following can be expressed as
-            #     mean_power = self.data['avgpower'][subch::2,IFidx,0,0,0]
-            #   or
-            #     mean_power = self.data['avgpower'][:,IFidx,0,0,0][subch::2]
-            #   or
-            #     mean_power = self.data[subch::2]['avgpower'][:,IFidx,0,0,0]
-            # assuming the first row is the same as the subchannel.  We are
-            # using the first form.  In this form
-            # WVSR data has indices (row,IF,dec,RA,chan)
-            # SAO  data has indices (row,beam,time,IF,dec,RA,chan)
-            if self.props['num beams'] > 1:
-              mean_power = self.data['TSYS'][subch::2,beam_idx,:,IFidx,0,0,0]
-              elevation  = self.data['ELEVATIO'][subch::2,0,:,0,0,0,0]
-            elif self.props['time axis'] == False:
-              if 'avgpower' in self.data.columns.names:
-                mean_power = self.data['avgpower'][subch::2,IFidx,0,0,0]
-              else:
-                mean_power = self.data['TSYS'][subch::2,IFidx,0,0,0]
-              elevation  = self.data['ELEVATIO'][subch::2]
-            else:
-              self.logger.error("fit_mean_power_to_airmass: unknown data shape")
-              raise RuntimeError("unknown data shape")
-            pw_shape = mean_power.shape
-            el_shape = elevation.shape
-            self.logger.debug("fit_mean_power_to_airmass: mean_power shape is %s",
-                              pw_shape)
-            self.logger.debug("fit_mean_power_to_airmass: elevation shape is %s",
-                              el_shape)
-            if pw_shape != el_shape:
-              self.logger.error("fit_mean_power_to_airmass: shapes must be the same")
-              raise RuntimeError("shapes must be the same")
-            # get an elevation array with the 'nan' and zero values removed
-            mask = ~(numpy.isnan(elevation) | numpy.equal(elevation, 0))
-            self.logger.debug("fit_mean_power_to_airmass: mask shape is %s",
-                              mask.shape)
-            elv = elevation[mask]
-            # remove the items with the same indices from mean_power
-            pwr = mean_power[mask]
-            #self.logger.debug('fit_mean_power_to_airmass: elevations: %s', elv)
-            self.logger.debug('fit_mean_power_to_airmass: subch %d pwr shape: %s',
-                          subchannel, pwr.shape)
-            # fit the data
-            popt, pcov = curve_fit(opacity_fitting, elv, pwr, p0=[0, 0])
-            intercept, slope = popt[0], popt[1]
-            self.logger.info(
-             "fit_mean_power_to_airmass: B%dP%d sch%d intercept, slope: %f, %f",
-                         beam_idx+1, IFidx+1, subchannel, intercept, slope)
-            msg = \
-            "IF%d, subch%d gain=%9.3e counts, gain_slope=%9.3e counts/airmass"\
-                % (IFidx+1, subchannel, intercept, slope)
+          self.logger.debug('fit_mean_power_to_airmass: processing beam %d',
+                              beam_idx+1)
+          for IFidx in range(self.props['num IFs']):
+            self.logger.debug('fit_mean_power_to_airmass: processing IF%d',
+                              IFidx+1)
+            pol = ['R','L'][IFidx]
+            Tvac = Tvac_func(beam=beam_idx, pol=pol)
+            msg = "estimated %sCP zenith Tsys in vacuum= %6.2f" % (pol, Tvac)
             self.header.add_history(msg)
-            if replace:
+            # average records here if needed.
+            subch_IDs = range(self.props['num cycles'])
+            self.logger.debug("fit_mean_power_to_airmass: subchannels: %s",
+                              subch_IDs)
+            for subch in subch_IDs:
+              subchannel = subch+1
+              # Get the data for this subchannel.
+              mean_power = good_wx_data['TSYS'][True][:,subch,beam_idx,IFidx]
+              elevation  = good_wx_data['ELEVATIO'][True]
+              if good_wx_data['TSYS'].has_key(False):
+                # include SIG False data if it exists
+                mean_power = numpy.append(mean_power,
+                            good_wx_data['TSYS'][False][:,subch,beam_idx,IFidx],
+                                          axis=0)
+                elevation  = numpy.append(elevation,
+                                          good_wx_data['ELEVATIO'][False],
+                                          axis=0)
+              if last:
+                E = elevation[first:last+1]
+                P = mean_power[first:last+1]
+              else:
+                E = elevation[first:]
+                P = mean_power[first:]
+              #self.logger.debug("fit_mean_power_to_airmass: elevation: %s", E)
+              #self.logger.debug("fit_mean_power_to_airmass: mean_power: %s", P)
+              # fit the data
+              # estimate the slope and intercept:
+              ind_max = (1/numpy.sin(numpy.deg2rad(E))).argmax()
+              ind_min = (1/numpy.sin(numpy.deg2rad(E))).argmin()
+              x_max = (1/numpy.sin(numpy.deg2rad(E)))[ind_max]
+              x_min = (1/numpy.sin(numpy.deg2rad(E)))[ind_min]
+              y_max = P[ind_max]
+              y_min = P[ind_min]
+              slope = (y_max-y_min)/(x_max-x_min)
+              intercept = y_min - slope*x_min
+              self.logger.debug(
+               "fit_mean_power_to_airmass: est. intercept = %f and slope = %f",
+               intercept,slope)
+              #popt, pcov = curve_fit(opacity_fitting, E, P, p0=[intercept, slope])
+              #intercept, slope = popt[0], popt[1]
+              x = 1/numpy.sin(numpy.deg2rad(E))
+              slope, intercept, r_value, p_value, std_err = linregress(x, P)
+              errors = (0, std_err)
+              self.logger.info("fit_mean_power_to_airmass:" +
+                               " B%dP%d sch%d intercept, slope: %f, %f",
+                               beam_idx+1, IFidx+1, subchannel,
+                               intercept, slope)
+              #self.logger.debug("fit_mean_power_to_airmass: covariance = %s", pcov)
+              #if pcov == numpy.inf:
+              #  continue
+              #errors = numpy.sqrt(numpy.diag(pcov))
+              msg = "IF%d, subch%d gain=%9.3e +/- %9.3e counts, gain_slope=%9.3e +/- %9.3e counts/am" % \
+                    (IFidx+1, subchannel,
+                     intercept, errors[0], slope, errors[1])
+              self.header.add_history(msg)
               gain = Tvac/intercept
+              gain_err = (gain/intercept)*errors[0]
               K_per_am = gain*slope
-              self.logger.debug(
-           "fit_mean_power_to_airmass: convert power to Tsys for subch%s %sCP",
-                          subch+1, pol)
-              new_indices = numpy.where(self.data['CYCLE'] == subchannel)[0]
-              self.logger.debug(
-                          "fit_mean_power_to_airmass: table rows for Tsys: %s",
-                          new_indices)
-              self.logger.debug(
-                          "fit_mean_power_to_airmass: destination shape is %s",
-                          self.data['TSYS'][new_indices,IFidx,0,0,0].shape)
-              self.data['TSYS'][new_indices,IFidx,0,0,0] = gain * pwr
-            #else:
-            #  self.logger.warning(
-            #            "fit_mean_power_to_airmass: failed; Tsys not computed")
+              K_per_am_err = gain*errors[1]
+              self.logger.info("fit_mean_power_to_airmass:" +
+                               " B%dP%d sch%d gain, K/am: %6.2f +/- %5.2f, %4.2f +/- %4.2f",
+                               beam_idx+1, IFidx+1, subchannel,
+                               gain, gain_err, K_per_am, K_per_am_err)
+              if replace:
+                # there are conversion constants for each switch state (SIG),
+                # beam (6th data axis), IF (or pol, 4th data axis) and
+                # subchannel (CYCLE)
+                if len(self.data['TSYS'].shape) == 5:
+                  # WVSR data
+                  rowlist = list(self.select({'SIG': sig, 'CYCLE': subchannel}))
+                  rowlist.sort()
+                  first = rowlist[0]
+                  last = rowlist[-1]+1
+                  step = rowlist[1]-rowlist[0]
+                  self.data['TSYS'][first:last:step, IFidx, 0, 0] *= gain
+                else:
+                  self.logger.warning(
+                 "fit_mean_power_to_airmass: unknown shape; Tsys not computed")
 
     def properties(self):
       """
@@ -1526,6 +1630,25 @@ class DSNFITSexaminer(object):
           for pol in pols:
             self.data[self.dataname][row][pol,0,0] = clobber(
                              self.data[self.dataname][row][pol,0,0], tone_channel)
+
+    def get_rows(self, keyword, value):
+      """
+      Get all the rows where the in the 'keyword' column equals 'value'
+      """
+      return numpy.where(self.data[keyword] == value)[0]
+
+    def select(self, selections):
+      """
+      Select rows according to multiple criteria.
+      """
+      keys = selections.keys()
+      key = keys[0]
+      value = selections[key]
+      selected = set(self.get_rows(key, value))
+      for key in keys[1:]:
+        value = selections[key]
+        selected = selected.intersection(set(self.get_rows(key, value)))
+      return list(selected)
       
     class Data(object):
       """
@@ -1670,4 +1793,3 @@ def get_power_range(table, subch, beam, pol):
             else:
               ymin = mean_pwr - 4*pwr_std
             return ymin, ymax
-

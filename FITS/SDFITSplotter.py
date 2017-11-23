@@ -42,6 +42,8 @@ import logging
 import numpy as np
 import re
 
+from matplotlib import rcParams
+from matplotlib.dates import DateFormatter, epoch2num
 from matplotlib.font_manager import FontProperties
 from os.path import basename
 from pylab import *
@@ -62,6 +64,8 @@ plotsymbols = ['o','v','^','<','>',
 
 fontP = FontProperties()
 fontP.set_size('x-small')      
+
+seconds_formatter = DateFormatter("%H:%M:%S")
 
 class DSNFITSplotter(DSNFITSexaminer):
   """
@@ -413,7 +417,8 @@ class DSNFITSplotter(DSNFITSexaminer):
         grid()
         xlim(*window)
         legend(prop=fontP)
-        titlestr = source+" DSS-"+str(self.dss)+" "+self.datestr+" "+self.timestr
+        titlestr = \
+                 source+" DSS-"+str(self.dss)+" "+self.datestr+" "+self.timestr
         title(titlestr)
         xlabel("$V_{LSR}$ (km s$^{-1}$")
         ylabel("$T_{ant}$ (K)")
@@ -422,79 +427,86 @@ class DSNFITSplotter(DSNFITSexaminer):
           savefig(savepath+fname)
         return {"rms": rms, "Tsys": Tsys, "intgr": intgr}
     
-    def plot_Tsys(self):
+    def plot_all_Tsys(self):
       """
-      Plots of system tempearture for all subchannels, beams and pols
+      Displays all Tsys values so user can select row range
       
-      If there is no time axis then there is a time and a Tsys for every scan,
-      cycle and pol, that is, four plots over rows.
-      
-      If there is a time axis then there is also a time and Tsys for every 
-      record
+      This works for WVSR data but needs to be elaborated for SAO data
       """
-      # Output the run of system temperatures as a diagnostic:
-      for cycle in self.cycle_keys:
-        cycle_idx = self.cycle_keys.index(cycle)
-        fig, ax = subplots(self.props['num beams'],self.props['num IFs'])
-        cindex = 0 # count for color selection
+      figure()
+      stride = self.props['num cycles']*self.props['num IFs']
+      for cycle_idx in range(self.props['num cycles']):
+        for beam_idx in range(self.props['num beams']):
+          for pol_idx in range(self.props['num IFs']):
+            label = self.make_legend_labels(sckey=cycle_idx, bmkey=beam_idx,
+                                            plkey=pol_idx)
+            for sig in [True, False]:
+              if sig:
+                lbl = label+" on"
+                ls = "-"
+                index = cycle_idx
+              else:
+                lbl = label+" off"
+                ls = "--"
+                index = 2+cycle_idx
+              plot(self.data['TSYS'][index:len(self.row_keys):stride,
+                                     pol_idx,0,0,0], ls=ls, label=lbl)
+      grid()
+      legend(loc='best')
+      xlabel("row")
+      ylabel("average power")
+      title(self.datestr)
+      show()
+      
+    def plot_Tsys(self, X=None):
+      """
+      Plot average power versus time or airmass or list index
+      
+      Options for X are::
+        "time"    - time of measurement
+        "airmass" - 1/sin(elev)
+        None      - list index
+      """
+      #good_wx_data = self.get_good_wx_data()
+      good_wx_data = self.get_wx_datacubes()
+      fig = {}
+      ax = {}
+      for subch in self.cycle_keys:
+        cycle_idx = subch - 1
+        fig[subch], ax[subch] = subplots(nrows=1, ncols=1)
+        fig[subch].suptitle("Subchannel "+str(subch))
         for beam in range(self.props['num beams']):
           for pol in range(self.props['num IFs']):
-            # just get the shape of the data cube
-            indices = self.get_indices()
-            if len(indices) == 6:
-              # row, beam, record, IF, dec, RA, time
-              plottimes = \
-               UnixTime_to_MPL(self.data['UNIXtime'][:,beam,:,cycle_idx,0,0,0])
-              tsys = self.data['TSYS'][:,beam,:,cycle_idx,0,0,0]
-            elif len(indices) == 4:
-              # row, IF, dec, RA, time
-              plottimes = UnixTime_to_MPL(self.data['UNIXtime'][:])
-              tsys = self.data['TSYS'][:,cycle_idx,0,0,0]
-            else:
-              self.logger.error("plot_Tsys: %d axes is invalid", len(indices))
-              raise RuntimeError("invalid number of data axes")
-            # draw the line
-            ax[beam][pol].plot_date(plottimes[:len(tsys)], tsys, linestyle='-')
-            # show the samples
-            if beam == 0 and pol == 0:
-              ax[beam][pol].plot_date(plottimes, tsys,
-                        label="Pol "+str(pol) + " Beam "+str(beam))
-            else:
-              ax[beam][pol].plot_date(plottimes, tsys)
-            cindex += 1
-            ylabel(r"T$_{sys}$ (K)")
-            legend(loc='best', fontsize='xx-small', numpoints=1)
-            grid()
-            titlestr = clean_TeX(self.data['DATE-OBS'][0])
-            title(titlestr)
-        fig.autofmt_xdate()
-    
-    def plot_Tsys_vs_am(self, axes):
-      """
-      plot system temperature versus airmass
-      
-      @param axes : subplot to use
-      @type  axes : matplotlib.axes.Axes object
-      """
-      good_wx_data = self.get_good_rows()
-      if good_wx_data.has_key('elev') and good_wx_data.has_key('TSYS'):
-        for subch in range(self.props['num cycles']):
-          for beam in range(self.props['num beams']):
-            for pol in range(self.props['num IFs']):
-              label = make_legend_labels(
-                                        sckeys=range(self.props['num cycles']),
-                                        bmkeys=range(self.props['num beams']),
-                                        plkeys=range(self.props['num IFs']),
-                                        sckey=subch, bmkey=beam, plkey=pol)
-              color_index = self.props['num beams']*(self.props['num cycles'] \
-                           *subch + beam) + pol
-              axes.plot(1/sin(pi*array(good_wx_data['elev'])/180.)[
-                                             subch::self.props['num cycles']],
-                        good_wx_data['TSYS'][subch][beam][pol],
-                        color=plotcolors[color_index],
-                        label=label)
-      axes.set_xlabel("Airmass")
-      axes.grid()
+            for sig in [True, False]:
+              plottimes = epoch2num(good_wx_data['UNIXtime'][sig])
+              tsys = good_wx_data['TSYS'][sig][:,cycle_idx,beam,pol]
+              label = self.make_legend_labels(bmkey=beam, plkey=pol)
+              if sig:
+                lbl = label+" sig"
+                ls = "-"
+              else:
+                lbl = label+" ref"
+                ls = "--"
+              if X == "time":
+                ax[subch].plot_date(plottimes, tsys, linestyle=ls, marker='.',
+                                    color=plotcolors[int(sig)], label=lbl)
+              elif X == "airmass":
+                ax[subch].plot(1/sin(pi*array(good_wx_data['ELEVATIO'][sig])/180.),
+                               tsys, marker='.', ls=ls, label=lbl)
+              else:
+                ax[subch].plot(tsys, marker='.', ls=ls, label=lbl)
+        ax[subch].grid(True)
+        ax[subch].legend(loc='best', fontsize='xx-small', numpoints=1)
+        if X == "time":
+          ax[subch].xaxis.set_major_formatter(seconds_formatter)
+          fig[subch].autofmt_xdate()
+        elif X == "airmass":
+          ax[subch].set_xlabel("Airmass")
+        else:
+          ax[subch].set_xlabel("index")
+        ax[subch].set_title(clean_TeX(self.data['DATE-OBS'][0]))
+        fig[subch].show()
+                
 
   #--------------------------- DSNFITSplotter methods -------------------------
   
@@ -595,43 +607,6 @@ class DSNFITSplotter(DSNFITSexaminer):
     show()
     self.logger.info("plot_spectrum: pol0, pol1, avg: %s", rms)
     return rms
-    
-  def plot_Tsys(self):
-    """
-    """
-    # Output the run of system temperatures as a diagnostic:
-    if self.dataset == {}:
-      self.get_datasets()
-    ds0 = self.dataset[0]
-    fig = figure()
-    for dskey in self.dataset.keys():
-      ds = self.dataset[dskey]
-      self.logger.debug("plot_Tsys: dataset %d scan keys: %s", dskey, ds.scan_keys)
-      for key in ds.scan_keys:
-        index = ds.scan_keys.index(key)
-        plottimes = UnixTime_to_MPL(ds.header['time'][index])
-        cindex = 0
-        for pol in [0,1]:
-          for beam in [0,1]:
-            tsys = ds.header['TSYS'][index][pol,:len(plottimes),beam]
-            plot_date(plottimes[:len(tsys)], tsys, linestyle='-', 
-                      color=plotcolors[cindex], marker=plotsymbols[dskey])
-            if key == ds.scan_keys[0]:
-              plot_date(plottimes[0], tsys[0],
-                        color=plotcolors[cindex],
-                        marker=plotsymbols[dskey],
-                        label=clean_TeX(basename(ds.file))+", Pol "+str(pol) \
-                        +" Beam "+str(beam))
-            else:
-              plot_date(plottimes[0], tsys[0], color=plotcolors[cindex],
-                        marker=plotsymbols[dskey])
-            cindex += 1
-    ylabel(r"T$_{sys}$ (K)")
-    legend(loc='best', fontsize='xx-small', numpoints=1)
-    grid()
-    titlestr = clean_TeX(str(ds0.year)+"/"+str(ds0.doy))
-    title(titlestr)
-    fig.autofmt_xdate()
 
 #----------------------------------- module functions -------------------------
 

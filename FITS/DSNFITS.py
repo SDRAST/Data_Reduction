@@ -168,7 +168,6 @@ class FITSfile(object):
     # frequency switching offset
     self.columns += pyfits.ColDefs(
                      [pyfits.Column(name='FOFFREF1',  format='1E', unit='Hz')])
-    self.make_offset_columns()
     
   def make_offset_columns(self, numrecs=1, 
                           Aoff=False,Xoff=True,Eoff=True,

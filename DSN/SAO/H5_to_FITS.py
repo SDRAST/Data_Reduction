@@ -167,7 +167,7 @@ class FITSfile_from_SAO(FITSfile):
     self.add_site_data(self.exthead)
     
     # make the basic columns that are always needed
-    self.make_basic_columns(numrecs=nrecs)
+    self.make_basic_columns()
 
     # add the backend data
     self.get_hardware_metadata(BE)
@@ -177,6 +177,9 @@ class FITSfile_from_SAO(FITSfile):
     
     # add multi-dimensioned metadata
     self.add_time_dependent_columns(nrecs)
+    
+    # beam offsets
+    self.make_offset_columns(numrecs=nrecs)
 
     # column for TSYS, one value for each IF
     beam_dim = "(1,1,1,2,"+str(nrecs)+",2)"
@@ -229,7 +232,7 @@ class FITSfile_from_SAO(FITSfile):
     self.logger.debug("make_SAO_table: computed scan shape: %s", dimsval)
     data_format = str(fmt_multiplier)+"E"
     self.logger.debug("make_SAO_table: data_format = %s", data_format)
-    self.columns.add_col(pyfits.Column(name='SPECTRUM', format=data_format,
+    self.columns.add_col(pyfits.Column(name='DATA', format=data_format,
                          dim=dimsval))
     
     # create the table extension
@@ -354,6 +357,7 @@ class FITSfile_from_SAO(FITSfile):
                         dataset.header['ant_az'][index][:numrecs].reshape(time_shp)
       tabhdu.data[index]['ELEVATIO'] = \
                         dataset.header['ant_el'][index][:numrecs].reshape(time_shp)
+      # weather
       tabhdu.data[index]['TAMBIENT'] = \
                       dataset.header['TAMBIENT'][index][:numrecs].reshape(time_shp)
       tabhdu.data[index]['PRESSURE'] = \
@@ -364,6 +368,11 @@ class FITSfile_from_SAO(FITSfile):
                       dataset.header['WINDSPEE'][index][:numrecs].reshape(time_shp)
       tabhdu.data[index]['WINDDIRE'] = \
                       dataset.header['WINDDIRE'][index][:numrecs].reshape(time_shp)
+      # pointing offsets
+      tabhdu.data[index]['BEAMXOFF'] = \
+                      dataset.header['BEAMXOFF'][index][:numrecs].reshape(time_shp)
+      tabhdu.data[index]['BEAMEOFF'] = \
+                      dataset.header['BEAMEOFF'][index][:numrecs].reshape(time_shp)
       
       # for first data axis (frequency)
       # THIS IS A HACK BECAUSE (see above)                               ! !!!!
@@ -412,7 +421,7 @@ class FITSfile_from_SAO(FITSfile):
       tabhdu.data[index]['CDELT6'] = 1
       
       # the data in dataset in keyed on scan number
-      tabhdu.data[index]['SPECTRUM'] = dataset.data[scan][:,:,:,:,:numrecs,:].transpose()
+      tabhdu.data[index]['DATA'] = dataset.data[scan][:,:,:,:,:numrecs,:].transpose()
       
       if dataset.header['nod'][index]:
         tabhdu.data[index]['SIG'] = False
@@ -425,230 +434,11 @@ class FITSfile_from_SAO(FITSfile):
       
       # unnecessary core keywords
       tabhdu.data[index]['TIME'] = tabhdu.data[index]['CRVAL5']
-      
+
       # these still need attention
       #tabhdu.data[index]['CAL'] =
       #tabhdu.data[index]['FOFFREF1'] = 
     return tabhdu
-
-# ------------------------------ removed from class ---------------------------
-    
-  def old_make_data_axis(self, header, columns,
-                             daxis,
-                             length,
-                             dtype,
-                             dformat,
-                             unit=None, comment=None):
-    """
-    create header item and columns for a data axis
-
-    @param tbhdu : extension (table HDU)
-    @type  tbhdu : pyfits.TableHDU objetc
-    
-    @param daxis : axis number
-    @type  daxis : int
-    
-    @param length : length of the axis (number of 'pixels')
-    @type  length : int
-
-    @param dtype : axis data type
-    @type  dtype : str
-
-    @param dformat : "D", "E", "I"
-    @type  dformat : str
-    
-    @param unit : unit of measurement (defaults to SI or None)
-    @type  unit : str
-    """
-    if comment == None:
-      comment = "SPECTRUM axis "+str(daxis)
-    header['ctype'+str(daxis)] = (dtype, comment)
-    if unit:
-      newcols = pyfits.ColDefs(
-            [pyfits.Column(name='CRVAL'+str(daxis), format='1'+dformat, unit=unit),
-             pyfits.Column(name='CRPIX'+str(daxis), format='1I'),
-             pyfits.Column(name='CDELT'+str(daxis), format='1'+dformat, unit=unit)])
-    else:
-      newcols = pyfits.ColDefs(
-            [pyfits.Column(name='CRVAL'+str(daxis), format='1'+dformat),
-             pyfits.Column(name='CRPIX'+str(daxis), format='1I'),
-             pyfits.Column(name='CDELT'+str(daxis), format='1'+dformat)])
-    for col in newcols:
-      columns.add_col(col)
-    header['maxis'+str(daxis)] = length
-    self.logger.debug("make_data_axis: MAXIS%d = %d", daxis, length)
-    return header, columns
-
-  def old_make_basic_columns(self, numrecs=1):
-    """
-    Make the minimum set of columns needed by SDFITS
-
-    This make the REQUIRED columns for an SDFITS binary table::
-    * SCAN     - scan number
-    * CYCLE    - subscan number; increments by 1 within a row
-    * DATE-OBS - ISO format date and time
-    * OBJECT   - source name
-    * OBSMODE  - observing mode
-    * SIG      - True if on-source
-    * CAL      - True if noise diode is on
-    * TCAL     - effective noise diode temperature
-    * EXPOSURE - integration time, sec
-    * BANDWIDT - spectrometer bandwidth, Hz
-    * TSYS     - system temperature
-    * RESTFREQ - frequency of spectral line in the local frame
-    * OBSFREQ  - center frequency of the receiver
-    * VELDEF   - definition of the reference frame
-    * RVSYS    - radial velocity of source w.r.t. telescope
-    * VFRAME   - radial velocity of rest frame w.r.t. telescope
-    * VELOCITY - radial velocity of source w.r.t. rest frame
-    * EQUINOX  - epoch for source coordinates
-    * FOFFREF1 - frequency offset for frequency switching
-    * FRONTEND -
-    * RECEIVER -
-    * SAMPLER  -
-    * UTIME    - a required FITS keyword
-
-    To these are usually appended the various beam offsets available at DSN
-    antennas.  See 'make_offset_columns'.
-
-    @param numrecs : minimum of the number of records in each scan
-    @type  numrecs : 1
-    """
-    # create empty column data arrays
-    # create required columns.
-
-    cols = pyfits.ColDefs([
-      pyfits.Column(name='SCAN',     format='1I'),
-      pyfits.Column(name='CYCLE',    format='1I'),
-      pyfits.Column(name='DATE-OBS', format='16A'),
-      pyfits.Column(name='OBJECT',   format='16A'),
-      pyfits.Column(name='OBSMODE',  format='8A'),
-      pyfits.Column(name='SIG',      format='1L'),
-      pyfits.Column(name='CAL',      format='1L'),
-      pyfits.Column(name='TCAL',     format='1E'),
-      pyfits.Column(name='EXPOSURE', format='1E', unit='s'),
-      pyfits.Column(name='TIME',     format='1E', unit='s'),
-      pyfits.Column(name='BANDWIDT', format='1E', unit='Hz'),
-      pyfits.Column(name='SIDEBAND', format='1A'),
-      pyfits.Column(name='RESTFREQ', format='1D', unit='Hz'),
-      pyfits.Column(name='OBSFREQ',  format='1D', unit='Hz')])
-    # Velocity data
-    cols += pyfits.ColDefs(
-                [pyfits.Column(name='VELDEF',   format='8A'),
-                 pyfits.Column(name='RVSYS',    format='1E', unit='m/s'),
-                 pyfits.Column(name='VFRAME',   format='1E', unit='m/s'),
-                 pyfits.Column(name='VELOCITY', format='1E', unit='m/s'),
-                 pyfits.Column(name='EQUINOX',  format='1E')])
-
-    # frequency switching offset
-    cols += pyfits.ColDefs(
-                     [pyfits.Column(name='FOFFREF1',  format='1E', unit='Hz')])
-    
-    cols += self.make_offset_columns(numrecs)
-
-    # MORE TO ADD !!!!!!!!!!!!!!!
-    #  for consideration
-    # NSCANS
-    return cols
-
-  def old_add_time_dependent_columns(self, numrecs, cols):
-    """
-    create columns for the time-dependent metadata
-    """
-    time_dim = "(1,1,1,1,"+str(numrecs)+",1)" # FORTRAN order means reversed
-    #cols.add_col(pyfits.Column(name='TIMESTAMP',
-    #                           format=str(numrecs)+'D',
-    #                           dim=time_dim))
-    cols.add_col(pyfits.Column(name='LST',
-                               format=str(numrecs)+'D',
-                               dim=time_dim))
-    cols.add_col(pyfits.Column(name='UNIXtime',
-                               format=str(numrecs)+'D',
-                               dim=time_dim))
-    cols.add_col(pyfits.Column(name='AZIMUTH',
-                               format=str(numrecs)+'E',
-                               dim=time_dim))
-    cols.add_col(pyfits.Column(name='ELEVATIO',
-                               format=str(numrecs)+'E',
-                               dim=time_dim))
-    cols.add_col(pyfits.Column(name='TAMBIENT',
-                               format=str(numrecs)+'E',
-                               dim=time_dim))
-    cols.add_col(pyfits.Column(name='PRESSURE',
-                               format=str(numrecs)+'E',
-                               dim=time_dim))
-    cols.add_col(pyfits.Column(name='HUMIDITY',
-                               format=str(numrecs)+'E',
-                               dim=time_dim))
-    cols.add_col(pyfits.Column(name='WINDSPEE',
-                               format=str(numrecs)+'E',
-                               dim=time_dim))
-    cols.add_col(pyfits.Column(name='WINDDIRE',
-                               format=str(numrecs)+'E',
-                               dim=time_dim))
-    return cols
-    
-  def old_make_offset_columns(self, numrecs, 
-                          Aoff=False,Xoff=True,Eoff=True,
-                          equatorial=False,
-                          galactic=False,
-                          refpos=False):
-    """
-    beam offsets such as those used to make maps
-
-    Notes
-    =====
-    
-    Pointing
-    ~~~~~~~~
-    These are not pointing offsets used by the antenna control computer to
-    align the beam with the source.
-    
-    Columns
-    ~~~~~~~
-    Unused columns, that is, all zeros, should not be included so I think this
-    method needs some arguments.  Do we need the REF offsets?
-    These are the offsets used by DSN antennas::
-      BEAMAOFF - azimuth offset
-      BEAMXOFF - cross-elevation offset
-      BEAMEOFF - elevation offset
-      BEAMHOFF - hour angle offset
-      BEAMCOFF - cross-declination offset
-      BEAMDOFF - declination offset
-    On 2016 Dec 22 these were added::
-      BEAMLOFF - galactic longitude offset
-      BEAMBOFF - galactic latitude offset
-      BEAMGOFF - galactic cross-latitude offset\end{verbatim}
-    """
-    # always required
-    if numrecs > 1:
-      cols = pyfits.ColDefs([pyfits.Column(name='BEAMXOFF',
-                                           format=str(numrecs)+'E',
-                                          dim="(1,1,1,1,"+str(numrecs)+",1)"),
-                             pyfits.Column(name='BEAMEOFF',
-                                           format=str(numrecs)+'E',
-                                          dim="(1,1,1,1,"+str(numrecs)+",1)")])
-    else:
-      cols = pyfits.ColDefs([pyfits.Column(name='BEAMXOFF',
-                                           format='E', unit='deg'),
-                             pyfits.Column(name='BEAMEOFF',
-                                           format='E', unit='deg')])
-                                           
-    # the following are traditional columns.  Use above format for dimensioned
-    # columns
-    if Aoff: # if needed
-      cols.add_col(pyfits.Column(name='BEAMAOFF', format='E', unit='deg'))
-    if equatorial: # equatorial offsets
-      cols.add_col(pyfits.Column(name='BEAMHOFF', format='E', unit='deg'))
-      cols.add_col(pyfits.Column(name='BEAMCOFF', format='E', unit='deg'))
-      cols.add_col(pyfits.Column(name='BEAMDOFF', format='E', unit='deg'))
-    if galactic:# find this code
-      pass 
-    if refpos: # reference position for position switching
-      cols.add_col(pyfits.Column(name='REF_HOFF', format='E', unit='deg'))
-      cols.add_col(pyfits.Column(name='REF_DOFF', format='E', unit='deg'))
-    return cols
-
 
 #--------------------------------- module functions ---------------------------
 

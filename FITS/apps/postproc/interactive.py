@@ -147,13 +147,6 @@ def get_average(examiners, source='67P_CG_201'):
     sum_y[polkey] /= sum_intgr[polkey]
     sum_Tsys[polkey] /= sum_intgr[polkey]
   return x, sum_y, sum_Tsys, sum_intgr
-
-def figure_rows_and_columns(nspectra):
-  """
-  """
-  cols = int(sqrt(nspectra))
-  rows = int(ceil(nspectra/rows))
-  return rows, cols
   
   
 examples = """
@@ -211,4 +204,13 @@ if __name__ == "__main__":
     year = None
     DOY = None
   sa = SessionAnalyzer(project=args.project, dss=args.dss, year=year, DOY=DOY)
+  # assume one table per file
+  pl = {}
+  for key in sa.examiners.keys():
+    pl[key] = sa.examiners[key].plotter[0]
+  table_keys = pl.keys()
+  table_keys.sort()
+  
+  
+  
 

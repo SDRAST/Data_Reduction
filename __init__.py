@@ -21,29 +21,27 @@ from support.text import select_files
 
 logger = logging.getLogger(__name__)
 
-def get_obs_session(project=None, dss=None, date=None):
+def get_obs_session(project=None, dtype="FITS", dss=None, date=None):
   """
   Asks user for parameters to locate observation session paths
   
-  This expects two directory trees to exist.  For raw data::
-    /usr/local/RA_data/HDF5/
+  This expects one of two directory trees to exist.  If dtype is given::
+    /usr/local/RA_data/dtype/
       dssXX/
         YEAR/
           DOY/
-  and for pickled data::
-    /usr/local/project_data/
+  or if project is given::
+    /usr/local/projects/project/Observations/
       dssXX/
         YEAR/
           DOY/
-  
-  @param raw : if True data will come from /usr/local/RA_data/
-  @type  raw : bool
-  
-  @param datafmt : optional "HDF5" or "SDFITS" or ... for sub-directory
-  @type  datafmt : str
+  If neither is given it will prompt for a project.
   
   @param project : optional name as defined in /usr/local/projects
   @type  project : str
+  
+  @param dtype : optional data type, default FITS; ignored if project is given
+  @type  dtype : str
   
   @param dss : optional station number
   @type  dss : int
@@ -53,22 +51,24 @@ def get_obs_session(project=None, dss=None, date=None):
   
   @return: project, DSS, year, DOY.
   """
-  # get the path to the project directory
+  # get the path to the session directory
   if project:
-    projectpath = "/usr/local/projects/"+project+"/"
+    sessionpath = "/usr/local/projects/"+project+"/Observations/"
+  elif dtype:
+    sessionpath = "/usr/local/RA_data/"+dtype+"/"
   else:
-    projectpath = select_files("/usr/local/projects/*",
+    sessionpath = select_files("/usr/local/projects/*", ftype="dir",
                                text="Select a project by index: ", single=True)
-    project = basename(projectpath)
-    if projectpath[-1] != "/":
-      projectpath += "/"
-  logger.debug("get_obs_session: project path: %s", projectpath)
+    project = basename(sessionpath)
+    if sessionpath[-1] != "/":
+      sessionpath += "/"
+  logger.debug("get_obs_session: project path: %s", sessionpath)
 
   # get the path to the project DSS sub-directory
   if dss:
-    dsspath = projectpath+"Observations/dss"+str(dss)+"/"
+    dsspath = sessionpath+"dss"+str(dss)+"/"
   else:
-    dsspath = select_files(projectpath+"Observations/dss*",
+    dsspath = select_files(sessionpath+"dss*", ftype="dir",
                            text="Select a station by index: ", single=True)
     logger.debug("get_obs_session: selected: %s", dsspath)
     dss = int(basename(dsspath)[-2:])
@@ -78,13 +78,13 @@ def get_obs_session(project=None, dss=None, date=None):
     yr = int(items[0])
     doy = int(items[1])
   else:
-    yrpath = select_files(dsspath+"/20*",
+    yrpath = select_files(dsspath+"/20*", ftype="dir",
                                   text="Select a year by index: ", single=True)
     if yrpath:
       logger.debug("get_obs_session: year path: %s", yrpath)
       yr = int(basename(yrpath))
       yrpath += "/"
-      doypath = select_files(yrpath+"/*",
+      doypath = select_files(yrpath+"/*", ftype="dir",
                                    text="Select a day BY INDEX: ", single=True)
       doy = int(basename(doypath))
       doypath += '/'
@@ -118,8 +118,12 @@ def get_obs_dirs(project, station, year, DOY, datafmt=None):
   logger.debug("get_obs_dirs: type %s for %s, DSS%d, %4d/%03d",
                datafmt, project, station, year, DOY)
   obspath = "dss%2d/%4d/%03d/" %  (station,year,DOY)
-  projdatapath = "/usr/local/project_data/"+project+"/"+obspath
-  projworkpath = "/usr/local/projects/"+project+"/Observations/"+obspath
+  if project:
+    projdatapath = "/usr/local/project_data/"+project+"/"+obspath
+    projworkpath = "/usr/local/projects/"+project+"/Observations/"+obspath
+  else:
+    projdatapath = ""
+    projworkpath = ""
   if datafmt:
     rawdatapath = "/usr/local/RA_data/"+datafmt+"/"+obspath
   else:
@@ -300,7 +304,7 @@ def reduce_spectrum_channels(spectrum, refval, refpix, delta, num_chan=1024):
   newdelta = delta*num_chan_avg
   logger.debug("reduce_spectrum_channels: delta from %.3f to %.3f",
                delta, newdelta)
-  newrefval = refval+newdelta/2
+  newrefval = refval + delta*(num_chan_avg/2 - 1)
   logger.debug("reduce_spectrum_channels: refval from %.3f to %.3f",
                refval, newrefval)
   logger.debug("reduce_spectrum_channels: averaging %d channels", num_chan_avg)

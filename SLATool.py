@@ -18,6 +18,7 @@ from pylab import *
 from Data_Reduction import get_obs_dirs, get_obs_session
 from Data_Reduction.FITS.DSNFITS import FITSfile
 from Data_Reduction.FITS.SDFITSplotter import DSNFITSplotter,make_legend_labels
+from DatesTimes import UnixTime_to_datetime
 from DSMS import DSN_complex_of
 from MonitorControl import Observatory, Telescope
 from Radio_Astronomy import rms_noise
@@ -130,36 +131,40 @@ class SessionAnalyzer(object):
     
     True means that some table has good data but not necessarily all.
     """
-    have_elev = False
-    have_Tsys = False
-    have_Tambient = False
-    have_pressure = False
-    have_humidity = False
-    have_windspeed = False
-    have_winddirec = False
+    good_data = {}
     for exkey in self.examiner_keys:
       examiner = self.examiners[exkey]
-      self.logger.debug("tsys_summary: data file is %s", examiner.datafile)
+      self.logger.debug("get_good_weather_data: data file is %s", examiner.datafile)
       # assume multiple tables are in time order
       tablekeys = examiner.tables.keys()
       tablekeys.sort
+      self.logger.debug("get_good_weather_data: table keys %s", tablekeys)
       for tablekey in tablekeys:
         table = examiner.tables[tablekey]
-        good_data = table.get_good_rows()
-        if good_data.has_key('elev'):
-          have_elev = True
-        if good_data.has_key('TSYS'):
-          have_Tsys = True
-        if good_data.has_key('Tambient'):
-          have_Tambient = True
-        if good_data.has_key('pressure'):
-          have_pressure = True
-        if good_data.has_key('humidity'):
-          have_humidity = True
-        if good_data.has_key('windspeed'):
-          have_windspeed = True
-        if good_data.has_key('winddirec'):
-          have_winddirec = True      
+        wx_data = table.get_wx_datacubes()
+        param_keys = wx_data.keys()
+        for param_key in param_keys:
+          print 'doing table',tablekey,'parameter',param_key
+          for switch_state in [True, False]:
+            # the state may already be defined so check  
+            if good_data.has_key(param_key):
+              # parameter already exists in the output data
+              if wx_data[param_key].has_key(switch_state):
+                # this state exists in the input data
+                if good_data[param_key].has_key(switch_state):
+                  # this state also exists in the output data so append
+                  good_data[param_key][switch_state] = numpy.append(good_data[param_key][switch_state],
+                                     wx_data[param_key][switch_state], axis=0)
+                else:
+                  # this state does not exist in the output so create
+                  good_data[param_key][switch_state] = wx_data[param_key][switch_state]
+              else:
+                # state does not exist in the input data
+                pass
+            else:
+              # parameter not defined in the output data so create
+              good_data[param_key] = {switch_state: wx_data[param_key][switch_state]}
+          print good_data
     return good_data
   
   def get_average(self, source='67P_CG_201'):
