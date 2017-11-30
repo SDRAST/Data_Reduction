@@ -63,7 +63,7 @@ jd_start, jd_end, number = eph_manager.ephem_open()
 logger = logging.getLogger(__name__)
 
 sw_state = {True: "sig", False: "ref"}
-polcode = {1: 'U', -1: 'L'}
+SBcode = {1: 'U', 0:None, -1: 'L'}
 
 class DSNFITSexaminer(object):
   """
@@ -113,7 +113,7 @@ class DSNFITSexaminer(object):
         try:
           tables[index].SB = numpy.unique(tables[index].data['SIDEBAND'])
         except KeyError:
-          tables[index].SB = polcode[tables[index].data['CDELT1'][0]]
+          tables[index].SB = SBcode[tables[index].data['CDELT1'][0]]
         index += 1
     return tables
   
@@ -649,7 +649,7 @@ class DSNFITSexaminer(object):
                                       self.data['OBJECT'][row],
                                       self.data['SIG'][row],
                                       self.data['OBSFREQ'][row]/1e6,
-                                      polcode[self.data['SIDEBAND'][row]],
+                                      SBcode[self.data['SIDEBAND'][row]],
                                       self.data['EXPOSURE'][row])        
     def validate_wx_data(self):
       """
@@ -763,137 +763,6 @@ class DSNFITSexaminer(object):
       elif self.header['BACKEND'] == 'WVSR':
         pass
       return wx_data
-      
-    def get_good_wx_data(self):
-      """
-      eliminates rows which have bad data, like 0 for CYCLE, nan, etc
-      
-      Note that this provides a method for flagging bad data by setting the
-      CYCLE value of a row to 0.
-      
-      The good data flags are True if there are any good data and False if
-      there are no good data for that column. They are used internally to
-      construct dicts of good data
-      
-      Good data values are returned in the dict 'good_data'.  For most values,
-      there is one key.  If the observing mode is PSSW or BPSW, then this
-      key can be True (SIG) or False (REF) according to the True/False
-      value in the data['SIG'] column.
-      """
-      if len(self.obsmodes) > 1:
-        raise RuntimeErrror(
-                "get_good_wx_data: multiple observing modes not yet supported")
-      props, num_indices = self.properties() # table properties
-      # check the data to make sure at least some are good and mask for those:
-      valid_data, indices =  self.validate_wx_data()
-      
-      # Initialize for extracting data from simple (single value) columns
-      good_data = {}
-      good_data['mpltime'] = {}
-      if valid_data['ELEVATIO']:
-        good_data['elev'] = {}
-      if valid_data['TAMBIENT']:
-        good_data['Tambient'] = {}
-      if valid_data['PRESSURE']:
-        good_data['pressure'] = {}
-      if valid_data['HUMIDITY']:
-        good_data['humidity'] = {}
-      if valid_data['WINDSPEE']:
-        good_data['windspeed'] = {}
-      if valid_data['WINDDIRE']:
-        good_data['winddirec'] = {}
-      if valid_data['TSYS']:
-        good_data['TSYS'] = {}
-      # is there any position switching?
-      if self.data['SIG'].all():
-        # there are no reference (off source) data
-        posnsw = False
-      else:
-        posnsw = True
-      self.logger.debug("get_good_wx_data: position switching is %s", posnsw)
-      # create empty lists or dicts
-      for paramkey in good_data.keys():
-        # there are always ONs
-        if paramkey == 'TSYS':
-          good_data[paramkey][True] = {}
-        else:
-          good_data[paramkey][True] = []
-        if posnsw:
-          if paramkey == 'TSYS':
-            good_data[paramkey][False] = {}
-          else:
-            good_data[paramkey][False] = []
-      self.logger.debug("get_good_wx_data: initial TSYS dict is %s", good_data['TSYS'])
-      # now expand the TSYS dict
-      for sig in [True, False]:
-        for cycle in self.cycle_keys: # this loops over subchannels
-          cycle_idx = self.cycle_keys.index(cycle)
-          make_key_if_needed(good_data['TSYS'][sig], cycle_idx, value={})
-          for beam_idx in range(self.props["num beams"]):
-            make_key_if_needed(good_data['TSYS'][sig][cycle_idx], beam_idx, value={})
-            for pol_idx in range(self.props["num IFs"]):
-              make_key_if_needed(good_data['TSYS'][sig][cycle_idx][beam_idx], pol_idx, value=[])
-      self.logger.debug("get_good_wx_data: expanded TSYS dict is %s",
-                        good_data['TSYS'])
-      # process all scans
-      for row in self.row_keys:
-        # these are simple columns with multiple dimensions
-        midnight_unixtime = time.mktime(time.strptime(
-                                       self.data['DATE-OBS'][row], "%Y/%m/%d"))
-        scan = self.data['SCAN'][row]
-        cycle = self.data['CYCLE'][row]
-        cycle_idx = cycle - 1
-        sig = self.data['SIG'][row]
-        if self.props['time axis'] == True:
-          # there are time-dependent values for every record
-          nrecs = self.props['num records'][cycle]
-          for rec in range(nrecs):
-            first_time = self.data['CRVAL5'][row]
-            rectime = first_time + rec*self.data['CDELT5'][row] # numpy.array
-            unixtime = midnight_unixtime + rectime
-            datime = datetime.datetime.fromtimestamp(unixtime) # datetime
-            # round to roughly 0.1 s
-            good_data['mpltime'][sig].append(round(date2num(datime),6))
-            good_data['elev'][sig].append(self.data['ELEVATIO'][row,0,rec,0,0,0,0])
-            for beam_idx in range(self.props["num beams"]):
-              beam = beam_idx+1
-              for pol_idx in range(self.props["num IFs"]):
-                pol = pol_idx+1
-                indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
-                                           beam=beam, record=rec)
-                good_data['TSYS'][sig][cycle_idx][beam_idx][pol_idx].append(
-                                                    self.data['TSYS'][indices])
-            good_data['Tambient'][sig].append(self.data['TAMBIENT'][row])
-            good_data['pressure'][sig].append(self.data['PRESSURE'][row])
-            good_data['humidity'][sig].append(self.data['HUMIDITY'][row])
-            if valid_data['WINDSPEE']:
-              good_data['windspeed'][sig].append(self.data['WINDSPEE'][row])
-            if valid_data['WINDDIRE']:
-              good_data['winddirec'][sig].append(self.data['WINDDIRE'][row])
-        else:
-          unixtime = self.data['UNIXtime'][row]
-          datime = datetime.datetime.fromtimestamp(unixtime) # datetime object
-          # round to roughly 0.1 s
-          for beam_idx in range(self.props["num beams"]):
-            beam = beam_idx+1
-            for pol_idx in range(self.props["num IFs"]):
-              pol = pol_idx+1
-              indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
-                                         beam=beam)
-              good_data['TSYS'][sig][cycle_idx][beam_idx][pol_idx].append(
-                                                    self.data['TSYS'][indices])
-          if cycle == 1:
-            # these are the same for all cycles
-            good_data['mpltime'][sig].append(round(date2num(datime),6))
-            good_data['elev'][sig].append(self.data['ELEVATIO'][row])
-            good_data['Tambient'][sig].append(self.data['TAMBIENT'][row])
-            good_data['pressure'][sig].append(self.data['PRESSURE'][row])
-            good_data['humidity'][sig].append(self.data['HUMIDITY'][row])
-            if valid_data['WINDSPEE']:
-              good_data['windspeed'][sig].append(self.data['WINDSPEE'][row])
-            if valid_data['WINDDIRE']:
-              good_data['winddirec'][sig].append(self.data['WINDDIRE'][row])
-      return good_data
 
     def get_first_value(self, column, row):
       """
@@ -1036,6 +905,9 @@ class DSNFITSexaminer(object):
         
       @param rows : a list of row numbers
       @type  rows : list of int
+      
+      @param remove_warning : no output warning if empty records are removed
+      @type  remove_warning : bool
       """
       def remove_empty_records(spectra):
         """
@@ -1049,7 +921,7 @@ class DSNFITSexaminer(object):
           nrecs = spectra.shape[2]
           spectra = spectra[:,:,:-1,:,:]
           if remove_warning:
-            self.logger.warning("normalized_beam_diff: removed last records")
+            self.logger.warning("nget_spectra: removed last records")
           # compensate integration time
           n_TAMS_recs = self.data['EXPOSURE']/5
           TAMS_intgr = 5*nrecs/n_TAMS_recs
@@ -1063,16 +935,20 @@ class DSNFITSexaminer(object):
       elif (self.data['OBSMODE'][rows] == numpy.array(nrows*['LINEPSSW'])).all():
         if self.num_indices == 6:
           spectra = self.data[self.dataname][rows,:,:,:,0,0,:]
+          return remove_empty_records(spectra)
         elif self.num_indices == 5:
           # has a time axis
           spectra = self.data[self.dataname][rows,:,:,0,0,:]
+          return spectra
         elif self.num_indices == 4:
           # has pol axis
           spectra = self.data[self.dataname][rows,:,0,0,:]
+          return spectra
         else:
           # only one spectrum
           spectra = self.data[self.dataname][rows,0,0,:]
-      return remove_empty_records(spectra)
+          return spectra
+      
     
     def normalized_beam_diff(self, rows):
       """
@@ -1099,8 +975,8 @@ class DSNFITSexaminer(object):
       @param rows : a list of row numbers
       @type  rows : list of int
       """
+      spectra = self.get_spectra(rows)
       if self.num_indices > 4: # 5 or more axes
-        spectra = self.get_spectra(rows)
         # spectra indices: row, beam, record, pol, freq
         diff = spectra[:,0,:,:,:]-spectra[:,1,:,:,:] # beam 1 - beam 2
         # diff indices: row, record, pol, freq
@@ -1730,6 +1606,138 @@ class DSNFITSexaminer(object):
             new_y[pol] = self.y[pol] - interpolate.splev(self.x, spline, der=0)
         return self.x, new_y, numpy.array(rms)
  
+    # these are now obsolete methods of the Table class
+      
+    def get_good_wx_data(self):
+      """
+      eliminates rows which have bad data, like 0 for CYCLE, nan, etc
+      
+      Note that this provides a method for flagging bad data by setting the
+      CYCLE value of a row to 0.
+      
+      The good data flags are True if there are any good data and False if
+      there are no good data for that column. They are used internally to
+      construct dicts of good data
+      
+      Good data values are returned in the dict 'good_data'.  For most values,
+      there is one key.  If the observing mode is PSSW or BPSW, then this
+      key can be True (SIG) or False (REF) according to the True/False
+      value in the data['SIG'] column.
+      """
+      if len(self.obsmodes) > 1:
+        raise RuntimeErrror(
+                "get_good_wx_data: multiple observing modes not yet supported")
+      props, num_indices = self.properties() # table properties
+      # check the data to make sure at least some are good and mask for those:
+      valid_data, indices =  self.validate_wx_data()
+      
+      # Initialize for extracting data from simple (single value) columns
+      good_data = {}
+      good_data['mpltime'] = {}
+      if valid_data['ELEVATIO']:
+        good_data['elev'] = {}
+      if valid_data['TAMBIENT']:
+        good_data['Tambient'] = {}
+      if valid_data['PRESSURE']:
+        good_data['pressure'] = {}
+      if valid_data['HUMIDITY']:
+        good_data['humidity'] = {}
+      if valid_data['WINDSPEE']:
+        good_data['windspeed'] = {}
+      if valid_data['WINDDIRE']:
+        good_data['winddirec'] = {}
+      if valid_data['TSYS']:
+        good_data['TSYS'] = {}
+      # is there any position switching?
+      if self.data['SIG'].all():
+        # there are no reference (off source) data
+        posnsw = False
+      else:
+        posnsw = True
+      self.logger.debug("get_good_wx_data: position switching is %s", posnsw)
+      # create empty lists or dicts
+      for paramkey in good_data.keys():
+        # there are always ONs
+        if paramkey == 'TSYS':
+          good_data[paramkey][True] = {}
+        else:
+          good_data[paramkey][True] = []
+        if posnsw:
+          if paramkey == 'TSYS':
+            good_data[paramkey][False] = {}
+          else:
+            good_data[paramkey][False] = []
+      self.logger.debug("get_good_wx_data: initial TSYS dict is %s", good_data['TSYS'])
+      # now expand the TSYS dict
+      for sig in [True, False]:
+        for cycle in self.cycle_keys: # this loops over subchannels
+          cycle_idx = self.cycle_keys.index(cycle)
+          make_key_if_needed(good_data['TSYS'][sig], cycle_idx, value={})
+          for beam_idx in range(self.props["num beams"]):
+            make_key_if_needed(good_data['TSYS'][sig][cycle_idx], beam_idx, value={})
+            for pol_idx in range(self.props["num IFs"]):
+              make_key_if_needed(good_data['TSYS'][sig][cycle_idx][beam_idx], pol_idx, value=[])
+      self.logger.debug("get_good_wx_data: expanded TSYS dict is %s",
+                        good_data['TSYS'])
+      # process all scans
+      for row in self.row_keys:
+        # these are simple columns with multiple dimensions
+        midnight_unixtime = time.mktime(time.strptime(
+                                       self.data['DATE-OBS'][row], "%Y/%m/%d"))
+        scan = self.data['SCAN'][row]
+        cycle = self.data['CYCLE'][row]
+        cycle_idx = cycle - 1
+        sig = self.data['SIG'][row]
+        if self.props['time axis'] == True:
+          # there are time-dependent values for every record
+          nrecs = self.props['num records'][cycle]
+          for rec in range(nrecs):
+            first_time = self.data['CRVAL5'][row]
+            rectime = first_time + rec*self.data['CDELT5'][row] # numpy.array
+            unixtime = midnight_unixtime + rectime
+            datime = datetime.datetime.fromtimestamp(unixtime) # datetime
+            # round to roughly 0.1 s
+            good_data['mpltime'][sig].append(round(date2num(datime),6))
+            good_data['elev'][sig].append(self.data['ELEVATIO'][row,0,rec,0,0,0,0])
+            for beam_idx in range(self.props["num beams"]):
+              beam = beam_idx+1
+              for pol_idx in range(self.props["num IFs"]):
+                pol = pol_idx+1
+                indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
+                                           beam=beam, record=rec)
+                good_data['TSYS'][sig][cycle_idx][beam_idx][pol_idx].append(
+                                                    self.data['TSYS'][indices])
+            good_data['Tambient'][sig].append(self.data['TAMBIENT'][row])
+            good_data['pressure'][sig].append(self.data['PRESSURE'][row])
+            good_data['humidity'][sig].append(self.data['HUMIDITY'][row])
+            if valid_data['WINDSPEE']:
+              good_data['windspeed'][sig].append(self.data['WINDSPEE'][row])
+            if valid_data['WINDDIRE']:
+              good_data['winddirec'][sig].append(self.data['WINDDIRE'][row])
+        else:
+          unixtime = self.data['UNIXtime'][row]
+          datime = datetime.datetime.fromtimestamp(unixtime) # datetime object
+          # round to roughly 0.1 s
+          for beam_idx in range(self.props["num beams"]):
+            beam = beam_idx+1
+            for pol_idx in range(self.props["num IFs"]):
+              pol = pol_idx+1
+              indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
+                                         beam=beam)
+              good_data['TSYS'][sig][cycle_idx][beam_idx][pol_idx].append(
+                                                    self.data['TSYS'][indices])
+          if cycle == 1:
+            # these are the same for all cycles
+            good_data['mpltime'][sig].append(round(date2num(datime),6))
+            good_data['elev'][sig].append(self.data['ELEVATIO'][row])
+            good_data['Tambient'][sig].append(self.data['TAMBIENT'][row])
+            good_data['pressure'][sig].append(self.data['PRESSURE'][row])
+            good_data['humidity'][sig].append(self.data['HUMIDITY'][row])
+            if valid_data['WINDSPEE']:
+              good_data['windspeed'][sig].append(self.data['WINDSPEE'][row])
+            if valid_data['WINDDIRE']:
+              good_data['winddirec'][sig].append(self.data['WINDDIRE'][row])
+      return good_data
       
   # convert these to Table methods as needed.
     

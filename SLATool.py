@@ -100,7 +100,7 @@ class SessionAnalyzer(object):
     for datafile in datafiles:
       self.logger.info("open_datafiles: %s", os.path.basename(datafile))
       examiner[dfindex]  = DSNFITSplotter(parent=self, FITSfile=datafile)
-      examiner[dfindex].datafile = datafile
+      #examiner[dfindex].datafile = datafile
       for table_key in examiner[dfindex].tables.keys():
         examiner[dfindex].tables[table_key].report_table()
       dfindex += 1
@@ -134,7 +134,7 @@ class SessionAnalyzer(object):
     good_data = {}
     for exkey in self.examiner_keys:
       examiner = self.examiners[exkey]
-      self.logger.debug("get_good_weather_data: data file is %s", examiner.datafile)
+      self.logger.debug("get_good_weather_data: data file is %s", examiner.file)
       # assume multiple tables are in time order
       tablekeys = examiner.tables.keys()
       tablekeys.sort
@@ -144,7 +144,6 @@ class SessionAnalyzer(object):
         wx_data = table.get_wx_datacubes()
         param_keys = wx_data.keys()
         for param_key in param_keys:
-          print 'doing table',tablekey,'parameter',param_key
           for switch_state in [True, False]:
             # the state may already be defined so check  
             if good_data.has_key(param_key):
@@ -164,7 +163,6 @@ class SessionAnalyzer(object):
             else:
               # parameter not defined in the output data so create
               good_data[param_key] = {switch_state: wx_data[param_key][switch_state]}
-          print good_data
     return good_data
   
   def get_average(self, source='67P_CG_201'):
