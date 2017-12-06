@@ -70,6 +70,7 @@ class FITSfile(object):
 
   def make_prihdu(self):
     """
+    Creates the FITS file's primary header (and data) unit
     """
     self.prihdu = pyfits.PrimaryHDU()
     self.prihdu.header['BLOCKED'] = 'T'

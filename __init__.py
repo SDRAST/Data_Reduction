@@ -7,21 +7,110 @@ to MonitorControl.
 """
 # standard Python modules
 import datetime
+import glob
 import logging
 import math
+import os
 import re
+import readline
 import scipy.fftpack
 
-from numpy import array, loadtxt, ndarray
-from os.path import basename, splitext
+from numpy import array, argmin, argmax, loadtxt, mean, ndarray, sqrt, var
+from os.path import basename, isdir, splitext
 
-from scipy import array, argmin, argmax, mean, sqrt, var
+from local_dirs import fits_dir, hdf5_dir, projects_dir, wvsr_dir
 from support import nearest_index # for older code
 from support.text import select_files
 
-logger = logging.getLogger(__name__)
+# enable raw_input Tab completion
+readline.parse_and_bind("tab: complete")
 
-def get_obs_session(project=None, dtype="FITS", dss=None, date=None):
+logger = logging.getLogger(__name__) # module logger
+
+def get_obs_session(project=None, dss=None, date=None, path='proj'):
+  """
+  Provides project, station, year and DOY, asking as needed.
+  
+  It follows one of several possible paths to get to the session::
+    proj - path through /usr/local/projects/project
+    hdf5 - path through /usr/local/RA_data/HDF5
+    fits - path through /usr/local/RA_data/FITS
+    wvsr - path through /data
+  
+  @param project : optional name as defined in /usr/local/projects
+  @type  project : str
+  
+  @param dss : optional station number
+  @type  dss : int
+  
+  @param date : optional YYYY/DDD
+  @type  date : str
+  
+  @return: project, DSS, year, DOY.
+  """
+  def get_directory(path):
+    """
+    """
+    # only one trailing /
+    path = path.rstrip('/')+"/*"
+    logger.debug("get_obs_session:get_directory: from %s", path)
+    names = glob.glob(path)
+    if names:
+      dirs = []
+      for name in names:
+        if isdir(name):
+          dirs.append(basename(name))
+      dirs.sort()
+      for name in dirs:
+        print name,
+      return raw_input('\n>')
+    else:
+      return []
+      
+  def from_wvsr_dir():
+    """
+    this needs to be completed and tested on crab14 or an auto host
+    """
+    session = get_directory(wvsr_dir)
+    return session
+    
+  # get the project
+  if project:
+    pass
+  else:
+    os.chdir(projects_dir)
+    project = get_directory(projects_dir)
+  projectpath = projects_dir+project
+  # get the station
+  if path[:4].lower() == 'wvsr':
+    # special call
+    print from_wvsr_dir()
+  if path[:4].lower() == 'proj':
+    os.chdir(projectpath+"/Observations/")
+  elif path[:4].lower() == 'hdf5':
+    os.chdir(hdf5_dir)
+  elif path[:4].lower() == 'fits':
+    os.chdir(fits_dir)
+  if dss:
+    pass
+  else:
+    # This seems odd but get_directory() needs '/' and int does not
+    station = get_directory(os.getcwd()+"/").rstrip('/')
+    dss = int(station[-2:])
+  stationpath = os.getcwd()+"/dss"+str(dss)
+  # get the date
+  if date:
+    items = date.split('/')
+    year = int(items[0])
+    DOY = int(items[1])
+  else:
+    year = int(get_directory(stationpath))
+    yearpath = stationpath+"/"+str(year)
+    DOY = int(get_directory(yearpath))
+  return project, dss, year, DOY
+  
+  
+def get_obs_session_old(project=None, dss=None, date=None):
   """
   Asks user for parameters to locate observation session paths
   
@@ -40,9 +129,6 @@ def get_obs_session(project=None, dtype="FITS", dss=None, date=None):
   @param project : optional name as defined in /usr/local/projects
   @type  project : str
   
-  @param dtype : optional data type, default FITS; ignored if project is given
-  @type  dtype : str
-  
   @param dss : optional station number
   @type  dss : int
   
@@ -53,22 +139,21 @@ def get_obs_session(project=None, dtype="FITS", dss=None, date=None):
   """
   # get the path to the session directory
   if project:
-    sessionpath = "/usr/local/projects/"+project+"/Observations/"
-  elif dtype:
-    sessionpath = "/usr/local/RA_data/"+dtype+"/"
+    projectpath = projects_dir+project+"/"
   else:
-    sessionpath = select_files("/usr/local/projects/*", ftype="dir",
+    projectpath = select_files(projects_dir+"*", ftype="dir",
                                text="Select a project by index: ", single=True)
-    project = basename(sessionpath)
-    if sessionpath[-1] != "/":
-      sessionpath += "/"
-  logger.debug("get_obs_session: project path: %s", sessionpath)
+    project = basename(projectpath)
+    if projectpath[-1] != "/":
+      projectpath += "/"
+  logger.debug("get_obs_session: project path: %s", projectpath)
 
   # get the path to the project DSS sub-directory
+  project_obs_path = projectpath + "Observations/"
   if dss:
-    dsspath = sessionpath+"dss"+str(dss)+"/"
+    dsspath = project_obs_path+"dss"+str(dss)+"/"
   else:
-    dsspath = select_files(sessionpath+"dss*", ftype="dir",
+    dsspath = select_files(project_obs_path+"dss*", ftype="dir",
                            text="Select a station by index: ", single=True)
     logger.debug("get_obs_session: selected: %s", dsspath)
     dss = int(basename(dsspath)[-2:])
@@ -78,7 +163,7 @@ def get_obs_session(project=None, dtype="FITS", dss=None, date=None):
     yr = int(items[0])
     doy = int(items[1])
   else:
-    yrpath = select_files(dsspath+"/20*", ftype="dir",
+    yrpath = select_files(dsspath+"*", ftype="dir",
                                   text="Select a year by index: ", single=True)
     if yrpath:
       logger.debug("get_obs_session: year path: %s", yrpath)
@@ -91,7 +176,7 @@ def get_obs_session(project=None, dtype="FITS", dss=None, date=None):
       logger.debug("get_obs_session: DOY path: %s", doypath)
     else:
       logger.warning("get_obs_session: no data for dss%2d", dss)
-      return project, None, 0, 0, None
+      return project, None, 0, 0
   logger.debug("get_obs_session: for %s, DSS%d, %4d/%03d",
                     project, dss, yr, doy)
   return project, dss, yr, doy
@@ -166,7 +251,7 @@ def select_data_files(datapath, name_pattern="", load_hdf=False):
       pass
     else:
       # only one * at front and back of pattern
-      name_pattern = "*"+name_pattern.strip('*')+"*"
+      name_pattern = "*"+name_pattern.rstrip('*')+"*"
   else:
     # no pattern specified.  All files.
     name_pattern = "*"

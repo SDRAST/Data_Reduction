@@ -74,7 +74,9 @@ generated and used to separate lower and upper sidebands.
   \item[L/U]- lower sideband/upper sideband, a signal pair obtained from I/Q.
   \item[MSB]- most significant bit (or byte, depending on context).
   \item[RF]- radio frequency (signal)
+  \item[VLBI]- very long baseline interferometry
   \item[WBDC]- wide-band down-converter, a class of receiver.
+  \item[WVSR]- wideband VLBI science receiver
 \end{description}
 
 \mainmatter
@@ -444,6 +446,11 @@ procedure then setting the {\ttfamily replace} argument to {\ttfamily True}.
 
 \chapter{Programs}\label{chap:programs}
 
+\section{Post-Processing}
+
+Almost all observing sessions record data to intermediate data files.  These
+files are converted to standard astronomical formats during or after the
+observing session.
 
 
 

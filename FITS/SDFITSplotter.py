@@ -144,7 +144,7 @@ class DSNFITSplotter(DSNFITSexaminer):
                         num_rows, num_cols)
       return num_figs, num_rows, num_cols, (width,height)
       
-    def init_multiplot(self, title, nrows, ncols, size=(4,4)): 
+    def init_multiplot(self, title, nrows, ncols, size=(4,4), sharey=False):
       """
       create a figure with multiple plots sharing common X and Y axis
       
@@ -162,14 +162,14 @@ class DSNFITSplotter(DSNFITSexaminer):
       @param ncols : number of columns of subplots
       @type  ncols : int
       
-      @param width : optional keyword argument for figure width (in)
-      @type  width : float
+      @param size : figure width, figure height (in)
+      @type  size : tuple of float
       
-      @param heigth : optional keyword argument for figure heigth (in)
-      @type  height : float
+      @param sharey : same range on all Y axes (in)
+      @type  sharey : bool
       """
       width, height = size
-      fig, ax = subplots(nrows=nrows, ncols=ncols) # , sharex=True, sharey=True)
+      fig, ax = subplots(nrows=nrows, ncols=ncols, sharey=sharey)
       self.logger.debug("init_multiplot: %d rows, %d columns, size: %s",
                         nrows, ncols, size)
       # could also be fig.set_size_inches(size, forward=True)
@@ -178,9 +178,32 @@ class DSNFITSplotter(DSNFITSexaminer):
       fig.suptitle(title)
       return fig, ax
 
-    def init_multiplots(self, title, nfigs, nrows, ncols, size=(4,4)):
+    def init_multiplots(self, title, nfigs, nrows, ncols, size=(4,4),
+                        sharey=False):
       """
       create multiple figures with multiple plots
+      
+      The sublots have no space between the axes in a figure. Use
+      figure_rows_and_columns() to compute number of figures, rows, columns and
+      figure size.
+      
+      @param title : figure title
+      @type  title : str
+      
+      @param nfigs : number of figures
+      @type  nfigs : int
+      
+      @param nrows : number of rows of subplots
+      @type  nrows : int
+      
+      @param ncols : number of columns of subplots
+      @type  ncols : int
+      
+      @param size : figure width, figure height (in)
+      @type  size : tuple of float
+      
+      @param sharey : same range on all Y axes (in)
+      @type  sharey : bool
       """
       self.logger.debug("init_multiplots: %d figs, %d rows, %d columns",
                         nfigs, nrows, ncols)
@@ -188,10 +211,11 @@ class DSNFITSplotter(DSNFITSexaminer):
       axs = {}
       for fignum in range(nfigs):
         figs[fignum], axs[fignum] = self.init_multiplot(title, nrows, ncols,
-                                                        size=size)
+                                                        size=size,
+                                                        sharey=sharey)
       return figs, axs
       
-    def show_all_spectra(self, rows=None, IFspectra=False):
+    def show_all_spectra(self, rows=None, IFspectra=False, sharey=False):
       """
       Plot spectra from a Table
       
@@ -204,6 +228,9 @@ class DSNFITSplotter(DSNFITSexaminer):
       
       @param IFspectra : plot IFSPECTR if there is one; default: False
       @type  IFspectra : bool
+      
+      @param sharey : same range on all Y axes (in)
+      @type  sharey : bool
       """
       # gets spectra from SPECTRUM column with RA and dec indices removed
       if rows == None:
@@ -212,9 +239,10 @@ class DSNFITSplotter(DSNFITSexaminer):
         spectra = self.get_spectra(rows)
       num_graphs = len(spectra)/self.props['num cycles']
       nfigs, nrows, ncols, size = self.figure_rows_and_columns(num_graphs)
-      figs, axs = self.init_multiplots("Basic Spectra",nfigs, nrows, ncols, size)
-      self.logger.debug("show_spectra: figure keys: %s", figs.keys())
-      self.logger.debug("show_spectra: axes   keys: %s", axs.keys())
+      figs, axs = self.init_multiplots("Basic Spectra", nfigs, nrows, ncols, 
+                                       size, sharey=sharey)
+      self.logger.debug("show_all_spectra: figure keys: %s", figs.keys())
+      self.logger.debug("show_all_spectra: axes   keys: %s", axs.keys())
       for fignum in figs.keys():
         fig = figs[fignum]
         ax = axs[fignum]
@@ -226,8 +254,9 @@ class DSNFITSplotter(DSNFITSexaminer):
             scan = self.data['SCAN'][specidx]
             cycle = self.data['CYCLE'][specidx]
             cycle_idx = self.cycle_keys.index(cycle)
-            self.logger.debug("show_spectra: doing row %d column %d spectrum %d",
-                              row, col, specidx)
+            self.logger.debug(
+                        "show_all_spectra: doing row %d column %d spectrum %d",
+                        row, col, specidx)
             spec = spectra[specidx] # returns spectra from one row
             if self.props['full Stokes']:
               if "IFSPECTR" in self.data.columns.names and IFspectra:
@@ -240,8 +269,10 @@ class DSNFITSplotter(DSNFITSexaminer):
               nchans = self.props['num chans']
               npols = self.props['num IFs']
             nbeams = self.props['num beams']
-            self.logger.debug("show_spectra: %d channels, %d pols", nchans, npols)
             nrecs = self.props['num records'][cycle]
+            self.logger.debug(
+                          "show_all_spectra: %d channels, %d pols, %d records",
+                          nchans, npols, nrecs)
             for rec in range(nrecs):
               record = rec+1
               symbol = plotsymbols[rec % 20]
@@ -251,8 +282,14 @@ class DSNFITSplotter(DSNFITSexaminer):
                   pol = pol_idx+1
                   # indices without row (0), RA (-1), dec (-2)
                   if len(spec.shape) == 4:
+                    # with beam and time axis
                     indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
                                                beam=beam, record=record,
+                                               trimmed=True)[1:]
+                  elif len(spec.shape) == 3:
+                    # with time axis
+                    indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
+                                               record=record,
                                                trimmed=True)[1:]
                   elif len(spec.shape) == 2:
                     indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
@@ -467,7 +504,6 @@ class DSNFITSplotter(DSNFITSexaminer):
         "airmass" - 1/sin(elev)
         None      - list index
       """
-      #good_wx_data = self.get_good_wx_data()
       good_wx_data = self.get_wx_datacubes()
       fig = {}
       ax = {}

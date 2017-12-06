@@ -270,7 +270,6 @@ class DSNFITSexaminer(object):
       * each subchannel gets its own cycle
       * each on-source or off-source position gets its own scan 
       """
-      #logger.debug("get_table_stats: for %s", self.name)
       # I suspect the following works because all are the same
       indices_for_nonzero_scans = self.data['SCAN'].nonzero()
       indices_for_nonzero_cycles = self.data['CYCLE'].nonzero()
@@ -299,11 +298,9 @@ class DSNFITSexaminer(object):
         "get_table_stats: number of cycles not equal to number of subchannels")
   
       scan_keys = numpy.unique(self.data['SCAN'][row_indices])
-      #logger.debug("get_table_stats: good scans: %s", scan_keys)
       num_scans = len(scan_keys)
   
       n_rows = num_scans * num_cycles
-      #logger.debug("get_table_stats: %d scans of %d cycles", num_scans, num_cycles)
       if n_rows != len(self.data):
         diff = len(self.data) - n_rows
         logger.info("get_table_stats: there are %d scans without all its cycles",
@@ -317,12 +314,9 @@ class DSNFITSexaminer(object):
         logger.debug("get_table_stats: complete scans: %s", complete_scans)
         good_rows = []
         for row in row_indices:
-          #logger.debug("get_table_stats: processing row %s", row)
           this_scan = self.data['SCAN'][row]
-          #logger.debug("get_table_stats: checking scan: %s", this_scan)
           if this_scan in complete_scans:
             good_rows.append(row)
-        #logger.debug("get_table_stats: good rows: %s", good_rows)
         self.scan_keys = list(complete_scans)
         self.row_keys = good_rows
       else:
@@ -711,7 +705,7 @@ class DSNFITSexaminer(object):
 
     def get_wx_datacubes(self):
       """
-      Create data for analyzing environmental data.
+      Create data for analyzing environmental conditions.
       
       Returns a dict with keys 'TAMBIENT', 'WINDDIRE', 'UNIXtime', 'TSYS',
       'HUMIDITY', 'PRESSURE', 'ELEVATIO', 'WINDSPEE'.  The data asociated with
@@ -735,32 +729,46 @@ class DSNFITSexaminer(object):
           wx_data[key][False] = self.data[key][of_rows].flatten()
       # now organize extra TSYS dimensions
       if self.header['BACKEND'] == 'SAO spectrometer':          # has time axis
+        if self.props['num beams'] > 1:
+          time_axis = 2
+        else:
+          time_axis = 1
         num_scans = self.data['TSYS'][on_rows].shape[0]
-        num_recs  = self.data['TSYS'][on_rows].shape[2]
+        num_recs  = self.data['TSYS'][on_rows].shape[time_axis]
         num_on = num_scans*num_recs       # there is always SIG=True data
         if len(self.data['SIG'][of_rows]):
           num_states = 2
-          num_of = self.data['TSYS'][of_rows].shape[0]*self.data['TSYS'][of_rows].shape[2]
+          num_of = self.data['TSYS'][of_rows].shape[0] \
+                  *self.data['TSYS'][of_rows].shape[time_axis]
         else:
           datalen = num_on
         wx_data['TSYS'] = {}
         wx_data['TSYS'][True] = numpy.zeros((num_on,
-                                self.props['num cycles'],
-                                self.props['num beams'],
-                                self.props['num IFs']))
+                                             self.props['num cycles'],
+                                             self.props['num beams'],
+                                             self.props['num IFs']))
         wx_data['TSYS'][False] = numpy.zeros((num_of,
-                                 self.props['num cycles'],
-                                 self.props['num beams'],
-                                 self.props['num IFs']))
+                                              self.props['num cycles'],
+                                              self.props['num beams'],
+                                              self.props['num IFs']))
         for subch_idx in range(self.props['num cycles']):
           for beam_idx in range(self.props['num beams']):
             for IF_idx in range(self.props['num IFs']):
-              data_on = self.data['TSYS'][on_rows,beam_idx,:,IF_idx,0,0,0].flatten()
+              if self.props['num beams'] > 1:
+                data_on = \
+                   self.data['TSYS'][on_rows,beam_idx,:,IF_idx,0,0,0].flatten()
+              else:
+                data_on = self.data['TSYS'][on_rows,:,IF_idx,0,0,0].flatten()
               wx_data['TSYS'][True][:,subch_idx,beam_idx,IF_idx] = data_on
               if num_states == 2:
-                data_of = self.data['TSYS'][of_rows,beam_idx,:,IF_idx,0,0,0].flatten()
+                if self.props['num beams'] > 1:
+                  data_of = \
+                   self.data['TSYS'][of_rows,beam_idx,:,IF_idx,0,0,0].flatten()
+                else:
+                  data_of = self.data['TSYS'][of_rows,:,IF_idx,0,0,0].flatten()
                 wx_data['TSYS'][False][:,subch_idx,beam_idx,IF_idx] = data_of            
       elif self.header['BACKEND'] == 'WVSR':
+        # still needs to be coded
         pass
       return wx_data
 
@@ -1338,8 +1346,6 @@ class DSNFITSexaminer(object):
               else:
                 E = elevation[first:]
                 P = mean_power[first:]
-              #self.logger.debug("fit_mean_power_to_airmass: elevation: %s", E)
-              #self.logger.debug("fit_mean_power_to_airmass: mean_power: %s", P)
               # fit the data
               # estimate the slope and intercept:
               ind_max = (1/numpy.sin(numpy.deg2rad(E))).argmax()
@@ -1459,11 +1465,14 @@ class DSNFITSexaminer(object):
         if len(spectrumshape) >= 5: # (time, pol, dec, RA, freq)
           props["num records"] = {}
           cycle_indices = range(props["num cycles"])
-          for cycle_idx in cycle_indices: # check each cycle
-            cycle = self.data['CYCLE'][cycle_idx]
-            spectrumshape = self.data[self.dataname][cycle_idx].shape
+          for row in cycle_indices: # check each cycle
+            cycle = self.data['CYCLE'][row]
+            spectrumshape = self.data[self.dataname][row].shape
             # just do the first scan
-            props["num records"][cycle] = int(spectrumshape[1])
+            if props["num beams"] > 1:
+              props["num records"][cycle] = int(spectrumshape[1])
+            else:
+              props["num records"][cycle] = int(spectrumshape[0])
         else:
           props["num records"] = {}
           for cycle in self.cycle_keys:

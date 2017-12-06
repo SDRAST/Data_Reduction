@@ -5,14 +5,18 @@ FITS class - module for DSN SDFITS class
 Documentation for keywords is given in::
   https://heasarc.gsfc.nasa.gov/docs/fcg/standard_dict.html
 
-WARNING: DSS=43 hardcoded on line 657, 673
+Notes for further attention::
+  * J2000 hard-coded in make_SAO_table() [lines 216, 219] and add_data() [450]
+  * obsfreq default is 22 GHz [line 33] for K in add_data() [line 369]
+  * mode default is PBSW [line 32]
+  * non-Kband passband assumed to be X [line 372]
+  * optional columns for CAL and FOFFREF1
 """
 import astropy
 import astropy.units as u
 import datetime
 import dateutil
 import logging
-#import pyfits
 import astropy.io.fits as pyfits
 import time
 import numpy
@@ -22,13 +26,13 @@ from time import mktime, strptime
 
 from Data_Reduction.FITS.DSNFITS import FITSfile
 from MonitorControl import ObservatoryError
+from MonitorControl.Receivers.DSN import DSN_rx
 from support.lists import unique
 
 logger = logging.getLogger(__name__)
 
 obsmode = 'LINEPBSW'        # can we get this from the HDF5 file?
 obsfreq = 22000000000       # Hz (wrong in HDF5 file)
-pols = ['L', 'L', 'R', 'R'] # replaces P1, P2
       
 #############################  FITS classes  ###############################
 
@@ -77,6 +81,9 @@ class FITSfile_from_SAO(FITSfile):
                             project="GBRA", observer="UNKNOWN"):
     """
     Create extension for each Backend instance
+    
+    Invoked by the main program (SAO2SDFITS.py) to convert HDF5 datasets to
+    SDFITS tables.  It calls 'make_SAO_table()' for each dataset.
 
     @param dss : DSN station
     @type  dss : Telescope instance
@@ -153,7 +160,7 @@ class FITSfile_from_SAO(FITSfile):
     for scan in scans:
       nrecs = min(nrecs, dataset.data[scan].shape[4])
     self.logger.debug("make_SAO_table: min. num. records: %d", nrecs)
-    nbeam = dims[5]
+    nbeams = dims[5]
     
     self.exthead = self.make_basic_header()
     # start the extension header
@@ -161,7 +168,14 @@ class FITSfile_from_SAO(FITSfile):
     self.exthead['observer'] = observer
     self.exthead['FRONTEND'] = equipment['FrontEnd'].name
     self.exthead['RECEIVER'] = equipment['Receiver'].name
-    #tbhead['TIMESYS'] = ('UTC', "DSN standard time")
+    
+    # adjust for X frontend and receiver
+    self.logger.info("make_SAO_table: receiver is %s", equipment['Receiver'])
+    if type(equipment['Receiver']) == DSN_rx:
+      nbeams = 1
+      self.logger.debug("make_SAO_table: DSN receivers have one beam")
+    else:
+      self.logger.debug("make_SAO_table: receiver has %d beams", nbeams)
     
     # add the site data
     self.add_site_data(self.exthead)
@@ -182,11 +196,15 @@ class FITSfile_from_SAO(FITSfile):
     self.make_offset_columns(numrecs=nrecs)
 
     # column for TSYS, one value for each IF
-    beam_dim = "(1,1,1,2,"+str(nrecs)+",2)"
-    col = pyfits.Column(name='TSYS',
-                         format=str(2*nrecs*2)+'D', dim=beam_dim)
-    self.logger.debug("make_SAO_table: col is type %s", type(col))
-    self.columns.add_col(col)
+    if nbeams == 1:
+      tsys_dim = "(1,1,1,2,"+str(nrecs)+")"
+      unit = "count"
+    else:
+      tsys_dim = "(1,1,1,2,"+str(nrecs)+",2)"
+      unit = "K"
+    self.logger.debug("make_SAO_table: TSYS dim is %s", tsys_dim)
+    self.columns.add_col(pyfits.Column(name='TSYS', format=str(2*nrecs*2)+'D',
+                                       dim=tsys_dim, unit=unit))
     
     # Add columns describing the data matrix
     #   Note that refpix defaults to 0
@@ -214,21 +232,25 @@ class FITSfile_from_SAO(FITSfile):
                                  nrecs, 'TIME', 'E', unit='s',
                                  comment='Python time.time() value')
     #   Beam axis
-    axis+=1; self.make_data_axis(self.exthead, self.columns, axis,
-                                                nbeam, 'BEAM',    'I',
+    if nbeams > 1:
+      axis+=1; self.make_data_axis(self.exthead, self.columns, axis,
+                                                nbeams, 'BEAM',    'I',
                                                 comment="beam 1 or 2")
     
     # Make the DATA column
     fmt_multiplier = self.exthead['MAXIS1']*self.exthead['MAXIS2']* \
                      self.exthead['MAXIS3']*self.exthead['MAXIS4']* \
-                     self.exthead['MAXIS5']*self.exthead['MAXIS6']
+                     self.exthead['MAXIS5']
+    if nbeams > 1:
+      fmt_multiplier *= self.exthead['MAXIS6']
     self.logger.debug("make_SAO_table: format multiplier = %d", fmt_multiplier)
     dimsval = "("+str(self.exthead['MAXIS1'])+"," \
                  +str(self.exthead['MAXIS2'])+"," \
                  +str(self.exthead['MAXIS3'])+"," \
                  +str(self.exthead['MAXIS4'])+"," \
-                 +str(self.exthead['MAXIS5'])+"," \
-                 +str(self.exthead['MAXIS6'])+")"
+                 +str(self.exthead['MAXIS5'])+")"
+    if nbeams > 1:
+      dimsval = dimsval[:-1] + ","+str(self.exthead['MAXIS6'])+")"
     self.logger.debug("make_SAO_table: computed scan shape: %s", dimsval)
     data_format = str(fmt_multiplier)+"E"
     self.logger.debug("make_SAO_table: data_format = %s", data_format)
@@ -238,7 +260,8 @@ class FITSfile_from_SAO(FITSfile):
     # create the table extension
     # tabhdu   = pyfits.new_table(cols, header=self.exthead, nrows=numscans)
     FITSrec = pyfits.FITS_rec.from_columns(self.columns, nrows=numscans)
-    tabhdu = pyfits.BinTableHDU(data=FITSrec, header=self.exthead, name="SINGLE DISH")
+    tabhdu = pyfits.BinTableHDU(data=FITSrec, header=self.exthead,
+                                name="SINGLE DISH")
     
     # now fill in the rows
     tabhdu = self.add_data(tabhdu, dataset, nrecs, equipment)
@@ -288,20 +311,6 @@ class FITSfile_from_SAO(FITSfile):
     self.logger.debug("get_hardware_metadata: MAXIS1 = %d",
                       self.exthead['maxis1'])
     self.exthead['freqres'] =  BE['freqres']
-
-    # GBTIDL needs a 0-based integer sequence for polarization, beam and IF
-    # How many polarizations, beams and IFs?
-    #pols = []
-    #beams = []
-    #IFs = []
-    #for key in BE.inputs.keys():
-    #  pols.append(BE.inputs[key].signal['pol'])
-    #  beams.append(BE.inputs[key].signal['beam'])
-    #  IFs.append(BE.inputs[key].name)
-    #if len(pols) < 1:
-    #  raise ObservatoryError(
-    #      "get_hardware_metadata: ", "There are no backend outputs defined")
-    #return hdr, cols
   
   def add_data(self, tabhdu, dataset, numrecs, equipment):
     """
@@ -319,8 +328,17 @@ class FITSfile_from_SAO(FITSfile):
     self.logger.debug("add_data: with %d records/scan", numrecs)
     scans = dataset.data.keys()
     numscans = len(scans)
-    time_shp = (1,numrecs,1,1,1,1)
-    beam_shp = (2,numrecs,2,1,1,1)
+    
+    # add beam dimension to data shape if needed
+    #   dims in C/Python order are: beam, record, pol, dec, RA, freq
+    if "MAXIS6" in tabhdu.header.keys():
+      time_shp = (1,numrecs,1,1,1,1) # same for both beams
+      beam_shp = (2,numrecs,2,1,1,1)
+    else:
+      time_shp = (numrecs,1,1,1,1)
+      beam_shp = (numrecs,2,1,1,1)
+    self.logger.debug("add_data: new shape for beam-dependent data is %s",
+                      beam_shp)
     for scan in scans:
       # dataset header is keyed on the index of the scan in the set of scans
       index = scans.index(scan)
@@ -343,36 +361,49 @@ class FITSfile_from_SAO(FITSfile):
                      + LSTtuple.tm_sec    )
       tabhdu.data[index]['LST'] = numpy.array(LSTs).reshape(time_shp)
       tabhdu.data[index]['OBJECT'] = dataset.header['OBJECT'][index]
-      tabhdu.data[index]['OBSMODE'] = obsmode
       tabhdu.data[index]['EXPOSURE'] = dataset.header['EXPOSURE'][0] # for B1P1
       tabhdu.data[index]['BANDWIDT'] = dataset.header['BANDWIDT']
-      tabhdu.data[index]['TSYS'] = \
+      
+      if "MAXIS6" in tabhdu.header.keys():
+        tabhdu.data[index]['TSYS'] = \
                   dataset.header['TSYS'][index][:,:numrecs,:].reshape(beam_shp)
+        # THIS IS A HACK BECAUSE dataset.header['OBSFREQ'][index] IS WRONG !!!!
+        tabhdu.data[index]['OBSFREQ'] = obsfreq # 
+        tabhdu.data[index]['OBSMODE'] = obsmode
+      else:
+        # not K-4ch FE so no power meters and no 'off' beam
+        # inspection of spectra suggests channels for averaging
+        extracted_passband = dataset.data[scan][300:19300,:,:,:,:numrecs,0]
+        averaged_power = extracted_passband.mean(axis=0)
+        newshape = tabhdu.data[index]['TSYS'].shape
+        tabhdu.data[index]['TSYS'] = \
+                                   averaged_power.transpose().reshape(newshape)
+        tabhdu.data[index]['OBSFREQ'] = \
+                                    equipment['FrontEnd'].data['frequency']*1e6
+        tabhdu.data[index]['OBSMODE'] = 'LINEPSSW'
       tabhdu.data[index]['RESTFREQ'] = dataset.header['linefreq']
       tabhdu.data[index]['VELOCITY'] = dataset.header['VELOCITY']
-      # THIS IS A HACK BECAUSE dataset.header['OBSFREQ'][index] IS WRONG !!!!!!
-      tabhdu.data[index]['OBSFREQ'] = obsfreq # 
       tabhdu.data[index]['VELDEF'] = dataset.header['VELDEF']
       tabhdu.data[index]['AZIMUTH'] = \
-                        dataset.header['ant_az'][index][:numrecs].reshape(time_shp)
+                    dataset.header['ant_az'][index][:numrecs].reshape(time_shp)
       tabhdu.data[index]['ELEVATIO'] = \
-                        dataset.header['ant_el'][index][:numrecs].reshape(time_shp)
+                    dataset.header['ant_el'][index][:numrecs].reshape(time_shp)
       # weather
       tabhdu.data[index]['TAMBIENT'] = \
-                      dataset.header['TAMBIENT'][index][:numrecs].reshape(time_shp)
+                  dataset.header['TAMBIENT'][index][:numrecs].reshape(time_shp)
       tabhdu.data[index]['PRESSURE'] = \
-                      dataset.header['PRESSURE'][index][:numrecs].reshape(time_shp)
+                  dataset.header['PRESSURE'][index][:numrecs].reshape(time_shp)
       tabhdu.data[index]['HUMIDITY'] = \
-                      dataset.header['HUMIDITY'][index][:numrecs].reshape(time_shp)
+                  dataset.header['HUMIDITY'][index][:numrecs].reshape(time_shp)
       tabhdu.data[index]['WINDSPEE'] = \
-                      dataset.header['WINDSPEE'][index][:numrecs].reshape(time_shp)
+                  dataset.header['WINDSPEE'][index][:numrecs].reshape(time_shp)
       tabhdu.data[index]['WINDDIRE'] = \
-                      dataset.header['WINDDIRE'][index][:numrecs].reshape(time_shp)
+                  dataset.header['WINDDIRE'][index][:numrecs].reshape(time_shp)
       # pointing offsets
       tabhdu.data[index]['BEAMXOFF'] = \
-                      dataset.header['BEAMXOFF'][index][:numrecs].reshape(time_shp)
+                  dataset.header['BEAMXOFF'][index][:numrecs].reshape(time_shp)
       tabhdu.data[index]['BEAMEOFF'] = \
-                      dataset.header['BEAMEOFF'][index][:numrecs].reshape(time_shp)
+                  dataset.header['BEAMEOFF'][index][:numrecs].reshape(time_shp)
       
       # for first data axis (frequency)
       # THIS IS A HACK BECAUSE (see above)                               ! !!!!
@@ -390,7 +421,7 @@ class FITSfile_from_SAO(FITSfile):
         tabhdu.data[index]['CDELT1'] = \
                   -tabhdu.data[index]['BANDWIDT']/equipment['Backend'].num_chan
       else:
-        logger.error("IF mode %s is not supported",
+        self.logger.error("IF mode %s is not supported",
                      tabhdu.data[index]['IFmode'])
       # second and third data axes (coordinates)
       RAstr = dataset.header['R.A.'][0] # same for all records in scan
@@ -401,7 +432,7 @@ class FITSfile_from_SAO(FITSfile):
       tabhdu.data[index]['CRVAL3'] = c.dec.deg
     
       # fourth data axis (polarization)
-      refval, delta = polcodes(equipment['Backend'])
+      refval, delta = equipment['Backend'].polcodes()
       tabhdu.data[index]['CRVAL4'] = refval
       tabhdu.data[index]['CDELT4'] = delta
     
@@ -417,20 +448,24 @@ class FITSfile_from_SAO(FITSfile):
                                       -seconds_from_midnight[0] )/(numrecs-1)
     
       # sixth data axis (beam)
-      tabhdu.data[index]['CRVAL6'] = 0
-      tabhdu.data[index]['CDELT6'] = 1
-      
-      # the data in dataset in keyed on scan number
-      tabhdu.data[index]['DATA'] = dataset.data[scan][:,:,:,:,:numrecs,:].transpose()
-      
+      if "MAXIS6" in tabhdu.header.keys():
+        tabhdu.data[index]['CRVAL6'] = 0
+        tabhdu.data[index]['CDELT6'] = 1
+        # the data in dataset in keyed on scan number
+        tabhdu.data[index]['DATA'] = \
+                             dataset.data[scan][:,:,:,:,:numrecs,:].transpose()
+      else:
+        tabhdu.data[index]['DATA'] = \
+                             dataset.data[scan][:,:,:,:,:numrecs,0].transpose()
       if dataset.header['nod'][index]:
         tabhdu.data[index]['SIG'] = False
       else:
         tabhdu.data[index]['SIG'] = True
       tabhdu.data[index]['EQUINOX'] = 2000 # should come from Obs. program!
       starttime = datetime.datetime.fromtimestamp(dataset.header['time'][1][0])
-      tabhdu.data[index]['VFRAME'] = dataset.V_LSR(starttime, 43) # get from obs. program!!
-      tabhdu.data[index]['RVSYS'] = tabhdu.data[index]['VELOCITY']+tabhdu.data[index]['VFRAME']
+      tabhdu.data[index]['VFRAME'] = dataset.V_LSR(starttime, self.tel.number)
+      tabhdu.data[index]['RVSYS'] = \
+                    tabhdu.data[index]['VELOCITY']+tabhdu.data[index]['VFRAME']
       
       # unnecessary core keywords
       tabhdu.data[index]['TIME'] = tabhdu.data[index]['CRVAL5']
@@ -440,7 +475,7 @@ class FITSfile_from_SAO(FITSfile):
       #tabhdu.data[index]['FOFFREF1'] = 
     return tabhdu
 
-#--------------------------------- module functions ---------------------------
+#--------------------------------- obsolete(?) module functions ---------------------------
 
 def make_number_lookup(codes):
   """
@@ -453,22 +488,6 @@ def make_number_lookup(codes):
     code = codes[index]
     lookup[code] = index+1
   return codes, lookup, len(codes)
-
-def polcodes(BE):
-  """
-  Extract polarization codes from signals
-  """
-  pols = []
-  for inpt in BE.inputs.keys():
-    pols.append(BE.inputs[inpt].signal['pol'])
-  pols = unique(pols)
-  pols.sort()
-  # convert to NRAO code
-  if pols == ['E', 'H']:
-    refval = -5; delta = +1
-  elif pols == ['L', 'R']:
-    refval = -2; delta = -1
-  return refval, delta
   
 def make_pol_lookup(codes):
   """

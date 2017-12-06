@@ -17,6 +17,7 @@ from pylab import *
 from scipy.optimize import curve_fit
 
 from Data_Reduction import get_obs_session
+from Data_Reduction.tipping import airmass
 from DatesTimes import calendar_date
 from local_dirs import projects_dir
 from support import nearest_index
@@ -241,16 +242,6 @@ class TidTipAnalyzer(object):
       fig.savefig(sessiondir+"tipdatafit-"+str(index+1)+".png")
     return Trx, sigTrx, tau, sigtau
 
-def airmass(elev):
-  """
-  @param elev : elevation above the horizon in degrees
-  @type  elev : float
-
-  @return: float
-  """
-  if type(elev) == list:
-    elev = array(elev)
-  return 1/numpy.sin(elev*math.pi/180)
 
 examples = """
 Examples
