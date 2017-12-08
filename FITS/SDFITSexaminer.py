@@ -70,7 +70,7 @@ class DSNFITSexaminer(object):
   Class for examining SAOdataset objects
   """
   def __init__(self, parent=None, FITSfile=None, hdulist=None,
-               dataname="SPECTRUM"):
+               dataname="DATA"):
     """
     Create an SAOexaminer object
     
@@ -158,7 +158,7 @@ class DSNFITSexaminer(object):
       frame       - reference frame for X-axis
       header      - FITS table header
       logger      - logging.Logger object
-      num_indices - number of indices in the SPECTRUM cube
+      num_indices - number of indices in the DATA cube
       obsmodes    - 
       obs_freqs   - non-redundant list of observing frequencies in table
       parent
@@ -857,31 +857,29 @@ class DSNFITSexaminer(object):
       return all_samples.min(),  all_samples.max(), \
              all_samples.mean(), all_samples.std()
 
-    def average_records(self, datasource, scan, subch, beam, pol):
+    def average_records(self, scan, subch, beam, pol):
       """
       average records in a scan
       
       To fill up the images arrays, the very first spectrum 
       
-      @param images : spectra from all records in a 2D array
-      @param datasource : SPECTRUM, or ifpower if Stokes
       @param scan : SCAN
       @param subch : CYCLE
       @param beam : 1-based number
       @param pol : 1-based number, i.e., 1 or 2
       """
       self.logger.debug(
-                  "average_records: for scan %d subch%d beam%1d pol%d from %s",
-                  scan, subch, beam, pol, datasource)
+                  "average_records: for scan %d subch%d beam%1d pol%d",
+                  scan, subch, beam, pol)
        
       IF_idx = pol-1
       cycle_idx = subch-1
       num_records = self.props["num records"][subch]
       first_spectrum = True # first record's spectrum
       for record in range(num_records):
-        indices = self.get_indices(scan=scan, cycle=subch, beam=beam, IF=pol,
+        indices = self.get_indices(scan=scan, cycle=subch, beam=beam, pol=pol,
                                    record=record)
-        spectrum = self.data[datasource][indices].reshape(
+        spectrum = self.data[self.dataname][indices].reshape(
                                                      self.props['num chans'],1)
         # if image array is empty, initialize with first spectrum
         if first_spectrum:

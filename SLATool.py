@@ -17,7 +17,7 @@ from pylab import *
 
 from Data_Reduction import get_obs_dirs, get_obs_session
 from Data_Reduction.FITS.DSNFITS import FITSfile
-from Data_Reduction.FITS.SDFITSplotter import DSNFITSplotter,make_legend_labels
+from Data_Reduction.FITS.SDFITSplotter import DSNFITSplotter, make_legend_labels
 from Data_Reduction.tipping import airmass, fit_tipcurve_data
 from DatesTimes import UnixTime_to_datetime
 from DSMS import DSN_complex_of
@@ -54,6 +54,17 @@ class SessionAnalyzer(object):
   """
   Tool for reducing multiple data reduction sessions
   
+  Attributes::
+    datapath
+    DOY
+    DSS
+    examiners
+    logger
+    project
+    projectdatapath
+    projworkpath
+    year
+    
   Example::
     In [1]: from Data_Reduction.SLATool import SessionAnalyzer
     In [2]: sa = SessionAnalyzer(project='67P', year=2015, DOY=204)
@@ -649,40 +660,44 @@ class SessionAnalyzer(object):
     self.logger.info("plot_elev_and_Tsys: saved to %s", savepath+"-elev.png")
     fig1.show()
 
-  def plot_weather(self, good_wx_data, savepath):
+  def plot_weather(self, weather_data=None, examiner_keys=None, savepath=None):
     """
     """
+    if weather_data:
+      pass
+      self.logger.debug("plot_elev_and_Tsys: using provided data")
+    elif examiner_keys:
+      self.logger.debug("plot_elev_and_Tsys: extracting data from tables %s",
+                        examiner_keys)
+      weather_data = self.get_good_weather_data(examiner_keys=examiner_keys)
+    else:
+      self.logger.debug("plot_elev_and_Tsys: using all data for this date")
+      weather_data = self.get_good_weather_data()
     fig2, wax = subplots(nrows=3, ncols=1, squeeze=True)
     fig2.suptitle("Weather")
     fig2.set_size_inches(6,3, forward=True)
     fig2.subplots_adjust(hspace=0) # no space between plots in a column
     fig2.subplots_adjust(left=0.15)
-    for key in self.examiner_keys:
-      table_keys = self.examiners[key].tables.keys()
-      table_keys.sort()
-      for tkey in table_keys:
-        table = self.examiners[key].tables[tkey]
-        good_wx_data = table.get_good_rows()
-        mpltime = epoch2num(good_wx_data['UNIXtime'][True])
-        # left axes: temperature
-        if good_wx_data.has_key('TAMBIENT'):
-          wax[0].plot_date(mpltime, good_wx_data['TAMBIENT'][True],"-k")
-        # middle axes: pressure
-        if good_wx_data.has_key('PRESSURE'):
-          wax[1].plot_date(mpltime, good_wx_data['PRESSURE'][True],"-k")
-        # right axes: humidity
-        if good_wx_data.has_key('HUMIDITY'):
-          wax[2].plot_date(mpltime, good_wx_data['HUMIDITY'][True],"-k")
-    if good_wx_data.has_key('TAMBIENT') or good_wx_data.has_key('PRESSURE'):
+    mpltime = epoch2num(weather_data['UNIXtime'][True])
+    # left axes: temperature
+    if weather_data.has_key('TAMBIENT'):
+      wax[0].plot_date(mpltime, weather_data['TAMBIENT'][True],"-k")
+    # middle axes: pressure
+    if weather_data.has_key('PRESSURE'):
+      wax[1].plot_date(mpltime, weather_data['PRESSURE'][True],"-k")
+    # right axes: humidity
+    if weather_data.has_key('HUMIDITY'):
+      wax[2].plot_date(mpltime, weather_data['HUMIDITY'][True],"-k")
+    if weather_data.has_key('TAMBIENT') or weather_data.has_key('PRESSURE'):
       wax[2].xaxis.set_major_formatter( DateFormatter('%H:%M') )
-    if good_wx_data.has_key('TAMBIENT') == False:
+    if weather_data.has_key('TAMBIENT') == False:
       wax[0].text(0.5,0.5,'bad ambient temperature data',
                 horizontalalignment='center',
                 verticalalignment='center',
                 transform = wax[0].transAxes)
     wax[0].set_ylabel("Temp (C)")
     wax[0].grid(True)
-    if good_wx_data.has_key('PRESSURE'):
+    if weather_data.has_key('PRESSURE'):
       wax[1].yaxis.set_major_formatter( FormatStrFormatter('%6.2f') )
     else:
       wax[1].text(0.5,0.5,'bad pressure data',
@@ -691,60 +706,415 @@ class SessionAnalyzer(object):
                 transform = wax[1].transAxes)
     wax[1].grid(True)
     wax[1].set_ylabel("Pres (mb)")
-    if good_wx_data.has_key('PRESSURE'):
+    if weather_data.has_key('PRESSURE'):
       wax[1].yaxis.set_major_formatter( FormatStrFormatter('%6.2f') )
-    if good_wx_data.has_key('HUMIDITY') == False:
+    if weather_data.has_key('HUMIDITY') == False:
       wax[2].text(0.5,0.5,'bad humidity data',
                 horizontalalignment='center',
                 verticalalignment='center',
                 transform = wax[2].transAxes)
     wax[2].grid(True)
     wax[2].set_ylabel("Humidity")
-    if good_wx_data.has_key('TAMBIENT') or good_wx_data.has_key('PRESSURE') or \
-      good_wx_data.has_key('HUMIDITY'):
+    if weather_data.has_key('TAMBIENT') or weather_data.has_key('PRESSURE') or \
+      weather_data.has_key('HUMIDITY'):
       fig2.autofmt_xdate()
     fig2.show()
     fig2.savefig(savepath+"-weather.png")
 
-  def plot_wind(self, good_wx_data, savepath):
+  def plot_wind(self, weather_data=None, examiner_keys=None, savepath=None):
     """
     """
+    if weather_data:
+      pass
+      self.logger.debug("plot_elev_and_Tsys: using provided data")
+    elif examiner_keys:
+      self.logger.debug("plot_elev_and_Tsys: extracting data from tables %s",
+                        examiner_keys)
+      weather_data = self.get_good_weather_data(examiner_keys=examiner_keys)
+    else:
+      self.logger.debug("plot_elev_and_Tsys: using all data for this date")
+      weather_data = self.get_good_weather_data()
     fig3, wax3 = subplots(nrows=2, ncols=1, squeeze=True)
     fig3.suptitle("Wind")
-    fig3.set_size_inches(6,4.5, forward=True)
+    fig3.set_size_inches(6, 4.5, forward=True)
     fig3.subplots_adjust(hspace=0) # no space between plots in a column
-    for key in self.examiner_keys:
-      table_keys = self.examiners[key].tables.keys()
-      table_keys.sort()
-      for tkey in table_keys:
-        table = self.examiners[key].tables[tkey]
-        good_wx_data = table.get_good_rows()
-        mpltime = epoch2num(good_wx_data['UNIXtime'])
-        # left axes: windspeed
-        if good_wx_data.has_key('WINDSPEE'):
-          wax3[0].plot_date(mpltime,good_wx_data['WINDSPEE'],"-k")
-        # right axes: wind direction
-        if good_wx_data.has_key('WINDDIR'):
-          wax3[1].plot_date(mpltime, good_wx_data['WINDDIRE'],"-k")
-    if good_wx_data.has_key('WINDSPEE') or good_wx_data.has_key('WINDDIRE'):
-      wax3[1].xaxis.set_major_formatter( DateFormatter('%H:%M') )
-    if good_wx_data.has_key('WINDDIRE') == False:
+    mpltime = epoch2num(weather_data['UNIXtime'][True])
+    # left axes: windspeed
+    if weather_data.has_key('WINDSPEE'):
+      wax3[0].plot_date(mpltime, weather_data['WINDSPEE'][True],"-k")
+      wax3[0].set_ylabel("Speed (km/h)")
+      wax3[0].grid(True)
+    else:
       wax3[0].text(0.5,0.5,'bad wind speed data',
                  horizontalalignment='center',
                  verticalalignment='center',
                  transform = wax3[0].transAxes)
-    wax3[0].set_ylabel("Speed (km/h)")
-    wax3[0].grid(True)
-    if good_wx_data.has_key('WINDDIRE') == False:
+    # right axes: wind direction
+    if weather_data.has_key('WINDDIR'):
+      wax3[1].plot_date(mpltime, weather_data['WINDDIRE'][True],"-k")
+      wax3[1].xaxis.set_major_formatter( DateFormatter('%H:%M') )
+      wax3[1].set_ylabel("Direction")
+      wax3[1].grid(True)
+    else:
       wax3[1].text(0.5,0.5,'bad wind direction data',
                  horizontalalignment='center',
                  verticalalignment='center',
                  transform = wax3[1].transAxes)
-    wax3[1].set_ylabel("Direction")
-    wax3[1].grid(True)
-    if good_wx_data.has_key('WINDSPEE') or good_wx_data.has_key('WINDDIRE'):
+    if weather_data.has_key('WINDSPEE') or weather_data.has_key('WINDDIRE'):
       fig3.autofmt_xdate()
     fig3.show()
     fig3.savefig(savepath+"-wind.png")
 
+  def plot_passband(self, figtitle=None):
+    """
+    """
+    for dfindex in self.examiner_keys:
+      for tablekey in self.examiners[dfindex].tables.keys():
+        table = self.examiners[dfindex].tables[tablekey]
+        plotter = self.examiners[dfindex].plotter[tablekey]
+        if len(table.obsmodes) > 1:
+          raise RuntimeError("multiple observing modes not yet supported")
+        num_scans = len(table.scan_keys)
+        num_cycles = len(table.cycle_keys)
+        num_rows = len(table.row_keys)
+        num_beams = table.props['num beams']
+        num_pols = table.props["num IFs"]
+        # collect the diagnostic spectra
+        if table.props["full Stokes"]:
+          # when SPECTRA are Stokes parameters, plot IF power for two pol modes
+          if table.props["num IFs"] == 2:
+            datasource = "IFSPECTR"
+            num_chans = table.props['num IFspec chans']
+        else:
+          if "SPECTRUM" in table.data.columns.names:
+            datasource = "SPECTRUM"
+          else:
+            datasource = "DATA"
+          num_chans = table.props['num chans']
+        self.logger.debug(" data source is %s", datasource)
+      
+        # create array of the right dimensions
+        images = table.prepare_summary_images(num_chans)
+
+        # get data statistics for scaling plots
+        ymin, ymax, ymean, ystd = table.get_data_stats()
+      
+        # prepare empty images
+        #   spectra are 2D arrays with frequency and scan as axes
+        #   images, also 2D arrays, are only needed if there is a TIME axis in
+        #   the data and then each record is a row in the array.
+        cycles = table.cycle_keys
+        # images with SCAN on the time axis have sub-images over record
+        start_image = {}
+        for cycle in cycles:
+          subch_idx = cycle - 1
+          start_image[subch_idx] = {}
+          for beam_idx in range(table.props["num beams"]):
+            start_image[subch_idx][beam_idx] = {}
+            for IF_idx in range(table.props["num IFs"]):
+              start_image[subch_idx][beam_idx][IF_idx] = True
+
+        # get the data
+        for scan in table.scan_keys:
+          scan_idx = table.scan_keys.index(scan) # scan numbers can start anywhere
+          for cycle in cycles:
+            subch_idx = cycle - 1
+            for beam_idx in range(table.props["num beams"]):
+              beam = beam_idx+1
+              for IF_idx in range(table.props["num IFs"]):
+                pol = IF_idx+1
+                self.logger.debug("  processing scan %d, subch %d, beam %d, pol %d",
+                               scan, cycle, beam, pol)
+                if table.props["time axis"]:
+                  # average scan spectrum and include record spectra in image
+                  # assume there is a scan number equal to the cycle number
+                  image, spectrum = \
+                      table.average_records(scan, cycle, beam, pol)
+                  # this is the all-record sub-image for the scan
+                  if start_image[subch_idx][beam_idx][IF_idx]:
+                    images[subch_idx][beam_idx][IF_idx] = image
+                    start_image[subch_idx][beam_idx][IF_idx] = False
+                  else:
+                    images[subch_idx][beam_idx][IF_idx] = \
+                        numpy.append(images[subch_idx][beam_idx][IF_idx],image,
+                                     axis=0)
+                else:
+                  # no time axis
+                  spec_indices = table.get_indices(scan=scan, cycle=cycle, 
+                                            beam=beam, pol=pol, record=record)
+                  image_line = table.data[datasource][spec_indices].reshape(
+                                                       num_chans,1).transpose()
+                  if start_image[subch_idx][beam_idx][IF_idx]:
+                    images[subch_idx][beam_idx][IF_idx] = image_line
+                  else:
+                    images[subch_idx][beam_idx][IF_idx] = \
+                              numpy.append(images[subch_idx][beam_idx][IF_idx],
+                                           image_line, axis=0)
+
+        # number of summaries
+        #     we want a summary for every beam, polarization and subchannel
+        num_summar = table.props["num beams"]*table.props["num IFs"]*num_cycles
+      
+        # One row for dynamic spectra of scans or records
+        if figtitle:
+          pass
+        else:
+          figtitle = os.path.basename(self.examiners[0].file)[4:-5]
+        fig, ax = plotter.init_multiplot(figtitle+"  Spectogram",
+                                           nrows=1, ncols=num_summar)
+              
+        # display the data
+        # labels are updated only in the first time around a loop
+        col = 0
+        labels = {}
+        for subch in range(num_cycles):
+          for beam in range(table.props["num beams"]):
+            for pol in range(table.props["num IFs"]):
+              label = make_legend_labels(sckeys=range(num_cycles),
+                                         bmkeys=range(num_beams),
+                                         plkeys=range(num_pols),
+                                         sckey=subch,
+                                         bmkey=beam,
+                                         plkey=pol)
+              col = 2*beam + pol
+              # dynamic spectra of IF power
+              ax[col].set_title(label)
+              ax[col].imshow(images[subch][beam][pol], aspect="auto")
+              for tick in ax[col].get_xticklabels():
+                tick.set_rotation(45)
+              if col == 0:
+                ax[col].set_ylabel("Cumulative record number")
+              fig.subplots_adjust(top=0.88)
+              fig.subplots_adjust(bottom=0.15)
+            
+          col += 1      
+        last_col = len(ax)-1
+        lines, labels = ax[last_col].get_legend_handles_labels()
+        fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
+        show()
+        # end table loop
+      datasetID = os.path.splitext(os.path.basename(self.examiners[dfindex].file))[0]
+      fig.savefig(self.datapath+datasetID+"_specgm.png")
+      
+  def plot_bmsw_diff(self, figtitle=None):
+    """
+    """
+    for dfindex in self.examiner_keys:
+      for tablekey in self.examiners[dfindex].tables.keys():
+        table = self.examiners[dfindex].tables[tablekey]
+        plotter = self.examiners[dfindex].plotter[tablekey]
+        if len(table.obsmodes) > 1:
+          raise RuntimeError("multiple observing modes not yet supported")
+        num_scans = len(table.scan_keys)
+        num_cycles = len(table.cycle_keys)
+        num_rows = len(table.row_keys)
+        num_beams = table.props['num beams']
+        num_pols = table.props["num IFs"]
+        # collect the diagnostic spectra
+        if table.props["full Stokes"]:
+          # when SPECTRA are Stokes parameters, plot IF power for two pol modes
+          if table.props["num IFs"] == 2:
+            datasource = "IFSPECTR"
+            num_chans = table.props['num IFspec chans']
+        else:
+          if "SPECTRUM" in table.data.columns.names:
+            datasource = "SPECTRUM"
+          else:
+            datasource = "DATA"
+          num_chans = table.props['num chans']
+        self.logger.debug(" data source is %s", datasource)
+      
+        # create arrays of the right dimensions
+        spectra = table.prepare_summary_arrays(num_chans)
+
+        # get data statistics for scaling plots
+        ymin, ymax, ymean, ystd = table.get_data_stats()
+      
+        # get the data
+        cycles = table.cycle_keys
+        for scan in table.scan_keys:
+          scan_idx = table.scan_keys.index(scan) # scan numbers can start anywhere
+          for cycle in cycles:
+            subch_idx = cycle - 1
+            for beam_idx in range(table.props["num beams"]):
+              beam = beam_idx+1
+              for IF_idx in range(table.props["num IFs"]):
+                pol = IF_idx+1
+                self.logger.debug("  processing scan %d, subch %d, beam %d, pol %d",
+                             scan, cycle, beam, pol)
+                if table.props["time axis"]:
+                  # average scan spectrum and include record spectra in image
+                  # assume there is a scan number equal to the cycle number
+                  image, spectrum = \
+                      table.average_records(scan, cycle, beam, pol)
+                  # this is the average spectrum for the scan
+                  spectra[scan_idx][subch_idx][beam_idx][IF_idx] = spectrum
+                else:
+                  # no time axis
+                  spec_indices = table.get_indices(scan=scan, cycle=cycle, 
+                                            beam=beam, pol=pol, record=record)
+                  spectra[scan_idx][subch_idx][beam_idx][IF_idx] = \
+                                           table.data[datasource][spec_indices]
+
+        # number of summaries
+        #     we want a summary for every beam, polarization and subchannel
+        num_summar = table.props["num beams"]*table.props["num IFs"]*num_cycles
+
+      
+        # One row for dynamic spectra of scans or records
+        if figtitle:
+          pass
+        else:
+          figtitle = os.path.basename(self.examiners[0].file)[4:-5]
+        # for beam-1 minus beam-2 differences
+        # THIS DOES NOT YET HANDLE OBSMODE CHANGES
+        if table.data[0]['OBSMODE'] == 'LINEPBSW':
+          # Figure 3 is for on beam - off beam differences
+          fig, ax = plotter.init_multiplot(
+                            figtitle+" on beam - off beam, summed over records",
+                            nrows=1, ncols=num_summar)
+        col = 0
+        labels = {}
+        for subch in range(num_cycles):
+          for beam in range(table.props["num beams"]):
+            for pol in range(table.props["num IFs"]):
+              label = make_legend_labels(sckeys=range(num_cycles),
+                                         bmkeys=range(num_beams),
+                                         plkeys=range(num_pols),
+                                         sckey=subch,
+                                         bmkey=beam,
+                                         plkey=pol)
+              col = 2*beam + pol
+              # beam-1 minus beam-2 differences
+              if table.data[0]['OBSMODE'] == 'LINEPBSW':
+                ax[col].set_title(label)
+                for scan in range(num_scans):
+                  beamdiff = spectra[scan][subch][0][pol] - \
+                            spectra[scan][subch][1][pol]
+                  ax[col].plot(beamdiff, label=str(scan))
+                ax[col].grid(True)
+                ax[col].set_xlim(0,table.props['num chans'])
+                for tick in ax[col].get_xticklabels():
+                  tick.set_rotation(45)
+                fig.subplots_adjust(top=0.88)
+                fig.subplots_adjust(bottom=0.15)
+          col += 1
+        if table.data[0]['OBSMODE'] == 'LINEPBSW':
+          last_col = len(ax)-1
+          lines, labels = ax[last_col].get_legend_handles_labels()
+          fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
+      show()
+      # end table loop
+    if table.data[0]['OBSMODE'] == 'LINEPBSW':
+      fig.savefig(sa.datapath+datasetID+"_beam_diff.png")
+
+  def plot_possw_diff(self, figtitle=None):
+    """
+    """
+    for dfindex in self.examiner_keys:
+      for tablekey in self.examiners[dfindex].tables.keys():
+        table = self.examiners[dfindex].tables[tablekey]
+        plotter = self.examiners[dfindex].plotter[tablekey]
+        if len(table.obsmodes) > 1:
+          raise RuntimeError("multiple observing modes not yet supported")
+        num_scans = len(table.scan_keys)
+        num_beams = table.props['num beams']
+        num_cycles = len(table.cycle_keys)
+        num_rows = len(table.row_keys)
+        num_pols = table.props["num IFs"]
+        # collect the diagnostic spectra
+        if table.props["full Stokes"]:
+          # when SPECTRA are Stokes parameters, plot IF power for two pol modes
+          if table.props["num IFs"] == 2:
+            datasource = "IFSPECTR"
+            num_chans = table.props['num IFspec chans']
+        else:
+          if "SPECTRUM" in table.data.columns.names:
+            datasource = "SPECTRUM"
+          else:
+            datasource = "DATA"
+          num_chans = table.props['num chans']
+        self.logger.debug(" data source is %s", datasource)
+      
+        # create arrays of the right dimensions
+        spectra = table.prepare_summary_arrays(num_chans)
+
+        # get data statistics for scaling plots
+        ymin, ymax, ymean, ystd = table.get_data_stats()
+      
+        # get the data
+        cycles = table.cycle_keys
+        for scan in table.scan_keys:
+          scan_idx = table.scan_keys.index(scan) # scan numbers can start anywhere
+          for cycle in cycles:
+            subch_idx = cycle - 1
+            for beam_idx in range(num_beams):
+              beam = beam_idx+1
+              for IF_idx in range(num_pols):
+                pol = IF_idx+1
+                self.logger.debug("  processing scan %d, subch %d, beam %d, pol %d",
+                             scan, cycle, beam, pol)
+                if table.props["time axis"]:
+                  # average scan spectrum and include record spectra in image
+                  # assume there is a scan number equal to the cycle number
+                  image, spectrum = \
+                      table.average_records(scan, cycle, beam, pol)
+                  # this is the average spectrum for the scan
+                  spectra[scan_idx][subch_idx][beam_idx][IF_idx] = spectrum
+                else:
+                  # no time axis
+                  spec_indices = table.get_indices(scan=scan, cycle=cycle, 
+                                            beam=beam, pol=pol, record=record)
+                  spectra[scan_idx][subch_idx][beam_idx][IF_idx] = \
+                                           table.data[datasource][spec_indices]
+
+        if figtitle:
+          pass
+        else:
+          figtitle = os.path.basename(self.examiners[0].file)[4:-5]
+        # position-1 - position-2 differences
+        if table.data[0]['OBSMODE'] == 'LINEPSSW' or \
+           table.data[0]['OBSMODE'] == 'LINEPBSW':
+          num_cols = table.props["num beams"]*table.props["num IFs"]
+          fig, ax = plotter.init_multiplot(
+                                           figtitle+" position 1 - position 2",
+                                           nrows=1, ncols=num_cols)
+        # display the data
+        # labels are updated only in the first time around a loop
+        col = 0
+        labels = {}
+        for subch in range(num_cycles):
+          for beam in range(table.props["num beams"]):
+            for pol in range(table.props["num IFs"]):
+              label = make_legend_labels(sckeys=range(num_cycles),
+                                         bmkeys=range(num_beams),
+                                         plkeys=range(num_pols),
+                                         sckey=subch,
+                                         bmkey=beam,
+                                         plkey=pol)
+              col = 2*beam + pol
+              if table.data[0]['OBSMODE'] == 'LINEPSSW' or \
+                 table.data[0]['OBSMODE'] == 'LINEPBSW':
+                ax[col].set_title(label)
+              num_pairs = num_scans/2
+              for scan in arange(2*num_pairs)[::2]:
+                spec_on = spectra[scan][subch][beam][pol]
+                spec_of = spectra[scan+1][subch][beam][pol]
+                ax[col].plot(spec_on-spec_of,label=str(scan)+"-"+str(scan+1))
+              if subch == 0:
+                ax[col].grid(True)
+                for tick in ax[col].get_xticklabels():
+                  tick.set_rotation(45)
+              if col == 0:
+                ax[col].set_ylabel("Power (on-off)")
+          fig.subplots_adjust(top=0.88)
+          fig.subplots_adjust(bottom=0.15)
+        lines, labels = ax[col].get_legend_handles_labels()
+        fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
+      show()
+      # end table loop
+    datasetID = os.path.splitext(os.path.basename(self.examiners[dfindex].file))[0]
+    if table.data[0]['OBSMODE'] == 'LINEPSSW' or \
+       table.data[0]['OBSMODE'] == 'LINEPBSW':
+      fig.savefig(self.datapath+datasetID+"_on-off.png")
 
