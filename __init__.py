@@ -74,6 +74,7 @@ def get_obs_session(project=None, dss=None, date=None, path='proj'):
     session = get_directory(wvsr_dir)
     return session
     
+  cwd = os.getcwd()
   # get the project
   if project:
     pass
@@ -84,7 +85,7 @@ def get_obs_session(project=None, dss=None, date=None, path='proj'):
   # get the station
   if path[:4].lower() == 'wvsr':
     # special call
-    print from_wvsr_dir()
+    print "from_wvsr_dir()"
   if path[:4].lower() == 'proj':
     os.chdir(projectpath+"/Observations/")
   elif path[:4].lower() == 'hdf5':
@@ -107,6 +108,7 @@ def get_obs_session(project=None, dss=None, date=None, path='proj'):
     year = int(get_directory(stationpath))
     yearpath = stationpath+"/"+str(year)
     DOY = int(get_directory(yearpath))
+  os.chdir(cwd)
   return project, dss, year, DOY
   
   

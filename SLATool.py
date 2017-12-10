@@ -12,7 +12,10 @@ import numpy
 import os
 import time
 
+from matplotlib.dates import DateFormatter
 from matplotlib.font_manager import FontProperties
+from matplotlib.ticker import FormatStrFormatter
+from os.path import basename, dirname, splitext
 from pylab import *
 
 from Data_Reduction import get_obs_dirs, get_obs_session
@@ -112,7 +115,7 @@ class SessionAnalyzer(object):
     dfindex = 0
     examiner = {}
     for datafile in datafiles:
-      self.logger.info("open_datafiles: %s", os.path.basename(datafile))
+      self.logger.info("open_datafiles: %s", basename(datafile))
       examiner[dfindex]  = DSNFITSplotter(parent=self, FITSfile=datafile)
       #examiner[dfindex].datafile = datafile
       for table_key in examiner[dfindex].tables.keys():
@@ -123,6 +126,17 @@ class SessionAnalyzer(object):
     self.logger.info("open_datafiles: started %d examiners" % 
                      len(examiner.keys()))
     return examiner
+
+  def make_session_names(self):
+    """
+    """
+    first_ex = self.examiners[self.examiner_keys[0]]
+    sttm = time.gmtime(first_ex.tables[0].get_first_value('UNIXtime', 0))
+    figtitle = "%4d/%02d/%02d (%03d)" % (sttm.tm_year, sttm.tm_mon,
+                                         sttm.tm_mday, sttm.tm_yday)
+    savename = "_".join(splitext(basename(first_ex.file))[0].split('-')[:2])
+    savepath = dirname(first_ex.file)+"/"+savename
+    return figtitle, savepath
 
   def get_sources(self):
     """
@@ -161,7 +175,7 @@ class SessionAnalyzer(object):
       
     for exkey in examiner_keys:
       examiner = self.examiners[exkey]
-      self.logger.debug("get_good_weather_data: data file is %s", examiner.file)
+      self.logger.debug("get_good_weather_data: data file is %s",examiner.file)
       # assume multiple tables are in time order
       tablekeys = examiner.tables.keys()
       tablekeys.sort
@@ -179,17 +193,20 @@ class SessionAnalyzer(object):
                 # this state exists in the input data
                 if good_data[param_key].has_key(switch_state):
                   # this state also exists in the output data so append
-                  good_data[param_key][switch_state] = numpy.append(good_data[param_key][switch_state],
-                                     wx_data[param_key][switch_state], axis=0)
+                  good_data[param_key][switch_state] = \
+                         numpy.append(good_data[param_key][switch_state],
+                                      wx_data[param_key][switch_state], axis=0)
                 else:
                   # this state does not exist in the output so create
-                  good_data[param_key][switch_state] = wx_data[param_key][switch_state]
+                  good_data[param_key][switch_state] = \
+                                               wx_data[param_key][switch_state]
               else:
                 # state does not exist in the input data
                 pass
             else:
               # parameter not defined in the output data so create
-              good_data[param_key] = {switch_state: wx_data[param_key][switch_state]}
+              good_data[param_key] = \
+                               {switch_state: wx_data[param_key][switch_state]}
     return good_data
 
   def fit_Tsys_to_airmass(self, weather_data=None, examiner_keys=None,
@@ -317,7 +334,7 @@ class SessionAnalyzer(object):
     sum_intgr = {0:0, 1:0}
     for exkey in self.examiners.keys():
       ex = self.examiners[exkey]
-      print "FITS file", os.path.basename(ex.file)
+      print "FITS file", basename(ex.file)
       for tbkey in ex.tables.keys():
         tb = ex.tables[tbkey]
         table_source = tb.sources[0] # for TAMS datasets
@@ -654,13 +671,14 @@ class SessionAnalyzer(object):
     lines, labels = ax[1].get_legend_handles_labels()
     fig1.legend(lines, labels, numpoints=1, loc="upper right", ncol=1, prop = fontP)
     if savepath:
-      if savepath[-1] != "/":
-        savepath += "/"
-      fig1.savefig(savepath+"Tsys+elev.png")
+      fig1.savefig(savepath+"-elev.png")
+    else:
+      fig1.save(self.datapath+"Tsys-elev.png")
     self.logger.info("plot_elev_and_Tsys: saved to %s", savepath+"-elev.png")
     fig1.show()
 
-  def plot_weather(self, weather_data=None, examiner_keys=None, savepath=None):
+  def plot_weather(self, figtitle=None, weather_data=None, examiner_keys=None,
+                   savepath=None):
     """
     """
     if weather_data:
@@ -674,7 +692,10 @@ class SessionAnalyzer(object):
       self.logger.debug("plot_elev_and_Tsys: using all data for this date")
       weather_data = self.get_good_weather_data()
     fig2, wax = subplots(nrows=3, ncols=1, squeeze=True)
-    fig2.suptitle("Weather")
+    if figtitle:
+      fig2.suptitle(figtitle)
+    else:
+      fig2.suptitle("Weather")
     fig2.set_size_inches(6,3, forward=True)
     fig2.subplots_adjust(hspace=0) # no space between plots in a column
     fig2.subplots_adjust(left=0.15)
@@ -721,7 +742,8 @@ class SessionAnalyzer(object):
     fig2.show()
     fig2.savefig(savepath+"-weather.png")
 
-  def plot_wind(self, weather_data=None, examiner_keys=None, savepath=None):
+  def plot_wind(self, figtitle=None, weather_data=None, examiner_keys=None,
+                savepath=None):
     """
     """
     if weather_data:
@@ -735,7 +757,10 @@ class SessionAnalyzer(object):
       self.logger.debug("plot_elev_and_Tsys: using all data for this date")
       weather_data = self.get_good_weather_data()
     fig3, wax3 = subplots(nrows=2, ncols=1, squeeze=True)
-    fig3.suptitle("Wind")
+    if figtitle:
+      fig3.suptitle(figtitle)
+    else:
+      fig3.suptitle("Wind")
     fig3.set_size_inches(6, 4.5, forward=True)
     fig3.subplots_adjust(hspace=0) # no space between plots in a column
     mpltime = epoch2num(weather_data['UNIXtime'][True])
@@ -750,7 +775,7 @@ class SessionAnalyzer(object):
                  verticalalignment='center',
                  transform = wax3[0].transAxes)
     # right axes: wind direction
-    if weather_data.has_key('WINDDIR'):
+    if weather_data.has_key('WINDDIRE'):
       wax3[1].plot_date(mpltime, weather_data['WINDDIRE'][True],"-k")
       wax3[1].xaxis.set_major_formatter( DateFormatter('%H:%M') )
       wax3[1].set_ylabel("Direction")
@@ -767,6 +792,25 @@ class SessionAnalyzer(object):
 
   def plot_passband(self, figtitle=None):
     """
+    Plots the passbands are a series of spectra and a dynamic spectrum
+    
+    Image array structure
+    ---------------------
+    There is an image array for each subchannel, beam and pol combination. The
+    data for each is a 2D nparray with dimensions (num_scans, num_chans).
+
+    Initialization
+    --------------
+    The spectra for each scan, subchannel, beam and pol combination are
+    initialized as zeros with shape (32768,). The zeros are replaced with data
+    from the FITS table DATA column.
+
+    The images for each subchannel, beam and pol combination are initialized as
+    numpy.arrays with shape (32768, 1). There is a flag dict 'start_image' 
+    which is initialized as True.  When it is True, the initial image (see
+    above) is replaced with data for the records in the first scan. The flag is
+    then set to False. After data, the subimages for each scan are appended.
+    The final image will have dimensions (num_scans*num_records, 32768).
     """
     for dfindex in self.examiner_keys:
       for tablekey in self.examiners[dfindex].tables.keys():
@@ -859,7 +903,7 @@ class SessionAnalyzer(object):
         if figtitle:
           pass
         else:
-          figtitle = os.path.basename(self.examiners[0].file)[4:-5]
+          figtitle = basename(self.examiners[0].file)[4:-5]
         fig, ax = plotter.init_multiplot(figtitle+"  Spectogram",
                                            nrows=1, ncols=num_summar)
               
@@ -893,7 +937,7 @@ class SessionAnalyzer(object):
         fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
         show()
         # end table loop
-      datasetID = os.path.splitext(os.path.basename(self.examiners[dfindex].file))[0]
+      datasetID = splitext(basename(self.examiners[dfindex].file))[0]
       fig.savefig(self.datapath+datasetID+"_specgm.png")
       
   def plot_bmsw_diff(self, figtitle=None):
@@ -965,7 +1009,7 @@ class SessionAnalyzer(object):
         if figtitle:
           pass
         else:
-          figtitle = os.path.basename(self.examiners[0].file)[4:-5]
+          figtitle = basename(self.examiners[0].file)[4:-5]
         # for beam-1 minus beam-2 differences
         # THIS DOES NOT YET HANDLE OBSMODE CHANGES
         if table.data[0]['OBSMODE'] == 'LINEPBSW':
@@ -1071,7 +1115,7 @@ class SessionAnalyzer(object):
         if figtitle:
           pass
         else:
-          figtitle = os.path.basename(self.examiners[0].file)[4:-5]
+          figtitle = basename(self.examiners[0].file)[4:-5]
         # position-1 - position-2 differences
         if table.data[0]['OBSMODE'] == 'LINEPSSW' or \
            table.data[0]['OBSMODE'] == 'LINEPBSW':
@@ -1113,7 +1157,7 @@ class SessionAnalyzer(object):
         fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
       show()
       # end table loop
-    datasetID = os.path.splitext(os.path.basename(self.examiners[dfindex].file))[0]
+    datasetID = splitext(basename(self.examiners[dfindex].file))[0]
     if table.data[0]['OBSMODE'] == 'LINEPSSW' or \
        table.data[0]['OBSMODE'] == 'LINEPBSW':
       fig.savefig(self.datapath+datasetID+"_on-off.png")

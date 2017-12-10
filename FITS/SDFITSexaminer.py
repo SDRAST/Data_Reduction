@@ -19,6 +19,23 @@ A SPECTRUM cell data cube has four axes::
 For files obtained from the SAO spectrometers, there is only one CYCLE but
 there are two feeds. A SPECTRUM cell has six axes::
    (freq, RA, dec, Stokes, time, beam)
+
+Notes
+=====
+Other FITS Formats
+------------------
+These are not handled right now except to give some information::
+In [1]: from Data_Reduction.FITS.SDFITSexaminer import DSNFITSexaminer
+In [3]: mylogger.setLevel(logging.INFO)
+In [4]: ex = DSNFITSexaminer(FITSfile="Carina_H92a_Tid_Gal.fits")
+INFO:Data_Reduction.FITS.SDFITSexaminer.DSNFITSexaminer:__init__:
+                                     0 tables found in Carina_H92a_Tid_Gal.fits
+WARNING:Data_Reduction.FITS.SDFITSexaminer.DSNFITSexaminer:__init__:
+                                                      this has no SDFITS tables
+INFO:Data_Reduction.FITS.SDFITSexaminer.DSNFITSexaminer:__init__:
+                                                     this is a simple FITS file
+INFO:Data_Reduction.FITS.SDFITSexaminer.DSNFITSexaminer:__init__:
+                                         data matrix shape is (1, 1800, 21, 31)
 """
 import astropy.io.fits as pyfits
 import astropy.units as u
@@ -96,6 +113,14 @@ class DSNFITSexaminer(object):
     else:
       self.logger.error("__init__: requires filename or HDU list")
     self.header = self.hdulist[0].header
+    if self.tables == {}:
+      self.logger.warning("__init__: this has no SDFITS tables")
+      if self.header['SIMPLE']: 
+        self.logger.info("__init__: this is a simple FITS file")
+        self.logger.info("__init__: data matrix shape is %s",
+                         self.hdulist[0].data.shape)
+      else:
+        self.logger.warning("__init__: unknown FITS format")
        
   def get_SDFITS_tables(self):
     """
@@ -649,19 +674,26 @@ class DSNFITSexaminer(object):
       """
       ensure that the weather data are usable
       
-      check the data to make sure at least some are good and mask for those
+      check the data to make sure at least some are good and mask for those.
+      The first item of the returned tuple reports whether any data point did
+      not meet the test (of being numpy.nan or zero). The second returns the
+      indices of the valid data.
       """
-      def validate(colname):
+      def validate(colname, allow_zero=False):
         """
         """
         data = self.data[colname]
-        mask = ~(numpy.isnan(data) | numpy.equal(data, 0))
+        if allow_zero:
+          mask = ~numpy.isnan(data)
+        else:
+          mask = ~(numpy.isnan(data) | numpy.equal(data, 0))
         return mask.any(), numpy.where(mask)
         
       valid_data = {}
       indices = {}
       #    time
-      valid_data['UNIXtime'], indices['UNIXtime'] = validate('UNIXtime')
+      valid_data['UNIXtime'], indices['UNIXtime'] = validate('UNIXtime',
+                                                             allow_zero=True)
       
       #    elevations
       valid_data['ELEVATIO'], indices['ELEVATIO'] = validate('ELEVATIO')
@@ -670,15 +702,15 @@ class DSNFITSexaminer(object):
 
       #    system temperature
       if numpy.equal(self.data['TSYS'], 0.).all():
+        # may not all be zero
         valid_data['TSYS'] = False
         self.logger.warning("validate_wx_data: Tsys data is bad")
       else:
         valid_data['TSYS'] = True
-        #self.logger.debug("validate_wx_data: system temperatures shape: %s",
-        #               self.data['TSYS'].shape)
                        
       #    ambient temperature
-      valid_data['TAMBIENT'], indices['TAMBIENT'] = validate('TAMBIENT')
+      valid_data['TAMBIENT'], indices['TAMBIENT'] = validate('TAMBIENT',
+                                                             allow_zero=True)
       if not valid_data['TAMBIENT']:
        self.logger.warning("validate_wx_data: ambient temperature data is bad")
        
@@ -693,12 +725,14 @@ class DSNFITSexaminer(object):
         self.logger.warning("validate_wx_data: humidity data is bad")
         
       #    windspeed
-      valid_data['WINDSPEE'], indices['WINDSPEE'] = validate('WINDSPEE')
+      valid_data['WINDSPEE'], indices['WINDSPEE'] = validate('WINDSPEE',
+                                                             allow_zero=True)
       if not valid_data['WINDSPEE']:
         self.logger.warning("validate_wx_data: windspeed data is bad")
         
       #    winddir
-      valid_data['WINDDIRE'], indices['WINDDIRE'] = validate('WINDDIRE')
+      valid_data['WINDDIRE'], indices['WINDDIRE'] = validate('WINDDIRE',
+                                                             allow_zero=True)
       if not valid_data['WINDDIRE']:
             self.logger.warning("validate_wx_data: wind direction data is bad")
       return valid_data, indices
