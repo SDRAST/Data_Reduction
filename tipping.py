@@ -19,6 +19,90 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
+class AtmosAnalyzer(object):
+  """
+  Analyzer for environmental data contained in a weather data cube
+  
+  Weather data cubes are created with the DSNFITSexaminer method 
+  get_wx_datacubes(), or the SessionAnalyzer method get_good_weather_data().
+  A weather data cube is a dict with keys 'TAMBIENT', 'WINDDIRE', 'UNIXtime',
+  'TSYS', 'HUMIDITY', 'PRESSURE', 'ELEVATIO', 'WINDSPEE'.  The data asociated
+  with each key is a dict with numpy array for (SIG state) True and for False.
+  The 'TSYS' array has four axes representing::
+        time index   - 0-based sequence in order of matplotlib datenum 
+        subchannel   - CYCLE value
+        beam         - 1-based number sequence
+        IF           - 1-based number sequence, usually representing pol
+  The other keys have only a time axis.
+  """
+  def __init__(self, datacube):
+    """
+    """
+    self.logger = logging.getLogger(logger.name+".AtmosAnalyzer")
+    self.data = datacube
+
+  def fit_Tsys_to_airmass(self, Tatm=250, linear=True):
+    """
+    Fit tipping curve data implicit in sessions elev and Tsys data
+    
+    Returns numpy arrays with indices for sig/ref state, subchannel, beam, IF.
+    
+    When linear=True then a straight line fit is performed. This would be
+    appropriate when the TSYS units are not kelvin but count or something else.
+    The parameters are zero airmass power intercept and its standard deviation,
+    and power per airmass and its standard deviation.
+    
+    If the Tsys units are in K, then a linear=False fit is appropriate, which
+    fits the data to a radiative transfer model. The returned parameters are
+    then the system temperature above the atmosphere, its standard deviation,
+    and the optical depth per airmass and its standard deviation. The average
+    of the physical temperature of the atmosphere defaults to 250 K.
+        
+    @param Tatm : air temperature along line of sight
+    @type  Tatm : float
+  
+    @param linear : use the linear (low tau) approximation
+    @type  linear : True
+    """
+    # get Tsys data structure  
+    if self.data.has_key('TSYS'):
+      nrows, num_cy, num_bm, num_pl = self.data['TSYS'][True].shape
+    else:
+      self.logger.error("fit_Tsys_to_airmass: no system temperature data")
+      return None
+    states = self.data['TSYS'].keys()
+    num_st = len(states)
+    
+    if self.data.has_key('ELEVATIO'):
+      pass
+    else:
+      self.logger.error("fit_Tsys_to_airmass: no elevation data")
+      return None
+    
+    # fit the data
+    param_shape = (num_st, num_cy, num_bm, num_pl)
+    # what type of fit?
+    if linear:
+      keys = ["pwr0", "pwr0stdv", "slope", "slopestdv"]
+    else:
+      keys = ["Tsys0", "Tsys0stdev", "tau0", "tau0stdev"]
+    # intialize
+    parameters = {}
+    for key in keys:
+      parameters[key] = numpy.zeros(param_shape)
+                    
+    for sig in states:              # sig/ref state first
+      for subch in range(num_cy):   # subchannel second
+        for beam in range(num_bm):  # beam third
+          for pol in range(num_pl): # pol fourth
+            el = self.data['ELEVATIO'][sig]
+            Tsys = self.data['TSYS'][sig][:,subch,beam,pol]
+            pars = fit_tipcurve_data(el, Tsys, Tatm=Tatm, linear=linear)
+            for key in keys:
+              index = keys.index(key)
+              parameters[key][sig, subch, beam, pol] = pars[index]
+    return parameters
+    
 def airmass(elev):
   """
   @param elev : elevation above the horizon in degrees

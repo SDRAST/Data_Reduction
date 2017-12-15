@@ -39,7 +39,7 @@ Possible symbols::
 """
 
 import logging
-import numpy as np
+import numpy
 import re
 
 from matplotlib import rcParams
@@ -215,7 +215,139 @@ class DSNFITSplotter(DSNFITSexaminer):
                                                         sharey=sharey)
       return figs, axs
       
-    def show_all_spectra(self, rows=None, IFspectra=False, sharey=False):
+    def show_passband(self, figtitle=None, rows=None, savepath=None):
+      """
+      If there are multiple beams, there will be a figure column for each beam
+      and each pol.  Else, if there is only one beam but mulplot_Tsys(tiple subchannels
+      then there will be a figure column for each subchannel and each pol.
+      Otherwise there is just a column for each pol.
+      """
+      if rows == None:
+        spectra = self.get_spectra(self.row_keys)
+      else:
+        spectra = self.get_spectra(rows)
+      # lay out the figure
+      if self.props['num beams'] > 1:
+        ncols = self.props['num beams']*self.props['num IFs']
+      elif self.props['num cycles'] > 1:
+        ncols = self.props['num cycles']*self.props['num IFs']
+      else:
+        ncols = self.props['num IFs']
+      # collect the diagnostic spectra
+      if self.props["full Stokes"]:
+        # when SPECTRA are Stokes parameters, plot IF power for two pol modes
+        if self.props["num IFs"] == 2:
+          datasource = "IFSPECTR"
+          num_chans = self.props['num IFspec chans']
+          IFspectra = True
+      else:
+        if "SPECTRUM" in self.data.columns.names:
+          datasource = "SPECTRUM"
+        else:
+          datasource = "DATA"
+        IFspectra = False
+        num_chans = self.props['num chans']
+        self.logger.debug("show_passband: data source is %s", datasource)
+      # prepare empty images
+      images = self.prepare_summary_images(num_chans)
+      # get data statistics for scaling plots
+      ymin, ymax, ymean, ystd = self.get_data_stats()
+      #   spectra are 2D arrays with frequency and scan as axes
+      #   images, also 2D arrays, are only needed if there is a TIME axis in
+      #   the data and then each record is a row in the array.
+      cycles = self.cycle_keys
+      # images with SCAN on the time axis have sub-images over record
+      start_image = {}
+      for cycle in cycles:
+        subch_idx = cycle - 1
+        start_image[subch_idx] = {}
+        for beam_idx in range(self.props["num beams"]):
+          start_image[subch_idx][beam_idx] = {}
+          for IF_idx in range(self.props["num IFs"]):
+            start_image[subch_idx][beam_idx][IF_idx] = True
+      # get the data
+      for scan in self.scan_keys:
+        scan_idx = self.scan_keys.index(scan) # scan numbers can start anywhere
+        for cycle in cycles:
+          subch_idx = cycle - 1
+          for beam_idx in range(self.props["num beams"]):
+            beam = beam_idx+1
+            for IF_idx in range(self.props["num IFs"]):
+              pol = IF_idx+1
+              #self.logger.debug("plot_passband: processing scan %d, subch %d, beam %d, pol %d",
+              #               scan, cycle, beam, pol)
+              if self.props["time axis"]:
+                # average scan spectrum and include record spectra in image
+                # assume there is a scan number equal to the cycle number
+                image, spectrum = \
+                      self.average_records(scan, cycle, beam, pol)
+                # this is the all-record sub-image for the scan
+                if start_image[subch_idx][beam_idx][IF_idx]:
+                  images[subch_idx][beam_idx][IF_idx] = image
+                  start_image[subch_idx][beam_idx][IF_idx] = False
+                else:
+                  images[subch_idx][beam_idx][IF_idx] = \
+                      numpy.append(images[subch_idx][beam_idx][IF_idx], image,
+                                   axis=0)
+              else:
+                # no time axis
+                spec_indices = self.get_indices(scan=scan, cycle=cycle, 
+                                                beam=beam, pol=pol)
+                image_line = self.data[datasource][spec_indices].reshape(
+                                                       num_chans,1).transpose()
+                if start_image[subch_idx][beam_idx][IF_idx]:
+                  images[subch_idx][beam_idx][IF_idx] = image_line
+                  start_image[subch_idx][beam_idx][IF_idx] = False
+                else:
+                  images[subch_idx][beam_idx][IF_idx] = \
+                              numpy.append(images[subch_idx][beam_idx][IF_idx],
+                                           image_line, axis=0)
+      if figtitle:
+        pass
+      else:
+        figtitle = basename(self.parent.file)[4:-5].replace('_',' ')
+      fig, ax = self.init_multiplot(figtitle+"  Spectogram",
+                                       nrows=1, ncols=ncols)
+      # display the data
+      # labels are updated only in the first time around a loop
+      labels = {}
+      num_beams = self.props['num beams']
+      num_cycles = len(self.cycle_keys)
+      num_pols = self.props["num IFs"]
+      halfband = self.data['BANDWIDT'][0]/2.e6
+      for subch in range(num_cycles):
+        for beam in range(self.props["num beams"]):
+          for pol in range(self.props["num IFs"]):
+            label = make_legend_labels(sckeys=range(num_cycles),
+                                       bmkeys=range(num_beams),
+                                       plkeys=range(num_pols),
+                                       sckey=subch,
+                                       bmkey=beam,
+                                       plkey=pol)
+            if self.props['num beams'] > 1:
+              col = 2*beam + pol
+            elif self.props['num cycles'] > 1:
+              col = 2*subch + pol
+            else:
+              col = pol
+            # dynamic spectra of IF power
+            ax[col].set_title(label)
+            height, width = images[subch][beam][pol].shape
+            ax[col].imshow(images[subch][beam][pol], aspect="auto",
+                           extent=(-halfband,halfband,0,height))
+            if col == 0:
+              ax[col].set_ylabel("Cumulative record number")
+              ax[col].set_xlabel("Frequency (MHz)")
+            fig.subplots_adjust(top=0.88)
+            fig.subplots_adjust(bottom=0.15)
+      last_col = len(ax)-1
+      lines, labels = ax[last_col].get_legend_handles_labels()
+      fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
+      if savepath:
+        fig.savefig(savepath)
+      show()
+
+    def show_all_spectra(self, IFspectra=False, sharey=False):
       """
       Plot spectra from a Table
       
@@ -384,7 +516,7 @@ class DSNFITSplotter(DSNFITSexaminer):
       fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
       show()
           
-    def plot_PSSW_spectra(self, scans=[]):
+    def plot_PSSW_spectra(self, figtitle=None, scans=[], savepath=None):
       """
       Plot position switched spectra
       
@@ -395,32 +527,94 @@ class DSNFITSplotter(DSNFITSexaminer):
       """
       if scans == []:
         scans = self.scan_keys
-      for cycle in self.cycle_keys:
-        figure()
-        for scan in scans[::2]:
-          try:
-            indices = self.get_indices(scan, cycle)
-          except ValueError, details:
-            self.logger.warning("plot_PS_spectra: %s", str(details))
-            continue
-          row = indices[0]
-          v = self.compute_X_axis(row, frame='RADI-LSR')
-          on  = self.data['SPECTRUM'][indices]
-          try:
-            off =  self.data['SPECTRUM'][self.get_indices(scan+1, cycle)]
-          except ValueError, details:
-            self.logger.warning("plot_PS_spectra: %s", str(details))
-            continue
-          spectrum = (on-off)/off
-          label = "("+str(scan)+"-"+str(scan+1)+")/"+str(scan+1)
-          plot(v, spectrum, label=label)
-        grid()
-        xlabel("$V_{lsr}$ (km/s)")
-        legend()
-        heading = "DSS-"+str(self.dss)+" "+self.data['DATE-OBS'][row]
-        heading += " %8.3f MHz" % (self.data['OBSFREQ'][row]/1e6)
-        title(heading)
-        show()
+      # lay out the figure
+      if self.props['num beams'] > 1:
+        ncols = self.props['num beams']*self.props['num IFs']
+      elif self.props['num cycles'] > 1:
+        ncols = self.props['num cycles']*self.props['num IFs']
+      else:
+        ncols = self.props['num IFs']
+      if figtitle:
+        pass
+      else:
+        first = basename(self.parent.file).index('_')+1
+        figtitle = "DSS-"+str(self.dss) +" "+ \
+                                           basename(self.parent.file)[first:-5]
+      fig, ax = self.init_multiplot(figtitle+" (On-Off)/Off",
+                                       nrows=1, ncols=ncols)
+      # data source
+      if 'IFSPECTR' in self.data.names:
+        # this is for Stokes spectra
+        datasource = 'IFSPECTR'
+      elif 'SPECTRUM' in self.data.names:
+        datasource = 'SPECTRUM'
+      else:
+        datasource = 'DATA'
+      self.logger.debug("plot_PSSW_spectra: data column is %s", datasource)
+
+      labels = {}
+      num_beams = self.props['num beams']
+      num_cycles = len(self.cycle_keys)
+      num_pols = self.props["num IFs"]
+      for subch_idx in range(num_cycles):
+        cycle = subch_idx + 1
+        for beam_idx in range(self.props["num beams"]):
+          beam = beam_idx + 1
+          for pol_idx in range(self.props["num IFs"]):
+            pol = pol_idx+1
+            label = make_legend_labels(sckeys=range(num_cycles),
+                                       bmkeys=range(num_beams),
+                                       plkeys=range(num_pols),
+                                       sckey=subch_idx,
+                                       bmkey=beam_idx,
+                                       plkey=pol_idx)
+            if self.props['num beams'] > 1:
+              col = 2*beam_idx + pol_idx
+            elif self.props['num cycles'] > 1:
+              col = 2*subch_idx + pol_idx
+            else:
+              col = pol_idx
+            # dynamic spectra of IF power
+            ax[col].set_title(label)
+            self.logger.debug("plot_PSSW_spectra: subch %d beam %d pol %d",
+                              cycle, beam, pol)
+            for scan in self.scan_keys[::2]:
+              try:
+                indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
+                                           beam=beam)
+                self.logger.debug("plot_PSSW_spectra: scan %d on indices: %s",
+                                  scan, indices)
+              except ValueError, details:
+                self.logger.warning("plot_PSSW_spectra: %s", str(details))
+                continue
+              row = indices[0]
+              v = self.compute_X_axis(row, frame='DELF-OBS',
+                                      num_chans=self.props['num IFspec chans'])
+              on  = self.data[datasource][indices]
+              try:
+                ref_indices = self.get_indices(scan=scan+1, cycle=cycle,
+                                               pol=pol, beam=beam)
+                self.logger.debug("plot_PSSW_spectra: scan %d off indices: %s",
+                                  scan, ref_indices)
+                off =  self.data[datasource][ref_indices]
+              except ValueError, details:
+                self.logger.warning("plot_PSSW_spectra: %s", str(details))
+                continue
+              spectrum = (on-off)/off
+              label = "("+str(scan)+"-"+str(scan+1)+")/"+str(scan+1)
+              ax[col].plot(v, spectrum, label=label)
+              if scan == self.scan_keys[0]:
+                ax[col].grid()
+                ax[col].set_xlabel("Frequency (MHz)")
+                heading = "%8.3f MHz" % (self.data['OBSFREQ'][row]/1e6)
+                heading += " P"+str(pol)
+                ax[col].set_title(heading)
+      last_col = len(ax)-1
+      lines, labels = ax[last_col].get_legend_handles_labels()
+      fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
+      if savepath:
+        savefig(savepath)
+      show()
 
     def plot_line(self, rows=[], window=(-100,100),
                     frame="RADI-OBJ", source='67P', savepath=None):
@@ -495,7 +689,7 @@ class DSNFITSplotter(DSNFITSexaminer):
       title(self.datestr)
       show()
       
-    def plot_Tsys(self, X=None):
+    def plot_Tsys(self, good_wx_data=None, X=None):
       """
       Plot average power versus time or airmass or list index
       
@@ -504,19 +698,23 @@ class DSNFITSplotter(DSNFITSexaminer):
         "airmass" - 1/sin(elev)
         None      - list index
       """
-      good_wx_data = self.get_wx_datacubes()
-      fig = {}
-      ax = {}
+      if good_wx_data:
+        pass
+      else:
+        good_wx_data = self.get_wx_datacubes()
+      heading = "DSS-%2d %s" % (self.dss, self.datestr)
+      fig, ax = self.init_multiplot(heading, 1, self.props['num cycles'])
       for subch in self.cycle_keys:
         cycle_idx = subch - 1
-        fig[subch], ax[subch] = subplots(nrows=1, ncols=1)
-        fig[subch].suptitle("Subchannel "+str(subch))
         for beam in range(self.props['num beams']):
           for pol in range(self.props['num IFs']):
             for sig in [True, False]:
-              plottimes = epoch2num(good_wx_data['UNIXtime'][sig])
+              tm = good_wx_data['UNIXtime'][sig]
+              plottimes = epoch2num(tm)
               tsys = good_wx_data['TSYS'][sig][:,cycle_idx,beam,pol]
+              el = good_wx_data['ELEVATIO'][sig]
               label = self.make_legend_labels(bmkey=beam, plkey=pol)
+              color_idx = 2*int(sig) + pol
               if sig:
                 lbl = label+" sig"
                 ls = "-"
@@ -524,24 +722,26 @@ class DSNFITSplotter(DSNFITSexaminer):
                 lbl = label+" ref"
                 ls = "--"
               if X == "time":
-                ax[subch].plot_date(plottimes, tsys, linestyle=ls, marker='.',
-                                    color=plotcolors[int(sig)], label=lbl)
+                ax[cycle_idx].plot_date(plottimes, tsys, linestyle=ls, marker='.',
+                                    color=plotcolors[color_idx], label=lbl)
               elif X == "airmass":
-                ax[subch].plot(1/sin(pi*array(good_wx_data['ELEVATIO'][sig])/180.),
-                               tsys, marker='.', ls=ls, label=lbl)
+                ax[cycle_idx].plot(1/sin(pi*array(el)/180.),
+                               tsys, color=plotcolors[color_idx], marker='.',
+                               ls=ls, label=lbl)
               else:
-                ax[subch].plot(tsys, marker='.', ls=ls, label=lbl)
-        ax[subch].grid(True)
-        ax[subch].legend(loc='best', fontsize='xx-small', numpoints=1)
+                ax[cycle_idx].plot(tsys, color=plotcolors[color_idx], marker='.',
+                               ls=ls, label=lbl)
+        ax[cycle_idx].grid(True)
+        ax[cycle_idx].legend(loc='best', fontsize='xx-small', numpoints=1)
         if X == "time":
-          ax[subch].xaxis.set_major_formatter(seconds_formatter)
-          fig[subch].autofmt_xdate()
+          ax[cycle_idx].xaxis.set_major_formatter(seconds_formatter)
+          fig.autofmt_xdate()
         elif X == "airmass":
-          ax[subch].set_xlabel("Airmass")
+          ax[cycle_idx].set_xlabel("Airmass")
         else:
-          ax[subch].set_xlabel("index")
-        ax[subch].set_title(clean_TeX(self.data['DATE-OBS'][0]))
-        fig[subch].show()
+          ax[cycle_idx].set_xlabel("index")
+        ax[cycle_idx].set_title("subchannel "+str(subch))
+        fig.show()
                 
 
   #--------------------------- DSNFITSplotter methods -------------------------

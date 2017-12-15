@@ -30,7 +30,9 @@ from Radio_Astronomy import rms_noise
 fontP = FontProperties()
 fontP.set_size('x-small')
 
-colors = ["b", "g", "r", "c", "m", "y"]
+brown = '#630000'
+teal = '#0084a5'
+colors = ["b", "g", "r", "c", "m", "y", brown, teal]
 sigref = {False: "r", True:"s"}
 polnames = ["L", "R"]
 
@@ -184,6 +186,7 @@ class SessionAnalyzer(object):
         table = examiner.tables[tablekey]
         wx_data = table.get_wx_datacubes()
         param_keys = wx_data.keys()
+        self.logger.debug("get_good_weather_data: parameters: %s", param_keys)
         for param_key in param_keys:
           for switch_state in [True, False]:
             # the state may already be defined so check  
@@ -196,15 +199,22 @@ class SessionAnalyzer(object):
                   good_data[param_key][switch_state] = \
                          numpy.append(good_data[param_key][switch_state],
                                       wx_data[param_key][switch_state], axis=0)
+                  self.logger.debug("get_good_weather_data: add %s for SIG=%s",
+                                    param_key, switch_state)
                 else:
                   # this state does not exist in the output so create
                   good_data[param_key][switch_state] = \
                                                wx_data[param_key][switch_state]
+                  self.logger.debug(
+                               "get_good_weather_data: create state %s for %s",
+                               switch_state, param_key)
               else:
                 # state does not exist in the input data
                 pass
             else:
               # parameter not defined in the output data so create
+              self.logger.debug("get_good_weather_data: got %s for SIG=%s",
+                                param_key, switch_state)
               good_data[param_key] = \
                                {switch_state: wx_data[param_key][switch_state]}
     return good_data
@@ -792,7 +802,7 @@ class SessionAnalyzer(object):
 
   def plot_passband(self, figtitle=None):
     """
-    Plots the passbands are a series of spectra and a dynamic spectrum
+    Plots the passbands as a series of spectra and a dynamic spectrum
     
     Image array structure
     ---------------------
@@ -813,132 +823,15 @@ class SessionAnalyzer(object):
     The final image will have dimensions (num_scans*num_records, 32768).
     """
     for dfindex in self.examiner_keys:
+      savefile = self.datapath + \
+                            splitext(basename(self.examiners[dfindex].file))[0]
       for tablekey in self.examiners[dfindex].tables.keys():
         table = self.examiners[dfindex].tables[tablekey]
         plotter = self.examiners[dfindex].plotter[tablekey]
         if len(table.obsmodes) > 1:
           raise RuntimeError("multiple observing modes not yet supported")
-        num_scans = len(table.scan_keys)
-        num_cycles = len(table.cycle_keys)
-        num_rows = len(table.row_keys)
-        num_beams = table.props['num beams']
-        num_pols = table.props["num IFs"]
-        # collect the diagnostic spectra
-        if table.props["full Stokes"]:
-          # when SPECTRA are Stokes parameters, plot IF power for two pol modes
-          if table.props["num IFs"] == 2:
-            datasource = "IFSPECTR"
-            num_chans = table.props['num IFspec chans']
-        else:
-          if "SPECTRUM" in table.data.columns.names:
-            datasource = "SPECTRUM"
-          else:
-            datasource = "DATA"
-          num_chans = table.props['num chans']
-        self.logger.debug(" data source is %s", datasource)
-      
-        # create array of the right dimensions
-        images = table.prepare_summary_images(num_chans)
-
-        # get data statistics for scaling plots
-        ymin, ymax, ymean, ystd = table.get_data_stats()
-      
-        # prepare empty images
-        #   spectra are 2D arrays with frequency and scan as axes
-        #   images, also 2D arrays, are only needed if there is a TIME axis in
-        #   the data and then each record is a row in the array.
-        cycles = table.cycle_keys
-        # images with SCAN on the time axis have sub-images over record
-        start_image = {}
-        for cycle in cycles:
-          subch_idx = cycle - 1
-          start_image[subch_idx] = {}
-          for beam_idx in range(table.props["num beams"]):
-            start_image[subch_idx][beam_idx] = {}
-            for IF_idx in range(table.props["num IFs"]):
-              start_image[subch_idx][beam_idx][IF_idx] = True
-
-        # get the data
-        for scan in table.scan_keys:
-          scan_idx = table.scan_keys.index(scan) # scan numbers can start anywhere
-          for cycle in cycles:
-            subch_idx = cycle - 1
-            for beam_idx in range(table.props["num beams"]):
-              beam = beam_idx+1
-              for IF_idx in range(table.props["num IFs"]):
-                pol = IF_idx+1
-                self.logger.debug("  processing scan %d, subch %d, beam %d, pol %d",
-                               scan, cycle, beam, pol)
-                if table.props["time axis"]:
-                  # average scan spectrum and include record spectra in image
-                  # assume there is a scan number equal to the cycle number
-                  image, spectrum = \
-                      table.average_records(scan, cycle, beam, pol)
-                  # this is the all-record sub-image for the scan
-                  if start_image[subch_idx][beam_idx][IF_idx]:
-                    images[subch_idx][beam_idx][IF_idx] = image
-                    start_image[subch_idx][beam_idx][IF_idx] = False
-                  else:
-                    images[subch_idx][beam_idx][IF_idx] = \
-                        numpy.append(images[subch_idx][beam_idx][IF_idx],image,
-                                     axis=0)
-                else:
-                  # no time axis
-                  spec_indices = table.get_indices(scan=scan, cycle=cycle, 
-                                            beam=beam, pol=pol, record=record)
-                  image_line = table.data[datasource][spec_indices].reshape(
-                                                       num_chans,1).transpose()
-                  if start_image[subch_idx][beam_idx][IF_idx]:
-                    images[subch_idx][beam_idx][IF_idx] = image_line
-                  else:
-                    images[subch_idx][beam_idx][IF_idx] = \
-                              numpy.append(images[subch_idx][beam_idx][IF_idx],
-                                           image_line, axis=0)
-
-        # number of summaries
-        #     we want a summary for every beam, polarization and subchannel
-        num_summar = table.props["num beams"]*table.props["num IFs"]*num_cycles
-      
-        # One row for dynamic spectra of scans or records
-        if figtitle:
-          pass
-        else:
-          figtitle = basename(self.examiners[0].file)[4:-5]
-        fig, ax = plotter.init_multiplot(figtitle+"  Spectogram",
-                                           nrows=1, ncols=num_summar)
-              
-        # display the data
-        # labels are updated only in the first time around a loop
-        col = 0
-        labels = {}
-        for subch in range(num_cycles):
-          for beam in range(table.props["num beams"]):
-            for pol in range(table.props["num IFs"]):
-              label = make_legend_labels(sckeys=range(num_cycles),
-                                         bmkeys=range(num_beams),
-                                         plkeys=range(num_pols),
-                                         sckey=subch,
-                                         bmkey=beam,
-                                         plkey=pol)
-              col = 2*beam + pol
-              # dynamic spectra of IF power
-              ax[col].set_title(label)
-              ax[col].imshow(images[subch][beam][pol], aspect="auto")
-              for tick in ax[col].get_xticklabels():
-                tick.set_rotation(45)
-              if col == 0:
-                ax[col].set_ylabel("Cumulative record number")
-              fig.subplots_adjust(top=0.88)
-              fig.subplots_adjust(bottom=0.15)
-            
-          col += 1      
-        last_col = len(ax)-1
-        lines, labels = ax[last_col].get_legend_handles_labels()
-        fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
-        show()
-        # end table loop
-      datasetID = splitext(basename(self.examiners[dfindex].file))[0]
-      fig.savefig(self.datapath+datasetID+"_specgm.png")
+          datasetID += "-"+str(tablekey+1)
+        plotter.show_passband(savepath=savefile+"_specgm.png")  
       
   def plot_bmsw_diff(self, figtitle=None):
     """
@@ -984,8 +877,8 @@ class SessionAnalyzer(object):
               beam = beam_idx+1
               for IF_idx in range(table.props["num IFs"]):
                 pol = IF_idx+1
-                self.logger.debug("  processing scan %d, subch %d, beam %d, pol %d",
-                             scan, cycle, beam, pol)
+                #self.logger.debug("plot_bmsw_diff: processing scan %d, subch %d, beam %d, pol %d",
+                #             scan, cycle, beam, pol)
                 if table.props["time axis"]:
                   # average scan spectrum and include record spectra in image
                   # assume there is a scan number equal to the cycle number
@@ -996,7 +889,7 @@ class SessionAnalyzer(object):
                 else:
                   # no time axis
                   spec_indices = table.get_indices(scan=scan, cycle=cycle, 
-                                            beam=beam, pol=pol, record=record)
+                                            beam=beam, pol=pol)
                   spectra[scan_idx][subch_idx][beam_idx][IF_idx] = \
                                            table.data[datasource][spec_indices]
 
@@ -1056,109 +949,17 @@ class SessionAnalyzer(object):
     """
     """
     for dfindex in self.examiner_keys:
+      savefile = self.datapath
+      savefile += splitext(basename(self.examiners[dfindex].file))[0]
+      self.logger.debug("plot_possw_diff: saving as %s", savefile)
       for tablekey in self.examiners[dfindex].tables.keys():
-        table = self.examiners[dfindex].tables[tablekey]
         plotter = self.examiners[dfindex].plotter[tablekey]
-        if len(table.obsmodes) > 1:
+        if len(plotter.obsmodes) > 1:
           raise RuntimeError("multiple observing modes not yet supported")
-        num_scans = len(table.scan_keys)
-        num_beams = table.props['num beams']
-        num_cycles = len(table.cycle_keys)
-        num_rows = len(table.row_keys)
-        num_pols = table.props["num IFs"]
-        # collect the diagnostic spectra
-        if table.props["full Stokes"]:
-          # when SPECTRA are Stokes parameters, plot IF power for two pol modes
-          if table.props["num IFs"] == 2:
-            datasource = "IFSPECTR"
-            num_chans = table.props['num IFspec chans']
-        else:
-          if "SPECTRUM" in table.data.columns.names:
-            datasource = "SPECTRUM"
-          else:
-            datasource = "DATA"
-          num_chans = table.props['num chans']
-        self.logger.debug(" data source is %s", datasource)
-      
-        # create arrays of the right dimensions
-        spectra = table.prepare_summary_arrays(num_chans)
-
-        # get data statistics for scaling plots
-        ymin, ymax, ymean, ystd = table.get_data_stats()
-      
-        # get the data
-        cycles = table.cycle_keys
-        for scan in table.scan_keys:
-          scan_idx = table.scan_keys.index(scan) # scan numbers can start anywhere
-          for cycle in cycles:
-            subch_idx = cycle - 1
-            for beam_idx in range(num_beams):
-              beam = beam_idx+1
-              for IF_idx in range(num_pols):
-                pol = IF_idx+1
-                self.logger.debug("  processing scan %d, subch %d, beam %d, pol %d",
-                             scan, cycle, beam, pol)
-                if table.props["time axis"]:
-                  # average scan spectrum and include record spectra in image
-                  # assume there is a scan number equal to the cycle number
-                  image, spectrum = \
-                      table.average_records(scan, cycle, beam, pol)
-                  # this is the average spectrum for the scan
-                  spectra[scan_idx][subch_idx][beam_idx][IF_idx] = spectrum
-                else:
-                  # no time axis
-                  spec_indices = table.get_indices(scan=scan, cycle=cycle, 
-                                            beam=beam, pol=pol, record=record)
-                  spectra[scan_idx][subch_idx][beam_idx][IF_idx] = \
-                                           table.data[datasource][spec_indices]
-
-        if figtitle:
-          pass
-        else:
-          figtitle = basename(self.examiners[0].file)[4:-5]
-        # position-1 - position-2 differences
-        if table.data[0]['OBSMODE'] == 'LINEPSSW' or \
-           table.data[0]['OBSMODE'] == 'LINEPBSW':
-          num_cols = table.props["num beams"]*table.props["num IFs"]
-          fig, ax = plotter.init_multiplot(
-                                           figtitle+" position 1 - position 2",
-                                           nrows=1, ncols=num_cols)
-        # display the data
-        # labels are updated only in the first time around a loop
-        col = 0
-        labels = {}
-        for subch in range(num_cycles):
-          for beam in range(table.props["num beams"]):
-            for pol in range(table.props["num IFs"]):
-              label = make_legend_labels(sckeys=range(num_cycles),
-                                         bmkeys=range(num_beams),
-                                         plkeys=range(num_pols),
-                                         sckey=subch,
-                                         bmkey=beam,
-                                         plkey=pol)
-              col = 2*beam + pol
-              if table.data[0]['OBSMODE'] == 'LINEPSSW' or \
-                 table.data[0]['OBSMODE'] == 'LINEPBSW':
-                ax[col].set_title(label)
-              num_pairs = num_scans/2
-              for scan in arange(2*num_pairs)[::2]:
-                spec_on = spectra[scan][subch][beam][pol]
-                spec_of = spectra[scan+1][subch][beam][pol]
-                ax[col].plot(spec_on-spec_of,label=str(scan)+"-"+str(scan+1))
-              if subch == 0:
-                ax[col].grid(True)
-                for tick in ax[col].get_xticklabels():
-                  tick.set_rotation(45)
-              if col == 0:
-                ax[col].set_ylabel("Power (on-off)")
-          fig.subplots_adjust(top=0.88)
-          fig.subplots_adjust(bottom=0.15)
-        lines, labels = ax[col].get_legend_handles_labels()
-        fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
-      show()
+        if plotter.data[0]['OBSMODE'] == 'LINEPSSW' or \
+           plotter.data[0]['OBSMODE'] == 'LINEPBSW':
+          plotter.plot_PSSW_spectra(savepath=savefile+"_on-off.png")
       # end table loop
-    datasetID = splitext(basename(self.examiners[dfindex].file))[0]
-    if table.data[0]['OBSMODE'] == 'LINEPSSW' or \
-       table.data[0]['OBSMODE'] == 'LINEPBSW':
-      fig.savefig(self.datapath+datasetID+"_on-off.png")
+    show()
+
 

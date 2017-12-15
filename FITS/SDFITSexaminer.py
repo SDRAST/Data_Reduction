@@ -454,17 +454,26 @@ class DSNFITSexaminer(object):
                          cycle_idx=cycle_idx, beam_idx=beam_idx, IF_idx=IF_idx,
                          record=record, trimmed=trimmed)
   
-    def freqs(self, row=0):
+    def freqs(self, row=0, num_chans=None):
       """
       Computes frequencies for spectra in MHz
     
       Assumes scan 1 is typical of all scans in the dataset
       """
-      freqs = self.data['CRVAL1'][row] + self.data['CDELT1'][row] * \
-               (numpy.arange(self.props['num chans'])-self.data['CRPIX1'][row])
+      if num_chans:
+        num_chans = num_chans
+        delf = self.data['BANDWIDT'][row]/num_chans
+        refpix = self.data['CRPIX1'][row]*num_chans/self.props['num chans']
+      else:
+        num_chans = self.props['num chans']
+        delf = self.data['CDELT1'][row]
+        refpix = self.data['CRPIX1'][row]
+      freqs = self.data['CRVAL1'][row] + delf * \
+               (numpy.arange(num_chans)-refpix)
       return freqs/1e6
                          
-    def rel_freq_units(self,frame="FREQ-OBS", ref_freq=None, v_frame=0, row=0):
+    def rel_freq_units(self,frame="FREQ-OBS", ref_freq=None, v_frame=0, row=0,
+                       num_chans=None):
       """
       Returns the X-axis units for various reference frames
     
@@ -499,17 +508,18 @@ class DSNFITSexaminer(object):
         f_ref = ref_freq
       else:
         f_ref = self.data['RESTFREQ'][row]/1e6 # ref freq in MHz
-      rel_freqs = self.freqs(row)-f_ref          # channel frequencies relative
+      rel_freqs = self.freqs(row, num_chans=num_chans) - f_ref # channel
+                                                 # frequencies relative
                                                  # to the reference frequency
       v_ref = self.data['VELOCITY'][row]         # vel. of object in LSR
-      self.logger.debug("rel_freq_units: reference frequency is %.3f", f_ref)
-      self.logger.debug("rel_freq_units: reference velocity is %.3f", v_ref)
-      self.logger.debug("rel_freq_units: frame velocity is %.3f", v_frame)
+      #self.logger.debug("rel_freq_units: reference frequency is %.3f", f_ref)
+      #self.logger.debug("rel_freq_units: reference velocity is %.3f", v_ref)
+      #self.logger.debug("rel_freq_units: frame velocity is %.3f", v_frame)
       self.frame = frame
       if frame == "CHAN-OBS": # channel number
         return range(len(rel_freqs))
       elif frame == "FREQ-OBS": # receiver frequency in the observer's frame
-        return self.freqs(row=row)
+        return self.freqs(row=row, num_chans=num_chans)
       elif frame == "DELF-OBS": # frequency relative to the reference pixel
         return rel_freqs
       elif frame == "RADI-OBS": # velocity relative to the reference pixel
@@ -526,7 +536,7 @@ class DSNFITSexaminer(object):
         return doppler_relat(rel_freqs, f_ref) - v_frame
   
     def compute_X_axis(self, row, frame='RADI-OBS', ref_freq=None,
-                       vspline=None, obstime=None):
+                       vspline=None, obstime=None, num_chans=None):
       """
       Computes the appropriate X-axis for a spectrum.
      
@@ -561,27 +571,32 @@ class DSNFITSexaminer(object):
       v_ref = self.data['VELOCITY'][0]
       if frame:
         self.frame = frame
-      self.logger.debug("compute_X_axis: requested frame is %s", frame)
-      self.logger.debug("compute_X_axis: reference frequency is %10.3f", f_ref)
-      if frame == "CHAN-OBS" or frame == "FREQ-OBS" or frame == "RELA-OBS":
+      #self.logger.debug("compute_X_axis: requested frame is %s", frame)
+      #self.logger.debug("compute_X_axis: reference frequency is %10.3f", f_ref)
+      if frame == "CHAN-OBS" or frame == "FREQ-OBS" or frame == "RELA-OBS" or \
+         frame == "DELF-OBS":
         # all these are in the observer's rest frame
-        x = self.rel_freq_units(frame=frame, ref_freq=f_ref)
+        x = self.rel_freq_units(frame=frame, ref_freq=f_ref,
+                                num_chans=num_chans)
         vobj = None
       elif frame == "FREQ-LSR":
         vobj = self.V_LSR(row) # km/s
         C = c/1000 # km/s
         delf = -self.V_LSR(row)*f_ref/C
-        self.logger.debug(" compute_X_axis: freq offset = %f", delf)
-        x = self.rel_freq_units(frame="FREQ-OBS", ref_freq=f_ref)-delf
+        #self.logger.debug(" compute_X_axis: freq offset = %f", delf)
+        x = self.rel_freq_units(frame="FREQ-OBS", ref_freq=f_ref,
+                                num_chans=num_chans)-delf
       elif frame == "RADI-OBS":
         # radial velocity referred to the observer
         vobj = self.V_LSR(row)
-        x = self.rel_freq_units(frame=frame, ref_freq=f_ref)
+        x = self.rel_freq_units(frame=frame, ref_freq=f_ref,
+                                num_chans=num_chans)
       elif frame == "RADI-LSR":
         x = self.rel_freq_units(frame=frame, ref_freq=f_ref, 
-                                v_frame=self.V_LSR(row))
+                                v_frame=self.V_LSR(row),
+                                num_chans=num_chans)
         vobj = v_ref
-        self.logger.debug("compute_X_axis: vobj = %.2f", vobj)
+        #self.logger.debug("compute_X_axis: vobj = %.2f", vobj)
       elif frame == "RADI-OBJ":
         # This is the object's rest frame
         self.logger.debug("compute_X_axis: vspline = %s", vspline)
@@ -589,11 +604,13 @@ class DSNFITSexaminer(object):
         if vspline and obstime:
           # convert obstime to UNIX time
           vobj = vspline(obstime)
-          x = -(c/1000)*self.rel_freq_units(frame="DELF-OBS")/f_ref - vobj
+          x = -(c/1000)*self.rel_freq_units(frame="DELF-OBS",
+                                            num_chans=num_chans)/f_ref - vobj
         else:
           vobj = self.data['VELOCITY'][row]
           x = self.rel_freq_units(frame=frame, ref_freq=f_ref,
-                                  v_frame=self.V_LSR(row) + vobj)
+                                  v_frame=self.V_LSR(row) + vobj,
+                                  num_chans=num_chans)
       else:
         self.logger.warning(" frame %s is not valid", frame)
         return
@@ -625,33 +642,33 @@ class DSNFITSexaminer(object):
                             frame=FK5, unit=(u.hourangle, u.deg))
       ra = position.ra.hour
       dec = position.dec.deg
-      self.logger.debug("V_LSR: ra = %f, dec = %f", ra, dec)
+      #self.logger.debug("V_LSR: ra = %f, dec = %f", ra, dec)
       cat_entry = novas.make_cat_entry(self.data["OBJECT"][row],
                                        "", 0, ra, dec, 0, 0, 0, 0)
       source = novas.make_object(2, 0, self.data["OBJECT"][0], cat_entry)
       longdeg = self.header['SITELONG']
-      self.logger.debug("V_LSR: longitude in degrees W = %f", longdeg)
+      #self.logger.debug("V_LSR: longitude in degrees W = %f", longdeg)
       if longdeg > 180:
         longdeg -= 360
-      self.logger.debug("V_LSR: longitude in degrees E = %f", longdeg)
+      #self.logger.debug("V_LSR: longitude in degrees E = %f", longdeg)
     
       DSS43 = novas.make_observer_on_surface(self.header['SITELAT'], longdeg,
                                              self.header['SITEELEV'], 0, 0)
       dt = UnixTime_to_datetime(self.get_first_value('UNIXtime', row))
-      self.logger.debug("V_LSR: computing for %s", dt.ctime())
+      #self.logger.debug("V_LSR: computing for %s", dt.ctime())
       jd = novas.julian_date(dt.year,dt.month,dt.day,dt.hour+dt.minute/60.)
       mjd = MJD(dt.year,dt.month,dt.day)
       earth = novas.make_object(0, 3, 'Earth', None)
       urthpos,urthvel = novas.ephemeris((jd,0), earth, origin=0)
       (obspos,obsvel) = novas.geo_posvel(jd,0,DSS43,0)
-      self.logger.debug("V_LSR: Earth velocity = %s", urthvel)
-      self.logger.debug("V_LSR: observer velocity = %s", obsvel)
+      #self.logger.debug("V_LSR: Earth velocity = %s", urthvel)
+      #self.logger.debug("V_LSR: observer velocity = %s", obsvel)
       totvel = tuple(numpy.array(urthvel)+numpy.array(obsvel))
-      self.logger.debug("V_LSR: total velocity = %s", totvel)
+      #self.logger.debug("V_LSR: total velocity = %s", totvel)
       (srcpos,srcvel) = novas.starvectors(cat_entry)
-      self.logger.debug("V_LSR: source velocity = %s", srcvel)
+      #self.logger.debug("V_LSR: source velocity = %s", srcvel)
       V = novas.rad_vel(source, srcpos, srcvel, totvel,0,0,0)
-      self.logger.debug("V_LSR: velocity of LSR = %.2f km/s", V)
+      #self.logger.debug("V_LSR: velocity of LSR = %.2f km/s", V)
       return V+v_sun(mjd, position.ra.hour, position.dec.deg)
         
     def make_directory(self, dest=sys.stdout):
@@ -701,12 +718,13 @@ class DSNFITSexaminer(object):
         self.logger.warning("validate_wx_data: elevation data is bad")
 
       #    system temperature
-      if numpy.equal(self.data['TSYS'], 0.).all():
-        # may not all be zero
-        valid_data['TSYS'] = False
-        self.logger.warning("validate_wx_data: Tsys data is bad")
-      else:
-        valid_data['TSYS'] = True
+      valid_data['TSYS'], indices['TSYS'] = validate('TSYS', allow_zero=True)
+      #if numpy.equal(self.data['TSYS'], 0.).all():
+      #  # may not all be zero
+      #  valid_data['TSYS'] = False
+      #  self.logger.warning("validate_wx_data: Tsys data is bad")
+      #else:
+      #  valid_data['TSYS'] = True
                        
       #    ambient temperature
       valid_data['TAMBIENT'], indices['TAMBIENT'] = validate('TAMBIENT',
@@ -751,17 +769,36 @@ class DSNFITSexaminer(object):
         IF           - 1-based number sequence, usually representing pol
       The other keys have only a time axis.
       """
-      valid_data, indices =  self.validate_wx_data()
       on_rows = self.get_rows('SIG', True)
+      self.logger.debug("get_wx_datacubes: rows for SIG=True: %s", on_rows)
       of_rows = self.get_rows('SIG', False)
+      self.logger.debug("get_wx_datacubes: rows for SIG=False: %s", of_rows)
+      
+      valid_data, indices =  self.validate_wx_data()
       param_keys = valid_data.keys()
-      param_keys.remove('TSYS')
+      param_keys.remove('TSYS') # to be handled separately
+      
+      num_cycles = self.props['num cycles']
       wx_data = {}
       for key in param_keys:
-        wx_data[key] = {True: self.data[key][on_rows].flatten()}
+        wx_data[key] = {True: self.data[key][on_rows[::num_cycles]].flatten()}
+        self.logger.debug("get_wx_datacubes: got %s for SIG=True", key)
         if len(of_rows):
-          wx_data[key][False] = self.data[key][of_rows].flatten()
+          wx_data[key][False] = self.data[key][of_rows[::num_cycles]].flatten()
+          self.logger.debug("get_wx_datacubes: got %s for SIG=False", key)
+
       # now organize extra TSYS dimensions
+      #   initialize
+      wx_data['TSYS'] = {}
+      wx_data['TSYS'][True] = numpy.zeros((len(on_rows)/self.props['num cycles'],
+                                           self.props['num cycles'],
+                                           self.props['num beams'],
+                                           self.props['num IFs']))
+      wx_data['TSYS'][False] = numpy.zeros((len(of_rows)/self.props['num cycles'],
+                                            self.props['num cycles'],
+                                            self.props['num beams'],
+                                            self.props['num IFs']))
+      
       if self.header['BACKEND'] == 'SAO spectrometer':          # has time axis
         if self.props['num beams'] > 1:
           time_axis = 2
@@ -769,22 +806,12 @@ class DSNFITSexaminer(object):
           time_axis = 1
         num_scans = self.data['TSYS'][on_rows].shape[0]
         num_recs  = self.data['TSYS'][on_rows].shape[time_axis]
-        num_on = num_scans*num_recs       # there is always SIG=True data
+        num_on = num_scans*num_recs        # there is always SIG=True data
         if len(self.data['SIG'][of_rows]):
+          # there are SIG=False rows
           num_states = 2
           num_of = self.data['TSYS'][of_rows].shape[0] \
                   *self.data['TSYS'][of_rows].shape[time_axis]
-        else:
-          datalen = num_on
-        wx_data['TSYS'] = {}
-        wx_data['TSYS'][True] = numpy.zeros((num_on,
-                                             self.props['num cycles'],
-                                             self.props['num beams'],
-                                             self.props['num IFs']))
-        wx_data['TSYS'][False] = numpy.zeros((num_of,
-                                              self.props['num cycles'],
-                                              self.props['num beams'],
-                                              self.props['num IFs']))
         for subch_idx in range(self.props['num cycles']):
           for beam_idx in range(self.props['num beams']):
             for IF_idx in range(self.props['num IFs']):
@@ -801,19 +828,30 @@ class DSNFITSexaminer(object):
                 else:
                   data_of = self.data['TSYS'][of_rows,:,IF_idx,0,0,0].flatten()
                 wx_data['TSYS'][False][:,subch_idx,beam_idx,IF_idx] = data_of            
-      elif self.header['BACKEND'] == 'WVSR':
-        # still needs to be coded
-        pass
+      elif self.header['BACKEND'][:4].upper() == 'WVSR':
+        # this currently has no time axis but it has cycles, and only one beam
+        # 
+        for subch_idx in range(self.props['num cycles']):
+          subch = subch_idx+1
+          self.logger.debug("get_wx_datacubes: WVSR %dth subchannel",subch_idx)
+          beam_idx = 0
+          for IF_idx in range(self.props['num IFs']):
+            self.logger.debug("get_wx_datacubes: %dth IF", IF_idx)
+            wx_data['TSYS'][True][:,subch_idx,beam_idx,IF_idx] = \
+                self.data['TSYS'][on_rows[subch_idx::2],IF_idx,0,0,0].flatten()
+            if len(of_rows):
+              wx_data['TSYS'][False][:,subch_idx,beam_idx,IF_idx] = \
+                self.data['TSYS'][of_rows[subch_idx::2],IF_idx,0,0,0].flatten()
       return wx_data
 
     def get_first_value(self, column, row):
       """
       Get the first value in a vector cell.
   
-      When there is a time axis, some column cells are vectors along the time axis
-      of the data cube.  Often, just the first value is needed corresponding to the
-      start of the scan.  This relieves the user of having to known how to access
-      that datum.
+      When there is a time axis, some column cells are vectors along the time
+      axis of the data cube.  Often, just the first value is needed
+      corresponding to the start of the scan.  This relieves the user of having
+      to known how to access that datum.
       """
       try:
         cellshape = self.data[column][row].shape
@@ -849,11 +887,11 @@ class DSNFITSexaminer(object):
               pol = IF_idx+1
               spectra[scan_idx][subch_idx][beam_idx][IF_idx] = \
                                                       numpy.zeros((num_chans,))
-              self.logger.debug(
-               "prepare_summary_arrays: for scan %d subch %d, beam %d, pol %d",
-               scan, subch, beam, pol)
-              self.logger.debug("prepare_summary_arrays: spectrum shape is %s",
-                          spectra[scan_idx][subch_idx][beam_idx][IF_idx].shape)
+              #self.logger.debug(
+              # "prepare_summary_arrays: for scan %d subch %d, beam %d, pol %d",
+              # scan, subch, beam, pol)
+              #self.logger.debug("prepare_summary_arrays: spectrum shape is %s",
+              #            spectra[scan_idx][subch_idx][beam_idx][IF_idx].shape)
       return spectra
       
     def prepare_summary_images(self, num_chans):
@@ -1325,6 +1363,7 @@ class DSNFITSexaminer(object):
       is a single value along the first axis of the data array (or last index in
       a C/Python array).  If there are multiple records then they will be
       averaged.
+      
     
       @param Tvac_func - a function for system temperature with no atmosph or CBR
       @type  Tvac_func - function(beam,pol)
@@ -1345,7 +1384,12 @@ class DSNFITSexaminer(object):
         return a + tau*x_sec
     
       good_wx_data = self.get_wx_datacubes()
-      for beam_idx in range(self.props['num beams']):
+      paramaters = numpy.zeros_like(good_wx_data['TSYS'][True])
+      std_devs = numpy.zeros_like(parameters)
+      for sig in good_wx_data['TSYS'].keys():
+        self.logger.debug('fit_mean_power_to_airmass: processing SIG=%s',
+                           sig)
+        for beam_idx in range(self.props['num beams']):
           self.logger.debug('fit_mean_power_to_airmass: processing beam %d',
                               beam_idx+1)
           for IFidx in range(self.props['num IFs']):
@@ -1362,16 +1406,8 @@ class DSNFITSexaminer(object):
             for subch in subch_IDs:
               subchannel = subch+1
               # Get the data for this subchannel.
-              mean_power = good_wx_data['TSYS'][True][:,subch,beam_idx,IFidx]
-              elevation  = good_wx_data['ELEVATIO'][True]
-              if good_wx_data['TSYS'].has_key(False):
-                # include SIG False data if it exists
-                mean_power = numpy.append(mean_power,
-                            good_wx_data['TSYS'][False][:,subch,beam_idx,IFidx],
-                                          axis=0)
-                elevation  = numpy.append(elevation,
-                                          good_wx_data['ELEVATIO'][False],
-                                          axis=0)
+              mean_power = good_wx_data['TSYS'][sig][:,subch,beam_idx,IFidx]
+              elevation  = good_wx_data['ELEVATIO'][sig]
               if last:
                 E = elevation[first:last+1]
                 P = mean_power[first:last+1]
@@ -1397,15 +1433,15 @@ class DSNFITSexaminer(object):
               slope, intercept, r_value, p_value, std_err = linregress(x, P)
               errors = (0, std_err)
               self.logger.info("fit_mean_power_to_airmass:" +
-                               " B%dP%d sch%d intercept, slope: %f, %f",
-                               beam_idx+1, IFidx+1, subchannel,
+                               " B%dP%d sch%d %s intercept, slope: %f, %f",
+                               beam_idx+1, IFidx+1, subchannel, sw_state[sig],
                                intercept, slope)
               #self.logger.debug("fit_mean_power_to_airmass: covariance = %s", pcov)
               #if pcov == numpy.inf:
               #  continue
               #errors = numpy.sqrt(numpy.diag(pcov))
-              msg = "IF%d, subch%d gain=%9.3e +/- %9.3e counts, gain_slope=%9.3e +/- %9.3e counts/am" % \
-                    (IFidx+1, subchannel,
+              msg = "IF%d, subch%d %s gain=%9.3e +/- %9.3e counts, gain_slope=%9.3e +/- %9.3e counts/am" % \
+                    (IFidx+1, subchannel, sw_state[sig],
                      intercept, errors[0], slope, errors[1])
               self.header.add_history(msg)
               gain = Tvac/intercept
@@ -1413,8 +1449,8 @@ class DSNFITSexaminer(object):
               K_per_am = gain*slope
               K_per_am_err = gain*errors[1]
               self.logger.info("fit_mean_power_to_airmass:" +
-                               " B%dP%d sch%d gain, K/am: %6.2f +/- %5.2f, %4.2f +/- %4.2f",
-                               beam_idx+1, IFidx+1, subchannel,
+                               " B%dP%d sch%d %s gain, K/am: %6.2f +/- %5.2f, %4.2f +/- %4.2f",
+                               beam_idx+1, IFidx+1, subchannel, sw_state[sig],
                                gain, gain_err, K_per_am, K_per_am_err)
               if replace:
                 # there are conversion constants for each switch state (SIG),
