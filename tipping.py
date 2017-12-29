@@ -114,7 +114,7 @@ def airmass(elev):
     elev = numpy.array(elev)
   return 1/numpy.sin(elev*math.pi/180)
 
-def fit_tipcurve_data(elev, Tsys, Tatm=250, linear=True):
+def fit_tipcurve_data(elev, Tsys, Tatm=250, method="linear"):
   """
   fits system temperatures to airmass
   
@@ -179,6 +179,13 @@ def fit_tipcurve_data(elev, Tsys, Tatm=250, linear=True):
     @type  tau : float
     """
     return Tsysvac + Tatm*(1 - numpy.exp(-tau*am))
+    
+  def transfer_appr(e, Tsysvac, tau):
+    """
+    Taylor expansion approximation of transfer equation
+    """
+    am = airmass(e)
+    return Tsysvac + Tatm*tau*am - 0.5*(Tatm*tau*am)**2
   
   def lin_transf_eqn(am, Pvac, Ppam):
     """
@@ -195,38 +202,51 @@ def fit_tipcurve_data(elev, Tsys, Tatm=250, linear=True):
     """
     return Ppam + Ppam*am
     
-  # find the indices of the smallest and largest airmass
   if type(elev) == list:
     elev = numpy.array(elev)
+  if type(Tsys) == list:
+    Tsys = numpy.array(Tsys)
+  # find the indices of the smallest and largest airmass
   am = airmass(elev)
   min_am_idx = am.argmin()
   max_am_idx = am.argmax()
   logger.debug("fit_tipcurve_data: min am at %d, max am at %d",
                min_am_idx, max_am_idx)
-  if type(Tsys) == list:
-    Tsys = numpy.array(Tsys)
-  # fit data to small tau function
-  if linear:
-    # estimate the fit parameters
-    est_t0, est_slope = est_pars(am, Tsys)
-    logger.debug("fit_tipcurve_data: estimated Tsys(0)=%f, slope=%f",
-               est_t0, est_slope)
-    popt, pcov = numpy.polyfit(am, Tsys, 1, cov=True)
-  else:
-    # estimate the fit parameters
+    
+  # estimate the parameters
+  if method == 'exact' or method == 'quadratic':
     est_t0, est_tau = est_pars(am, Tsys, Tatm=Tatm)
     logger.debug("fit_tipcurve_data: estimated Tsys(0)=%f, tau(1)=%f",
                est_t0, est_tau)
-    # fit the data
-    popt, pcov = curve_fit(lin_transf_eqn, am, Tsys, p0 = [est_t0, est_tau])
-  logger.debug("fit_tipcurve_data: popt = %s", popt)
-  logger.debug("fit_tipcurve_data: pcov = %s", pcov)
-  if linear:
+  else:
+    est_t0, est_slope = est_pars(am, Tsys)
+  # perform the fit
+  if method == 'linear':
+    popt, pcov = numpy.polyfit(am, Tsys, 1, cov=True)
+    logger.debug("fit_tipcurve_data: popt = %s", popt)
+    logger.debug("fit_tipcurve_data: pcov = %s", pcov)
     Prx = popt[1]    # noise power from receiver in above atmosphere
     Ppam = popt[0]   # atmosphere power contribution per airmass
     sigPpam, sigPrx = numpy.sqrt(numpy.diag(pcov))
     return Prx, sigPrx, Ppam, sigPpam
-  else:  
+  elif method == 'quadratic':
+    popt, pcov = numpy.polyfit(am, Tsys, 2, cov=True)
+    logger.debug("fit_tipcurve_data: popt = %s", popt)
+    logger.debug("fit_tipcurve_data: pcov = %s", pcov)
+    Trx = popt[2]
+    tau = 2*popt[0]/popt[1]
+    Tatm = popt[1]/tau
+    sigP0, sigP1, sigP2 = numpy.sqrt(numpy.diag(pcov))
+    # the derivation for following is in the log for 2017 Dec 19
+    sigTrx = sigP0
+    sigtau = math.sqrt(tau**2*(sigP1**2 + sigP2**2/popt[2]**2))
+    sigTatm = math.sqrt(((1+popt[1]**2)*sigP1**2
+                        + popt[1]**2*sigP2**2/sigP1**2)/tau**2)
+    return Trx, sigTrx, tau, sigtau, Tatm, sigTatm
+  else:
+    popt, pcov = curve_fit(lin_transf_eqn, am, Tsys, p0 = [est_t0, est_tau])
+    logger.debug("fit_tipcurve_data: popt = %s", popt)
+    logger.debug("fit_tipcurve_data: pcov = %s", pcov)
     Trx = popt[0]
     tau = popt[1]
     sigTrx, sigtau = numpy.sqrt(numpy.diag(pcov))

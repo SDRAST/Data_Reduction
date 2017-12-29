@@ -91,7 +91,7 @@ class SessionAnalyzer(object):
     @param DOY : of observing session
     @type  DOY : int
     """
-    self.logger = logging.getLogger(logger.name+".DSNFITSplotter")
+    self.logger = logging.getLogger(logger.name+".SessionAnalyzer")
     
     # get the session details
     if year and DOY:
@@ -115,19 +115,18 @@ class SessionAnalyzer(object):
     Opens the files for the session in /usr/local/RA_data/FITS
     """
     dfindex = 0
-    examiner = {}
+    examiners = {}
     for datafile in datafiles:
-      self.logger.info("open_datafiles: %s", basename(datafile))
-      examiner[dfindex]  = DSNFITSplotter(parent=self, FITSfile=datafile)
-      #examiner[dfindex].datafile = datafile
-      for table_key in examiner[dfindex].tables.keys():
-        examiner[dfindex].tables[table_key].report_table()
+      self.logger.info("open_datafiles:opening %s", basename(datafile))
+      examiners[dfindex] = DSNFITSplotter(parent=self, FITSfile=datafile)
+      for table_key in examiners[dfindex].tables.keys():
+        examiners[dfindex].tables[table_key].report_table()
       dfindex += 1
-    self.examiner_keys = examiner.keys()
+    self.examiner_keys = examiners.keys()
     self.examiner_keys.sort()
     self.logger.info("open_datafiles: started %d examiners" % 
-                     len(examiner.keys()))
-    return examiner
+                     len(examiners.keys()))
+    return examiners
 
   def make_session_names(self):
     """
@@ -823,21 +822,26 @@ class SessionAnalyzer(object):
     The final image will have dimensions (num_scans*num_records, 32768).
     """
     for dfindex in self.examiner_keys:
-      savefile = self.datapath + \
-                            splitext(basename(self.examiners[dfindex].file))[0]
+      session_name = splitext(basename(self.examiners[dfindex].file))[0]
+      savefile = self.datapath + session_name   
       for tablekey in self.examiners[dfindex].tables.keys():
         table = self.examiners[dfindex].tables[tablekey]
         plotter = self.examiners[dfindex].plotter[tablekey]
         if len(table.obsmodes) > 1:
           raise RuntimeError("multiple observing modes not yet supported")
-          datasetID += "-"+str(tablekey+1)
-        plotter.show_passband(savepath=savefile+"_specgm.png")  
+        plotter.show_passband(
+                      figtitle=session_name.replace("_"," ")+"-"+str(tablekey),
+                             savepath=savefile+"-"+str(tablekey)+"_specgm.png")  
       
-  def plot_bmsw_diff(self, figtitle=None):
+  def plot_bmsw_diff(self, figtitle=None, savefig=True):
     """
+    Plot the difference between the two beams for each pol
+    
+    This is an indicator of receiver gain stability.
     """
     for dfindex in self.examiner_keys:
-      for tablekey in self.examiners[dfindex].tables.keys():
+      examiner = self.examiners[dfindex]
+      for tablekey in examiner.tables.keys():
         table = self.examiners[dfindex].tables[tablekey]
         plotter = self.examiners[dfindex].plotter[tablekey]
         if len(table.obsmodes) > 1:
@@ -895,9 +899,13 @@ class SessionAnalyzer(object):
 
         # number of summaries
         #     we want a summary for every beam, polarization and subchannel
-        num_summar = table.props["num beams"]*table.props["num IFs"]*num_cycles
+        if table.props["num beams"] < 2:
+          self.logger.error("plot_bmsw_diff: %d beams is not enough", 
+                            table.props["num beams"])
+          return False
+        num_summar = table.props["num beams"]/2 \
+                    *table.props["num IFs"] * num_cycles
 
-      
         # One row for dynamic spectra of scans or records
         if figtitle:
           pass
@@ -906,28 +914,27 @@ class SessionAnalyzer(object):
         # for beam-1 minus beam-2 differences
         # THIS DOES NOT YET HANDLE OBSMODE CHANGES
         if table.data[0]['OBSMODE'] == 'LINEPBSW':
-          # Figure 3 is for on beam - off beam differences
           fig, ax = plotter.init_multiplot(
-                            figtitle+" on beam - off beam, summed over records",
+                            figtitle+"-"+str(tablekey)
+                            +" beam 1 - beam 2, summed over records",
                             nrows=1, ncols=num_summar)
-        col = 0
-        labels = {}
-        for subch in range(num_cycles):
-          for beam in range(table.props["num beams"]):
-            for pol in range(table.props["num IFs"]):
-              label = make_legend_labels(sckeys=range(num_cycles),
-                                         bmkeys=range(num_beams),
-                                         plkeys=range(num_pols),
-                                         sckey=subch,
-                                         bmkey=beam,
-                                         plkey=pol)
-              col = 2*beam + pol
-              # beam-1 minus beam-2 differences
-              if table.data[0]['OBSMODE'] == 'LINEPBSW':
+          col = 0
+          labels = {}
+          for subch in range(num_cycles):
+            # subchannel index, not subchannel number
+            for beam in range(0,table.props["num beams"],2):
+              # beams taken by pairs
+              for pol in range(table.props["num IFs"]):
+                label = make_legend_labels(sckeys=range(num_cycles),
+                                           plkeys=range(num_pols),
+                                           sckey=subch,
+                                           plkey=pol)                           
+                # beam-1 minus beam-2 differences
                 ax[col].set_title(label)
-                for scan in range(num_scans):
+                for scan in range(len(table.scan_keys)):
+                  # scan index, not SCAN number
                   beamdiff = spectra[scan][subch][0][pol] - \
-                            spectra[scan][subch][1][pol]
+                             spectra[scan][subch][1][pol]
                   ax[col].plot(beamdiff, label=str(scan))
                 ax[col].grid(True)
                 ax[col].set_xlim(0,table.props['num chans'])
@@ -935,22 +942,25 @@ class SessionAnalyzer(object):
                   tick.set_rotation(45)
                 fig.subplots_adjust(top=0.88)
                 fig.subplots_adjust(bottom=0.15)
-          col += 1
-        if table.data[0]['OBSMODE'] == 'LINEPBSW':
+                col += 1
           last_col = len(ax)-1
           lines, labels = ax[last_col].get_legend_handles_labels()
           fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
-      show()
+          datasetID = splitext(basename(examiner.file))[0]+"-"+str(tablekey)
+          fig.savefig(self.datapath+datasetID+"_beam_diff.png")
+          show()
+        else:
+          self.logger.warning("plot_bmsw_diff: examiner %d table %d mode is %s",
+                              dfindex, tablekey, table.data[0]['OBSMODE'])
       # end table loop
-    if table.data[0]['OBSMODE'] == 'LINEPBSW':
-      fig.savefig(sa.datapath+datasetID+"_beam_diff.png")
+    # end examiner loop
 
-  def plot_possw_diff(self, figtitle=None):
+  def plot_possw_diff(self, figtitle=None, savefig=True):
     """
     """
     for dfindex in self.examiner_keys:
-      savefile = self.datapath
-      savefile += splitext(basename(self.examiners[dfindex].file))[0]
+      session_name = splitext(basename(self.examiners[dfindex].file))[0]
+      savefile = self.datapath + session_name
       self.logger.debug("plot_possw_diff: saving as %s", savefile)
       for tablekey in self.examiners[dfindex].tables.keys():
         plotter = self.examiners[dfindex].plotter[tablekey]
@@ -958,7 +968,13 @@ class SessionAnalyzer(object):
           raise RuntimeError("multiple observing modes not yet supported")
         if plotter.data[0]['OBSMODE'] == 'LINEPSSW' or \
            plotter.data[0]['OBSMODE'] == 'LINEPBSW':
-          plotter.plot_PSSW_spectra(savepath=savefile+"_on-off.png")
+          if savefig:
+            plotter.plot_PSSW_spectra(
+                      figtitle=session_name.replace("_"," ")+"-"+str(tablekey),
+                             savepath=savefile+"-"+str(tablekey)+"_on-off.png")
+          else:
+            plotter.plot_PSSW_spectra(
+                      figtitle=session_name.replace("_"," ")+"-"+str(tablekey))
       # end table loop
     show()
 

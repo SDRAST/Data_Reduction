@@ -16,7 +16,7 @@ from os.path import basename
 from pylab import *
 from scipy.optimize import curve_fit
 
-
+from local_dirs import log_dir
 from Radio_Astronomy import dBm_to_watts
 from support.logs import init_logging, get_loglevel
 from support.options import initiate_option_parser
@@ -195,7 +195,7 @@ if __name__ == "__main__":
       Don't use textwrap; just return the string.
       """
       return self.epilog
-  
+
   logging.basicConfig(level=logging.WARNING)
   mylogger = logging.getLogger()
 
@@ -208,7 +208,7 @@ if __name__ == "__main__":
   mylogger = init_logging(mylogger,
                           loglevel = logging.INFO,
                           consolevel = get_loglevel(opts.loglevel),
-                          logname = "/usr/local/logs/tipping.log")
+                          logname = log_dir+"tipping.log")
   
   sys.exit()
   tipfiles = sort_by_time(logdir, tiplogs)

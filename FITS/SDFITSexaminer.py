@@ -65,6 +65,7 @@ from Astronomy import c, MJD, v_sun
 from Astronomy.redshift import doppler_radio, doppler_optical, doppler_relat
 from Data_Reduction import clobber
 from Data_Reduction.FITS.DSNFITS import get_indices
+from Data_Reduction.tipping import airmass, fit_tipcurve_data
 from DatesTimes import ISOtime2datetime, UnixTime_to_datetime
 from MonitorControl.BackEnds import get_freq_array
 from MonitorControl.Configurations.CDSCC.FO_patching import DistributionAssembly
@@ -101,18 +102,17 @@ class DSNFITSexaminer(object):
     self.parent = parent
     self.logger = logging.getLogger(logger.name+'.DSNFITSexaminer')
     if FITSfile:
+      self.logger.debug("__init__: opening %s", FITSfile)
       self.hdulist = pyfits.open(FITSfile)
-      # hdulist[0] has the file header
-      self.tables = self.get_SDFITS_tables()
       self.file = FITSfile
-      self.logger.info("__init__: %d tables found in %s",
-                     len(self.tables), os.path.basename(FITSfile))
     elif hdulist:
+      self.logger.debug("__init__: got %s", hdulist)
       self.hdulist = hdulist
-      self.tables = self.get_SDFITS_tables()
     else:
       self.logger.error("__init__: requires filename or HDU list")
     self.header = self.hdulist[0].header
+    self.tables = self.get_SDFITS_tables()
+    self.logger.debug("__init__: tables found: %s", self.tables)
     if self.tables == {}:
       self.logger.warning("__init__: this has no SDFITS tables")
       if self.header['SIMPLE']: 
@@ -121,6 +121,7 @@ class DSNFITSexaminer(object):
                          self.hdulist[0].data.shape)
       else:
         self.logger.warning("__init__: unknown FITS format")
+    self.tctables = self.get_tipcurve_tables()
        
   def get_SDFITS_tables(self):
     """
@@ -141,6 +142,21 @@ class DSNFITSexaminer(object):
           tables[index].SB = SBcode[tables[index].data['CDELT1'][0]]
         index += 1
     return tables
+       
+  def get_tipcurve_tables(self):
+    """
+    Finds the SINGLE DISH extensions in a FITS file
+    """
+    tctables = {}
+    index = 0
+    self.logger.debug("get_tipcurve_tables: checking %s", self.hdulist[1:])
+    for extension in self.hdulist[1:]:
+      if extension.header['extname'] == 'TIPPING CURVE':
+        self.logger.debug("get_tipcurve_tables: found %s", extension)
+        tctables[index] = TidTipAnalyzer(extension)
+        self.logger.debug("get_tipcurve_tables: created table %s", tctables[index])
+        index += 1
+    return tctables
   
   def get_sources(self):
     """
@@ -790,16 +806,19 @@ class DSNFITSexaminer(object):
       # now organize extra TSYS dimensions
       #   initialize
       wx_data['TSYS'] = {}
-      wx_data['TSYS'][True] = numpy.zeros((len(on_rows)/self.props['num cycles'],
-                                           self.props['num cycles'],
-                                           self.props['num beams'],
-                                           self.props['num IFs']))
-      wx_data['TSYS'][False] = numpy.zeros((len(of_rows)/self.props['num cycles'],
-                                            self.props['num cycles'],
-                                            self.props['num beams'],
-                                            self.props['num IFs']))
+      # this assumes that all subchannels with a TIME axis have the same number
+      # of records
+      num_records = self.props['num records'][1]
+      tsys_shape = (len(on_rows)*num_records/self.props['num cycles'],
+                    self.props['num cycles'],
+                    self.props['num beams'],
+                    self.props['num IFs'])
+      self.logger.debug("get_wx_datacubes: TSYS shape is %s", tsys_shape)
+      wx_data['TSYS'][True] = numpy.zeros(tsys_shape)
+      wx_data['TSYS'][False] = numpy.zeros(tsys_shape)
       
       if self.header['BACKEND'] == 'SAO spectrometer':          # has time axis
+        # get the number of scans, records per scan, and sig/ref states
         if self.props['num beams'] > 1:
           time_axis = 2
         else:
@@ -812,10 +831,13 @@ class DSNFITSexaminer(object):
           num_states = 2
           num_of = self.data['TSYS'][of_rows].shape[0] \
                   *self.data['TSYS'][of_rows].shape[time_axis]
+        # fill in the TSYS data
+        self.logger.debug("get_wx_datacubes: %s props: %s", self, self.props)
         for subch_idx in range(self.props['num cycles']):
           for beam_idx in range(self.props['num beams']):
             for IF_idx in range(self.props['num IFs']):
               if self.props['num beams'] > 1:
+                # this therefore has a time axis too
                 data_on = \
                    self.data['TSYS'][on_rows,beam_idx,:,IF_idx,0,0,0].flatten()
               else:
@@ -1027,7 +1049,6 @@ class DSNFITSexaminer(object):
           spectra = self.data[self.dataname][rows,0,0,:]
           return spectra
       
-    
     def normalized_beam_diff(self, rows):
       """
       (on-source - off-source)/off_source for each record and each pol
@@ -1816,68 +1837,47 @@ class DSNFITSexaminer(object):
               good_data['winddirec'][sig].append(self.data['WINDDIRE'][row])
       return good_data
       
-  # convert these to Table methods as needed.
-    
-  def beam_switched_average(self, mode='LINE-PBSW'):
+class TidTipAnalyzer():
+  """
+  """
+  def __init__(self, extension):
     """
-    Returns pol average spectrum and total integration of given dataset(s)
-    
-    Also computes the average spectrum and total integration time for each pol
-    and accumulates them in the SAOexaminer attributes avg_diff and tau.
-    
-    @param index : dataset index
-    @type  index : int
-    
-    @param mode : observing mode (which aught to be in the header)
-    @type  mode : str
     """
-    first_scan = self.dataset.keys()[0]
-    num_chan   = self.dataset[first_scan].shape[0]
-    if mode == 'LINE-PBSW':
-      spec, tau = self.dataset.norm_spectra()
-      if self.avg_diff == {}:
-        # cumulative average
-        # xan't do it in __init__ because num_chan is not known
-        self.avg_diff = {0: zeros(num_chan), 1: zeros(num_chan)}
-        self.tau = {0: 0.0, 1: 0.0}      # cumulative integration time
-      for pol in [0,1]:
-        self.avg_diff[pol] += spec[pol]
-        self.tau[pol] += tau[pol]
-    else:
-        self.logger.error("beam_switched_average: mode %s not yet implemented", mode)
-    for pol in [0,1]:
-      self.avg_diff[pol] /= len(self.indices)
+    self.header = extension.header
+    self.data = extension.data
+    self.logger = logging.getLogger(logger.name+".TidTipAnalyzer")
+
+  def fit_data(self, Tatmos=250, project=None, method="linear"):
+    """
+    Fits tipping curve data from a specified file
   
-def get_power_range(table, subch, beam, pol):
-            """
-            calculate limits for power levels
-            
-            the idea here is to avoid huge spikes compressing the spectra
-            will need some tuning
-            
-            @param subch : sub-channel number
-            @param beam : beam number (1-based)
-            @param pol   : polarization number (not NRAO pol code)
-            """
-            subch_idx = subch-1
-            beam_idx = beam-1
-            IF_idx = pol-1
-            # gets the indices for scan 1
-            indices = table.get_indices(cycle=subch, beam=beam, IF=pol)
-            logger.debug("get_power_range: indices: %s", indices)
-            # gets spectra from all rows
-            spectrum = table.data['SPECTRUM'][:,indices[1:]]
-            logger.debug("get_power_range: spectrum shape is %s", spectrum.shape)
-            mean_pwr = spectrum.mean()
-            pwr_std = spectrum.std()
-            max_pwr = spectrum.max()
-            min_pwr = spectrum.min()
-            if max_pwr > mean_pwr + 4*pwr_std:
-              ymax = mean_pwr + pwr_std
-            else:
-              ymax = mean_pwr + 4*pwr_std
-            if min_pwr < mean_pwr - 4*pwr_std:
-              ymin = mean_pwr - pwr_std
-            else:
-              ymin = mean_pwr - 4*pwr_std
-            return ymin, ymax
+    @param tipfiles : dict keyed on filename with file times
+    @type  tipfiles : dict
+  
+    @param index : file in tipfiles to be plotted
+    @type  index : int
+  
+    @param Tatm : average temperature of the atmosphere
+    @type  Tatm : float
+  
+    @return: float (receiver temperature), float (atmospheric opacity)
+    """
+    # fit the data
+    Trx = {}; sigTrx = {}
+    tau = {}; sigtau = {}
+    Tatm = {}; sigTatm = {}
+    for IF in range(4):
+      PM = IF+1
+      rows = numpy.where(self.data['CYCLE'] == PM)
+      elev = self.data['ELEVATIO'][rows]
+      tsys = self.data['TSYS'][rows]
+      if method == "linear":
+        Trx[IF], sigTrx[IF], Tsys_per_am, sigTsys_per_am = \
+                    fit_tipcurve_data(elev, tsys, Tatm=250, method="linear")
+        tau[IF] = Tsys_per_am/Tatmos
+        sigtau[IF] = sigTsys_per_am/Tatmos
+      elif method == "quadratic":
+        Trx[IF], sigTrx[IF], tau[IF], sigtau[IF], Tatm[IF], sigTatm[IF] = \
+                    fit_tipcurve_data(elev, tsys, Tatm=250, method="quadratic")
+    return Trx, sigTrx, tau, sigtau, Tatm, sigTatm
+

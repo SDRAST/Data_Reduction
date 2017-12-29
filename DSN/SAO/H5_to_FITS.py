@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-FITS class - module for DSN SDFITS class
+H5_to_FITS - module FITSfile_from_SAO and TipTableMaker classes
 
-Documentation for keywords is given in::
+Documentation
+=============
+For FITS keywords is given in::
   https://heasarc.gsfc.nasa.gov/docs/fcg/standard_dict.html
 
 Notes for further attention::
@@ -13,19 +15,25 @@ Notes for further attention::
   * optional columns for CAL and FOFFREF1
 """
 import astropy
+import astropy.io.fits as pyfits
 import astropy.units as u
+import calendar
 import datetime
 import dateutil
 import logging
-import astropy.io.fits as pyfits
+import os
 import time
 import numpy
 
 from astropy.coordinates import SkyCoord
 from time import mktime, strptime
 
+from Automation.NMClogs import NMClogManager,NMC_log_server
 from Data_Reduction.FITS.DSNFITS import FITSfile
+from DatesTimes import UnixTime_to_datetime
 from MonitorControl import ObservatoryError
+from MonitorControl.Configurations import station_configuration
+from MonitorControl.Configurations.CDSCC.FO_patching import DistributionAssembly
 from MonitorControl.Receivers.DSN import DSN_rx
 from support.lists import unique
 
@@ -258,7 +266,6 @@ class FITSfile_from_SAO(FITSfile):
                          dim=dimsval))
     
     # create the table extension
-    # tabhdu   = pyfits.new_table(cols, header=self.exthead, nrows=numscans)
     FITSrec = pyfits.FITS_rec.from_columns(self.columns, nrows=numscans)
     tabhdu = pyfits.BinTableHDU(data=FITSrec, header=self.exthead,
                                 name="SINGLE DISH")
@@ -473,6 +480,116 @@ class FITSfile_from_SAO(FITSfile):
       # these still need attention
       #tabhdu.data[index]['CAL'] =
       #tabhdu.data[index]['FOFFREF1'] = 
+    return tabhdu
+
+# -------------------- convert DSS-43 tipping files to FITS -------------------
+
+class TipTableMaker(FITSfile):
+  """
+  """
+  def __init__(self, dss, year, doy, datefiles):
+    """
+    """
+    self.datefiles = datefiles
+    # object to get IF routing
+    self.da = DistributionAssembly()
+    patchdate = self.da.get_sheet_by_date("%4d/%03d" % (year,doy))
+    self.IFs = self.da.get_signals('Power Meter')
+    # equipment configuration
+    obs, equipment = station_configuration('WBDC2_K2')
+    tel = equipment['Telescope']
+    FITSfile.__init__(self, tel)
+    # object for getting NMC log data
+    first_file = self.datefiles[0]
+    first_time = float(os.path.basename(first_file)[12:-4])
+    time = UnixTime_to_datetime(first_time).strftime("%H%M")
+    self.NMClogman = NMClogManager(station=dss, year=year,
+                            DOY=doy, time=time, use_portal=False)
+    # object for providing specific data from the NMC log extracts
+    self.logserver = NMC_log_server(dss, year, doy)
+    
+  def init_header(self):
+    """
+    """
+    # make the table header
+    self.header  = pyfits.Header() ## tbhdu.header
+    self.header['extname'] = ("SINGLE DISH",          "required keyword value")
+    self.header['nmatrix'] = (1,                      "one DATA column")
+    self.header['veldef']  = ('FREQ-OBS',             "raw receiver frequency")
+    self.header['TIMESYS'] = ('UTC',                       "DSN standard time")
+    self.header['datafile'] = ('',            "path and name of original data")
+    self.header['UNIXtime'] = ('',                           "UNIX time stamp")
+    self.header['DATE-OBS'] = ('',             "day of observation YYYY/MM/DD")
+    self.header['TIME'] = ('',                     "seconds UT since midnight")
+    self.header['TAMBIENT'] = ('',                   "ambient temperature (K)")
+    self.header['PRESSURE'] = ('',                 "atmospheric pressure (mB)")
+    self.header['HUMIDITY'] = ('',                              "humidity (%)")
+    self.header['WINDSPEE'] = ('',                         "wind speed (km/s)")
+    self.header['WINDDIRE'] = ('',              "wind compass direction (deg)")
+    # make the columns
+    self.columns = pyfits.ColDefs([
+      pyfits.Column(name='SCAN',     format='1I'), # one multichannel meas'mnt
+      pyfits.Column(name='CYCLE',    format='1I'), # a single channel meas'mnt
+      pyfits.Column(name='OBSFREQ',  format='1D', unit='Hz')])
+    self.columns.add_col(pyfits.Column(name='BEAM', format='1I'))
+    self.columns.add_col(pyfits.Column(name='POL', format='1I'))
+    self.columns.add_col(pyfits.Column(name='ELEVATIO', format='1E', unit='deg'))
+    self.columns.add_col(pyfits.Column(name='TSYS', format='1E', unit='K'))
+    
+  def make_table(self, unixtime, el, Tsys):
+    """
+    """
+    self.init_header()
+    dt = UnixTime_to_datetime(unixtime)
+    nscans, nPMs = Tsys.shape
+    # add header items
+    self.header['UNIXtime'] = unixtime
+    self.header['DATE-OBS'] = dt.strftime("%Y/%m/%d")
+    self.header['TIME'] = unixtime - calendar.timegm((dt.year,1,1, 0,0,0,0,0))
+    weather = self.logserver.get_weather(unixtime)
+    if weather:
+      self.header['TAMBIENT'] = weather[0]
+      self.header['PRESSURE'] = weather[1]
+      self.header['HUMIDITY'] = weather[2]
+      self.header['WINDSPEE'] = weather[3]
+      self.header['WINDDIRE'] = weather[4]
+    
+    # create the table extension
+    FITSrec = pyfits.FITS_rec.from_columns(self.columns, nrows=nscans*nPMs)
+    tabhdu = pyfits.BinTableHDU(data=FITSrec, header=self.header,
+                                name="TIPPING CURVE")
+    # now fill in the rows
+    tabhdu = self.add_data(tabhdu, nscans, nPMs, el, Tsys)
+    return tabhdu
+
+  def add_data(self, tabhdu, nscans, nPMs, el, tsys):
+    """
+    """
+    # add additional header data: TAMBIENT, PRESSURE, HUMIDITY
+    index = 0
+    subch_idx = 0
+    for scan_idx in range(nscans):
+      for pm in range(nPMs):
+        tabhdu.data[index]['SCAN'] = scan_idx+1
+        tabhdu.data[index]['ELEVATIO'] = el[scan_idx]
+        tabhdu.data[index]['CYCLE'] = pm+1
+        tabhdu.data[index]['TSYS'] = tsys[scan_idx][pm]
+        sigprops = self.IFs['PM'+str(tabhdu.data[index]['CYCLE'])]
+        if sigprops['Pol'] == 'H':
+          tabhdu.data[index]['POL'] = -6
+        elif sigprops['Pol'] == 'E':
+          tabhdu.data[index]['POL'] = -5
+        elif sigprops['Pol'] == 'L':
+          tabhdu.data[index]['POL'] = -2
+        elif sigprops['Pol'] == 'R':
+          tabhdu.data[index]['POL'] = -1
+        band = sigprops['Band'] = sigprops['Band']
+        if sigprops['IF'] == "L":
+          tabhdu.data[index]['OBSFREQ'] = (band - 0.5)*1e9
+        elif sigprops['IF'] == "H":
+          tabhdu.data[index]['OBSFREQ'] = (band + 0.5)*1e9
+        tabhdu.data[index]['BEAM'] = sigprops['Receiver']
+        index += 1
     return tabhdu
 
 #--------------------------------- obsolete(?) module functions ---------------------------

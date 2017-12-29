@@ -85,7 +85,7 @@ generated and used to separate lower and upper sidebands.
 
 The Deep Space Network conducts front-line radio astronomy research at its
 three deep space communication complexes (DSCC), near Canberra (Australia),
-Goldstone (California) and Madrid
+Goldstone (California), and Madrid
 (Spain).  Each Complex supports radio astronomers active in their host
 countries, as well as guest investigators from around the world.  It is
 important for inter-operability that the DSN uses data file formats which are
@@ -109,21 +109,30 @@ from a DSN SDFITS file to one adhering to a different convention.
 This document describes tools available for using Python to reduce and analyze
 data in DSN SDFITS format.
 
+In addition to the SINGLE DISH extension, DSN FITS defines additional extensions
+for phase calibrator tones extracted from spectral line data (the PGC TONES) 
+extension and tipping curves (the TIPPING CURVE) extension.
+
 \chapter{DSN SDFITS Convention}\label{chap:conventions}
 
 \section{Overview}
 
 This summarizes the features of the DSN convention for SDFITS.
 \begin{description}
-\item[Multidimensional columns] 
-\item[The {\ttfamily CYCLE} column]
-\item[One extension per spectrometer]
-\item[A {\ttfamily PCG TONES} extension for calibration tones]
-\item[Uncalibrated {\ttfamily TSYS} proxy]
+\item[Multidimensional columns] in addition to the DATA column are allowed as
+long as they have the same dimensions as the DATA column.
+\item[The {\ttfamily CYCLE} column] is used to distinguish sub-channels for
+those spectrometers in which smaller bands are extracted from a single IF band.
+\item[One extension per spectrometer] avoids mixing spectra of different lengths
+in the same table.
+\item[Uncalibrated {\ttfamily TSYS} proxy] is created using the average power
+in the spectra when power meters are not available. The UNIT for the TSYS 
+column is then {\ttfamily count} instead of {\ttfamily K}.
+\item[A {\ttfamily PCG TONES} extension for calibration tones] has a set of
+sub-spectra extracted from each tone from very high resolution data.
+\item[A TIPPING CURVE extension] for power meter scans between low and highlightelevations.
 \end{description}
-Additional features under consideration are an extension for extensions for
-ambient-load/noise-diode calibrations and for tipping curves and
-non-degenerate coordinate axes (axes 2 and 3).
+An extension for extension for ambient-load/noise-diode calibrations is planned.
 
 
 \section{Multidimensional Columns}
@@ -134,22 +143,247 @@ except the first, is the same.  To illustrate this, consider a receiver with
 two feeds, each having two polarized outputs and a backend which produces ten
 4096~channel spectra per scan.  The DSN convention follows the NRAO one in that
 the DATA column would have {\ttfamily TDIM(4096,1,1,2,10,2)}.  If a system 
-temperature is measured for each IF and spectrum, the {\ttfamily TSYS} column 
+temperature is measured for each IF ({\itshape i.e} for each beam and
+polarization), the {\ttfamily TSYS} column 
 would have cells which are numpy arrays with dimension 
-($1 \times 1 \times 1 \times 2 \times 10 \times 2$). Note that this column does 
+{\ttfamily (1,1,1,2,10,2)}. Note that this column does 
 not require a separate {\ttfamily TDIM} because all the axis
 meanings are the same and the length of the first axis can be obtained from
 the {\ttfamily array.shape} attribute.
 
-\chapter{Command Line}\label{chap:cmd-line}
+\section{Data File Storage}
 
-\section{Overview}
+FITS files are stored in sub-directories of {\ttfamily /usr/local/RA\_data/FITS/}
+using the Python LFS convention. That means that only the computer that created
+the file and the remote repository on ra.jpl.nasa.gov have the actual data.
+Other computers in the DSN Radio Astronomy IT infrastructure have LFS objects
+which represnt those files.  To use a file on one of the other computers it 
+must be explicitly fetched with the {\ttfamily git lfs pull} command.  Please
+see the DSAO User's Guide for further information.
+
+\section{The PCG TONES Extension}
+
+In addition to a
+SINGLE DISH extension, these files have a TONES PCG extension which contains
+information derived from the phase calibration generator (PCG). This includes
+the data from 32 channels of the original high resolution (131072 channel)
+spectrum surrounding each tone.
+
+\section{The TIPPING CURVE Extension}
+
+\section{Examples}
+
+\subsection{FITS File (HDU List)}
+
+\begin{code}[h!tb]
+\begin{center}
+{\scriptsize \begin{verbatim}
+In [2]: ff = pyfits.open("SAO_2015-204.fits")
+In [3]: ff.info()
+Filename: SAO_2015-204.fits
+No.    Name         Type      Cards   Dimensions   Format
+0    PRIMARY     PrimaryHDU      14   ()              
+1    SINGLE DISH  BinTableHDU    170   2R x 51C     [1I, 1I, 16A, 16A, 8A, 1L, 1L, 1E, 1E, 1E, 1E, 1I, 1D,
+                                                     1D, 8A, 1E, 1E, 1E, 1E, 1E, 7D, 7D, 7E, 7E, 7E, 7E,
+                                                     7E, 7E, 7E, 7E, 7E, 28D, 1D, 1I, 1D, 1D, 1I, 1D, 1D,
+                                                     1I, 1D, 1I, 1I, 1I, 1E, 1I, 1E, 1I, 1I, 1I, 917504E]   
+2    SINGLE DISH  BinTableHDU    170   12R x 51C    [1I, 1I, 16A, 16A, 8A, 1L, 1L, 1E, 1E, 1E, 1E, 1I, 1D,
+                                                     1D, 8A, 1E, 1E, 1E, 1E, 1E, 22D, 22D, 22E, 22E, 22E,
+                                                     22E, 22E, 22E, 22E, 22E, 22E, 88D, 1D, 1I, 1D, 1D, 1I,
+                                                     1D, 1D, 1I, 1D, 1I, 1I, 1I, 1E, 1I, 1E, 1I, 1I, 1I,
+                                                     2883584E]   
+3    SINGLE DISH  BinTableHDU    170   2R x 51C     [1I, 1I, 16A, 16A, 8A, 1L, 1L, 1E, 1E, 1E, 1E, 1I, 1D,
+                                                     1D, 8A, 1E, 1E, 1E, 1E, 1E, 25D, 25D, 25E, 25E, 25E,
+                                                     25E, 25E, 25E, 25E, 25E, 25E, 100D, 1D, 1I, 1D, 1D,
+                                                     1I, 1D, 1D, 1I, 1D, 1I, 1I, 1I, 1E, 1I, 1E, 1I, 1I,
+                                                     1I, 3276800E]   
+4    TIPPING CURVE  BinTableHDU     43   468R x 9C    [1I, 1I, 16A, 1E, 1D, 1I, 1I, 1E, 1E]   
+5    TIPPING CURVE  BinTableHDU     43   456R x 9C    [1I, 1I, 16A, 1E, 1D, 1I, 1I, 1E, 1E] \end{verbatim}  
+}\caption{\label{cod:FITSfile}Contents of a typical SINGLE DISH file.}
+\end{center}
+\end{code}
+Snippet~\ref{cod:FITSfile} sows the contents of a typical DSN FITS file 
+consisting of a primary header and data unit (HD), three SINGLE DISH extensions
+and two TIPPING CURVE extensions.
+
+\subsection{File Header}
+
+Code snippet~\ref{cod:SD-header} shows the header of a typical DSN SDFITS file.
+\begin{code}[h!tb]
+\begin{center}
+{\scriptsize \begin{verbatim}
+In [10]: hdulist[0].header.ascardlist()
+Out[10]: 
+SIMPLE  =                    T / conforms to FITS standard                      
+BITPIX  =                    8 / array data type                                
+NAXIS   =                    0 / number of array dimensions                     
+EXTEND  =                    T                                                  
+BLOCKED = 'T       '                                                            
+DATE    = '2017/09/29'                                                          
+ORIGIN  = 'FITSfile.__init__'                                                   
+TELESCOP= 'DSS-14  '                                                            
+SITELONG=           116.888653 / degrees west of Greenwich                      
+SITELAT =           35.4259278 / degrees                                        
+SITEELEV=              1031.81 / meters                                         
+OBSGEO-X=         -2353621.251 / meters                                         
+OBSGEO-Y=         -4641341.542 / meters                                         
+OBSGEO-Z=           3677052.37 / meters\end{verbatim}
+}\caption{\label{cod:SD-header}Header of a typical SINGLE DISH file.}
+\end{center}
+\end{code}
+The file has been opened using the {\ttfamily pyfits} package.
+
+\subsection{SINGLE DISH Extension Header}
+
+Code snippet~\ref{cod:tb-header} shows a typical SDFITS extension header for
+data acquired with a WVSR.
+\begin{code}[h!]
+\begin{center}
+{\scriptsize \begin{verbatim}
+XTENSION= 'BINTABLE'           / binary table extension                         
+BITPIX  =                    8 / array data type                                
+NAXIS   =                    2 / number of array dimensions                     
+NAXIS1  =               139492 / length of dimension 1                          
+NAXIS2  =                  130 / length of dimension 2                          
+PCOUNT  =                    0 / number of group parameters                     
+GCOUNT  =                    1 / number of groups                               
+TFIELDS =                   46 / number of table fields                         
+EXTNAME = 'SINGLE DISH'        / required keyword value                         
+NMATRIX =                    1 / one DATA column                                
+VELDEF  = 'FREQ-OBS'           / raw receiver frequency                         
+TIMESYS = 'UTC     '           / DSN standard time                              
+FRONTEND= 'X14     '           / front end ID                                   
+RECEIVER= 'X14     '           / receiver ID                                    
+PROJID  = 'AUTO_EGG'                                                            
+OBSERVER= 'cjn     '                                                            
+TELESCOP= 'DSS-14  '                                                            
+SITELONG=           116.888653 / degrees west of Greenwich                      
+SITELAT =           35.4259278 / degrees                                        
+SITEELEV=              1031.81 / meters                                         
+OBSGEO-X=         -2353621.251 / meters                                         
+OBSGEO-Y=         -4641341.542 / meters                                         
+OBSGEO-Z=           3677052.37 / meters                                         
+BACKEND = 'wvsr2   '                                                            
+MAXIS1  =                 8192 / length of DATA axis 1                          
+FREQRES =          61.03515625                                                  
+CTYPE1  = 'FREQ-OBS'           / channel frequency in telescope frame           
+CTYPE2  = 'RA---GLS'           / RA J2000.0                                     
+MAXIS2  =                    1                                                  
+CTYPE3  = 'DEC--GLS'           / decl. J2000                                    
+MAXIS3  =                    1                                                  
+CTYPE4  = 'STOKES  '           / polarization code: 1,2,3,4                     
+MAXIS4  =                    4                                                                                                                                                          
+...                                                    
+TTYPE41 = 'CRVAL4  '                                                            
+TFORM41 = '1I      '                                                            
+TTYPE42 = 'CRPIX4  '                                                            
+TFORM42 = '1I      '                                                            
+TTYPE43 = 'CDELT4  '                                                            
+TFORM43 = '1I      '                                                            
+TTYPE44 = 'DATA    '                                                            
+TFORM44 = '32768E  '                                                            
+TDIM44  = '(8192,1,1,4)'                                                        
+TTYPE45 = 'TSYS    '                                                            
+TFORM45 = '2E      '                                                            
+TUNIT45 = 'K       '                                                            
+TDIM45  = '(1,1,1,2)'                                                           
+TTYPE46 = 'IFSPECTR'                                                            
+TFORM46 = '2048E   '                                                            
+TDIM46  = '(1024,1,1,2)'\end{verbatim}
+}\caption{\label{cod:tb-header}Part of a header of a typical SINGLE DISH 
+extension for WVSR data.}
+\end{center}
+\end{code}
+Because WVSR data are processed into Stokes parameters, there is a
+{\ttfamily IFSPECTR} column with moderate resolution power spectra of
+the signals from which the Stokes parameters ({\ttfamily DATA}) were computed.
+
+If only one polarization was available, it will be RCP (the standard DSN
+telecommunications polarization sense) and the fourth axis as
+well as the {\ttfamily IFSPECTR} column would be dropped.
+
+The antenna coordinates are redundant because they are in the primary header.
+This is simply for convenience.
+
+\subsection{SINGLE DISH Extension Columns}
+
+Code snippet~\ref{cod:SD-table} shows the columns of a typical SINGLE DISH table.
+The files derived from DSN telecommunications receivers typically contain Stokes
+parameter spectra which means that the DATA column cells have four dimensions 
+(frequency, right ascension, declination and Stokes parameter).
+\begin{code}[h!tb]
+\begin{center}
+{\scriptsize \begin{verbatim}
+In [13]: hdulist[1].columns
+Out[13]: 
+ColDefs(
+    name = 'SCAN'; format = '1I'
+    name = 'CYCLE'; format = '1I'
+    name = 'DATE-OBS'; format = '16A'
+    name = 'OBJECT'; format = '16A'
+    name = 'OBSMODE'; format = '8A'
+    name = 'SIG'; format = '1L'
+    name = 'CAL'; format = '1L'
+    name = 'TCAL'; format = '1E'
+    name = 'EXPOSURE'; format = '1E'; unit = 's'
+    name = 'TIME'; format = '1E'; unit = 's'
+    name = 'BANDWIDT'; format = '1E'; unit = 'Hz'
+    name = 'SIDEBAND'; format = '1A'
+    name = 'RESTFREQ'; format = '1D'; unit = 'Hz'
+    name = 'OBSFREQ'; format = '1D'; unit = 'Hz'
+    name = 'VELDEF'; format = '8A'
+    name = 'RVSYS'; format = '1E'; unit = 'm/s'
+    name = 'VFRAME'; format = '1E'; unit = 'm/s'
+    name = 'VELOCITY'; format = '1E'; unit = 'm/s'
+    name = 'EQUINOX'; format = '1E'
+    name = 'FOFFREF1'; format = '1E'; unit = 'Hz'
+    name = 'BEAMXOFF'; format = 'E'; unit = 'deg'
+    name = 'BEAMEOFF'; format = 'E'; unit = 'deg'
+    name = 'LST'; format = '1D'; dim = '(1,)'
+    name = 'UNIXtime'; format = '1D'; dim = '(1,)'
+    name = 'AZIMUTH'; format = '1E'; dim = '(1,)'
+    name = 'ELEVATIO'; format = '1E'; dim = '(1,)'
+    name = 'TAMBIENT'; format = '1E'; dim = '(1,)'
+    name = 'PRESSURE'; format = '1E'; dim = '(1,)'
+    name = 'HUMIDITY'; format = '1E'; dim = '(1,)'
+    name = 'WINDSPEE'; format = '1E'; dim = '(1,)'
+    name = 'WINDDIRE'; format = '1E'; dim = '(1,)'
+    name = 'CRVAL1'; format = '1D'; unit = 'Hz'
+...
+    name = 'CDELT4'; format = '1I'
+    name = 'SPECTRUM'; format = '32768E'; dim = '(8192,1,1,4)'
+    name = 'IFSPECTR'; format = '2048E'; dim = '(1024,1,1,2)'
+    name = 'TSYS'; format = '2E'; dim = '(1,1,1,2)'
+)\end{verbatim}
+}\caption{\label{cod:SD-table}Columns of a typical SINGLE DISH
+extension.}
+\end{center}
+\end{code}
+Snippet~\ref{cod:tb-cols} shows all the column names for a WVSR table.
+\begin{code}[h!tb]
+\begin{center}
+{\scriptsize \begin{verbatim}
+In [4]: sa.examiners[0].tables[0].columns.names
+Out[4]: 
+['SCAN',     'CYCLE',    'DATE-OBS', 'OBJECT',   'OBSMODE',  'SIG',      'CAL',      'TCAL',
+ 'EXPOSURE', 'TIME',     'BANDWIDT', 'SIDEBAND', 'RESTFREQ', 'OBSFREQ',  'VELDEF',   'RVSYS',
+ 'VFRAME',   'VELOCITY', 'EQUINOX',  'FOFFREF1', 'BEAMXOFF', 'BEAMEOFF', 'LST',      'UNIXtime',
+ 'AZIMUTH',  'ELEVATIO', 'TAMBIENT', 'PRESSURE', 'HUMIDITY', 'WINDSPEE', 'WINDDIRE', 'CRVAL1',
+ 'CRPIX1',   'CDELT1',   'CRVAL2',   'CRPIX2',   'CDELT2',   'CRVAL3',   'CRPIX3',   'CDELT3',
+ 'CRVAL4',   'CRPIX4',   'CDELT4',   'DATA',     'TSYS',     'IFSPECTR']
+\end{verbatim}
+}\caption{\label{cod:tb-cols}Column names of a typical SINGLE DISH extension for
+WVSR data.}
+\end{center}
+\end{code}
+
+\chapter{Command Line}\label{chap:cmd-line}
 
 While one may generally want to use a Python program to avoid repetitive actions,
 for simple tasks the Python command line is often the quickest and clearest way
 to obtain results.  It also serves as a convenient way to recall attributes
-and methods of classes used in data reduction. And, it is a convenient way to
-introduce the classes.
+and methods of classes used in data reduction. Classes for data retrieval and
+examination are desribed below.
 
 \section{Class {\ttfamily SessionAnalyzer}}
 
@@ -209,12 +443,15 @@ file.
 Initiating a {\ttfamily SessionAnalyzer} causes
 each of the FITS files for the session to be assigned a
 {\ttfamily DSNFITSplotter} object which opens the file for data reduction.
+The {\ttfamily DSNFITSplotter} class is a subclass of {\ttfamily DSNFITSexaminer}.
+Plotting is described in the next chapter.
 
-\section{Class {\ttfamily DSNFITSplotter} and {\ttfamily DSNFITSexaminer}}
+\section{Class {\ttfamily DSNFITSexaminer}}\label{sec:examiner}
 
-{\ttfamily DSNFITSplotter} is actually a subclass of ({\itshape i.e.} is
-derived from) {\ttfamily DSNFITSexaminer}, to which it adds plotting capability.
-The real work of data reduction is done by {\ttfamily DSNFITSexaminer}.
+This class operates on FITS files.  It has methods specifically for DSN SDFITS
+files.  However, it will open any FITS file.  The {\ttfamily DSNFITSexaminer}
+object will also open any SINGLE DISH extensions with the private
+{\ttfamily Table} class.
 
 \subsection{Key Attributes}
 
@@ -439,8 +676,146 @@ The scaling factor can be estimated if one has a previously determined
 zero~airmass value for system temperature. If one is confident about that
 procedure then setting the {\ttfamily replace} argument to {\ttfamily True}.
 
+\section{Processing Tipping Curves}
+
+Besides the {\ttfamily DSNFITSexaminer.Table} method 
+{\ttfamily fit\_mean\_power\_to\_airmass()} which uses data from the
+SINGLE DISH extensions, there is also a class {\ttfamily TidTipAnalyzer}
+which works with TIPPING CURVE extensions. Instances of this class are created
+whenever the initialization of {\ttfamily DSNFITSexaminer} finds
+TIPPING CURVE extensions. These become items in the {\ttfamily DSNFITSexaminer}
+attribute {\ttfamily tctables}. Snippet~\ref{code:TidTip} shows how one 
+inspects the data to select the ranges to be fitted
+\begin{code}[h!tb]
+\begin{center}
+{\scriptsize \begin{verbatim}
+kuiper@kuiper:.../DSN-Sci-packages/Data_Reduction/FITS/apps/postproc$ ipython --pylab
+...
+In [1]: run interactive.py --date=2015/204 --dss=43 --project=67P
+In [2]: from Data_Reduction.tipping import airmass
+In [3]: rows = numpy.where(sa.examiners[0].tctables[0].data['CYCLE'] == 1)
+In [4]: plot(airmass(sa.examiners[0].tctables[0].data['ELEVATIO'][rows]),
+                     sa.examiners[0].tctables[0].data['TSYS'][rows],      label="PM1")
+Out[4]: [<matplotlib.lines.Line2D at 0x7f77be081a10>]
+In [5]: rows = numpy.where(sa.examiners[0].tctables[0].data['CYCLE'] == 2)
+In [6]: plot(airmass(sa.examiners[0].tctables[0].data['ELEVATIO'][rows]),
+                     sa.examiners[0].tctables[0].data['TSYS'][rows],      label="PM2")
+Out[6]: [<matplotlib.lines.Line2D at 0x7f77be070dd0>]
+In [7]: rows = numpy.where(sa.examiners[0].tctables[0].data['CYCLE'] == 3)
+In [8]: plot(airmass(sa.examiners[0].tctables[0].data['ELEVATIO'][rows]),
+                     sa.examiners[0].tctables[0].data['TSYS'][rows],      label="PM3")
+Out[8]: [<matplotlib.lines.Line2D at 0x7f77bdd91490>]
+In [9]: rows = numpy.where(sa.examiners[0].tctables[0].data['CYCLE'] == 4)
+In [10]: plot(airmass(sa.examiners[0].tctables[0].data['ELEVATIO'][rows]),
+                      sa.examiners[0].tctables[0].data['TSYS'][rows],     label="PM4")
+In [11]: legend()
+In [12]: grid()
+In [13]: xlabel('Air mass')
+In [14]: ylabel('System temperature (K)')
+In [16]: title("2015/204")\end{verbatim}
+}\caption[{\ttfamily TidTipAnalyzer example}]{\label{code:TidTip}
+Example of using the {\ttfamily TidTipAnalyzer} class to inspect tipping
+data.}
+\end{center}
+\end{code}
+{\ttfamily sa} is the name of the {\ttfamily SessionAnalyzer} which was started
+by program {\ttfamily interactive.py} (section~\ref{sec:interact},
+page~\pageref{sec:interact}). {\ttfamily sa.examiners[0]} is the first
+examiner created to handle one FITS file. {\ttfamily sa.examiners[0].tctables}
+are the handlers for the TIPPING CURVE extensions in the file.
+After the first few times, one would probably write a small function to do this.
+
+Figure~\ref{fig:tc-plot} shows the tipping curve data.
+\begin{figure}[h!tb]
+\begin{center}
+\includegraphics[width=5in]{tipping43-204-2.png}
+\caption{\label{fig:tc-plot}Data from the first tipping curve on 2015/204.}
+\end{center}
+\end{figure}
+The quality is good and so there is no need to extract a subset for fitting,
+which is shown in Snippet~\ref{cod:tipfit}.
+\begin{code}[h!tb]
+\begin{center}
+{\scriptsize \begin{verbatim}
+In [8]: from DatesTimes import UnixTime_to_datetime
+In [15]: UnixTime_to_datetime(sa.examiners[0].tctables[0].header['UNIXTIME']).strftime("%Y/%j %H:%M")
+Out[15]: '2015/204 21:54
+In [3]: sa.examiners[0].tctables[0].fit_data()
+Out[3]: 
+({0: 35.859516,   1: 35.363167,    2: 35.920727,    3: 33.488853},
+ {0:  0.26522738, 1:  0.31136668,  2:  0.32382384,  3:  0.31152838},
+ {0:  0.07538555, 1:  0.086743080, 2:  0.087312553, 3:  0.08278944},
+ {0:  0.00048351, 1:  0.000567621, 2:  0.000590331, 3:  0.00056792},
+ {}, {})\end{verbatim}
+}\caption[Fit temperature {\itshape vs} airmass]{\label{cod:tipfit}Fitting 
+TIPPING CURVE data to a straight line of system temperature {\itshape vs} 
+airmass.}
+\end{center}
+\end{code}
+The first row is the zero airmass system temperature and the second is its
+standard deviation. The third row is the zenith optical depth and the fourth its
+standard deviation. Two empty Python {\ttfamily dict}s are for the physical
+temperature of the atmosphere along the line of sight if a quadratic fit is
+done. (Usually not a good idea with 22~GHz data.)
+
 
 \chapter{Plotting}\label{chap:plotting}
+
+As explained in the previous chapter, initializing a {\ttfamily SessionAnalyzer}
+class also creates a {\ttfamily DSNFITSplotter} object which adds plotting
+capability.
+
+\section{Class {\ttfamily DSNFITSplotter}}\label{sec:plotter}
+
+{\ttfamily DSNFITSplotter} is actually a subclass of ({\itshape i.e.} is
+derived from) {\ttfamily DSNFITSexaminer}, to which it adds plotting capability.
+The real work of data reduction is done by {\ttfamily DSNFITSexaminer}.
+{\ttfamily DSNFITSplotter} only creates a private class {\ttfamily Plotter}
+object for each SINGLE DISH extension in the file.
+
+ has one method:
+\begin{description}\itemsep0pt \parskip0pt \parsep0pt
+\item [plot\_average()] plots a DSN FITS spectrum averaged over the SINGLE DISH
+tables in the file.  A DSN FITS spectrum is multi-dimensional with axes::
+    [[beam,] [time,]], pol, [dec, RA], frequency-like
+[] indicates the axes may not be present.  During data manipulations the
+[ra, dec,] axes are the first to be eliminated.
+    
+Note that the frame of the provided spectrum is not changed.  Only the
+X-axis is recomputed before plotting.
+\end{description}
+
+
+\subsection{Class {\ttfamily Plotter}}
+
+The {\ttfamily Plotter} class has these methods:
+\begin{description}\itemsep0pt \parskip0pt \parsep0pt
+\item[figure\_rows\_and\_columns()] computes number of rows and columns for 
+subplots.
+\item[init\_multiplot()] creates a figure with multiple plots sharing common X 
+and Y axis. The sublots have no space between them.
+\item[init\_multiplots()] creates multiple figures with multiple plots.  The 
+subplots have no space between the axes in a figure. Use
+{\ttfamily figure\_rows\_and\_columns()} to compute number of figures, rows, 
+columns and figure size.
+\item[show\_passband()] creates dynamic spectra of the IFs. If there are multiple
+beams, there will be a figure column for each beam and each pol.  Else, if there
+is only one beam but multiple subchannels then there will be a figure column for
+each subchannel and each pol. Otherwise there is just a column for each pol.
+\item[show\_all\_spectra()] plots all the spectra in a table.  In each subplot are
+all the spectra for each beam and polarization from one row in the SINGLE DISH
+table. If there are multiple records in a row ({\itshape i.e.} a TIME dimension 
+in DATA), all records are plotted (not the average over records).
+\item[make\_legend\_labels()] is self-explanatory.
+\item[plot\_BPSW\_spectra()] plots reduced beam and position switched spectra.
+\item[plot\_PSSW\_spectra()] plots position switched spectra.
+\item[plot\_line()] plots method reduced averaged spectral lines (from
+{\ttfamily DSNFITSexaminer.Table} method {\ttfamily reduce\_line()}) for both 
+pols.
+\item[plot\_all\_Tsys()] displays all TSYS values so user can select row range.
+(This works for WVSR data but needs work for SAO data.)
+\item[plot\_Tsys()] plots average power versus time or airmass or list index.
+\end{description}
 
 
 
@@ -448,7 +823,7 @@ procedure then setting the {\ttfamily replace} argument to {\ttfamily True}.
 
 \section{Session Summaries}
 
-
+describe
 
 \section{Post-Processing}
 
@@ -459,6 +834,43 @@ run automatically.  Users can run them to regenerate the standard format files
 as long as the original files are on-line.
 
 \subsubsection{\ttfamily SAO2SDFITS}
+
+describe
+
+\section{Data Analysis}
+
+\subsection{\ttfamily interactive.py}\label{sec:interact}
+
+This program is a convenience for initializing the common data reduction classes
+for analyzing the data from a session. Code Snippet~\ref{code:interactive} 
+\begin{code}[h!tb]
+\begin{center}
+{\small \begin{verbatim}
+kuiper@kuiper:...DSN-Sci-packages/Data_Reduction/FITS/apps/postproc$ ipython --pylab
+...
+In [2]: sa.examiners
+Out[2]: {0: <Data_Reduction.FITS.SDFITSplotter.DSNFITSplotter at 0x7f3eb09ba0d0>}
+In [3]: sa.examiners[0].tables
+Out[3]: 
+{0: <Data_Reduction.FITS.SDFITSexaminer.Table at 0x7f3eb091bad0>,
+ 1: <Data_Reduction.FITS.SDFITSexaminer.Table at 0x7f3eb08e1590>,
+ 2: <Data_Reduction.FITS.SDFITSexaminer.Table at 0x7f3eb08f7390>}
+In [4]: sa.examiners[0].plotter
+Out[4]: 
+{0: <Data_Reduction.FITS.SDFITSplotter.Plotter at 0x7f3ea643ebd0>,
+ 1: <Data_Reduction.FITS.SDFITSplotter.Plotter at 0x7f3ea643eb90>,
+ 2: <Data_Reduction.FITS.SDFITSplotter.Plotter at 0x7f3ea643e410>}
+In [5]: ex.tctables
+Out[5]: 
+{0: <Data_Reduction.FITS.SDFITSexaminer.TidTipAnalyzer instance at 0x7f3eb019bd40>,
+ 1: <Data_Reduction.FITS.SDFITSexaminer.TidTipAnalyzer instance at 0x7f3eb019bbd8>}
+\end{verbatim}
+}\caption[Program {\ttfamily interactive.py}]{\label{code:interactive}
+Initiating a data reduction session with {\ttfamily interactive.py}.}
+\end{center}
+\end{code}
+The {\ttfamily SDFITSexaminer.Table} and {\ttfamily SDFITSplotter} classes are 
+decribed in section~\ref{sec:examiner} (page~\pageref{sec:examiner}).
 
 
 

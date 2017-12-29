@@ -49,7 +49,8 @@ from os.path import basename
 from pylab import *
 
 from Data_Reduction import trim_extremes
-from Data_Reduction.FITS.SDFITSexaminer import DSNFITSexaminer
+from Data_Reduction.FITS.SDFITSexaminer import DSNFITSexaminer, TidTipAnalyzer
+from Data_Reduction.tipping import airmass
 from DatesTimes import UnixTime_to_MPL
 from support.graphics import get_screen_resolution
 from support.text import clean_TeX
@@ -78,6 +79,7 @@ class DSNFITSplotter(DSNFITSexaminer):
     Either a FITS file or an HDU list must be provided.
     """
     mylogger = logging.getLogger(logger.name+".DSNFITSplotter")
+    mylogger.debug("__init__: initializing superclass")
     DSNFITSexaminer.__init__(self, parent=parent, FITSfile=FITSfile,
                              hdulist=hdulist)
     self.logger = mylogger
@@ -218,7 +220,7 @@ class DSNFITSplotter(DSNFITSexaminer):
     def show_passband(self, figtitle=None, rows=None, savepath=None):
       """
       If there are multiple beams, there will be a figure column for each beam
-      and each pol.  Else, if there is only one beam but mulplot_Tsys(tiple subchannels
+      and each pol.  Else, if there is only one beam but multiple subchannels
       then there will be a figure column for each subchannel and each pol.
       Otherwise there is just a column for each pol.
       """
@@ -540,7 +542,7 @@ class DSNFITSplotter(DSNFITSexaminer):
         first = basename(self.parent.file).index('_')+1
         figtitle = "DSS-"+str(self.dss) +" "+ \
                                            basename(self.parent.file)[first:-5]
-      fig, ax = self.init_multiplot(figtitle+" (On-Off)/Off",
+      fig, ax = self.init_multiplot(figtitle+" (Sig-Ref)/Ref",
                                        nrows=1, ncols=ncols)
       # data source
       if 'IFSPECTR' in self.data.names:
@@ -588,8 +590,12 @@ class DSNFITSplotter(DSNFITSexaminer):
                 self.logger.warning("plot_PSSW_spectra: %s", str(details))
                 continue
               row = indices[0]
-              v = self.compute_X_axis(row, frame='DELF-OBS',
+              if datasource == 'IFSPECTR':
+                v = self.compute_X_axis(row, frame='DELF-OBS',
                                       num_chans=self.props['num IFspec chans'])
+              else:
+                v = self.compute_X_axis(row, frame='DELF-OBS',
+                                      num_chans=self.props['num chans'])
               on  = self.data[datasource][indices]
               try:
                 ref_indices = self.get_indices(scan=scan+1, cycle=cycle,
@@ -606,9 +612,9 @@ class DSNFITSplotter(DSNFITSexaminer):
               if scan == self.scan_keys[0]:
                 ax[col].grid()
                 ax[col].set_xlabel("Frequency (MHz)")
-                heading = "%8.3f MHz" % (self.data['OBSFREQ'][row]/1e6)
-                heading += " P"+str(pol)
-                ax[col].set_title(heading)
+                #heading = "%8.3f MHz" % (self.data['OBSFREQ'][row]/1e6)
+                #heading += " P"+str(pol)
+                #ax[col].set_title(heading)
       last_col = len(ax)-1
       lines, labels = ax[last_col].get_legend_handles_labels()
       fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
@@ -844,10 +850,48 @@ class DSNFITSplotter(DSNFITSexaminer):
     self.logger.info("plot_spectrum: pol0, pol1, avg: %s", rms)
     return rms
 
+#------------------- class for plotting TIPPING CURVE extension data ----------
+
+class TidTipPlotter(TidTipAnalyzer):
+  """
+  class for plotting data from the TIPPING CURVE extensions
+  """
+  def __init__(self, extension):
+    """
+    """
+    TidTipAnalyzer.__init__(self, extension)
+
+  def plot_data():
+    """
+    """
+    fig = figure()
+    for IF in range(4):
+      PM = IF+1
+      rows = where(self.data['CYCLE'] == PM)
+      tsys = self.data['TSYS'][rows]
+      am = airmass(self.data['ELEVATIO'][rows])
+      plot(am, tsys, plotcolors[IF]+'-')
+      plot(am, tsys, plotcolors[IF]+'.', label="IF%d" % PM)
+      # add fit to legend
+      label = "IF%d  %5.1f$\pm$%3.1f  %5.3f$\pm$%5.3f" % (
+                 IF, Trx[IF],sigTrx[IF], tau[IF],sigtau[IF])
+      handles[IF].set_label(label)
+    legend(loc="upper left", numpoints=1)
+    grid()
+    title(self.header['DATE-OBS'])
+    xlabel("airmass")
+    legend(loc="upper left", numpoints=1)
+    show()
+    if project:
+      sessiondir = projects_dir+project+"/Observations/dss43/%4d/%03d/" % (
+                                                           self.year, self.DOY)
+      fig.savefig(sessiondir+"tipdatafit-"+str(index+1)+".png")
+
+  
 #----------------------------------- module functions -------------------------
 
 def make_legend_labels(dskeys=[], tbkeys=[], sckeys=[], bmkeys=[], plkeys=[],
-                       dskey=None, tbkey=None, sckey=None, bmkey=None, plkey=None):
+                   dskey=None, tbkey=None, sckey=None, bmkey=None, plkey=None):
   """
   @param dskeys : all datafile or examiner keys
   @param tbkeys : all table keys
@@ -872,4 +916,37 @@ def make_legend_labels(dskeys=[], tbkeys=[], sckeys=[], bmkeys=[], plkeys=[],
   if plkey != None and len(plkeys) > 1:
     label += "P"+str(plkey+1)
   return label
-
+  
+def get_power_range(table, subch, beam, pol):
+            """
+            calculate limits for power levels
+            
+            the idea here is to avoid huge spikes compressing the spectra
+            will need some tuning
+            
+            @param subch : sub-channel number
+            @param beam : beam number (1-based)
+            @param pol   : polarization number (not NRAO pol code)
+            """
+            subch_idx = subch-1
+            beam_idx = beam-1
+            IF_idx = pol-1
+            # gets the indices for scan 1
+            indices = table.get_indices(cycle=subch, beam=beam, IF=pol)
+            logger.debug("get_power_range: indices: %s", indices)
+            # gets spectra from all rows
+            spectrum = table.data['SPECTRUM'][:,indices[1:]]
+            logger.debug("get_power_range: spectrum shape is %s", spectrum.shape)
+            mean_pwr = spectrum.mean()
+            pwr_std = spectrum.std()
+            max_pwr = spectrum.max()
+            min_pwr = spectrum.min()
+            if max_pwr > mean_pwr + 4*pwr_std:
+              ymax = mean_pwr + pwr_std
+            else:
+              ymax = mean_pwr + 4*pwr_std
+            if min_pwr < mean_pwr - 4*pwr_std:
+              ymin = mean_pwr - pwr_std
+            else:
+              ymin = mean_pwr - 4*pwr_std
+            return ymin, ymax

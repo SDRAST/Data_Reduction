@@ -86,6 +86,7 @@ from matplotlib.font_manager import FontProperties
 # import from local modules
 from Data_Reduction import get_obs_dirs, get_obs_session, select_data_files
 from Data_Reduction.SLATool import SessionAnalyzer
+from Data_Reduction.FITS.SDFITSexaminer import TidTipAnalyzer
 from Data_Reduction.FITS.SDFITSplotter import DSNFITSplotter
 from Radio_Astronomy import rms_noise
 from support.lists import unique
@@ -163,25 +164,25 @@ if __name__ == "__main__":
   p.usage='data_summary.py [options] [data_directory]'
 
   p.add_argument('--date',
-               dest = 'date',
-               type = str,
-               default = None,
-               help = 'Date of observation as YEAR/DOY string')
+                 dest = 'date',
+                 type = str,
+                 default = None,
+                 help = 'Date of observation as YEAR/DOY string')
   p.add_argument('-D', '--dss',
-               dest = 'dss',
-               type = int,
-               default = None,
-               help = 'DSN station number')
+                 dest = 'dss',
+                 type = int,
+                 default = None,
+                 help = 'DSN station number')
   p.add_argument('-n', '--name_pattern',
-              dest = 'name_pattern',
-              type = str,
-              default = '*.fits',
-              help = 'Pattern required in datafile file name. Default: *')
+                 dest = 'name_pattern',
+                 type = str,
+                 default = '*.fits',
+                 help = 'Pattern required in datafile file name. Default: *')
   p.add_argument('-p', '--project',
-               dest = 'project',
-               type = str,
-               default = None,
-               help = "Project code")
+                 dest = 'project',
+                 type = str,
+                 default = None,
+                 help = "Project code")
   args = p.parse_args()
 
   logging.basicConfig(level=logging.INFO)
