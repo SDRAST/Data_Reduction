@@ -703,6 +703,16 @@ class DSNFITSexaminer(object):
                                       self.data['OBSFREQ'][row]/1e6,
                                       SBcode[self.data['SIDEBAND'][row]],
                                       self.data['EXPOSURE'][row])        
+    def validate(self, colname, allow_zero=False):
+      """
+      """
+      data = self.data[colname]
+      if allow_zero:
+        mask = ~numpy.isnan(data)
+      else:
+        mask = ~(numpy.isnan(data) | numpy.equal(data, 0))
+      return mask.any(), numpy.where(mask)
+        
     def validate_wx_data(self):
       """
       ensure that the weather data are usable
@@ -712,60 +722,44 @@ class DSNFITSexaminer(object):
       not meet the test (of being numpy.nan or zero). The second returns the
       indices of the valid data.
       """
-      def validate(colname, allow_zero=False):
-        """
-        """
-        data = self.data[colname]
-        if allow_zero:
-          mask = ~numpy.isnan(data)
-        else:
-          mask = ~(numpy.isnan(data) | numpy.equal(data, 0))
-        return mask.any(), numpy.where(mask)
-        
       valid_data = {}
       indices = {}
       #    time
-      valid_data['UNIXtime'], indices['UNIXtime'] = validate('UNIXtime',
+      valid_data['UNIXtime'], indices['UNIXtime'] = self.validate('UNIXtime',
                                                              allow_zero=True)
       
       #    elevations
-      valid_data['ELEVATIO'], indices['ELEVATIO'] = validate('ELEVATIO')
+      valid_data['ELEVATIO'], indices['ELEVATIO'] = self.validate('ELEVATIO')
       if not valid_data['ELEVATIO']:
         self.logger.warning("validate_wx_data: elevation data is bad")
 
       #    system temperature
-      valid_data['TSYS'], indices['TSYS'] = validate('TSYS', allow_zero=True)
-      #if numpy.equal(self.data['TSYS'], 0.).all():
-      #  # may not all be zero
-      #  valid_data['TSYS'] = False
-      #  self.logger.warning("validate_wx_data: Tsys data is bad")
-      #else:
-      #  valid_data['TSYS'] = True
+      valid_data['TSYS'], indices['TSYS'] = self.validate('TSYS', allow_zero=True)
                        
       #    ambient temperature
-      valid_data['TAMBIENT'], indices['TAMBIENT'] = validate('TAMBIENT',
+      valid_data['TAMBIENT'], indices['TAMBIENT'] = self.validate('TAMBIENT',
                                                              allow_zero=True)
       if not valid_data['TAMBIENT']:
        self.logger.warning("validate_wx_data: ambient temperature data is bad")
        
       #    pressure
-      valid_data['PRESSURE'], indices['PRESSURE'] = validate('PRESSURE')
+      valid_data['PRESSURE'], indices['PRESSURE'] = self.validate('PRESSURE')
       if not valid_data['PRESSURE']:
         self.logger.warning("validate_wx_data: pressure data is bad")
         
       #    humidity
-      valid_data['HUMIDITY'], indices['HUMIDITY'] = validate('HUMIDITY')
+      valid_data['HUMIDITY'], indices['HUMIDITY'] = self.validate('HUMIDITY')
       if not valid_data['HUMIDITY']:
         self.logger.warning("validate_wx_data: humidity data is bad")
         
       #    windspeed
-      valid_data['WINDSPEE'], indices['WINDSPEE'] = validate('WINDSPEE',
+      valid_data['WINDSPEE'], indices['WINDSPEE'] = self.validate('WINDSPEE',
                                                              allow_zero=True)
       if not valid_data['WINDSPEE']:
         self.logger.warning("validate_wx_data: windspeed data is bad")
         
       #    winddir
-      valid_data['WINDDIRE'], indices['WINDDIRE'] = validate('WINDDIRE',
+      valid_data['WINDDIRE'], indices['WINDDIRE'] = self.validate('WINDDIRE',
                                                              allow_zero=True)
       if not valid_data['WINDDIRE']:
             self.logger.warning("validate_wx_data: wind direction data is bad")
@@ -785,9 +779,13 @@ class DSNFITSexaminer(object):
         IF           - 1-based number sequence, usually representing pol
       The other keys have only a time axis.
       """
-      on_rows = self.get_rows('SIG', True)
+      on_rows = numpy.array(list(set(self.rows).intersection(
+                               set(numpy.where(self.data['SIG'] == True)[0]))))
+      #on_rows = self.get_rows('SIG', True)
       self.logger.debug("get_wx_datacubes: rows for SIG=True: %s", on_rows)
-      of_rows = self.get_rows('SIG', False)
+      of_rows = numpy.array(list(set(self.rows).intersection(
+                              set(numpy.where(self.data['SIG'] == False)[0]))))
+      #of_rows = self.get_rows('SIG', False)
       self.logger.debug("get_wx_datacubes: rows for SIG=False: %s", of_rows)
       
       valid_data, indices =  self.validate_wx_data()
@@ -816,7 +814,7 @@ class DSNFITSexaminer(object):
       self.logger.debug("get_wx_datacubes: TSYS shape is %s", tsys_shape)
       wx_data['TSYS'][True] = numpy.zeros(tsys_shape)
       wx_data['TSYS'][False] = numpy.zeros(tsys_shape)
-      
+      # TSYS is handled differently because of a possible TIME axis
       if self.header['BACKEND'] == 'SAO spectrometer':          # has time axis
         # get the number of scans, records per scan, and sig/ref states
         if self.props['num beams'] > 1:
@@ -852,18 +850,22 @@ class DSNFITSexaminer(object):
                 wx_data['TSYS'][False][:,subch_idx,beam_idx,IF_idx] = data_of            
       elif self.header['BACKEND'][:4].upper() == 'WVSR':
         # this currently has no time axis but it has cycles, and only one beam
-        # 
+        #
+        
         for subch_idx in range(self.props['num cycles']):
           subch = subch_idx+1
           self.logger.debug("get_wx_datacubes: WVSR %dth subchannel",subch_idx)
           beam_idx = 0
           for IF_idx in range(self.props['num IFs']):
             self.logger.debug("get_wx_datacubes: %dth IF", IF_idx)
+            tsys_on = self.data['TSYS'][on_rows[subch_idx::],IF_idx,0,0,0].flatten()
+            length = len(wx_data['TSYS'][True][:,subch_idx,beam_idx,IF_idx])
             wx_data['TSYS'][True][:,subch_idx,beam_idx,IF_idx] = \
-                self.data['TSYS'][on_rows[subch_idx::2],IF_idx,0,0,0].flatten()
+              self.data['TSYS'][on_rows[subch_idx:length:2],IF_idx,0,0,0].flatten()
             if len(of_rows):
+              tsys_of = self.data['TSYS'][of_rows[subch_idx::],IF_idx,0,0,0].flatten()
               wx_data['TSYS'][False][:,subch_idx,beam_idx,IF_idx] = \
-                self.data['TSYS'][of_rows[subch_idx::2],IF_idx,0,0,0].flatten()
+                self.data['TSYS'][of_rows[subch_idx:length:2],IF_idx,0,0,0].flatten()
       return wx_data
 
     def get_first_value(self, column, row):
@@ -1617,6 +1619,8 @@ class DSNFITSexaminer(object):
     def select(self, selections):
       """
       Select rows according to multiple criteria.
+      
+      'selections' is a dict like 
       """
       keys = selections.keys()
       key = keys[0]

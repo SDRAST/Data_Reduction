@@ -219,6 +219,8 @@ class DSNFITSplotter(DSNFITSexaminer):
       
     def show_passband(self, figtitle=None, rows=None, savepath=None):
       """
+      Plots the passbands from this file as dynamic spectra
+      
       If there are multiple beams, there will be a figure column for each beam
       and each pol.  Else, if there is only one beam but multiple subchannels
       then there will be a figure column for each subchannel and each pol.

@@ -130,6 +130,7 @@ class SessionAnalyzer(object):
 
   def make_session_names(self):
     """
+    creates the directory path to the data from the session
     """
     first_ex = self.examiners[self.examiner_keys[0]]
     sttm = time.gmtime(first_ex.tables[0].get_first_value('UNIXtime', 0))
@@ -332,7 +333,9 @@ class SessionAnalyzer(object):
   
   def get_average(self, source='67P_CG_201'):
     """
-    Print r.m.s. noise for each dataset and all datasets together
+    Computes average spectrum for a source in the session
+    
+    Prints r.m.s. noise for each dataset and all datasets together
     
     @param source : source for which averaging is done
     """
@@ -563,6 +566,8 @@ class SessionAnalyzer(object):
   def plot_elev_and_Tsys(self, figtitle=None, weather_data=None,
                          examiner_keys=None, savepath=None):
     """
+    Plots Tsys vs time and vs elevation.
+    
     The data asociated with each key of 'weather_data' is a dict with numpy
     array for (SIG state) True and for False.    The 'TSYS' array has four
     axes representing::
@@ -629,7 +634,8 @@ class SessionAnalyzer(object):
                                          plkey=pol)
               color_index = num_st*((subch_idx*num_bm + beam)*num_pl + pol) \
                             + 1-int(sig)
-              mpltime = epoch2num(weather_data['UNIXtime'][sig])
+              tsys_len = len(weather_data['TSYS'][sig][:,subch_idx,beam,pol])
+              mpltime = epoch2num(weather_data['UNIXtime'][sig])[:tsys_len]
               ax2.plot_date(mpltime,
                             weather_data['TSYS'][sig][:,subch_idx,beam,pol],
                             marker='.',
@@ -646,8 +652,9 @@ class SessionAnalyzer(object):
                                          bmkey=beam,
                                          plkey=pol)
               color_index = num_st*((subch*num_bm + beam)*num_pl + pol) \
-                            + 1-int(sig) 
-              am = airmass(weather_data['ELEVATIO'][sig])
+                            + 1-int(sig)
+              tsys_len = len(weather_data['TSYS'][sig][:,subch_idx,beam,pol])
+              am = airmass(weather_data['ELEVATIO'][sig])[:tsys_len]
               ax[1].plot(am,  weather_data['TSYS'][sig][:,subch,beam,pol],
                          '.', color=colors[color_index],
                          label=label+sigref[sig])
@@ -678,7 +685,8 @@ class SessionAnalyzer(object):
     ax[1].yaxis.set_major_formatter(NullFormatter())
     ax[1].grid()
     lines, labels = ax[1].get_legend_handles_labels()
-    fig1.legend(lines, labels, numpoints=1, loc="upper right", ncol=1, prop = fontP)
+    fig1.legend(lines, labels, numpoints=1, loc="upper right", ncol=1,
+                prop = fontP)
     if savepath:
       fig1.savefig(savepath+"-elev.png")
     else:
@@ -689,6 +697,7 @@ class SessionAnalyzer(object):
   def plot_weather(self, figtitle=None, weather_data=None, examiner_keys=None,
                    savepath=None):
     """
+    Plots temperature, humidity and pressure from get_good_weather_data()
     """
     if weather_data:
       pass
@@ -754,6 +763,7 @@ class SessionAnalyzer(object):
   def plot_wind(self, figtitle=None, weather_data=None, examiner_keys=None,
                 savepath=None):
     """
+    Plots wind velocity and direction
     """
     if weather_data:
       pass
@@ -801,7 +811,7 @@ class SessionAnalyzer(object):
 
   def plot_passband(self, figtitle=None):
     """
-    Plots the passbands as a series of spectra and a dynamic spectrum
+    Plots the passbands as dynamic spectra for the whole session
     
     Image array structure
     ---------------------
@@ -957,6 +967,9 @@ class SessionAnalyzer(object):
 
   def plot_possw_diff(self, figtitle=None, savefig=True):
     """
+    Plots the difference between a SIG=True scan and the next SIG=False scan.
+    
+    This eliminates receiver systematics.
     """
     for dfindex in self.examiner_keys:
       session_name = splitext(basename(self.examiners[dfindex].file))[0]
