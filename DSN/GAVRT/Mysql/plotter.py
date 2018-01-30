@@ -17,13 +17,10 @@ _host,_user,_pw = pickle.load(open(os.environ['HOME']+"/.GAVRTlogin.p",
 class DBPlotter(DSS28db):
   """
   """
-  #def __init__(self, host=_host, user=_user, pw=_pw,
-  #                   name='dss28_eac', port=3306):
   def __init__(self):
     """
     """
     mylogger = logging.getLogger(logger.name+".DBPlotter")
-    #DSS28db.__init__(self, host=host, user=user, pw=pw)
     DSS28db.__init__(self)
     self.logger = mylogger
  
