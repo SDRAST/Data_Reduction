@@ -98,11 +98,12 @@ class DSNFITSexaminer(object):
     Create an SAOexaminer object
     
     Attributes::
-      file    - FITS file path and name
-      header  - file primary HDU header
-      hdulist - list of HDUs in file
-      logger  - logging.Logger object
-      tables  - private class Table (SINGLE DISH) objects
+      file     - FITS file path and name
+      header   - file primary HDU header
+      hdulist  - list of HDUs in file
+      logger   - logging.Logger object
+      tables   - private class Table (SINGLE DISH) objects
+      tctables - tipping curve tables
     """
     self.parent = parent
     self.logger = logging.getLogger(logger.name+'.DSNFITSexaminer')
@@ -564,7 +565,7 @@ class DSNFITSexaminer(object):
       The header parameter 'velocity' is set to the value of 'vobj' which is
       velocity of the object in the rest velocity of frame specified.
     
-      Acceptable frames are defined in the SAOhdf5.rel_freq_units() docstring.
+      Acceptable frames are defined in the self.rel_freq_units() docstring.
       In addition we allow here RADI-OBJ which defines the rest frame of the
       object.
     
