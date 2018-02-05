@@ -59,6 +59,8 @@ from scipy.stats import linregress
 from novas import compat as novas
 from novas.compat import eph_manager
 
+logger = logging.getLogger(__name__)
+
 import support.lists
 
 from Astronomy import c, MJD, v_sun
@@ -68,17 +70,20 @@ from Data_Reduction.FITS.DSNFITS import get_indices
 from Data_Reduction.tipping import airmass, fit_tipcurve_data
 from DatesTimes import ISOtime2datetime, UnixTime_to_datetime
 from MonitorControl.BackEnds import get_freq_array
-from MonitorControl.Configurations.CDSCC.FO_patching import DistributionAssembly
+try:
+  from MonitorControl.Configurations.CDSCC.FO_patching import DistributionAssembly
+  from MonitorControl.FrontEnds.K_band import K_4ch
+  K_4ch = None
+except ImportError:
+  logger.warning("SDFITSexaminer cannot handle DSS-43 K-band")
 from MonitorControl.Configurations.coordinates import DSS
 from MonitorControl.FrontEnds.DSN import DSN_fe
-from MonitorControl.FrontEnds.K_band import K_4ch
 from Radio_Astronomy import rms_noise
 from support import mkdir_if_needed, nearest_index
 from support.dicts import make_key_if_needed
 
 
 jd_start, jd_end, number = eph_manager.ephem_open()
-logger = logging.getLogger(__name__)
 
 sw_state = {True: "sig", False: "ref"}
 SBcode = {1: 'U', 0:None, -1: 'L'}
@@ -690,9 +695,9 @@ class DSNFITSexaminer(object):
     def make_directory(self, dest=sys.stdout):
       """
       """
-      labels = "Row Scan ch      Source       Sig  Freq      intg"
-      flines = "--- ---- -- ---------------- ----- --------- ----"
-      lbform = "%3d  %3d %2d %16s %5s %6.0f %s %4d"
+      labels = "Row Scan ch      Source       Sig  Freq      intg      date/time"
+      flines = "--- ---- -- ---------------- ----- --------- ---- -------------------"
+      lbform = "%3d  %3d %2d %16s %5s %6.0f %s %4d %20s"
       print >> dest, labels
       print >> dest, flines
       for row in self.rows:
@@ -702,7 +707,8 @@ class DSNFITSexaminer(object):
                                       self.data['SIG'][row],
                                       self.data['OBSFREQ'][row]/1e6,
                                       SBcode[self.data['SIDEBAND'][row]],
-                                      self.data['EXPOSURE'][row])        
+                                      self.data['EXPOSURE'][row],
+                                      time.ctime(self.data['UNIXtime'][row])[4:])        
     def validate(self, colname, allow_zero=False):
       """
       """
