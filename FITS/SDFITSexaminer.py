@@ -199,21 +199,27 @@ class DSNFITSexaminer(object):
     Public Attributes::
       BE          - Backend subclass associated with this table
       dss         - DSN antenna
-      cycles      - list of unique cycle numbers
-      cycle_keys  - 
+      cycle_keys  - list of unique CYCLE values
       data        - contents of FITS binary table
+      dataname    - whether it is DATA or SPECTRUM
+      datestr     - like 2017/020
+      DOY         - day of year
+      dss         - DSN station number
+      FE          - FrontEnd instance
       frame       - reference frame for X-axis
       header      - FITS table header
       logger      - logging.Logger object
       num_indices - number of indices in the DATA cube
-      obsmodes    - 
+      obsmodes    - observing modes used in this session
       obs_freqs   - non-redundant list of observing frequencies in table
-      parent
+      parent      - the DSNFITSexaminer object to which this belongs
       props       - table properties
-      rows        - rows with valid data
+      rows        - numbers for rows in the table
       row_keys    - ordered list of row numbers
       scan_keys   - ordered list of scan numbers
       sources     - non-redundant list of sources in table
+      timestr     - HH:MM
+      year        - 4-digits
     
     Methods::
       align_spectrum
@@ -300,9 +306,10 @@ class DSNFITSexaminer(object):
                               numchans)
             raise RuntimeError("no name for backend")
           self.data['CYCLE'] = numpy.ones(len(self.data))
-      # ore convenience attributes
+      # more convenience attributes
       self.get_table_stats()
-      self.rows = self.data['CYCLE'].nonzero()[0] # valid data
+      #self.rows = range(len(self.data))
+      self.scans = numpy.unique(self.data['SCAN'])
       self.props, self.num_indices = self.properties()
       datashape = extension.data[self.dataname].shape
       self.sources = numpy.unique(self.data['OBJECT'][self.rows])
@@ -318,20 +325,25 @@ class DSNFITSexaminer(object):
       * each on-source or off-source position gets its own scan 
       """
       # I suspect the following works because all are the same
-      indices_for_nonzero_scans = self.data['SCAN'].nonzero()
-      indices_for_nonzero_cycles = self.data['CYCLE'].nonzero()
-      indices_for_nonzero_freqs = self.data['OBSFREQ'].nonzero()
-      # the above should probably be made into sets taking 0th element then
-      # row_indices = set(indices_for_nonzero_scans).intersection(
-      #     set(indices_for_nonzero_cycles).intersection(indices_for_nonzero_freqs)
-      indices_for_OK_obsmodes = self.data['OBSMODE'][self.data['OBSMODE'] != ""] # not used
+      indices_for_nonzero_scans = self.data['SCAN'].nonzero()[0]
+      indices_for_nonzero_cycles = self.data['CYCLE'].nonzero()[0]
+      indices_for_nonzero_freqs = self.data['OBSFREQ'].nonzero()[0]
+      indices_for_OK_obsmodes = numpy.where(self.data['OBSMODE'] != "")[0]
       # (might need to check other columns)
-      row_indices = (indices_for_nonzero_scans and indices_for_nonzero_cycles and \
-                     indices_for_nonzero_freqs)[0]
-      # the above returns a tuple with the array of indices as the first item
-      logger.debug("get_table_stats: rows without nan or zero: %s", row_indices)
+      #row_indices = numpy.intersect1d(indices_for_nonzero_scans,
+      #                                indices_for_nonzero_cycles)
+      row_indices = self.data['SCAN'].nonzero()[0]
+      row_indices = numpy.intersect1d(row_indices, indices_for_nonzero_freqs)
+      row_indices = numpy.intersect1d(row_indices, indices_for_OK_obsmodes)
+      self.rows = row_indices
+      logger.debug("get_table_stats: rows with valid data: %s", row_indices)
   
       self.cycle_keys = list(numpy.unique(self.data['CYCLE'][row_indices]))
+      try:
+        self.cycle_keys.remove(0)
+      except ValueError:
+        # no CYCLE=0
+        pass
       logger.debug("get_table_stats: nonzero cycles: %s", self.cycle_keys)
       num_cycles = len(self.cycle_keys)
       logger.debug("get_table_stats: %d cycles per scan", num_cycles)
@@ -349,26 +361,32 @@ class DSNFITSexaminer(object):
   
       n_rows = num_scans * num_cycles
       if n_rows != len(self.data):
+        # scans with two or more cycles, each with its own row
         diff = len(self.data) - n_rows
         logger.info("get_table_stats: there are %d scans without all its cycles",
                     diff)
+        # find the scans that have all the subchannels
         complete_scans = []
-        # select the rows with non-zero CYCLE for each of the scans
         for scan in scan_keys:
+          # select the rows with non-zero CYCLE for each of the scans
           num_rows = len(self.data['CYCLE'][self.data['SCAN'] == scan])
           if num_rows == num_cycles:
             complete_scans.append(scan)
         logger.debug("get_table_stats: complete scans: %s", complete_scans)
-        good_rows = []
+        # find the rows that have complete scans
+        complete_scan_rows = []
         for row in row_indices:
           this_scan = self.data['SCAN'][row]
           if this_scan in complete_scans:
-            good_rows.append(row)
+            complete_scan_rows.append(row)
         self.scan_keys = list(complete_scans)
-        self.row_keys = good_rows
+        self.row_keys = complete_scan_rows
       else:
+        # only one cycle per scan
         self.scan_keys = list(scan_keys)
         self.row_keys = list(row_indices)
+      self.logger.debug("get_table_stats: complete scans: %s", self.scan_keys)
+      self.logger.debug("get_table_stats: complete rows: %s", self.row_keys)
       self.obsmodes = numpy.unique(self.data['OBSMODE'][self.row_keys])
     
     def report_table(self):
@@ -413,7 +431,8 @@ class DSNFITSexaminer(object):
       self.logger.debug("get_obs_freqs: checking cycles %s", self.cycle_keys)
       self.logger.debug("get_obs_freqs: OBSFREQ shape is %s",
                         self.data['OBSFREQ'].shape)
-      self.logger.debug("get_obs_freqs: 'rows' shape is %s", self.rows.shape)
+      # get a frequency from each CYCLE
+      self.logger.debug("get_obs_freqs: rows: %s", self.rows)
       for cycle in self.cycle_keys:
         self.logger.debug("get_obs_freqs: getting freqs for cycle %d", cycle)
         self.obs_freqs[cycle] = self.data['OBSFREQ'][self.rows]\
@@ -788,11 +807,9 @@ class DSNFITSexaminer(object):
       """
       on_rows = numpy.array(list(set(self.rows).intersection(
                                set(numpy.where(self.data['SIG'] == True)[0]))))
-      #on_rows = self.get_rows('SIG', True)
       self.logger.debug("get_wx_datacubes: rows for SIG=True: %s", on_rows)
       of_rows = numpy.array(list(set(self.rows).intersection(
                               set(numpy.where(self.data['SIG'] == False)[0]))))
-      #of_rows = self.get_rows('SIG', False)
       self.logger.debug("get_wx_datacubes: rows for SIG=False: %s", of_rows)
       
       valid_data, indices =  self.validate_wx_data()
@@ -814,13 +831,18 @@ class DSNFITSexaminer(object):
       # this assumes that all subchannels with a TIME axis have the same number
       # of records
       num_records = self.props['num records'][1]
-      tsys_shape = (len(on_rows)*num_records/self.props['num cycles'],
+      tsys_shape = {}
+      tsys_shape[True] = num_records*(len(on_rows)/self.props['num cycles'],
                     self.props['num cycles'],
                     self.props['num beams'],
                     self.props['num IFs'])
-      self.logger.debug("get_wx_datacubes: TSYS shape is %s", tsys_shape)
-      wx_data['TSYS'][True] = numpy.zeros(tsys_shape)
-      wx_data['TSYS'][False] = numpy.zeros(tsys_shape)
+      tsys_shape[False] = num_records*(len(of_rows)/self.props['num cycles'],
+                    self.props['num cycles'],
+                    self.props['num beams'],
+                    self.props['num IFs'])
+      self.logger.debug("get_wx_datacubes: weather TSYS shape is %s", tsys_shape)
+      wx_data['TSYS'][True] = numpy.zeros(tsys_shape[True])
+      wx_data['TSYS'][False] = numpy.zeros(tsys_shape[False])
       # TSYS is handled differently because of a possible TIME axis
       if self.header['BACKEND'] == 'SAO spectrometer':          # has time axis
         # get the number of scans, records per scan, and sig/ref states
@@ -858,21 +880,22 @@ class DSNFITSexaminer(object):
       elif self.header['BACKEND'][:4].upper() == 'WVSR':
         # this currently has no time axis but it has cycles, and only one beam
         #
-        
         for subch_idx in range(self.props['num cycles']):
           subch = subch_idx+1
           self.logger.debug("get_wx_datacubes: WVSR %dth subchannel",subch_idx)
           beam_idx = 0
           for IF_idx in range(self.props['num IFs']):
-            self.logger.debug("get_wx_datacubes: %dth IF", IF_idx)
-            tsys_on = self.data['TSYS'][on_rows[subch_idx::],IF_idx,0,0,0].flatten()
-            length = len(wx_data['TSYS'][True][:,subch_idx,beam_idx,IF_idx])
+            self.logger.debug("get_wx_datacubes: %dth IF", IF_idx)            
+            #length = len(wx_data['TSYS'][True][:,subch_idx,beam_idx,IF_idx])
+            #self.logger.debug("get_wx_datacubes: axis length is %d", length)
             wx_data['TSYS'][True][:,subch_idx,beam_idx,IF_idx] = \
-              self.data['TSYS'][on_rows[subch_idx:length:2],IF_idx,0,0,0].flatten()
+              self.data['TSYS'][on_rows[subch_idx::2],IF_idx,0,0,0].flatten()
+              #self.data['TSYS'][on_rows[subch_idx:length:2],IF_idx,0,0,0].flatten()
             if len(of_rows):
               tsys_of = self.data['TSYS'][of_rows[subch_idx::],IF_idx,0,0,0].flatten()
               wx_data['TSYS'][False][:,subch_idx,beam_idx,IF_idx] = \
-                self.data['TSYS'][of_rows[subch_idx:length:2],IF_idx,0,0,0].flatten()
+                self.data['TSYS'][of_rows[subch_idx::2],IF_idx,0,0,0].flatten()
+                #self.data['TSYS'][of_rows[subch_idx:length:2],IF_idx,0,0,0].flatten()
       return wx_data
 
     def get_first_value(self, column, row):
