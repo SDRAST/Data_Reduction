@@ -582,16 +582,25 @@ class DSNFITSplotter(DSNFITSexaminer):
             ax[col].set_title(label)
             self.logger.debug("plot_PSSW_spectra: subch %d beam %d pol %d",
                               cycle, beam, pol)
-            for scan in self.scan_keys[::2]:
+            on_scans = numpy.unique(self.data['SCAN'][numpy.where(
+                                  self.data['SIG'][self.row_keys] == True)[0]])
+            of_scans = numpy.unique(self.data['SCAN'][numpy.where(
+                                 self.data['SIG'][self.row_keys] == False)[0]])
+            num_pairs = min(len(on_scans), len(of_scans))
+            for index in range(num_pairs):
+              on_scan = on_scans[index]
+              of_scan = of_scans[index]
+              # get the indices for the DATA cell in the ON position
               try:
-                indices = self.get_indices(scan=scan, cycle=cycle, pol=pol,
+                indices = self.get_indices(scan=on_scan, cycle=cycle, pol=pol,
                                            beam=beam)
                 self.logger.debug("plot_PSSW_spectra: scan %d on indices: %s",
-                                  scan, indices)
+                                  on_scan, indices)
               except ValueError, details:
                 self.logger.warning("plot_PSSW_spectra: %s", str(details))
                 continue
               row = indices[0]
+              # get the X-axis units for the ON position
               if datasource == 'IFSPECTR':
                 v = self.compute_X_axis(row, frame='DELF-OBS',
                                       num_chans=self.props['num IFspec chans'])
@@ -599,19 +608,20 @@ class DSNFITSplotter(DSNFITSexaminer):
                 v = self.compute_X_axis(row, frame='DELF-OBS',
                                       num_chans=self.props['num chans'])
               on  = self.data[datasource][indices]
+              # get the indices for the DATA cell in the OFF position
               try:
-                ref_indices = self.get_indices(scan=scan+1, cycle=cycle,
+                ref_indices = self.get_indices(scan=of_scan, cycle=cycle,
                                                pol=pol, beam=beam)
                 self.logger.debug("plot_PSSW_spectra: scan %d off indices: %s",
-                                  scan, ref_indices)
+                                  of_scan, ref_indices)
                 off =  self.data[datasource][ref_indices]
               except ValueError, details:
                 self.logger.warning("plot_PSSW_spectra: %s", str(details))
                 continue
               spectrum = (on-off)/off
-              label = "("+str(scan)+"-"+str(scan+1)+")/"+str(scan+1)
+              label = "("+str(on_scan)+"-"+str(of_scan)+")/"+str(of_scan)
               ax[col].plot(v, spectrum, label=label)
-              if scan == self.scan_keys[0]:
+              if index == 0:
                 ax[col].grid()
                 ax[col].set_xlabel("Frequency (MHz)")
                 #heading = "%8.3f MHz" % (self.data['OBSFREQ'][row]/1e6)

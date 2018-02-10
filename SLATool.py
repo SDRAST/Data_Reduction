@@ -24,7 +24,8 @@ from Data_Reduction.FITS.SDFITSplotter import DSNFITSplotter, make_legend_labels
 from Data_Reduction.tipping import airmass, fit_tipcurve_data
 from DatesTimes import UnixTime_to_datetime
 from DSMS import DSN_complex_of
-from MonitorControl import Observatory, Telescope
+from MonitorControl import Observatory
+from MonitorControl.Antenna import Telescope
 from Radio_Astronomy import rms_noise
 
 fontP = FontProperties()

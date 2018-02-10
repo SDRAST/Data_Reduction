@@ -205,6 +205,7 @@ if __name__ == "__main__":
     year = None
     DOY = None
   sa = SessionAnalyzer(project=args.project, dss=args.dss, year=year, DOY=DOY)
+  print "session analyzer 'sa' started"
   # assume one table per file
   pl = {}
   for key in sa.examiners.keys():
