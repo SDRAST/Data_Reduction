@@ -95,7 +95,49 @@ import struct
 import DatesTimes as DT
 import time
 from glob import glob
-from Data_Reduction.DSN import obs_dir, ravi_data_dir
+
+
+from Data_Reduction.DSN import obs_dir
+
+this_host = socket.gethostname()
+if this_host == 'kuiper':
+  eaclogdir      = root_dir + "EAC/logs/"
+  raclogdir      = root_dir + "RAC/usr/local/dss13/data.logs/"
+  vsrLogDir      = root_dir + "VSR/var/home/ftp/vsr/log/"
+  vsrScriptDir   = root_dir + "VSR/var/home/ftp/vsr/scripts/"
+  vsr_atJobsDir  = root_dir + "VSR/home/ops/"
+  raviLogDir     = root_dir + "RAVI/home/kuiper/"
+  ravi_data_dir  = root_dir + "RAVI/mnt/PESD_data/"
+  ravi_atJobsDir = root_dir + "RAVI/usr/local/projects/PESD/observations/"
+elif this_host == 'venus-ravi2':
+  eaclogdir      = root_dir + "EAC/logs/"
+  raclogdir      = root_dir + "RAC/usr/local/dss13/data.logs/"
+  vsrLogDir      = root_dir + "VSR/var/home/ftp/vsr/log/"
+  vsrScriptDir   = root_dir + "VSR/var/home/ftp/vsr/scripts/"
+  vsr_atJobsDir  = root_dir + "VSR/home/ops/"
+  raviLogDir     = "/home/kuiper/"
+  ravi_data_dir  = "/mnt/PESD_data/"
+  ravi_atJobsDir = root_dir + "observations/"
+elif this_host == "crab14" or this_host == "dto":
+  eaclogdir      = root_dir + "EAC/logs/"
+  raclogdir      = root_dir + "RAC/usr/local/dss13/data.logs/"
+  vsrLogDir      = root_dir + "VSR/var/home/ftp/vsr/log/"
+  vsrScriptDir   = root_dir + "VSR/var/home/ftp/vsr/scripts/"
+  vsr_atJobsDir  = root_dir + "VSR/home/ops/"
+  raviLogDir     = "/home/kuiper/"
+  ravi_data_dir  = "/data2/exp/"
+  ravi_atJobsDir = root_dir + "observations/"
+else:
+  print "Data_Reduction.DSN: host",this_host,"not coded"
+  eaclogdir      = ""
+  raclogdir      = ""
+  vsrLogDir      = ""
+  vsrScriptDir   = ""
+  vsr_atJobsDir  = ""
+  raviLogDir     = ""
+  ravi_data_dir  = ""
+  ravi_atJobsDir = ""
+  print "Cannot access EAC, RAC, RAVI and VSR logs"
 
 subchannel = ["1N1", "1N2", "1W1", "1W2", "2N1", "2N2", "2W1", "2W2"]
 

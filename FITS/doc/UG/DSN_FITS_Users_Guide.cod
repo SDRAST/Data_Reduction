@@ -1,0 +1,15 @@
+\contentsline {code}{\numberline {2.1}{\ignorespaces Contents of a typical SINGLE DISH file.}}{5}
+\contentsline {code}{\numberline {2.2}{\ignorespaces Header of a typical SINGLE DISH file.}}{5}
+\contentsline {code}{\numberline {2.3}{\ignorespaces Part of a header of a typical SINGLE DISH extension for WVSR data.}}{6}
+\contentsline {code}{\numberline {2.4}{\ignorespaces Columns of a typical SINGLE DISH extension.}}{8}
+\contentsline {code}{\numberline {2.5}{\ignorespaces Column names of a typical SINGLE DISH extension for WVSR data.}}{8}
+\contentsline {code}{\numberline {3.1}{\ignorespaces Session analayzer class}}{10}
+\contentsline {code}{\numberline {3.2}{\ignorespaces Example of a TAMS spectrometer table}}{11}
+\contentsline {code}{\numberline {3.3}{\ignorespaces Example of a spectral line table from a WVSR}}{12}
+\contentsline {code}{\numberline {3.4}{\ignorespaces Position switched data reduction}}{12}
+\contentsline {code}{\numberline {3.5}{\ignorespaces Beam and position switched data reduction}}{13}
+\contentsline {code}{\numberline {3.6}{\ignorespaces \ttfamily TidTipAnalyzer example}}{15}
+\contentsline {code}{\numberline {3.7}{\ignorespaces Fit temperature {\itshape vs} airmass}}{15}
+\contentsline {code}{\numberline {5.1}{\ignorespaces Program {\ttfamily interactive.py}}}{20}
+\contentsline {code}{\numberline {B.1}{\ignorespaces {\ttfamily ipython} tab completion}}{27}
+\contentsline {code}{\numberline {B.2}{\ignorespaces Stripped-down definition of the {\tt Telescope} class.}}{28}

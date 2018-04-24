@@ -1,7 +1,18 @@
 # -*- coding: utf-8 -*-
 """
+Classes for reducing Solar Patrol data
+
+DBPlotter (from Data_Reduction.DSN.GAVRT.Mysql.plotter) is used to reduce data
+stored in the LCER GAVRT MySQL database.  The following example gets the 
+coordinate data for a map made during a given session::
+  In [1]: from Data_Reduction.DSN.GAVRT.Mysql.plotter import DBPlotter
+  In [2]: pl = DBPlotter()
+  In [3]: sp = pl.get_session_plotter(2017,233)
+  In [4]: map69data = sp.maps[69].maps_from_tlogs()
+  In [5]: xdec,dec = sp.maps[69].center_map()
+
 A lot of modules under this need fixing up because of change from package 
-Observatory to MonitorControl
+Observatory to MonitorControl and algorithmic to object-oriented programming.
 """
 import datetime
 from glob import glob
@@ -18,9 +29,9 @@ from Data_Reduction import nearest_index
 from Data_Reduction.DSN.GAVRT.solar import create_metadata_sheet
 from DSMS.excel import set_column_dimensions
 
-mylogger = logging.getLogger("__main__."+__name__)
+logger = logging.getLogger(__name__)
 
-def load_tfile_data(filename,start=None,stop=None,dss=28):
+def load_tfile_data(filename, start=None, stop=None, dss=28):
   """
   Load data from a GAVRT t-file
 
@@ -44,16 +55,18 @@ def load_tfile_data(filename,start=None,stop=None,dss=28):
       Astronomy.get_geodetic_coords(dss=dss)
   datafile = open(filename,"r")
   labels = datafile.readline().strip().split()
+  logger.debug("load_tfile_data: labels: %s", labels)
   datafile.close()
   labels.insert(0,'DOY')
   labels.insert(0,'Year')
+  logger.debug("load_tfile_data: new labels: %s", labels)
 
-  # colums are: Year DOY UTC Epoch Chan Tsys Int Az El Diode Level
-  #              i4   i4  S8   f8    S2  f4   f4 f4 f4   i4    f4
+  # colums are: Year DOY UTC Epoch Chan Tsys Int Az El Diode Level CryoTemp
+  #              i4   i4  S8   f8    S2  f4   f4 f4 f4   i4    f4    f4
   data = loadtxt(filename,skiprows=1,
                  dtype = {'names': tuple(labels),
                           'formats': ('i4','i4','S8','f8',
-                                      'S2','f4','f4','f4','f4','i4','f4')})
+                                      'S2','f4','f4','f4','f4','i4','f4', 'f4')})
   date_nums = []
   ras = []
   decs = []
@@ -144,17 +157,21 @@ def DSS28_beamwidth(freq):
   """
   return 0.54/freq
 
-def get_session_t_files(project_path,date_info):
+def get_session_t_files(project_path, date_info):
   """
   """
-  session_path = project_path+"Data/"+date_info[0]
+  session_path = project_path+"Observations/dss28/%4d/%03d/" % (date_info[1],date_info[4])
+  logger.debug("get_session_t_files: session path is %s", session_path)
   wb_name = "%4d-%03d.xlsx" % (date_info[1],date_info[4])
+  logger.debug("get_session_t_files: workbook name is %s", wb_name)
   wb_file = session_path+"/"+wb_name
-  f1 = glob(session_path+"/t12*.?")
+  logger.debug("get_session_t_files: filename is %s", wb_file)
+  f1 = glob(session_path+"/t12*.?") # for chans 2, 4, 6, 8
   f1.sort()
-  f2 = glob(session_path+"/t12*.??")
+  f2 = glob(session_path+"/t12*.??") # for chans 10, 12, 14, 16
   f2.sort()
   files = f1+f2
+  logger.debug("get_session_t_files: found files %s", files)
   return files
 
 def extract_data(datatype, wb, start, stop, meta_column, files):
@@ -197,42 +214,42 @@ def extract_data(datatype, wb, start, stop, meta_column, files):
   elif datatype == 'boresight':
     sheetname = "Bore-"
   sheetname += startstr+"-"+stopstr
-  mylogger.debug("Looking for sheet %s", sheetname)
+  logger.debug("Looking for sheet %s", sheetname)
   metadata_sheet = wb.get_sheet_by_name(sheetname)
   if metadata_sheet == None:
     # Doesn't exist, make it.
-    mylogger.debug("Attempting to create worksheet %s", sheetname)
+    logger.debug("Attempting to create worksheet %s", sheetname)
     try:
       metasheet = wb.get_sheet_by_name('Metadata')
     except Exception, details:
-      mylogger.error("Could not get spreadsheet metadata", exc_info=True)
+      logger.error("Could not get spreadsheet metadata", exc_info=True)
       return None
     try:
       wb.add_sheet(copy.deepcopy(metasheet))
     except Exception, details:
-      mylogger.error("Could not copy metadata sheet", exc_info=True)
+      logger.error("Could not copy metadata sheet", exc_info=True)
       return None
     else:
-      mylogger.debug("New sheets: %s", str(wb.get_sheet_names()))
+      logger.debug("New sheets: %s", str(wb.get_sheet_names()))
       metadata_sheet = wb.get_sheet_by_name('Metadata')
-      mylogger.debug("Active sheet: %s", metadata_sheet.title)
+      logger.debug("Active sheet: %s", metadata_sheet.title)
       metadata_sheet.title = sheetname
-      mylogger.debug("Active sheet was renamed to %s", metadata_sheet.title)
+      logger.debug("Active sheet was renamed to %s", metadata_sheet.title)
 
-    #mylogger.debug("Creating worksheet %s named %s",
+    #logger.debug("Creating worksheet %s named %s",
     #               metadata_sheet,sheetname)
     #metadata_sheet = create_metadata_sheet(metadata_sheet,sheetname)
   else:
-    mylogger.debug("%s already exists",metadata_sheet.title)
+    logger.debug("%s already exists",metadata_sheet.title)
   for filename in files:
     bname = basename(filename)
     # find the row for this file or create it
     row = get_row_number(metadata_sheet,meta_column['File'],bname)
-    mylogger.debug("%s meta data will go into row %s", bname,row)
+    logger.debug("%s meta data will go into row %s", bname,row)
     if row == None:
       row = metadata_sheet.get_highest_row()
-      mylogger.debug("%s meta data are not yet in %s", bname,sheetname)
-      mylogger.debug("%s meta data will now go into row %d",bname,row)
+      logger.debug("%s meta data are not yet in %s", bname,sheetname)
+      logger.debug("%s meta data will now go into row %d",bname,row)
     # get data for this file
     data, labels, date_nums, ras, decs, azs, elevs, tsys = \
           load_tfile_data(filename)

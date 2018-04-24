@@ -1,0 +1,13 @@
+\BOOKMARK [1][-]{section.1}{Standard GBT IDL Reduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Reduction Verification}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Define Data Sets}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{Inspection of Data}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.3}{Polarization Conversion}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.4}{Position Switched Reduction}{section.2}% 6
+\BOOKMARK [2][-]{subsection.2.5}{Beam and Position Switched Reduction}{section.2}% 7
+\BOOKMARK [3][-]{subsubsection*.1}{By Ratios}{subsection.2.5}% 8
+\BOOKMARK [3][-]{subsubsection*.2}{By Differences}{subsection.2.5}% 9
+\BOOKMARK [1][-]{section.3}{Testing Versions of reduce\137rrl}{}% 10
+\BOOKMARK [2][-]{subsection.3.1}{Version Incompatibility}{section.3}% 11
+\BOOKMARK [2][-]{subsection.3.2}{Using Old Version pickle File}{section.3}% 12
+\BOOKMARK [2][-]{subsection.3.3}{Position Switched Reduction in reduce\137rrl\137psw}{section.3}% 13

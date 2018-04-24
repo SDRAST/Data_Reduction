@@ -1,0 +1,17 @@
+\begin{thebibliography}{4}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+
+\bibitem[{IAU(1974)}]{IAU1974}
+IAU. 1974, in Proc. IAU General Assembly 15, IAU (Dordrecht: Reidel), 166
+
+\bibitem[{IEEE(1969)}]{IEEE1969}
+IEEE. 1969, IEEE Transactions on Antennas and Propagation, AP-17, 270
+
+\bibitem[{Liszt(1995)}]{Liszt1995}
+Liszt, H.~S. 1995, NRAO preprint
+
+\bibitem[{Pence(2012)}]{Pence2012}
+Pence, W.~D. 2012, Single Dish {FITS} ({SDFITS}) Convention for Radio Astronomy
+  Data, http://fits.gsfc.nasa.gov/registry/sdfits.html
+
+\end{thebibliography}
