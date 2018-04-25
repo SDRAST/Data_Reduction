@@ -22,9 +22,15 @@ def signal_handler(signal, frame):
   """  
   print 'You pressed Ctrl+C!'
   socket.close()
-  reader.terminate()
+  try:
+    reader.terminate()
+  except AttributeError:
+    logger.error("signal_handler: no reader to terminate")
   for count in range(10):
-    worker[count].terminate()
+    try:
+      worker[count].terminate()
+    except AttributeError:
+      logger.error("signal_handler: no %s to terminate", worker[count])
   print "Total",time.time()-begin,"s"
   sys.exit(0)
 
@@ -39,16 +45,17 @@ def _open_socket(host=IP, port=60000):
     logger.info("_open_socket: socket bound")
     return s
 
-def get_packet(socket, unpacker_queue):
+def get_packet(socket, unpacker_queues):
   """
   gets packets and assigns them to unscramblers
   """
   while True:
     try:
-      for count in range(10000):
-        data, addr = socket.recvfrom(pkt_size)
-        unpacker_queue.put(data)
-      self.logger.debug("get_packet: for %s", unpacker_queue)
+      for worker in range(10):
+        logger.debug("get_packet: getting data for worker %d", worker)
+        for count in range(10000):
+          data, addr = socket.recvfrom(pkt_size)
+          unpacker_queues[worker].put(data)
     except KeyboardInterrupt:
       # nothing to do; signal_handler takes care of it
       pass
@@ -71,29 +78,34 @@ def unscramble_packet(unpacker_queue, ordered_queue):
       return power, kurt
 
     while True:
-      try:
-        pkt_buf = unpacker_queue.get()
-        result = unpack_from(pkt_fmt, pkt_buf)
-        pkt = {}
-        pkt['hdr'] = result[:8]
-        pkt['pkt cnt sec'] = result[8]
-        pkt['sec cnt'] = result[9]
-        pkt['raw pkt cnt'] = result[10]
-        data = result[11:]
-        pkt['pwr'], pkt['krt'] = unscramble(data)
-        logger.debug("get_packet: unscrambled packet %d", pkt['raw pkt cnt'])
-        ordered_queue.put(pkt)
-      except (KeyboardInterrupt):
-        # wait for reader to finish
-        pass
+      count = 10000
+      one_second = []
+      while count:
+        try:
+          pkt_buf = unpacker_queue.get()
+          result = unpack_from(pkt_fmt, pkt_buf)
+          pkt = {}
+          pkt['hdr'] = result[:8]
+          pkt['pkt cnt sec'] = result[8]
+          pkt['sec cnt'] = result[9]
+          pkt['raw pkt cnt'] = result[10]
+          data = result[11:]
+          pkt['pwr'], pkt['krt'] = unscramble(data)
+          one_second.append(pkt)
+          count -= 1
+        except (KeyboardInterrupt):
+          # wait for reader to finish
+          pass
+      ordered_queue.put(one_second)
+      logger.debug("get_packet: unscrambled 10000 packets")
+
 
 if __name__ == "__main__":
   logging.basicConfig()
   mylogger = logging.getLogger()
-  mylogger.setLevel(logging.DEBUG)
+  mylogger.setLevel(logging.INFO)
 
   socket = _open_socket()
-  in_queue = Queue()
   ordered_queue = Queue()
 
   unpacker_queues = {} # one unpacker_queue for each worker
@@ -101,7 +113,7 @@ if __name__ == "__main__":
   for count in range(10):
     unpacker_queues[count] = Queue()
     worker[count] = Process(target=unscramble_packet,
-                            args=(in_queue, unpacker_queues[count]))
+                            args=(unpacker_queues[count], ordered_queue))
   reader = Process(target=get_packet, args=(socket, unpacker_queues))
 
   begin = time.time()
@@ -111,14 +123,16 @@ if __name__ == "__main__":
     mylogger.debug("started %d", count)
     time.sleep(0.1)
   reader.start() # get all the others going before starting the reader
-  self.logger.debug("reader started")
+  mylogger.debug("reader started")
 
   one_second = []
-  try:
-    one_second.append(ordered_queue.get())
-    print "got one_second"
-  except KeyboardInterrupt:
-    pass
+  not_done = True
+  while not_done:
+    try:
+      one_second.append(ordered_queue.get())
+      print "got one_second"
+    except KeyboardInterrupt:
+      not_done = False
   
   reader.join()
   for count in range(10):
