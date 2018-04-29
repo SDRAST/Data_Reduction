@@ -1558,7 +1558,7 @@ class DSNFITSexaminer(object):
           # has STOKES dimension
           props["num beams"] = 1     # no beam axis
           props["full Stokes"] = True
-          if 'IFSPECTR' in self.data.columns.names:
+          if 'TSYS' in self.data.columns.names:
             props["num IFs"] = 2
             IFspecshape = self.data['IFSPECTR'][0].shape
             props["num IFspec chans"] = int(IFspecshape[-1])
