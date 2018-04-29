@@ -214,8 +214,8 @@ class DSNFITSexaminer(object):
       obs_freqs   - non-redundant list of observing frequencies in table
       parent      - the DSNFITSexaminer object to which this belongs
       props       - table properties
-      rows        - numbers for rows in the table
-      row_keys    - ordered list of row numbers
+      rows        - ordered list of rows with valid data
+      acs_rows    - ordered list of rows for scans which have all their cycles
       scan_keys   - ordered list of scan numbers
       sources     - non-redundant list of sources in table
       timestr     - HH:MM
@@ -325,20 +325,17 @@ class DSNFITSexaminer(object):
       * each on-source or off-source position gets its own scan 
       """
       # I suspect the following works because all are the same
-      indices_for_nonzero_scans = self.data['SCAN'].nonzero()[0]
-      indices_for_nonzero_cycles = self.data['CYCLE'].nonzero()[0]
       indices_for_nonzero_freqs = self.data['OBSFREQ'].nonzero()[0]
+      indices_for_nonzero_cycles = self.data['CYCLE'].nonzero()[0]
       indices_for_OK_obsmodes = numpy.where(self.data['OBSMODE'] != "")[0]
-      # (might need to check other columns)
-      #row_indices = numpy.intersect1d(indices_for_nonzero_scans,
-      #                                indices_for_nonzero_cycles)
       row_indices = self.data['SCAN'].nonzero()[0]
       row_indices = numpy.intersect1d(row_indices, indices_for_nonzero_freqs)
+      row_indices = numpy.intersect1d(row_indices, indices_for_nonzero_cycles)
       row_indices = numpy.intersect1d(row_indices, indices_for_OK_obsmodes)
       self.rows = row_indices
-      logger.debug("get_table_stats: rows with valid data: %s", row_indices)
+      logger.debug("get_table_stats: rows with valid data: %s", self.rows)
   
-      self.cycle_keys = list(numpy.unique(self.data['CYCLE'][row_indices]))
+      self.cycle_keys = list(numpy.unique(self.data['CYCLE'][self.rows]))
       try:
         self.cycle_keys.remove(0)
       except ValueError:
@@ -356,7 +353,8 @@ class DSNFITSexaminer(object):
         self.logger.warning(
         "get_table_stats: number of cycles not equal to number of subchannels")
   
-      scan_keys = numpy.unique(self.data['SCAN'][row_indices])
+      # scans with valid data for at least one cycle
+      scan_keys = numpy.unique(self.data['SCAN'][self.rows])
       num_scans = len(scan_keys)
   
       n_rows = num_scans * num_cycles
@@ -369,7 +367,8 @@ class DSNFITSexaminer(object):
         complete_scans = []
         for scan in scan_keys:
           # select the rows with non-zero CYCLE for each of the scans
-          num_rows = len(self.data['CYCLE'][self.data['SCAN'] == scan])
+          scan_rows = numpy.where(self.data['SCAN'] == scan)[0]
+          num_rows = len(self.data['CYCLE'][scan_rows].nonzero()[0])
           if num_rows == num_cycles:
             complete_scans.append(scan)
         logger.debug("get_table_stats: complete scans: %s", complete_scans)
@@ -380,14 +379,14 @@ class DSNFITSexaminer(object):
           if this_scan in complete_scans:
             complete_scan_rows.append(row)
         self.scan_keys = list(complete_scans)
-        self.row_keys = complete_scan_rows
+        self.acs_rows = complete_scan_rows
       else:
         # only one cycle per scan
         self.scan_keys = list(scan_keys)
-        self.row_keys = list(row_indices)
-      self.logger.debug("get_table_stats: complete scans: %s", self.scan_keys)
-      self.logger.debug("get_table_stats: complete rows: %s", self.row_keys)
-      self.obsmodes = numpy.unique(self.data['OBSMODE'][self.row_keys])
+        self.acs_rows = list(row_indices)
+      self.logger.debug("get_table_stats: rows with complete scans: %s",
+                        self.acs_rows)
+      self.obsmodes = numpy.unique(self.data['OBSMODE'][self.acs_rows])
     
     def report_table(self):
       """
@@ -486,7 +485,7 @@ class DSNFITSexaminer(object):
       @param trimmed : return tuple with 'RA' and 'dec' indices removed (always 0)
       @type  trimmed : bool
       """
-      scan_idx = self.scan_keys.index(scan)
+      scan_idx = list(self.scans).index(scan)
       cycle_idx = self.cycle_keys.index(cycle)
       beam_idx = beam-1
       IF_idx = pol-1
@@ -1031,7 +1030,7 @@ class DSNFITSexaminer(object):
       Example::
         In [67]: tb0.data['SPECTRUM'].shape
         Out[67]: (12, 2, 22, 2, 1, 1, 32768)
-        In [68]: specs = tb0.get_spectra(tb0.row_keys)
+        In [68]: specs = tb0.get_spectra(tb0.acs_rows)
         In [69]: specs.shape
         Out[69]: (12, 2, 22, 2, 32768)
         
@@ -1090,7 +1089,7 @@ class DSNFITSexaminer(object):
       Example::
         In [70]: tb0.data['SPECTRUM'].shape
         Out[70]: (12, 2, 22, 2, 1, 1, 32768)
-        In [71]: norms = tb0.normalized_beam_diff(tb0.row_keys)
+        In [71]: norms = tb0.normalized_beam_diff(tb0.acs_rows)
         In [72]: norms.shape
         Out[72]: (12, 22, 2, 32768)
       This removes the beam axis.
@@ -1140,7 +1139,7 @@ class DSNFITSexaminer(object):
       Example::
         In [70]: tb0.data['SPECTRUM'].shape
         Out[70]: (12, 2, 22, 2, 1, 1, 32768)
-        In [74]: bpsw0 = tb0.BPSW_spectra(tb0.row_keys)
+        In [74]: bpsw0 = tb0.BPSW_spectra(tb0.acs_rows)
         In [75]: bpsw0.shape
         Out[75]: (6, 22, 2, 32768)
       The rows were reduced by pairs of one on-source and one off-source.
@@ -1149,7 +1148,7 @@ class DSNFITSexaminer(object):
       beam 1 system temperatures for the 22H sub-band. Two power meters were
       assigned to the two pols of beam 2.  To construct a Tsys array which
       uses the beam 2 data for both beam difference spectra, do this::
-        In [76]: tb0.data['TSYS'][tb0.row_keys].shape
+        In [76]: tb0.data['TSYS'][tb0.acs_rows].shape
         Out[76]: (12, 2, 22, 2, 1, 1, 1)
         In [77]: tsys0 = (tb0.data['TSYS'][::2,1,:,:,0,0] \
                         + tb0.data['TSYS'][1::2,1,:,:,0,0])/2
@@ -1396,7 +1395,7 @@ class DSNFITSexaminer(object):
       """
       """
       if rows == []:
-        rows = self.row_keys
+        rows = self.acs_rows
       scanave, Tsys, intgr = self.scans_average(rows)
       subset = self.extract_window(rows, data=scanave, Tsys=Tsys,intgr=intgr,
                                    xlimits=window, frame=frame, source=source)
@@ -1607,7 +1606,7 @@ class DSNFITSexaminer(object):
       if rows:
         pass
       else:
-        rows = self.row_keys
+        rows = self.acs_rows
       # the nearest tone below the center frequency
       for row in rows:
         freq_offset = self.data['OBSFREQ'][row] - \
@@ -1812,7 +1811,7 @@ class DSNFITSexaminer(object):
       self.logger.debug("get_good_wx_data: expanded TSYS dict is %s",
                         good_data['TSYS'])
       # process all scans
-      for row in self.row_keys:
+      for row in self.acs_rows:
         # these are simple columns with multiple dimensions
         midnight_unixtime = time.mktime(time.strptime(
                                        self.data['DATE-OBS'][row], "%Y/%m/%d"))

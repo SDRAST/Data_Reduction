@@ -40,6 +40,7 @@ Out[11]: ['start', 'datafile', 'end', 'source', 'EXPOSURE']
 In [12]: specdata['chan 01'][113]['data'].shape
 Out[12]: (131072, 1, 1, 4)
 """
+import io
 import logging
 import numpy
 import cPickle as pickle
@@ -58,6 +59,9 @@ logger = logging.getLogger(__name__)
 def get_channel_IDs(metadata):
   """
   get the channel IDs
+  
+  @param metadata : result from parse_scan_files
+  @type  metadata :
   """
   chan_keys = []
   first_scan = metadata.keys()[0]
@@ -204,7 +208,6 @@ def read_FFT_file(datafilename):
   """
   try:
     datafile = open(datafilename,"r")
-    logger.debug("read_FFT_file: getting data file %s", datafile)
   except IOError, details:
     # Probably missing FFT files
     logger.warning("read_FFT_file: no FFT data for because %s", str(details))
@@ -326,3 +329,30 @@ def get_sources(scans, noref=True):
   last_scan[source] = scan        
   return sources, first_scan, last_scan
 
+def get_one_spectrum(filename, index):
+  """
+  get one spectrum from a multi-spectrum FFT file
+  """
+  bytes_per_spectrum = 1028097
+  FFTfile = open(filename, 'r')
+  # position to the desired spectrum
+  FFTfile.seek(index*bytes_per_spectrum)
+  databuf = FFTfile.read(bytes_per_spectrum)
+  FFTfile.close()
+  file_in_memory = io.BytesIO(databuf)
+  dtype = [('freq', '<i4'),
+           ('IF1-ps', '<i4'), 
+           ('IF2-ps', '<i4'), 
+           ('IF1-phase', '<i4'), 
+           ('IF2-phase', '<i4'), 
+           ('I', '<i4'), 
+           ('Q', '<i4'), 
+           ('U', '<i4'), 
+           ('V', '<i4'), 
+           ('P', '<i4'), 
+           ('count', '<i4'), 
+           ('index', '<i4')]
+  data = numpy.loadtxt(file_in_memory,dtype=dtype)
+  return data
+  
+  
