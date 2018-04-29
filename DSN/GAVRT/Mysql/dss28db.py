@@ -14,25 +14,42 @@ The server has these databases::
  'gavrt_sources'.
 
 Database 'dss28_eac' has these tables::
- 'five_point',
- 'raster',
- 'raster_cfg',
- 'rss_cfg',
- 'seti_cfg',
- 'seti_frame',
- 'weather',
- 'xpwr',
- 'xpwr_cfg',
- 'xscan'
+  In [17]: dbplotter.get_public_tables()
+  Out[17]: 
+  (('angles',),
+   ('chan_cfg',),
+   ('conv_cfg',),
+   ('fiber_cfg',),
+   ('five_point',),
+   ('pointing_cfg',),
+   ('raster',),
+   ('raster_cfg',),
+   ('rf_cfg',),
+   ('rss_cfg',),
+   ('seti_cfg',),
+   ('seti_frame',),
+   ('tlog',),
+   ('weather',),
+   ('xpwr',),
+   ('xpwr_cfg',),
+   ('xscan',),
+   ('zplot',),
+   ('zplot_cfg',))
 
 Database 'gavrt_sources' has these tables::
  'catalog',
  'class',
  'source'
 
+'raster' columns::
+  raster_id,
+  raster_cfg_id, year, doy, utc, epoch, xdecoff, decoff, ha, dec, tsrc
 'rss_cfg' columns::
   rss_cfg_id,
   year, doy, utc, chan, sky_freq, feed, pol, nd, if_mode, if_bw, bb_bw, fiber_chan
+'source' columns::
+  source_id, catalog_id, class_id,
+  name, RA, Dec, size_dec, size_xdec, reference, aka
 'weather' columns::
   weather_id,
   datetime, pressure, temp, humidity, wind_speed, wind_dir
@@ -46,17 +63,15 @@ Database 'gavrt_sources' has these tables::
   xscan_id, xpwr_cfg_id,
   year, doy, utc, epoch, tsrc, stdev, bl_stdev, az, az_offset, el, el_offset,
   ha, dec, offset, bw, corr
-'source' columns::
-  source_id, catalog_id, class_id,
-  name, RA, Dec, size_dec, size_xdec, reference, aka
 """
+import cPickle as pickle
 import datetime
 import ephem
 import logging
 import MySQLdb
 import os
-import pickle
 import stat
+import time
 
 from math import cos, pi
 from matplotlib.mlab import griddata
@@ -71,12 +86,18 @@ logger = logging.getLogger(__name__)
 import Astronomy as A
 
 from MonitorControl.Configurations.coordinates import DSS
+from Radio_Astronomy import HPBW
 
 _host,_user,_pw = pickle.load(open(os.environ['HOME']+"/.GAVRTlogin.p",
                                      "rb" ))
 dss28 = DSS(28)
 longitude = -dss28.long*180/pi
 latitude = dss28.lat*180/pi
+f_max = 16. # GHz
+wl_min = f_max/300
+taper = 12 # dB
+hpbw = HPBW(taper, wl_min, 34)*180/pi # deg
+default_step = hpbw/3.
 
 class Map(object):
   """
@@ -117,19 +138,38 @@ class Map(object):
       self.name = "map %d" % self.cfg_id
     self.logger.debug("__init__: map for configuration %s is %s",
                       self.session, self.name)
+    # this applies to the default channel.
     self.cfg = self.get_map_config()
-    # Note that the following applies to the default channel.
-    self.rss_cfg = {}
-    self.rss_cfg[self.cfg['chan']] = self.session.db.get_as_dict(
-                                  "select * from rss_cfg where rss_cfg_id = " +
-                                  str(self.cfg['rss_cfg_id']) + ";")
+    # this is used by get_raster_data
     self.get_raster_keys()
+    # this defines 'start' and 'end'
     self.get_raster_data()
-    self.map_data = {}
-     
+    # gets from 'tlog' the channels used between 'start' and 'end'
+    self.get_active_channels()
+         
   def get_map_config(self):
     """
     returns a dict with the raster map configuration
+    
+    This is the map generated for display during the observing session.  The
+    observer selects a channel.  Other channel data are recorded in the t-logs
+    for the channels enabled.
+    
+    Example::
+      In [9]: map56.get_map_config()
+      Out[9]: 
+      {'chan': 4.0,
+       'doy': 233.0,
+       'epoch': 1503329279.0,
+       'freq': 8000.0,
+       'raster_cfg_id': 56.0,
+       'rate': 0.035000000000000003,
+       'rss_cfg_id': 109708.0,
+       'source_id': 66.0,
+       'step': 0.035000000000000003,
+       'utc': datetime.timedelta(0, 55679),
+       'year': 2017.0}
+
     """
     cfg = self.session.db.get_as_dict(
         "select * from raster_cfg where raster_cfg_id = " + \
@@ -148,6 +188,7 @@ class Map(object):
                                                           str(self.cfg_id)+";")
     rasterkeys.sort()
     self.raster_keys = rasterkeys[:,0]
+    return self.raster_keys
   
   def get_raster_data(self):
     """
@@ -169,10 +210,25 @@ class Map(object):
 
   def get_active_channels(self):
     """
+    returns the receiver channels that were active between 'start' and 'end'
+    
+    Example::
+      In [5]: map56.get_active_channels()
+      Out[5]: [2, 4]
     """
-    response = self.session.db.get("select chan from tlog where epoch >= " + 
+    response = self.session.db.get("select chan from tlog where epoch >= " +
                        str(self.start) + " and epoch <=" + str(self.end) + ";")
-    self.channels = unique(list(response.flatten()))
+    self.channels = unique(list(response[:].flatten()))
+    self.rss_cfg = {}
+    for chan in self.channels:
+      response = self.session.db.get(
+                       "select rss_cfg_id from tlog where chan = " +str(chan)
+                       + " and epoch >= " + str(self.start) + " and epoch <="
+                       + str(self.end) + ";")
+      rss_cfg_id = unique(list(response[:,0].flatten()))[0]
+      self.rss_cfg[chan] = self.session.db.get_as_dict(
+                                  "select * from rss_cfg where rss_cfg_id = " +
+                                  str(rss_cfg_id) + ";")
     return self.channels
     
   def maps_from_tlogs(self):
@@ -185,6 +241,12 @@ class Map(object):
       chan_list = self.channels
     except:
       self.get_active_channels()
+    self.map_data = {}
+    if self.channels:
+      pass
+    else:
+      self.logger.warning("maps_from_tlogs: this map has no active channels")
+      return None
     for channel in self.channels:
       ch_index = self.channels.index(channel)
       query = "select tlog.epoch, tlog.az, tlog.el, tlog.top, tlog.rss_cfg_id" +               \
@@ -199,7 +261,7 @@ class Map(object):
                                   "select * from rss_cfg where rss_cfg_id = " +
                                   str(int(data[:,4][0])) + ";")
       if ch_index == 0:
-        # these are common to all channels
+        # first channel only: these are common to all channels
         self.map_data['UNIXtime']    = data[:,0].astype(float)
         self.map_data['azimuth']     = data[:,1].astype(float)
         self.map_data['elevation']   = data[:,2].astype(float)
@@ -207,6 +269,8 @@ class Map(object):
         self.map_data['declination'] = []
         self.map_data['MPL_datenum'] = []
         self.map_data['VFC_counts']  = {}
+        self.map_data['freq']        = {}
+        self.map_data['pol']         = {}
         for index in range(len(self.map_data['UNIXtime'])):
           dt = datetime.datetime.utcfromtimestamp(
                                      self.map_data['UNIXtime'][index])
@@ -227,19 +291,28 @@ class Map(object):
           self.map_data['MPL_datenum'].append(date2num(dt))
       # only the VFC counts differ between channels
       self.map_data['VFC_counts'][channel]  = data[:,3].astype(float)
+      self.map_data['freq'][channel] = self.rss_cfg[channel]['sky_freq']
+      self.map_data['pol'][channel] = self.rss_cfg[channel]['pol'][0].upper()
     return self.map_data
 
   def center_map(self, xdec_ofst=0., dec_ofst=0.):
     """
-    Generates a map in relative coordinates relative to a source
+    Generates a map in coordinates relative to a source
 
     @param body : source at map center
     @type  body : ephem source instance
 
     @return: (dxdecs,ddecs) in degrees
     """
-    if self.map_data == {}:
+    try:
+      self.map_data.keys()
+    except AttributeError:
       self.maps_from_tlogs()
+    if self.map_data.has_key('MPL_datenum'):
+      pass
+    else:
+      # 'tlog' did not have good data
+      return None
     sun = ephem.Sun()
     self.map_data['dec_offset'] = []
     self.map_data['xdec_offset'] = []
@@ -258,6 +331,16 @@ class Map(object):
   
   def regrid(self, width=1.0, height=1.0, step=None):
     """
+    converts a map from observed coordinates to map coordinates
+    
+    @param width : map width in deg
+    @type  width : float
+    
+    @param height : map height in deg
+    @type  height : float
+    
+    @param step : map step size in deg
+    @type  step : float
     """
     if step == None:
       # use the original step size
@@ -305,13 +388,78 @@ class Session(object):
       self.logger.debug("get_maps: getting %d", map_id)
       self.maps[map_id] = Map(self, map_id)
     return self.maps
+    
+  def make_directory(self):
+    """
+    show maps in the database for this session
+    """
+    map_keys = self.maps.keys()
+    map_keys.sort()
+    response = ["Map YYYY/DDD -start-- --end--- chan -freq pol"]
+    txt_format = "%3d %4d/%03d %02d:%02d:%02d %02d:%02d:%02d  %2d  %5d %s"
+    for key in map_keys:
+      start = time.gmtime(self.maps[key].start)
+      end   = time.gmtime(self.maps[key].end)
+      for channel in self.maps[key].channels:
+        freq = self.maps[key].rss_cfg[channel]['sky_freq']
+        pol = self.maps[key].rss_cfg[channel]['pol']
+        txt = txt_format % (key, start.tm_year, start.tm_yday,
+                            start.tm_hour, start.tm_min, start.tm_sec,
+                            end.tm_hour, end.tm_min, end.tm_sec,
+                            channel, freq, pol)
+        response.append(txt)
+    return response
 
+  def save_map_data(self, mapkeys=None):
+    """
+    create a dict with the map data from the designated images
+    
+    @param mapkeys : numbers of the maps (default: all)
+    @type  mapkeys : list of int
+    """
+    if mapkeys:
+      self.logger.info("show_images:")
+    else:
+      mapkeys = self.maps.keys()
+      mapkeys.sort()
+    for key in mapkeys:
+      try:
+        self.maps[key].map_data.keys()
+        self.logger.debug("save_map_data: mapdata[%d] exists", key)
+      except AttributeError:
+        self.maps[key].maps_from_tlogs()
+        self.logger.debug("save_map_data: loaded mapdata[%d]", key)
+      if self.maps[key].map_data.has_key('dec_offset'):
+        self.logger.debug("save_map_data: mapdata[%d] is centered", key)
+      else:
+        self.maps[key].center_map()
+        self.logger.debug("save_map_data: mapdata[%d] has been centered", key)
+      if self.maps[key].map_data.has_key('grid_x'):
+        self.logger.debug("save_map_data: mapdata[%d] is regridded", key)
+      else:
+        self.maps[key].regrid()
+        self.logger.debug("save_map_data: mapdata[%d] has been regridded", key)
+    export = {}
+    for key in mapkeys:
+      export[key] = self.maps[key].map_data
+    filename = "maps-%4d-%03d.pkl" % (self.year, self.doy)
+    exportfile = open(filename, "w")
+    pickle.dump(export, exportfile)
+    exportfile.close()
+    return export
+    
+    
 
 class DSS28db(BaseDB):
   """
   subclass for the DSS-28 EAC database
   
   provides methods for handling tables
+  
+  Attributes::
+    logger   - logging.Logger object
+    receiver - receivers which provide data
+    sessions - dict of sessions obtained with 'get_session'
   """
   def __init__(self, host=_host, user=_user, pw=_pw,
                      name='dss28_eac', port=3306):
