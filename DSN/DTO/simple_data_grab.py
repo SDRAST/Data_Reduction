@@ -1,3 +1,8 @@
+"""
+read packets from 10Gbe port, reformat, and store to disk
+
+
+"""
 import logging
 import numpy
 import signal
