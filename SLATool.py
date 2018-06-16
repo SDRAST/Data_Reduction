@@ -859,7 +859,7 @@ class SessionAnalyzer(object):
           raise RuntimeError("multiple observing modes not yet supported")
         num_scans = len(table.scan_keys)
         num_cycles = len(table.cycle_keys)
-        num_rows = len(table.row_keys)
+        num_rows = len(table.acs_rows)
         num_beams = table.props['num beams']
         num_pols = table.props["num IFs"]
         # collect the diagnostic spectra
