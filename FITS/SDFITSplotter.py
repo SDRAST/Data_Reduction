@@ -64,7 +64,7 @@ plotsymbols = ['o','v','^','<','>',
                '+',"x","d","|","_"]
 
 fontP = FontProperties()
-fontP.set_size('x-small')      
+fontP.set_size('xx-small')      
 
 seconds_formatter = DateFormatter("%H:%M:%S")
 
@@ -178,6 +178,11 @@ class DSNFITSplotter(DSNFITSexaminer):
       fig.set_size_inches(ncols*width, nrows*height, forward=True)
       fig.subplots_adjust(wspace=0, hspace=0) # no space between plots in a row
       fig.suptitle(title)
+      # adjust position to make room for figure legend.
+      subplot_width = 0.8/ncols
+      subplot_margin = 0.1*subplot_width
+      subplot_offset = subplot_margin - 0.1
+      
       return fig, ax
 
     def init_multiplots(self, title, nfigs, nrows, ncols, size=(4,4),
@@ -227,7 +232,7 @@ class DSNFITSplotter(DSNFITSexaminer):
       Otherwise there is just a column for each pol.
       """
       if rows == None:
-        spectra = self.get_spectra(self.row_keys)
+        spectra = self.get_spectra(self.acs_rows)
       else:
         spectra = self.get_spectra(rows)
       # lay out the figure
@@ -370,7 +375,7 @@ class DSNFITSplotter(DSNFITSexaminer):
       """
       # gets spectra from SPECTRUM column with RA and dec indices removed
       if rows == None:
-        spectra = self.get_spectra(self.row_keys)
+        spectra = self.get_spectra(self.acs_rows)
       else:
         spectra = self.get_spectra(rows)
       num_graphs = len(spectra)/self.props['num cycles']
@@ -484,11 +489,11 @@ class DSNFITSplotter(DSNFITSexaminer):
       if spectra:
         npairs = len(spectra)
       elif rows :
-        rows = self.row_keys
+        rows = self.acs_rows
         spectra = self.BPSW_spectra(rows)
         npairs = len(spectra)
       else:
-        rows = self.row_keys
+        rows = self.acs_rows
         spectra = self.BPSW_spectra(rows)
         npairs = len(spectra)
       pairs = range(npairs)
@@ -582,10 +587,14 @@ class DSNFITSplotter(DSNFITSexaminer):
             ax[col].set_title(label)
             self.logger.debug("plot_PSSW_spectra: subch %d beam %d pol %d",
                               cycle, beam, pol)
-            on_scans = numpy.unique(self.data['SCAN'][numpy.where(
-                                  self.data['SIG'][self.row_keys] == True)[0]])
-            of_scans = numpy.unique(self.data['SCAN'][numpy.where(
-                                 self.data['SIG'][self.row_keys] == False)[0]])
+            #on_scans = numpy.unique(self.data['SCAN'][numpy.where(
+            #                      self.data['SIG'][self.acs_rows] == True)[0]])
+            #of_scans = numpy.unique(self.data['SCAN'][numpy.where(
+            #                     self.data['SIG'][self.acs_rows] == False)[0]])
+            on_indices = numpy.where(self.data['SIG'] == True)[0]
+            of_indices = numpy.where(self.data['SIG'] == False)[0]
+            on_scans = numpy.unique(self.data['SCAN'][numpy.intersect1d(on_indices, self.rows)])
+            of_scans = numpy.unique(self.data['SCAN'][numpy.intersect1d(of_indices, self.rows)])
             num_pairs = min(len(on_scans), len(of_scans))
             for index in range(num_pairs):
               on_scan = on_scans[index]
@@ -698,7 +707,7 @@ class DSNFITSplotter(DSNFITSexaminer):
                 lbl = label+" off"
                 ls = "--"
                 index = 2+cycle_idx
-              plot(self.data['TSYS'][index:len(self.row_keys):stride,
+              plot(self.data['TSYS'][index:len(self.acs_rows):stride,
                                      pol_idx,0,0,0], ls=ls, label=lbl)
       grid()
       legend(loc='best')
