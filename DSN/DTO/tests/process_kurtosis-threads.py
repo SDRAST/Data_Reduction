@@ -1,4 +1,6 @@
 """
+Prototype for data_server.py in MonitorControl/BackEnds
+
 This grabs data from the roach ten times.  Each time it reads 10,000 packets
 and stores them in an array called 'packet'. It saves pkt_cnt_sec from
 the first and the last packet in a list 'pkt_cnt_sec'.  Likewise it stores
