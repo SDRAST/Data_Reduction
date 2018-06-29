@@ -1,13 +1,36 @@
 import cPickle
+import glob
 import logging
 import numpy
+import socket
 
 from pylab import *
+
+from local_dirs import wvsr_dir
 
 logger = logging.getLogger(__name__)
 
 datapath = "/data/HDF5/dss14/2018/"
 filename = datapath + "169/mon-2018-169-004039.bin"
+
+def get_data_path(workstation, dss, year, doy):
+  """
+  """
+  thishost = socket.gethostname()
+  if thishost == workstation:
+    datapath = wvsr_dir
+  else:
+    workstationpath = "/home/kuiper/mnt/"+workstation
+    if thishost == 'dto':
+      datapath = workstationpath+wvsr_dir
+    else:
+      dtopath = "/home/kuiper/mnt/dto"
+      if thishost == 'kuiper':
+        datapath = dtopath +workstationpath+ wvsr_dir
+      else:
+        return None
+  datapath += "HDF5/dss"+str(dss)+"/"+str(year)+("/%03d/" % doy)
+  return datapath
 
 class KurtspecMonitor(object):
   """
@@ -90,8 +113,7 @@ class KurtspecMonitor(object):
     """
     """
     self.extract_dynamic_spectra()
-    fig, ax = subplots(rows=2, columns=1, figsize=(30,12))
-    figure(figsize=(30,12))
+    fig, ax = subplots(nrows=2, ncols=1, figsize=(30,12))
     ax[0].imshow(self.dyn_spec[type]['I'])
     title(type+" I")
     colorbar()
@@ -101,5 +123,11 @@ class KurtspecMonitor(object):
     show()
     
 if __name__ == "__main__":
-    mon = KurtspecMonitor()
+  workstation = "gpu2"
+  dss=14
+  year=2018
+  doy=179
+  datapath = get_data_path(workstation, dss, year, doy)
+  files = glob.glob(datapath+"*.pkl")
+  mon = KurtspecMonitor(files[0])
     
