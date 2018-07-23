@@ -1,5 +1,8 @@
 """
 make session index page
+
+At the moment this only displays the results for the I channel because the
+Q channel gets its data from the same input
 """
 import cPickle
 import glob
@@ -35,7 +38,8 @@ def make_grid(title="Table Title", files=None):
   html += "</TABLE>\n"
   return html
 
-def find_good_signals(datapath, workpath):
+
+def find_good_signals(datapath, session_path):
   """
   select I inputs only
   
@@ -44,13 +48,16 @@ def find_good_signals(datapath, workpath):
   @param filename : name of a session's 'spectra*' file
   @type  filename : str
   """
-  session_data = glob.glob(session_path+"spectra-*.hdf5")
+  logger.debug("find_good_signals: in %s", datapath+"mon-*.hdf5")
+  session_data = glob.glob(datapath+"mon-*.hdf5")
   logger.debug("find_good_signals: found %s", session_data)
   good_signals = []
   for filename in session_data:
     data = h5py.File(filename)
-    logger.debug("find_good_signals: signals are %s", data['signals'])
-    good_signals.append(data['signals']['I'])
+
+    if data.attrs['channel'] == "I":
+      logger.debug("find_good_signals: signals are %s", data.attrs['signal'])
+      good_signals.append(data.attrs['signal'])
     data.close()
   return good_signals
 
@@ -118,20 +125,36 @@ if __name__ == "__main__":
   # get the session path
   projectdatapath, projworkpath, datapath = \
                     get_obs_dirs("PESD", args.dss, year, doy)
+<<<<<<< HEAD
   datapath = path_to_remote(args.workstation, projworkpath)
   mylogger.debug("project data path: %s", projectdatapath)
   mylogger.debug("project work path: %s", projworkpath)
   mylogger.debug("data path: %s", datapath)
+=======
+  mylogger.debug("project data path: %s", projectdatapath)
+  mylogger.debug("project work path: %s", projworkpath)
+  datapath = path_to_remote(args.workstation, projectdatapath)
+  mylogger.debug("data path: %s", datapath)
+  sessionpath = path_to_remote(args.workstation, projworkpath)
+>>>>>>> 206bc86491576ebbd374be3d37434f72b02e7fbc
   
   # select signals to display
   if args.use_only:
     good_signals = args.use_only.split(',')
   else:
+<<<<<<< HEAD
     good_signals = find_good_signals(datapath)
   
   # extract the signal information
   #    passband files
   pbfiles = glob.glob(datapath+"thumbnails/passband*.png")
+=======
+    good_signals = find_good_signals(datapath, projworkpath)
+  
+  # extract the signal information
+  #    passband files
+  pbfiles = glob.glob(sessionpath+"thumbnails/passband*.png")
+>>>>>>> 206bc86491576ebbd374be3d37434f72b02e7fbc
   pbfiles.sort()
   #    get observed signals
   signames = []
@@ -150,6 +173,7 @@ if __name__ == "__main__":
   for signame in signames:
     html += "<HR/>" 
     #   get the images
+<<<<<<< HEAD
     pfiles = glob.glob(datapath+"thumbnails/specgram-power-"+signame+"*.png")
     pfiles.sort()
     mylogger.debug("found: %s", pfiles)
@@ -161,6 +185,19 @@ if __name__ == "__main__":
     mylogger.debug("found: %s", kfiles)
     # get the spectra
     ktfiles = glob.glob(datapath+"thumbnails/kurtosis-"+signame+"*.png")
+=======
+    pfiles = glob.glob(sessionpath+"thumbnails/specgram-power-"+signame+"*.png")
+    pfiles.sort()
+    mylogger.debug("found: %s", pfiles)
+    pbfiles = glob.glob(sessionpath+"thumbnails/passband-"+signame+"*.png")
+    pbfiles.sort()
+    mylogger.debug("found: %s", pbfiles)
+    kfiles = glob.glob(sessionpath+"thumbnails/specgram-kurtosis-"+signame+"-*.png")
+    kfiles.sort()
+    mylogger.debug("found: %s", kfiles)
+    # get the spectra
+    ktfiles = glob.glob(sessionpath+"thumbnails/kurtosis-"+signame+"*.png")
+>>>>>>> 206bc86491576ebbd374be3d37434f72b02e7fbc
     ktfiles.sort()
   
     # generate the signal images
@@ -204,7 +241,16 @@ if __name__ == "__main__":
     html += "</TABLE>\n"
   
   html += "</HTML>\n"
+<<<<<<< HEAD
   htfile = open(datapath+"index.html","w")
+=======
+  if os.path.exists(sessionpath):
+    pass
+  else:
+    os.makedirs(sessionpath)
+  fullpath = sessionpath+"index.html"
+  htfile = open(fullpath,"w")
+>>>>>>> 206bc86491576ebbd374be3d37434f72b02e7fbc
   htfile.write(html)
   htfile.close()
   
