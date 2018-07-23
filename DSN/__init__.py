@@ -410,3 +410,25 @@ def rx_band(freq):
   else:
     band = None
   return band
+
+def path_to_remote(workstation, local_path):
+  """
+  """
+  thishost = socket.gethostname()
+  if thishost == workstation:
+    # program runs on this host
+    datapath = local_path
+  elif thishost == 'gpu1' or thishost == 'gpu2':
+    return local_path
+  else:
+    workstationpath = "/home/kuiper/mnt/"+workstation
+    if thishost == 'dto':
+      datapath = workstationpath+local_path
+    else:
+      dtopath = "/home/kuiper/mnt/dto"
+      if thishost == 'kuiper':
+        datapath = dtopath +workstationpath+local_path
+      else:
+        return None
+  return datapath
+
