@@ -134,10 +134,11 @@ class KurtspecMonitor(KurtspecSummarizer):
     self.logger.debug("__init__: logger is %s", self.logger.name)
     self.thumbpath = self.session_path + 'thumbnails/'
     self.thumbscale = thumbscale
+    self.logger.debug("__init__: thumbs in %s", self.thumbpath)
     if exists(self.thumbpath):
       pass
     else:
-      os.makedirs(self.thumbpath)
+      os.makedirs(self.thumbpath, mode=0775)
   
   def format_file_name(self, name, UNIXtime):
     """
