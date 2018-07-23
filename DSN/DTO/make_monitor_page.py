@@ -1,7 +1,9 @@
 """
 make session index page
 """
+import cPickle
 import glob
+import h5py
 import logging
 import os
 import sys
@@ -10,6 +12,8 @@ from Data_Reduction import get_obs_dirs
 from Data_Reduction.DSN import path_to_remote
 from support.lists import unique
 from support.logs import get_loglevel, initiate_option_parser, init_logging
+
+logger = logging.getLogger(__name__)
 
 def make_grid(title="Table Title", files=None):
   """
@@ -30,6 +34,25 @@ def make_grid(title="Table Title", files=None):
     html += "\n</TR>"
   html += "</TABLE>\n"
   return html
+
+def find_good_signals(datapath, workpath):
+  """
+  select I inputs only
+  
+  This takes a minute or so to load the data from the pkl file.
+  
+  @param filename : name of a session's 'spectra*' file
+  @type  filename : str
+  """
+  session_data = glob.glob(session_path+"spectra-*.hdf5")
+  logger.debug("find_good_signals: found %s", session_data)
+  good_signals = []
+  for filename in session_data:
+    data = h5py.File(filename)
+    logger.debug("find_good_signals: signals are %s", data['signals'])
+    good_signals.append(data['signals']['I'])
+    data.close()
+  return good_signals
 
 if __name__ == "__main__":
   logging.basicConfig(level=logging.DEBUG)
@@ -53,6 +76,11 @@ if __name__ == "__main__":
                  type = str,
                  default = "PESD",
                  help = "Project code")
+  p.add_argument('-u', '--use_only',
+                 dest = 'use_only',
+                 type=str,
+                 default = None,
+                 help = 'Use only')
   p.add_argument('-w', '--workstation',
                  dest = 'workstation',
                  type = str,
@@ -95,15 +123,25 @@ if __name__ == "__main__":
   mylogger.debug("project work path: %s", projworkpath)
   mylogger.debug("data path: %s", datapath)
   
+  # select signals to display
+  if args.use_only:
+    good_signals = args.use_only.split(',')
+  else:
+    good_signals = find_good_signals(datapath)
+  
   # extract the signal information
   #    passband files
   pbfiles = glob.glob(datapath+"thumbnails/passband*.png")
   pbfiles.sort()
+  #    get observed signals
   signames = []
   for filename in pbfiles:
-    signames.append(os.path.basename(filename).split('-')[1])
+    signame = os.path.basename(filename).split('-')[1]
+    if signame in good_signals:
+      signames.append(signame)
   signames = unique(signames)
   signames.sort()
+  mylogger.debug("signals for this session: %s", signames)
   
   # page header
   html = "<HTML>\n"
@@ -133,6 +171,7 @@ if __name__ == "__main__":
     html += "<CENTER>\n"
     html += "<H2>DSS-%2s %s-band %sCP for %s on %4d/%03d</H1>\n" % \
             (dss, band, pol, args.project, year, doy)
+    html += "<P><A HREF='PESD/background'>Background</A></P>\n"
     html += "<P><A HREF='PESD/aboutKurtosis'>About Kurtosis</A></P>\n"
     html += "<P>Click on any image for full resolution.</P>\n"
     html += "<TABLE BORDER=1>\n"
@@ -165,7 +204,7 @@ if __name__ == "__main__":
     html += "</TABLE>\n"
   
   html += "</HTML>\n"
-  htfile = open(datapath+"/DataQuality.html","w")
+  htfile = open(datapath+"index.html","w")
   htfile.write(html)
   htfile.close()
   
