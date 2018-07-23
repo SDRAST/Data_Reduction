@@ -416,7 +416,10 @@ def path_to_remote(workstation, local_path):
   """
   thishost = socket.gethostname()
   if thishost == workstation:
+    # program runs on this host
     datapath = local_path
+  elif thishost == 'gpu1' or thishost == 'gpu2':
+    return local_path
   else:
     workstationpath = "/home/kuiper/mnt/"+workstation
     if thishost == 'dto':

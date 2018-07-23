@@ -17,7 +17,6 @@ import socket
 import sys
 import time
 
-from collections import OrderedDict
 from os.path import basename, dirname, exists, splitext
 from time import gmtime, strftime
 
@@ -227,6 +226,7 @@ class KurtspecMonitor(KurtspecSummarizer):
     
   def plot_kurtosis(self, save=True, log=True):
     """
+    display a spectrogram of the original data
     """
     times = self.get_MPL_times()
     for start_idx in range(0, len(times), 1800):

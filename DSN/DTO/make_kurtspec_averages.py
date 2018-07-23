@@ -25,6 +25,7 @@ import h5py
 import logging
 import numpy
 import os
+import sys
 import time
 
 from Data_Reduction import get_obs_dirs
@@ -212,15 +213,9 @@ if __name__ == "__main__":
   else:
     mylogger.error(" 'date' is a required argument")
     sys.exit(1)
-  if args.workstation:
-    pass
-  else:
-    mylogger.error(" 'workstation' is a required argument")
-    sys.exit(1)
     
-  rawdatapath = "/data/kurtspec/%4d/%03d/" % (year, doy)
-  datapath = path_to_remote(args.workstation, rawdatapath)
-  mylogger.debug("path for data: %s", datapath)
+  datapath = "/data/kurtspec/%4d/%03d/" % (year, doy)
+    
   files = glob.glob(datapath+"*.hdf5")
   mylogger.debug("found: %s", files)
   
