@@ -1,102 +1,75 @@
 import cPickle
+import h5py
 import logging
 import numpy
 
 from pylab import *
 
-logger = logging.getLogger(__name__)
+from DatesTimes import UnixTime_to_MPL
 
-datapath = "/data/HDF5/dss14/2018/"
-filename = datapath + "169/mon-2018-169-004039.bin"
+logger = logging.getLogger(__name__)
 
 class KurtspecMonitor(object):
   """
   class to examine spectra of 1-sec kurtspec packet averages
   """
-  array_index = {"power":    {"I": 0,
-                               "Q": 2},
-                 "kurtosis": {"I": 1,
-                               "Q": 3}}
-
   def __init__(self, filename=None):
     """
+    initialize a KurtspecMonitor object and optionally open a file
+    
+    If a filename is not given, use 'open_datafile()'
+    
+    @param filename : name of an HDF5 monitor file
     """
     if filename:
-      data_array = self.open_datafile(filename)
+      data = self.open_datafile(filename)
     pass
   
   def open_datafile(self, filename):
     """
+    open an HDF5 datafile
     """
-    dfile = open(filename, "rb+")
-    data = cPickle.load(dfile)
+    data = cf5py.Fil(filename)
     self.data_array = data.reshape(data.shape + (1,))
-    count = 0
-    reading = True
-    while reading:
-      try:
-        data = cPickle.load(dfile)
-        self.data_array = numpy.append(self.data_array, 
-                                       data.reshape(data.shape + (1,)),
-                                       axis=2)
-        count += 1
-        print "\r"+str(count),
-      except EOFError:
-        reading = False
-    dfile.close()
+    self.signal = self.data_array.attrs['signal']
+    self.time = self.data_array['time']
+    self.power = self.data_array['power']
+    self.kurtosis = self.data_array['kurtosis']
     return self.data_array
-
-  def extract_dynamic_spectra(self):
-    """
-    """
-    self.dyn_spec = {}
-    for moment in ["power","kurtosis"]:
-      self.dyn_spec[moment] = {}
-      for inpt in ["I","Q"]:
-        index = KurtspecMonitor.array_index[moment][inpt]
-        if moment == "power":
-          self.dyn_spec[moment][inpt] = numpy.log10(self.data_array[:,index,:])
-        else:
-          self.dyn_spec[moment][inpt] = self.data_array[:,index,:]
-    return self.dyn_spec
     
   def average_power(self, log=False):
     """
+    make dynamic spectra averaged over one second
     """
-    avg_pwr = {}
-    for inpt in ["I","Q"]:
-      index = KurtspecMonitor.array_index["power"][inpt]
-      mean = self.data_array[:,index,:].mean(axis=1)
+    mean_pwr = self.power.mean()
       if log:
-        avg_pwr[inpt] = numpy.log10(mean)
+        return numpy.log10(mean_pwr)
       else:
-        avg_pwr[inpt] = mean
-    return avg_pwr
+        return mean
 
   def plot_spectra(self, log=True):
     """
     Note that this default differs from the one in 'average_power'
     """
     avg_pwr = self.average_power(log=log)
-    figure()
-    plot(avg_pwr['I'], label="I")
-    plot(avg_pwr['Q'], label="Q")
+    mpldates = UnixTime_to_MPL(self.time)
+    fig = figure()
+    plot_date(mpldates, avg_pwr)
     legend()
     grid()
     title("Average Passband")
+    fig.autofmt_xdate()
     show()
 
-  def show_spectrogram(self, type='power'):
+  def show_spectrogram(self, ptype='power'):
     """
+    display a spectrogram of the original data
     """
-    self.extract_dynamic_spectra()
-    fig, ax = subplots(rows=2, columns=1, figsize=(30,12))
-    figure(figsize=(30,12))
-    ax[0].imshow(self.dyn_spec[type]['I'])
-    title(type+" I")
-    colorbar()
-    ax[1].imshow(self.dyn_spec[type]['Q'])
-    title(type+" Q")
+    fig = figure(figsize=(30,12))
+    if ptype == 'power':
+      imshow(self.power)
+    else:
+      imshow(self.kurtosis)
     colorbar()
     show()
     
