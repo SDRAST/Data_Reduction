@@ -116,45 +116,30 @@ if __name__ == "__main__":
   else:
     mylogger.error(" 'dss' is a required argument")
     sys.exit(1)
-  if args.workstation:
-    pass
-  else:
-    mylogger.error(" 'workstation' is a required argument")
-    sys.exit(1)
   
   # get the session path
   projectdatapath, projworkpath, datapath = \
                     get_obs_dirs("PESD", args.dss, year, doy)
-<<<<<<< HEAD
-  datapath = path_to_remote(args.workstation, projworkpath)
+
   mylogger.debug("project data path: %s", projectdatapath)
   mylogger.debug("project work path: %s", projworkpath)
+  if args.workstation:
+    datapath = path_to_remote(args.workstation, projectdatapath)
+    sessionpath = path_to_remote(args.workstation, projworkpath)
+  else:
+    datapath = projectdatapath
+    sessionpath = projworkpath
   mylogger.debug("data path: %s", datapath)
-=======
-  mylogger.debug("project data path: %s", projectdatapath)
-  mylogger.debug("project work path: %s", projworkpath)
-  datapath = path_to_remote(args.workstation, projectdatapath)
-  mylogger.debug("data path: %s", datapath)
-  sessionpath = path_to_remote(args.workstation, projworkpath)
->>>>>>> 206bc86491576ebbd374be3d37434f72b02e7fbc
   
   # select signals to display
   if args.use_only:
     good_signals = args.use_only.split(',')
   else:
-<<<<<<< HEAD
-    good_signals = find_good_signals(datapath)
-  
-  # extract the signal information
-  #    passband files
-  pbfiles = glob.glob(datapath+"thumbnails/passband*.png")
-=======
     good_signals = find_good_signals(datapath, projworkpath)
   
   # extract the signal information
   #    passband files
   pbfiles = glob.glob(sessionpath+"thumbnails/passband*.png")
->>>>>>> 206bc86491576ebbd374be3d37434f72b02e7fbc
   pbfiles.sort()
   #    get observed signals
   signames = []
@@ -173,19 +158,6 @@ if __name__ == "__main__":
   for signame in signames:
     html += "<HR/>" 
     #   get the images
-<<<<<<< HEAD
-    pfiles = glob.glob(datapath+"thumbnails/specgram-power-"+signame+"*.png")
-    pfiles.sort()
-    mylogger.debug("found: %s", pfiles)
-    pbfiles = glob.glob(datapath+"thumbnails/passband-"+signame+"*.png")
-    pbfiles.sort()
-    mylogger.debug("found: %s", pbfiles)
-    kfiles = glob.glob(datapath+"thumbnails/specgram-kurtosis-"+signame+"-*.png")
-    kfiles.sort()
-    mylogger.debug("found: %s", kfiles)
-    # get the spectra
-    ktfiles = glob.glob(datapath+"thumbnails/kurtosis-"+signame+"*.png")
-=======
     pfiles = glob.glob(sessionpath+"thumbnails/specgram-power-"+signame+"*.png")
     pfiles.sort()
     mylogger.debug("found: %s", pfiles)
@@ -197,7 +169,6 @@ if __name__ == "__main__":
     mylogger.debug("found: %s", kfiles)
     # get the spectra
     ktfiles = glob.glob(sessionpath+"thumbnails/kurtosis-"+signame+"*.png")
->>>>>>> 206bc86491576ebbd374be3d37434f72b02e7fbc
     ktfiles.sort()
   
     # generate the signal images
@@ -241,16 +212,13 @@ if __name__ == "__main__":
     html += "</TABLE>\n"
   
   html += "</HTML>\n"
-<<<<<<< HEAD
-  htfile = open(datapath+"index.html","w")
-=======
+
   if os.path.exists(sessionpath):
     pass
   else:
     os.makedirs(sessionpath)
   fullpath = sessionpath+"index.html"
   htfile = open(fullpath,"w")
->>>>>>> 206bc86491576ebbd374be3d37434f72b02e7fbc
   htfile.write(html)
   htfile.close()
   

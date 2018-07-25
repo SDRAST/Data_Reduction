@@ -215,6 +215,7 @@ if __name__ == "__main__":
     sys.exit(1)
     
   datapath = "/data/kurtspec/%4d/%03d/" % (year, doy)
+  mylogger.debug("data at %s", datapath)
     
   files = glob.glob(datapath+"*.hdf5")
   mylogger.debug("found: %s", files)

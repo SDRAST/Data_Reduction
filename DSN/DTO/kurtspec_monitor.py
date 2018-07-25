@@ -383,11 +383,6 @@ if __name__ == "__main__":
   else:
     mylogger.error(" 'dss' is a required argument")
     sys.exit(1)
-  if args.workstation:
-    pass
-  else:
-    mylogger.error(" 'workstation' is a required argument")
-    sys.exit(1)
     
   projdatapath, projworkpath, datapath = \
                     get_obs_dirs("PESD", args.dss, year, doy)
@@ -395,8 +390,12 @@ if __name__ == "__main__":
   mylogger.debug("project work path: %s", projworkpath)
   mylogger.debug("raw data path: %s", datapath)
   
-  datapath = path_to_remote(args.workstation, projdatapath)
-  sessionpath = path_to_remote(args.workstation, projworkpath)
+  if args.workstation:
+    datapath = path_to_remote(args.workstation, projdatapath)
+    sessionpath = path_to_remote(args.workstation, projworkpath)
+  else:
+    datapath = projdatapath
+    sessionpath = projworkpath
   mylogger.debug("path for data: %s", datapath)
   files = glob.glob(datapath+"*.hdf5")
   mylogger.debug("found: %s", files)
