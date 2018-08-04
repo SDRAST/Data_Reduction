@@ -87,7 +87,7 @@ if __name__ == "__main__":
                  dest = 'use_only',
                  type=str,
                  default = None,
-                 help = 'Use only')
+                 help = 'Use only these signals; e.g. S,X')
   p.add_argument('-w', '--workstation',
                  dest = 'workstation',
                  type = str,
@@ -136,6 +136,10 @@ if __name__ == "__main__":
     good_signals = args.use_only.split(',')
   else:
     good_signals = find_good_signals(datapath, projworkpath)
+  if good_signals:
+    pass
+  else:
+    mylogger.error("no I channel data found; Q data is redundant")
   
   # extract the signal information
   #    passband files

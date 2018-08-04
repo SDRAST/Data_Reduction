@@ -26,6 +26,11 @@ from DatesTimes import UnixTime_to_MPL
 from support.logs import get_loglevel, initiate_option_parser, init_logging
 
 logger = logging.getLogger(__name__)
+
+# these were determined by inspection of the pasbands
+#   at present the K data (usually in the Q channels) are the same as what is
+# in the I channel
+valid_freqs = {"S": (130,160), "X": (30,580), "K": (30,580)}    # MHz
   
 class KurtspecSummarizer(object):
   """
@@ -78,6 +83,7 @@ class KurtspecSummarizer(object):
     self.logger.debug("open_averages: for %s", self.filename)
     data = h5py.File(self.filename)
     self.signal = data.attrs['signal']
+    self.band = self.signal[0]
     self.times = data['time'].value
     self.power = data['power'].value
     self.kurtosis = data['kurtosis'].value
@@ -98,15 +104,12 @@ class KurtspecSummarizer(object):
     else:
       avg_pwr = self.power[first:end,:].mean(axis=0)
     return avg_pwr
-
-  def average_kurtosis(self, first=0, end=1800):
-    """
-    """
-    return self.kurtosis[first:end,:].mean(axis=1)
     
   def extract_dynamic_spectra(self):
     """
     extracts dynamic spectrum type 'power' or 'kurtosis'
+    
+    It appears that the last kurtosis spectrum is zeros
     """
     self.dyn_spec = {}
     for moment in ["power","kurtosis"]:
@@ -121,6 +124,23 @@ class KurtspecSummarizer(object):
 class KurtspecMonitor(KurtspecSummarizer):
   """
   Displays session summaries
+  
+  Attributes::
+    logger     - logging.Logger object
+    thumbpath  - path to thumbnails
+    thunmscale - thumb image scale relative to original
+  
+  Attributes inherited from KurtspecSummarizer::
+    data        - contents of HDF5 monitor file
+    doy         - from file name
+    dyn_spec    - freq (Y) and time (X) 2D image indexed on type and signal
+    filename    - name of picklefile
+    logger      - logging.Logger instance
+    signal      - signal name as BDDP (band, dss, pol)
+    times       - UNIX time for each average
+    timestr     - time as HHMMSS from file name
+    workstation - local host
+    year        - file name
   """
   def __init__(self, workstation=None, filename=None, session_path=None, 
                thumbscale=0.1):
@@ -199,9 +219,12 @@ class KurtspecMonitor(KurtspecSummarizer):
                  + " to "   + time.strftime("%H%M", time.gmtime(end))   )
     return fig
   
-  def plot_segment_kurtosis(self, first=0, end=1800, save=True, log=True):
+  def plot_segment_kurtosis(self, first=0, end=1800, save=True):
     """
     plot the frequency averaged kurtosis for the designated times
+    
+    Frequency range for averaging is in global 'valid_freqs' determined by
+    inspection of the passbands.
     """
     width = end-first
     axes_width_inches = 18.0*width/1800
@@ -211,12 +234,16 @@ class KurtspecMonitor(KurtspecSummarizer):
     fig = plt.figure(figsize=(figwidth_inches, figheight_inches), dpi=100)
     ax = fig.add_subplot(111)
     times = self.get_MPL_times()
-    avg_kurtosis = self.average_kurtosis(first=first, end=end)
+    # take the mean over the valid frequency range
+    minfreq = valid_freqs[self.band][0]
+    maxfreq = valid_freqs[self.band][1]
+    avg_kurtosis = self.kurtosis[first:end, minfreq:maxfreq].mean(axis=1)
     ax.plot(times[first:end], avg_kurtosis)
     ax.grid(True)
+    ax.set_xlim(times[first], times[end])
     avkurt = avg_kurtosis.mean()
-    krtrng = avg_kurtosis.max()-self.kurtosis.min()
-    ax.set_ylim(avkurt-5*krtrng, avkurt+5*krtrng)
+    krtrng = avg_kurtosis.max()-avg_kurtosis.min()
+    ax.set_ylim(avkurt-2*krtrng, avkurt+2*krtrng)
     ax.set_title(   self.signal
                  +" from "+time.strftime("%H%M", time.gmtime(first))
                  +" to "  +time.strftime("%H%M", time.gmtime(end))      )
@@ -224,7 +251,7 @@ class KurtspecMonitor(KurtspecSummarizer):
     fig.autofmt_xdate()
     return fig
     
-  def plot_kurtosis(self, save=True, log=True):
+  def plot_kurtosis(self, save=True):
     """
     display a spectrogram of the original data
     """
@@ -234,7 +261,7 @@ class KurtspecMonitor(KurtspecSummarizer):
                         self.signal, start_idx, start_idx+1800)
       last_idx = min(start_idx+1800, len(times)-1)
       fig = self.plot_segment_kurtosis(first=start_idx, end=last_idx,
-                                       save=save, log=log)
+                                       save=save)
       filename = self.format_file_name("kurtosis",
                                        self.times[start_idx])+".png"
       fig.savefig(self.session_path + filename)
@@ -293,10 +320,24 @@ class KurtspecMonitor(KurtspecSummarizer):
     ax.set_position((0.1,0.2,0.8,0.8))
     data = self.dyn_spec[sigtype][:,first:end]
     self.logger.debug("show_spectrogram: data shape is %s", data.shape)
-    img = ax.imshow(data,
-                    extent=[times[first], times[end],
-                            0,            650        ],
-                    aspect='auto', origin='lower')
+    if sigtype == "power":
+      img = ax.imshow(data,
+                      extent=[times[first], times[end],
+                              0,            650        ],
+                      aspect='auto', origin='lower')
+    elif sigtype == "kurtosis":
+      minfreq = valid_freqs[self.band][0]
+      maxfreq = valid_freqs[self.band][1]
+      min_kurt = self.dyn_spec['kurtosis'][minfreq:maxfreq,:-1].min()
+      max_kurt = self.dyn_spec['kurtosis'][minfreq:maxfreq,:-1].max()
+      meankurt = self.dyn_spec['kurtosis'][minfreq:maxfreq,:-1].mean()
+      img = ax.imshow(data,
+                      extent=[times[first], times[end],
+                              0,            650        ],
+                      vmin=meankurt-1, vmax=meankurt+1,
+                      aspect='auto', origin='lower')
+    else:
+      raise RuntimeError("invalid signal type:", sigtype)
     ax.grid(True)
     ax.get_xaxis().set_visible(True)
     ax.xaxis_date()
