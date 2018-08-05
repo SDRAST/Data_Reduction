@@ -51,13 +51,11 @@ def find_good_signals(datapath, session_path):
   logger.debug("find_good_signals: in %s", datapath+"mon-*.hdf5")
   session_data = glob.glob(datapath+"mon-*.hdf5")
   logger.debug("find_good_signals: found %s", session_data)
-  good_signals = []
+  good_signals = {'I': [], 'Q': []}
   for filename in session_data:
     data = h5py.File(filename)
-
-    if data.attrs['channel'] == "I":
-      logger.debug("find_good_signals: signals are %s", data.attrs['signal'])
-      good_signals.append(data.attrs['signal'])
+    logger.debug("find_good_signals: signals are %s", data.attrs['signal'])
+    good_signals[data.attrs['channel']].append(data.attrs['signal'])
     data.close()
   return good_signals
 
@@ -136,11 +134,16 @@ if __name__ == "__main__":
     good_signals = args.use_only.split(',')
   else:
     good_signals = find_good_signals(datapath, projworkpath)
-  if good_signals:
+  if good_signals['I']:
+    # good data in this directory
     pass
-  else:
+  elif good_signals['Q']:
+    # redundant until Q channel is fixed
     mylogger.error("no I channel data found; Q data is redundant")
-  
+    sys.exit(1)
+  else:
+    mylogger.error("no files found")
+    sys.exit(1)
   # extract the signal information
   #    passband files
   pbfiles = glob.glob(sessionpath+"thumbnails/passband*.png")
