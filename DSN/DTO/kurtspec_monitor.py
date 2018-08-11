@@ -76,7 +76,7 @@ class KurtspecSummarizer(object):
     open a file of time- averaged spectra from the monitoring session
     """
     self.logger.debug("open_averages: for %s", self.filename)
-    data = h5py.File(self.filename)
+    data = h5py.File(self.filename, mode='r')
     self.signal = data.attrs['signal']
     self.times = data['time'].value
     self.power = data['power'].value
