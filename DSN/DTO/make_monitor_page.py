@@ -38,6 +38,7 @@ def make_grid(title="Table Title", files=None):
   html += "</TABLE>\n"
   return html
 
+
 def find_good_signals(datapath, session_path):
   """
   select I inputs only
@@ -50,12 +51,11 @@ def find_good_signals(datapath, session_path):
   logger.debug("find_good_signals: in %s", datapath+"mon-*.hdf5")
   session_data = glob.glob(datapath+"mon-*.hdf5")
   logger.debug("find_good_signals: found %s", session_data)
-  good_signals = []
+  good_signals = {'I': [], 'Q': []}
   for filename in session_data:
     data = h5py.File(filename)
-    if data.attrs['channel'] == "I":
-      logger.debug("find_good_signals: signals are %s", data.attrs['signal'])
-      good_signals.append(data.attrs['signal'])
+    logger.debug("find_good_signals: signals are %s", data.attrs['signal'])
+    good_signals[data.attrs['channel']].append(data.attrs['signal'])
     data.close()
   return good_signals
 
@@ -85,7 +85,7 @@ if __name__ == "__main__":
                  dest = 'use_only',
                  type=str,
                  default = None,
-                 help = 'Use only')
+                 help = 'Use only these signals; e.g. S,X')
   p.add_argument('-w', '--workstation',
                  dest = 'workstation',
                  type = str,
@@ -114,36 +114,47 @@ if __name__ == "__main__":
   else:
     mylogger.error(" 'dss' is a required argument")
     sys.exit(1)
-  if args.workstation:
-    pass
-  else:
-    mylogger.error(" 'workstation' is a required argument")
-    sys.exit(1)
   
   # get the session path
   projectdatapath, projworkpath, datapath = \
                     get_obs_dirs("PESD", args.dss, year, doy)
+
   mylogger.debug("project data path: %s", projectdatapath)
   mylogger.debug("project work path: %s", projworkpath)
-  datapath = path_to_remote(args.workstation, projectdatapath)
+  if args.workstation:
+    datapath = path_to_remote(args.workstation, projectdatapath)
+    sessionpath = path_to_remote(args.workstation, projworkpath)
+  else:
+    datapath = projectdatapath
+    sessionpath = projworkpath
   mylogger.debug("data path: %s", datapath)
-  sessionpath = path_to_remote(args.workstation, projworkpath)
   
   # select signals to display
   if args.use_only:
     good_signals = args.use_only.split(',')
   else:
     good_signals = find_good_signals(datapath, projworkpath)
-  
+  if good_signals['I']:
+    # good data in this directory
+    pass
+  elif good_signals['Q']:
+    # redundant until Q channel is fixed
+    mylogger.error("no I channel data found; Q data is redundant")
+    sys.exit(1)
+  else:
+    mylogger.error("no files found")
+    sys.exit(1)
   # extract the signal information
   #    passband files
   pbfiles = glob.glob(sessionpath+"thumbnails/passband*.png")
   pbfiles.sort()
-  #    get observed signals
+  #    get observed signals; ONLY I input for now
   signames = []
   for filename in pbfiles:
     signame = os.path.basename(filename).split('-')[1]
-    if signame in good_signals:
+    mylogger.debug("found signal %s in passband images", signame)
+    if signame in good_signals['I']:
+      mylogger.debug("adding signal %s", signame)
       signames.append(signame)
   signames = unique(signames)
   signames.sort()
@@ -158,13 +169,13 @@ if __name__ == "__main__":
     #   get the images
     pfiles = glob.glob(sessionpath+"thumbnails/specgram-power-"+signame+"*.png")
     pfiles.sort()
-    mylogger.debug("found: %s", pfiles)
+    mylogger.debug("power images found: %s", pfiles)
     pbfiles = glob.glob(sessionpath+"thumbnails/passband-"+signame+"*.png")
     pbfiles.sort()
-    mylogger.debug("found: %s", pbfiles)
+    mylogger.debug("passband plots found: %s", pbfiles)
     kfiles = glob.glob(sessionpath+"thumbnails/specgram-kurtosis-"+signame+"-*.png")
     kfiles.sort()
-    mylogger.debug("found: %s", kfiles)
+    mylogger.debug("kurtosis images found: %s", kfiles)
     # get the spectra
     ktfiles = glob.glob(sessionpath+"thumbnails/kurtosis-"+signame+"*.png")
     ktfiles.sort()
@@ -210,6 +221,7 @@ if __name__ == "__main__":
     html += "</TABLE>\n"
   
   html += "</HTML>\n"
+
   if os.path.exists(sessionpath):
     pass
   else:

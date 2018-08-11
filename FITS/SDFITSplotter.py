@@ -230,6 +230,24 @@ class DSNFITSplotter(DSNFITSexaminer):
       and each pol.  Else, if there is only one beam but multiple subchannels
       then there will be a figure column for each subchannel and each pol.
       Otherwise there is just a column for each pol.
+    
+      Image array structure
+      ---------------------
+      There is an image array for each subchannel, beam and pol combination. The
+      data for each is a 2D nparray with dimensions (num_scans, num_chans).
+
+      Initialization
+      --------------
+      The spectra for each scan, subchannel, beam and pol combination are
+      initialized as zeros with shape (32768,). The zeros are replaced with data
+      from the FITS table DATA column.
+
+      The images for each subchannel, beam and pol combination are initialized as
+      numpy.arrays with shape (32768, 1). There is a flag dict 'start_image' 
+      which is initialized as True.  When it is True, the initial image (see
+      above) is replaced with data for the records in the first scan. The flag is
+      then set to False. After data, the subimages for each scan are appended.
+      The final image will have dimensions (num_scans*num_records, 32768).
       """
       if rows == None:
         spectra = self.get_spectra(self.acs_rows)
@@ -354,9 +372,9 @@ class DSNFITSplotter(DSNFITSexaminer):
       fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
       if savepath:
         fig.savefig(savepath)
-      show()
+      #fig.show()
 
-    def show_all_spectra(self, IFspectra=False, sharey=False):
+    def show_all_spectra(self, rows=None, IFspectra=False, sharey=False):
       """
       Plot spectra from a Table
       
@@ -459,7 +477,7 @@ class DSNFITSplotter(DSNFITSexaminer):
         lines, labels = ax[0][0].get_legend_handles_labels()
         fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
       # end loop over fig
-      show()
+      #fig.show()
     
     def make_legend_labels(self, dskey=None, tbkey=None, sckey=None,
                            bmkey=None, plkey=None):
@@ -714,7 +732,7 @@ class DSNFITSplotter(DSNFITSexaminer):
       xlabel("row")
       ylabel("average power")
       title(self.datestr)
-      show()
+      #show()
       
     def plot_Tsys(self, good_wx_data=None, X=None):
       """
@@ -768,7 +786,7 @@ class DSNFITSplotter(DSNFITSexaminer):
         else:
           ax[cycle_idx].set_xlabel("index")
         ax[cycle_idx].set_title("subchannel "+str(subch))
-        fig.show()
+        #fig.show()
                 
 
   #--------------------------- DSNFITSplotter methods -------------------------

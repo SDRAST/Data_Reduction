@@ -49,7 +49,7 @@ import time
 
 from astropy.coordinates import FK4, FK5, SkyCoord
 from copy import copy
-from matplotlib.dates import date2num
+#from matplotlib.dates import date2num
  
 from scipy import interpolate
 from scipy.optimize import curve_fit
@@ -75,7 +75,7 @@ try:
   from MonitorControl.FrontEnds.K_band import K_4ch
   K_4ch = None
 except ImportError:
-  logger.warning("SDFITSexaminer cannot handle DSS-43 K-band")
+  logger.warning("SDFITSexaminer cannot handle DSS-43 K-band: no configuration")
 from MonitorControl.Configurations.coordinates import DSS
 from MonitorControl.FrontEnds.DSN import DSN_fe
 from Radio_Astronomy import rms_noise
@@ -193,6 +193,7 @@ class DSNFITSexaminer(object):
     else:
       savename = savepath + filename+".fits"
     self.logger.info('consolidate: writing %s', savename)
+    # where is the save command?
      
   class Table(pyfits.BinTableHDU):
     """
@@ -435,7 +436,9 @@ class DSNFITSexaminer(object):
       for cycle in self.cycle_keys:
         self.logger.debug("get_obs_freqs: getting freqs for cycle %d", cycle)
         self.obs_freqs[cycle] = self.data['OBSFREQ'][self.rows]\
-                                             [numpy.equal(self.rows, cycle)][0]
+                         [numpy.equal(self.data['CYCLE'][self.rows], cycle)][0]
+        #self.obs_freqs[cycle] = self.data['OBSFREQ'][self.rows]\
+        #                                     [numpy.equal(self.rows, cycle)][0]
       return self.obs_freqs
 
     def get_index_keys(self):
@@ -804,24 +807,43 @@ class DSNFITSexaminer(object):
         IF           - 1-based number sequence, usually representing pol
       The other keys have only a time axis.
       """
-      on_rows = numpy.array(list(set(self.rows).intersection(
-                               set(numpy.where(self.data['SIG'] == True)[0]))))
-      self.logger.debug("get_wx_datacubes: rows for SIG=True: %s", on_rows)
-      of_rows = numpy.array(list(set(self.rows).intersection(
-                              set(numpy.where(self.data['SIG'] == False)[0]))))
-      self.logger.debug("get_wx_datacubes: rows for SIG=False: %s", of_rows)
+      # the following give rows for both cycles independent of spectrum quality
+      #
+      #on_rows = numpy.array(list(set(self.rows).intersection(
+      #                         set(numpy.where(self.data['SIG'] == True)[0]))))
+      goodtime = numpy.intersect1d(numpy.unique(self.data['UNIXtime'],
+                                   return_index=True)[1],
+                                   numpy.nonzero(self.data['UNIXtime'])[0])
+      onweather = numpy.intersect1d(numpy.unique(self.data['UNIXtime'],
+                                                  return_index=True)[1],
+                                    numpy.where(self.data['SIG'] == True)[0])
+      onweather = numpy.intersect1d(onweather, goodtime)
+      self.logger.debug("get_wx_datacubes: rows for SIG=True: %s", onweather)
+      #of_rows = numpy.array(list(set(self.rows).intersection(
+      #                        set(numpy.where(self.data['SIG'] == False)[0]))))
+      ofweather = numpy.intersect1d(numpy.unique(self.data['UNIXtime'],
+                                                  return_index=True)[1],
+                                     numpy.where(self.data['SIG'] == False)[0])
+      ofweather = numpy.intersect1d(ofweather, goodtime)
+      self.logger.debug("get_wx_datacubes: rows for SIG=False: %s", ofweather)
       
       valid_data, indices =  self.validate_wx_data()
       param_keys = valid_data.keys()
       param_keys.remove('TSYS') # to be handled separately
       
-      num_cycles = self.props['num cycles']
+      # populate the dict with the simple parameters
+      # these are the same for both cycles
       wx_data = {}
+      goodonweather = numpy.intersect1d(onweather, numpy.nonzero(self.data['CYCLE'])[0])
+      goodofweather = numpy.intersect1d(ofweather, numpy.nonzero(self.data['CYCLE'])[0])
       for key in param_keys:
-        wx_data[key] = {True: self.data[key][on_rows[::num_cycles]].flatten()}
+        #wx_data[key] = {True: self.data[key][on_rows[::num_cycles]].flatten()}
+        wx_data[key] = {True: self.data[key][goodonweather].flatten()}
         self.logger.debug("get_wx_datacubes: got %s for SIG=True", key)
-        if len(of_rows):
-          wx_data[key][False] = self.data[key][of_rows[::num_cycles]].flatten()
+        # it is possible that there was no position switching, e.g. pulsars
+        if len(goodofweather):
+          #wx_data[key][False] = self.data[key][of_rows[::num_cycles]].flatten()
+          wx_data[key][False] = self.data[key][goodofweather].flatten()
           self.logger.debug("get_wx_datacubes: got %s for SIG=False", key)
 
       # now organize extra TSYS dimensions
@@ -831,14 +853,18 @@ class DSNFITSexaminer(object):
       # of records
       num_records = self.props['num records'][1]
       tsys_shape = {}
-      tsys_shape[True] = num_records*(len(on_rows)/self.props['num cycles'],
-                    self.props['num cycles'],
-                    self.props['num beams'],
-                    self.props['num IFs'])
-      tsys_shape[False] = num_records*(len(of_rows)/self.props['num cycles'],
-                    self.props['num cycles'],
-                    self.props['num beams'],
-                    self.props['num IFs'])
+      goodons = numpy.intersect1d(onweather, numpy.nonzero(self.data['CYCLE'])[0])
+      goodofs = numpy.intersect1d(ofweather, numpy.nonzero(self.data['CYCLE'])[0])
+      #tsys_shape[True] = num_records*(len(on_rows)/self.props['num cycles'],
+      tsys_shape[True] = num_records*(len(goodons),
+                         self.props['num cycles'],
+                         self.props['num beams'],
+                         self.props['num IFs'])
+      #tsys_shape[False] = num_records*(len(of_rows)/self.props['num cycles'],
+      tsys_shape[False] = num_records*(len(goodofs),
+                          self.props['num cycles'],
+                          self.props['num beams'],
+                          self.props['num IFs'])
       self.logger.debug("get_wx_datacubes: weather TSYS shape is %s", tsys_shape)
       wx_data['TSYS'][True] = numpy.zeros(tsys_shape[True])
       wx_data['TSYS'][False] = numpy.zeros(tsys_shape[False])
@@ -849,14 +875,19 @@ class DSNFITSexaminer(object):
           time_axis = 2
         else:
           time_axis = 1
-        num_scans = self.data['TSYS'][on_rows].shape[0]
-        num_recs  = self.data['TSYS'][on_rows].shape[time_axis]
+        #num_scans = self.data['TSYS'][on_rows].shape[0]
+        #num_recs  = self.data['TSYS'][on_rows].shape[time_axis]
+        num_scans = self.data['TSYS'][goodonweather].shape[0]
+        num_recs  = self.data['TSYS'][goodonweather].shape[time_axis]
         num_on = num_scans*num_recs        # there is always SIG=True data
-        if len(self.data['SIG'][of_rows]):
+        #if len(self.data['SIG'][of_rows]):
+        if len(self.data['SIG'][goodofweather]):
           # there are SIG=False rows
           num_states = 2
-          num_of = self.data['TSYS'][of_rows].shape[0] \
-                  *self.data['TSYS'][of_rows].shape[time_axis]
+          #num_of = self.data['TSYS'][of_rows].shape[0] \
+          #        *self.data['TSYS'][of_rows].shape[time_axis]
+          num_of = self.data['TSYS'][goodofweather].shape[0] \
+                  *self.data['TSYS'][goodofweather].shape[time_axis]
         # fill in the TSYS data
         self.logger.debug("get_wx_datacubes: %s props: %s", self, self.props)
         for subch_idx in range(self.props['num cycles']):
@@ -865,16 +896,20 @@ class DSNFITSexaminer(object):
               if self.props['num beams'] > 1:
                 # this therefore has a time axis too
                 data_on = \
-                   self.data['TSYS'][on_rows,beam_idx,:,IF_idx,0,0,0].flatten()
+                   self.data['TSYS'][goodonweather,beam_idx,:,IF_idx,0,0,0].flatten()
+                   #self.data['TSYS'][on_rows,beam_idx,:,IF_idx,0,0,0].flatten()
               else:
-                data_on = self.data['TSYS'][on_rows,:,IF_idx,0,0,0].flatten()
+                #data_on = self.data['TSYS'][on_rows,:,IF_idx,0,0,0].flatten()
+                data_on = self.data['TSYS'][goodonweather,:,IF_idx,0,0,0].flatten()
               wx_data['TSYS'][True][:,subch_idx,beam_idx,IF_idx] = data_on
               if num_states == 2:
                 if self.props['num beams'] > 1:
                   data_of = \
-                   self.data['TSYS'][of_rows,beam_idx,:,IF_idx,0,0,0].flatten()
+                   self.data['TSYS'][goodofweather,beam_idx,:,IF_idx,0,0,0].flatten()
+                   #self.data['TSYS'][of_rows,beam_idx,:,IF_idx,0,0,0].flatten()
                 else:
-                  data_of = self.data['TSYS'][of_rows,:,IF_idx,0,0,0].flatten()
+                  #data_of = self.data['TSYS'][of_rows,:,IF_idx,0,0,0].flatten()
+                  data_of = self.data['TSYS'][goodofweather,:,IF_idx,0,0,0].flatten()
                 wx_data['TSYS'][False][:,subch_idx,beam_idx,IF_idx] = data_of            
       elif self.header['BACKEND'][:4].upper() == 'WVSR':
         # this currently has no time axis but it has cycles, and only one beam
@@ -888,12 +923,13 @@ class DSNFITSexaminer(object):
             #length = len(wx_data['TSYS'][True][:,subch_idx,beam_idx,IF_idx])
             #self.logger.debug("get_wx_datacubes: axis length is %d", length)
             wx_data['TSYS'][True][:,subch_idx,beam_idx,IF_idx] = \
-              self.data['TSYS'][on_rows[subch_idx::2],IF_idx,0,0,0].flatten()
+              self.data['TSYS'][goodonweather,IF_idx,0,0,0].flatten()
+              #self.data['TSYS'][on_rows[subch_idx::2],IF_idx,0,0,0].flatten()
               #self.data['TSYS'][on_rows[subch_idx:length:2],IF_idx,0,0,0].flatten()
-            if len(of_rows):
-              tsys_of = self.data['TSYS'][of_rows[subch_idx::],IF_idx,0,0,0].flatten()
+            if len(goodofweather):
               wx_data['TSYS'][False][:,subch_idx,beam_idx,IF_idx] = \
-                self.data['TSYS'][of_rows[subch_idx::2],IF_idx,0,0,0].flatten()
+                self.data['TSYS'][goodofweather,IF_idx,0,0,0].flatten()
+                #self.data['TSYS'][of_rows[subch_idx::2],IF_idx,0,0,0].flatten()
                 #self.data['TSYS'][of_rows[subch_idx:length:2],IF_idx,0,0,0].flatten()
       return wx_data
 
@@ -1828,7 +1864,8 @@ class DSNFITSexaminer(object):
             unixtime = midnight_unixtime + rectime
             datime = datetime.datetime.fromtimestamp(unixtime) # datetime
             # round to roughly 0.1 s
-            good_data['mpltime'][sig].append(round(date2num(datime),6))
+            #good_data['mpltime'][sig].append(round(date2num(datime),6))
+            good_data['mpltime'][sig].append(round(datime.toordinal(),6))
             good_data['elev'][sig].append(self.data['ELEVATIO'][row,0,rec,0,0,0,0])
             for beam_idx in range(self.props["num beams"]):
               beam = beam_idx+1
@@ -1859,7 +1896,8 @@ class DSNFITSexaminer(object):
                                                     self.data['TSYS'][indices])
           if cycle == 1:
             # these are the same for all cycles
-            good_data['mpltime'][sig].append(round(date2num(datime),6))
+            #good_data['mpltime'][sig].append(round(date2num(datime),6))
+            good_data['mpltime'][sig].append(round(datime.toordinal(),6))
             good_data['elev'][sig].append(self.data['ELEVATIO'][row])
             good_data['Tambient'][sig].append(self.data['TAMBIENT'][row])
             good_data['pressure'][sig].append(self.data['PRESSURE'][row])
