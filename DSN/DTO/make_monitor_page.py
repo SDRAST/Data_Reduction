@@ -148,11 +148,13 @@ if __name__ == "__main__":
   #    passband files
   pbfiles = glob.glob(sessionpath+"thumbnails/passband*.png")
   pbfiles.sort()
-  #    get observed signals
+  #    get observed signals; ONLY I input for now
   signames = []
   for filename in pbfiles:
     signame = os.path.basename(filename).split('-')[1]
-    if signame in good_signals:
+    mylogger.debug("found signal %s in passband images", signame)
+    if signame in good_signals['I']:
+      mylogger.debug("adding signal %s", signame)
       signames.append(signame)
   signames = unique(signames)
   signames.sort()
@@ -167,13 +169,13 @@ if __name__ == "__main__":
     #   get the images
     pfiles = glob.glob(sessionpath+"thumbnails/specgram-power-"+signame+"*.png")
     pfiles.sort()
-    mylogger.debug("found: %s", pfiles)
+    mylogger.debug("power images found: %s", pfiles)
     pbfiles = glob.glob(sessionpath+"thumbnails/passband-"+signame+"*.png")
     pbfiles.sort()
-    mylogger.debug("found: %s", pbfiles)
+    mylogger.debug("passband plots found: %s", pbfiles)
     kfiles = glob.glob(sessionpath+"thumbnails/specgram-kurtosis-"+signame+"-*.png")
     kfiles.sort()
-    mylogger.debug("found: %s", kfiles)
+    mylogger.debug("kurtosis images found: %s", kfiles)
     # get the spectra
     ktfiles = glob.glob(sessionpath+"thumbnails/kurtosis-"+signame+"*.png")
     ktfiles.sort()
