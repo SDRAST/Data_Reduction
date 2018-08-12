@@ -328,11 +328,12 @@ class KurtspecMonitor(KurtspecSummarizer):
     elif sigtype == "kurtosis":
       minfreq = valid_freqs[self.band][0]
       maxfreq = valid_freqs[self.band][1]
-      min_kurt = self.dyn_spec['kurtosis'][minfreq:maxfreq,:-1].min()
-      max_kurt = self.dyn_spec['kurtosis'][minfreq:maxfreq,:-1].max()
-      meankurt = self.dyn_spec['kurtosis'][minfreq:maxfreq,:-1].mean()
-      self.logger.debug("show_spectrogram: min,mean,max = %6.3f/%6.3f/%6.3f",
-                        min_kurt, meankurt, max_kurt)
+      min_kurt = self.dyn_spec['kurtosis'][minfreq:maxfreq,first:end].min()
+      max_kurt = self.dyn_spec['kurtosis'][minfreq:maxfreq,first:end].max()
+      meankurt = self.dyn_spec['kurtosis'][minfreq:maxfreq,first:end].mean()
+      rms_kurt = self.dyn_spec['kurtosis'][minfreq:maxfreq,first:end].std()
+      self.logger.debug("show_spectrogram: min,mean+-rms,max = %6.3f/%6.3f+-%7.4f/%6.3f",
+                        min_kurt, meankurt, rms_kurt, max_kurt)
       img = ax.imshow(data,
                       extent=[times[first], times[end],
                               0,            650        ],
