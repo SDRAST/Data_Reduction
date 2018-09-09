@@ -274,7 +274,7 @@ class DSNFITSplotter(DSNFITSexaminer):
           datasource = "DATA"
         IFspectra = False
         num_chans = self.props['num chans']
-        self.logger.debug("show_passband: data source is %s", datasource)
+      self.logger.debug("show_passband: data source is %s", datasource)
       # prepare empty images
       images = self.prepare_summary_images(num_chans)
       # get data statistics for scaling plots
@@ -333,7 +333,7 @@ class DSNFITSplotter(DSNFITSexaminer):
         pass
       else:
         figtitle = basename(self.parent.file)[4:-5].replace('_',' ')
-      fig, ax = self.init_multiplot(figtitle+"  Spectogram",
+      fig, ax = self.init_multiplot(figtitle+"  Spectrogram",
                                        nrows=1, ncols=ncols)
       # display the data
       # labels are updated only in the first time around a loop
@@ -341,7 +341,7 @@ class DSNFITSplotter(DSNFITSexaminer):
       num_beams = self.props['num beams']
       num_cycles = len(self.cycle_keys)
       num_pols = self.props["num IFs"]
-      halfband = self.data['BANDWIDT'][0]/2.e6
+      halfband = self.get_first_good_value('BANDWIDT')/2.e6
       for subch in range(num_cycles):
         for beam in range(self.props["num beams"]):
           for pol in range(self.props["num IFs"]):

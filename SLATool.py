@@ -128,9 +128,11 @@ class SessionAnalyzer(object):
   def make_session_names(self):
     """
     creates the directory path to the data from the session
+    
+    It is crafted from the name of the first FITS file
     """
     first_ex = self.examiners[self.examiner_keys[0]]
-    sttm = time.gmtime(first_ex.tables[0].get_first_value('UNIXtime', 0))
+    sttm = time.gmtime(first_ex.tables[0].get_first_good_value('UNIXtime'))
     figtitle = "%4d/%02d/%02d (%03d)" % (sttm.tm_year, sttm.tm_mon,
                                          sttm.tm_mday, sttm.tm_yday)
     savename = "_".join(splitext(basename(first_ex.file))[0].split('-')[:2])

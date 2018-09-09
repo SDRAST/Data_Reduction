@@ -145,7 +145,7 @@ class DSNFITSexaminer(object):
         try:
           tables[index].SB = numpy.unique(tables[index].data['SIDEBAND'])
         except KeyError:
-          tables[index].SB = SBcode[tables[index].data['CDELT1'][0]]
+          tables[index].SB = SBcode[tables[index].get_first_good_value('CDELT1')]
         index += 1
     return tables
        
@@ -243,24 +243,24 @@ class DSNFITSexaminer(object):
       self.parent = parent
       # add some attributes for convenience
       try:
-        d = UnixTime_to_datetime(self.get_first_value('UNIXtime',0)).timetuple()
+        d = UnixTime_to_datetime(self.get_first_good_value('UNIXtime')).timetuple()
       except KeyError:
         # old deprecated format
+        date_obs = self.parent.hdulist[1].get_first_good_value('DATE-OBS')
+        time_obs = self.parent.hdulist[1].get_first_good_value('TIME')
         try:
           time_at_midnight = \
-          time.strptime(self.parent.hdulist[1].data['DATE-OBS'][0], "%Y/%m/%d")
-          d = unixtime_at_midnight + self.parent.hdulist[1].data['TIME'][0]
+          time.strptime(date_obs, "%Y/%m/%d")
+          d = unixtime_at_midnight + time_obs
         except ValueError:
           # acceptable format
           try:
             time_at_midnight = \
-            time.strptime(self.parent.hdulist[1].data['DATE-OBS'][0],
-                          "%Y-%m-%d")
-            d = unixtime_at_midnight + self.parent.hdulist[1].data['TIME'][0]
+            time.strptime(date_obs, "%Y-%m-%d")
+            d = unixtime_at_midnight + time_obs
           except ValueError:
             # ISOtime
-            d = ISOtime2datetime(
-                        self.parent.hdulist[1].data['DATE-OBS'][0]).timetuple()
+            d = ISOtime2datetime(date_obs).timetuple()
       # what is the data column called?
       if 'SPECTRUM' in self.data.columns.names:
         self.dataname = 'SPECTRUM'
@@ -503,15 +503,25 @@ class DSNFITSexaminer(object):
     
       Assumes scan 1 is typical of all scans in the dataset
       """
+      if row == 0:
+        bandwidth = self.get_first_good_value('BANDWIDT')
+        ref_pix   = self.get_first_good_value('CRPIX1')
+        freq      = self.get_first_good_value('CRVAL1')
+        freq_step = self.get_first_good_value('CDELT1')
+      else:
+        bandwidth = self.data['BANDWIDT'][row]
+        ref_pix   = self.data['CRVAL1'][row]
+        freq      = self.data['CRVAL1'][row]
+        freq_step = self.data['CDELT1'][row]
       if num_chans:
         num_chans = num_chans
-        delf = self.data['BANDWIDT'][row]/num_chans
-        refpix = self.data['CRPIX1'][row]*num_chans/self.props['num chans']
+        delf = bandwidth/num_chans
+        refpix = ref_pix*num_chans/self.props['num chans']
       else:
         num_chans = self.props['num chans']
-        delf = self.data['CDELT1'][row]
-        refpix = self.data['CRPIX1'][row]
-      freqs = self.data['CRVAL1'][row] + delf * \
+        delf = freq_step
+        refpix = ref_pix
+      freqs = freq + delf * \
                (numpy.arange(num_chans)-refpix)
       return freqs/1e6
                          
@@ -550,7 +560,10 @@ class DSNFITSexaminer(object):
       if ref_freq:
         f_ref = ref_freq
       else:
-        f_ref = self.data['RESTFREQ'][row]/1e6 # ref freq in MHz
+        if row == 0:
+          f_ref = self.get_first_good_value('RESTFREQ')/1e6
+        else:
+          f_ref = self.data['RESTFREQ'][row]/1e6 # ref freq in MHz
       rel_freqs = self.freqs(row, num_chans=num_chans) - f_ref # channel
                                                  # frequencies relative
                                                  # to the reference frequency
@@ -606,12 +619,12 @@ class DSNFITSexaminer(object):
       """
       if not obstime:
         # get time from the first row
-        obstime = self.get_first_value('UNIXtime', row)
+        obstime = self.get_first_good_value('UNIXtime')
       if ref_freq:
         f_ref = ref_freq
       else:
-        f_ref = self.data['RESTFREQ'][0]/1e6 # MHz
-      v_ref = self.data['VELOCITY'][0]
+        f_ref = self.get_first_good_value('RESTFREQ')/1e6 # data['RESTFREQ'][0]/1e6 # MHz
+      v_ref = self.get_first_good_value('VELOCITY') # data['VELOCITY'][0]
       if frame:
         self.frame = frame
       #self.logger.debug("compute_X_axis: requested frame is %s", frame)
@@ -671,24 +684,31 @@ class DSNFITSexaminer(object):
     
       @return: float (km/s)
       """
+      if row == 0:
+        equinox =  self.get_first_good_value('EQUINOX')
+        ra =       self.get_first_good_value('CRVAL2')
+        dec =      self.get_first_good_value('CRVAL3')
+        source =   self.get_first_good_value('OBJECT')
+        unixtime = self.get_first_good_value('UNIXtime')
+      else:
+        equinox  = self.data['EQUINOX'][row]
+        ra       = self.data['CRVAL2'][row]
+        dec      = self.data['CRVAL3'][row]
+        source   = self.data["OBJECT"][row]
+        unixtime = self.data["UNIXtime"][row]
       try:
-        if self.data['EQUINOX'][row] == 1950:
-          position = SkyCoord(self.data['CRVAL2'][row],
-                              self.data['CRVAL3'][row],
-                              frame=FK4, unit=(u.hourangle, u.deg))
+        if equinox == 1950:
+          position = SkyCoord(ra, dec, frame=FK4, unit=(u.hourangle, u.deg))
       except KeyError:
         # assume J2000
         pass
       else:
-        position = SkyCoord(self.data['CRVAL2'][row],
-                            self.data['CRVAL3'][row],
-                            frame=FK5, unit=(u.hourangle, u.deg))
+        position = SkyCoord(ra, dec, frame=FK5, unit=(u.hourangle, u.deg))
       ra = position.ra.hour
       dec = position.dec.deg
       #self.logger.debug("V_LSR: ra = %f, dec = %f", ra, dec)
-      cat_entry = novas.make_cat_entry(self.data["OBJECT"][row],
-                                       "", 0, ra, dec, 0, 0, 0, 0)
-      source = novas.make_object(2, 0, self.data["OBJECT"][0], cat_entry)
+      cat_entry = novas.make_cat_entry(source, "", 0, ra, dec, 0, 0, 0, 0)
+      source = novas.make_object(2, 0, source, cat_entry)
       longdeg = self.header['SITELONG']
       #self.logger.debug("V_LSR: longitude in degrees W = %f", longdeg)
       if longdeg > 180:
@@ -697,7 +717,7 @@ class DSNFITSexaminer(object):
     
       DSS43 = novas.make_observer_on_surface(self.header['SITELAT'], longdeg,
                                              self.header['SITEELEV'], 0, 0)
-      dt = UnixTime_to_datetime(self.get_first_value('UNIXtime', row))
+      dt = UnixTime_to_datetime(unixtime)
       #self.logger.debug("V_LSR: computing for %s", dt.ctime())
       jd = novas.julian_date(dt.year,dt.month,dt.day,dt.hour+dt.minute/60.)
       mjd = MJD(dt.year,dt.month,dt.day)
@@ -941,17 +961,44 @@ class DSNFITSexaminer(object):
       axis of the data cube.  Often, just the first value is needed
       corresponding to the start of the scan.  This relieves the user of having
       to known how to access that datum.
+      
+      @param column : name of the column
+      @type  column : str
+      
+      @param row : number of the row in the table
+      @type  row : int
       """
       try:
         cellshape = self.data[column][row].shape
       except AttributeError:
-        return self.data[column][row]
+        # if the table cell has no shape then it is just a single value; for
+        # example, self.data['OBJECT'][0] has no shape
+        value =  self.data[column][row]
       else:
         if cellshape == ():
-          return self.data[column][row]
+          # if the shape is empty the cell is a numpy array of zero dimensions
+          # such as self.data['UNIXtime'][0].shape
+          value = self.data[column][row]
         else:
-          idx = len(cellshape)*[[0]]
-          return self.data[column][row][idx][0]
+          # create an index with the right number of indices, such as
+          # tb.data['TSYS'][0].shape which has a shape (2, 1, 1, 1) so that
+          # (not clear why I wrote the following this way
+          #idx = len(cellshape)*[[0]]
+          #return self.data[column][row][idx][0]
+          idx = len(cellshape)*[0]
+          value = self.data[column][row][idx]
+      return value
+  
+    def get_first_good_value(self, column):
+      """
+      Get the first good value in the named column.
+      
+      A row with UNIX time of 0.0 does not have valid data
+      """
+      row = 0
+      while self.data['UNIXtime'][row] == 0.0:
+        row += 1
+      return self.get_first_value(column, row)
       
     def prepare_summary_arrays(self, num_chans):
       """

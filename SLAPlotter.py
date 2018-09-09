@@ -46,7 +46,6 @@ class SessionPlotter(SessionAnalyzer):
     else:
       self.logger.warning("__init__: no FITS examiners created")
     
-    
   def plot_elev_and_Tsys(self, figtitle=None, weather_data=None,
                          examiner_keys=None, savepath=None):
     """
@@ -88,7 +87,7 @@ class SessionPlotter(SessionAnalyzer):
     if figtitle:
       fig1.suptitle(figtitle)
     else:
-      "%4d/%03d DSS-%2d" % (self.year, self.DOY, self.DSS)
+      fig1.suptitle("%4d/%03d DSS-%2d" % (self.year, self.DOY, self.DSS))
     fig1.set_size_inches(12,5, forward=True)
     ax2 = ax[0].twinx()
     
@@ -175,9 +174,11 @@ class SessionPlotter(SessionAnalyzer):
                 prop = fontP)
     if savepath:
       fig1.savefig(savepath+"-elev.png")
+      self.logger.info("plot_elev_and_Tsys: saved to %s", savepath+"-elev.png")
     else:
-      fig1.save(self.datapath+"Tsys-elev.png")
-    self.logger.info("plot_elev_and_Tsys: saved to %s", savepath+"-elev.png")
+      fig1.savefig(self.datapath+"-elev.png")
+      self.logger.info("plot_elev_and_Tsys: saved to %s",
+                       self.datapath+"-elev.png")
     #fig1.show()
 
   def plot_weather(self, figtitle=None, weather_data=None, examiner_keys=None,
@@ -450,8 +451,8 @@ class SessionPlotter(SessionAnalyzer):
         plotter = self.examiners[dfindex].plotter[tablekey]
         if len(plotter.obsmodes) > 1:
           raise RuntimeError("multiple observing modes not yet supported")
-        if plotter.data[0]['OBSMODE'] == 'LINEPSSW' or \
-           plotter.data[0]['OBSMODE'] == 'LINEPBSW':
+        obsmode = plotter.get_first_good_value('OBSMODE')
+        if obsmode == 'LINEPSSW' or obsmode == 'LINEPBSW':
           if savefig:
             plotter.plot_PSSW_spectra(
                       figtitle=session_name.replace("_"," ")+"-"+str(tablekey),
@@ -459,6 +460,8 @@ class SessionPlotter(SessionAnalyzer):
           else:
             plotter.plot_PSSW_spectra(
                       figtitle=session_name.replace("_"," ")+"-"+str(tablekey))
+        self.logger.warning("plot_possw_diff: nothing to do for OBSMODE %s",
+                            obsmode)
       # end table loop
     show()
 
