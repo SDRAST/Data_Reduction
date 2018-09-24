@@ -114,20 +114,19 @@ if __name__ == "__main__":
   else:
     mylogger.error(" 'dss' is a required argument")
     sys.exit(1)
-  if args.workstation:
-    pass
-  else:
-    mylogger.error(" 'workstation' is a required argument")
-    sys.exit(1)
   
   # get the session path
   projectdatapath, projworkpath, datapath = \
                     get_obs_dirs("PESD", args.dss, year, doy)
   mylogger.debug("project data path: %s", projectdatapath)
   mylogger.debug("project work path: %s", projworkpath)
-  datapath = path_to_remote(args.workstation, projectdatapath)
+  if args.workstation:
+    datapath = path_to_remote(args.workstation, projectdatapath)
+    sessionpath = path_to_remote(args.workstation, projworkpath)
+  else:
+    datapath = projectdatapath
+    sessionpath = projworkpath
   mylogger.debug("data path: %s", datapath)
-  sessionpath = path_to_remote(args.workstation, projworkpath)
   
   # select signals to display
   if args.use_only:
@@ -153,6 +152,10 @@ if __name__ == "__main__":
   html = "<HTML>\n"
   html += "<CENTER><H1>Session Summary for %s on %4d/%03d</H1></CENTER>\n" % \
          (args.project, year, doy)
+  if signames:
+    pass
+  else:
+    html += "<P><CENTER>The Q channel (second IF) was not working properly</CENTER></P>"
   for signame in signames:
     html += "<HR/>" 
     #   get the images
