@@ -44,7 +44,7 @@ mylogger = logging.getLogger(__name__)
 
 
 
-##################################### Methods #################################
+##################################### Functions ################################
 
 def save_scan_data(row, scan, dateobs, source, interval, antenna, be,
                    spectrum):

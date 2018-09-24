@@ -331,6 +331,8 @@ class FITSfile(object):
 def get_SDFITS_tables(hdulist):
   """
   Finds the SINGLE DISH extensions in a FITS file
+  
+  This is used by make_session_index.py
   """
   tables = []
   # hdulist[0] is the file header
@@ -339,7 +341,44 @@ def get_SDFITS_tables(hdulist):
       tables.append(extension)
   return tables
 
-
+def get_row(tabletype, scans, scan=0,
+                       num_cycles=1, cycle=1,
+                       num_tones=0, tone=0):
+  """
+  get the row number in a table of the specified type
+  
+  The bandwidth could be so narrow that there are no tones within it.
+  
+  @param tabletype : required 'SINGLE DISH' or 'TONES PCG', case insensitive
+  @type  tabletype : str
+  
+  @param scans : required ordered list of scan numbers in the table
+  @type  scans : list of int
+  
+  @param scan : SCAN number, must be in 'scans'
+  @type  scan : int
+  
+  @param num_cycles : number of CYCLEs in a scan; default 1
+  @type  num_cycles : int
+  
+  @param cycle : CYCLE number within a scan, starting with 1; default 1
+  @type  cycle : int
+  
+  @param tone : tone number starting with 0 for the lowest frequency tone
+  @type  tone : int
+  """
+  scan_idx = scans.index(scan)
+  cycle_idx = cycle - 1
+  if tabletype.upper() == 'SINGLE DISH':
+    return num_cycles*scan_idx + cycle_idx
+  elif tabletype.upper() == 'TONES PCG':
+    if num_tones:
+      return (scan_idx*num_cycles + cycle_idx)*num_tones + tone
+    else:
+      return -1 # no tone, no row
+  else:
+    logger.error("get_row: table type %s is not recognized", tabletype)
+  
 def get_indices(num_indices, props,
                 scan_idx=0, cycle_idx=0, beam_idx=0, IF_idx=0, record=0,
                 trimmed=False):
@@ -351,6 +390,8 @@ def get_indices(num_indices, props,
   
   In FITS convention, lists start with 1. For Python, subtract 1 (if the list
   is continuous)
+  
+  This is used by class DSNFITSexaminer.
   
   @param num_indices : number of indices in the SPECTRUM array
   @type  num_indices : int

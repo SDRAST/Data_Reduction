@@ -109,7 +109,7 @@ class DataAverager(object):
                      % (fname[RF], RF))[0] in "yY":
           os.remove(fullpath)
         else:
-          raise RuntimeError("%s already exists", os.basename(fullpath))
+          raise RuntimeError("%s already exists", os.path.basename(fullpath))
       self.logger.debug("create_monitor_datasets: creating %s for %s",
                         fullpath, RF)
       try:
@@ -202,7 +202,7 @@ if __name__ == "__main__":
   mylogger = init_logging(logging.getLogger(),
                           loglevel   = get_loglevel(args.file_loglevel),
                           consolevel = get_loglevel(args.console_loglevel),
-                          logname    = args.logpath+__name__+".log")
+                          logname    = args.logpath+"make_kurtspec_averages"+".log")
   mylogger.debug("arguments: %s", args)
   mylogger.debug(" Handlers: %s", mylogger.handlers)
 
@@ -215,6 +215,7 @@ if __name__ == "__main__":
     sys.exit(1)
     
   datapath = "/data/kurtspec/%4d/%03d/" % (year, doy)
+  mylogger.debug("data at %s", datapath)
     
   files = glob.glob(datapath+"*.hdf5")
   mylogger.debug("found: %s", files)

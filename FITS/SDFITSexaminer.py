@@ -49,7 +49,7 @@ import time
 
 from astropy.coordinates import FK4, FK5, SkyCoord
 from copy import copy
-from matplotlib.dates import date2num
+#from matplotlib.dates import date2num
  
 from scipy import interpolate
 from scipy.optimize import curve_fit
@@ -75,7 +75,7 @@ try:
   from MonitorControl.FrontEnds.K_band import K_4ch
   K_4ch = None
 except ImportError:
-  logger.warning("SDFITSexaminer cannot handle DSS-43 K-band")
+  logger.warning("SDFITSexaminer cannot handle DSS-43 K-band: no configuration")
 from MonitorControl.Configurations.coordinates import DSS
 from MonitorControl.FrontEnds.DSN import DSN_fe
 from Radio_Astronomy import rms_noise
@@ -145,7 +145,7 @@ class DSNFITSexaminer(object):
         try:
           tables[index].SB = numpy.unique(tables[index].data['SIDEBAND'])
         except KeyError:
-          tables[index].SB = SBcode[tables[index].data['CDELT1'][0]]
+          tables[index].SB = SBcode[tables[index].get_first_good_value('CDELT1')]
         index += 1
     return tables
        
@@ -193,6 +193,7 @@ class DSNFITSexaminer(object):
     else:
       savename = savepath + filename+".fits"
     self.logger.info('consolidate: writing %s', savename)
+    # where is the save command?
      
   class Table(pyfits.BinTableHDU):
     """
@@ -242,24 +243,24 @@ class DSNFITSexaminer(object):
       self.parent = parent
       # add some attributes for convenience
       try:
-        d = UnixTime_to_datetime(self.get_first_value('UNIXtime',0)).timetuple()
+        d = UnixTime_to_datetime(self.get_first_good_value('UNIXtime')).timetuple()
       except KeyError:
         # old deprecated format
+        date_obs = self.parent.hdulist[1].get_first_good_value('DATE-OBS')
+        time_obs = self.parent.hdulist[1].get_first_good_value('TIME')
         try:
           time_at_midnight = \
-          time.strptime(self.parent.hdulist[1].data['DATE-OBS'][0], "%Y/%m/%d")
-          d = unixtime_at_midnight + self.parent.hdulist[1].data['TIME'][0]
+          time.strptime(date_obs, "%Y/%m/%d")
+          d = unixtime_at_midnight + time_obs
         except ValueError:
           # acceptable format
           try:
             time_at_midnight = \
-            time.strptime(self.parent.hdulist[1].data['DATE-OBS'][0],
-                          "%Y-%m-%d")
-            d = unixtime_at_midnight + self.parent.hdulist[1].data['TIME'][0]
+            time.strptime(date_obs, "%Y-%m-%d")
+            d = unixtime_at_midnight + time_obs
           except ValueError:
             # ISOtime
-            d = ISOtime2datetime(
-                        self.parent.hdulist[1].data['DATE-OBS'][0]).timetuple()
+            d = ISOtime2datetime(date_obs).timetuple()
       # what is the data column called?
       if 'SPECTRUM' in self.data.columns.names:
         self.dataname = 'SPECTRUM'
@@ -435,7 +436,9 @@ class DSNFITSexaminer(object):
       for cycle in self.cycle_keys:
         self.logger.debug("get_obs_freqs: getting freqs for cycle %d", cycle)
         self.obs_freqs[cycle] = self.data['OBSFREQ'][self.rows]\
-                                             [numpy.equal(self.rows, cycle)][0]
+                         [numpy.equal(self.data['CYCLE'][self.rows], cycle)][0]
+        #self.obs_freqs[cycle] = self.data['OBSFREQ'][self.rows]\
+        #                                     [numpy.equal(self.rows, cycle)][0]
       return self.obs_freqs
 
     def get_index_keys(self):
@@ -500,15 +503,25 @@ class DSNFITSexaminer(object):
     
       Assumes scan 1 is typical of all scans in the dataset
       """
+      if row == 0:
+        bandwidth = self.get_first_good_value('BANDWIDT')
+        ref_pix   = self.get_first_good_value('CRPIX1')
+        freq      = self.get_first_good_value('CRVAL1')
+        freq_step = self.get_first_good_value('CDELT1')
+      else:
+        bandwidth = self.data['BANDWIDT'][row]
+        ref_pix   = self.data['CRVAL1'][row]
+        freq      = self.data['CRVAL1'][row]
+        freq_step = self.data['CDELT1'][row]
       if num_chans:
         num_chans = num_chans
-        delf = self.data['BANDWIDT'][row]/num_chans
-        refpix = self.data['CRPIX1'][row]*num_chans/self.props['num chans']
+        delf = bandwidth/num_chans
+        refpix = ref_pix*num_chans/self.props['num chans']
       else:
         num_chans = self.props['num chans']
-        delf = self.data['CDELT1'][row]
-        refpix = self.data['CRPIX1'][row]
-      freqs = self.data['CRVAL1'][row] + delf * \
+        delf = freq_step
+        refpix = ref_pix
+      freqs = freq + delf * \
                (numpy.arange(num_chans)-refpix)
       return freqs/1e6
                          
@@ -547,7 +560,10 @@ class DSNFITSexaminer(object):
       if ref_freq:
         f_ref = ref_freq
       else:
-        f_ref = self.data['RESTFREQ'][row]/1e6 # ref freq in MHz
+        if row == 0:
+          f_ref = self.get_first_good_value('RESTFREQ')/1e6
+        else:
+          f_ref = self.data['RESTFREQ'][row]/1e6 # ref freq in MHz
       rel_freqs = self.freqs(row, num_chans=num_chans) - f_ref # channel
                                                  # frequencies relative
                                                  # to the reference frequency
@@ -603,12 +619,12 @@ class DSNFITSexaminer(object):
       """
       if not obstime:
         # get time from the first row
-        obstime = self.get_first_value('UNIXtime', row)
+        obstime = self.get_first_good_value('UNIXtime')
       if ref_freq:
         f_ref = ref_freq
       else:
-        f_ref = self.data['RESTFREQ'][0]/1e6 # MHz
-      v_ref = self.data['VELOCITY'][0]
+        f_ref = self.get_first_good_value('RESTFREQ')/1e6 # data['RESTFREQ'][0]/1e6 # MHz
+      v_ref = self.get_first_good_value('VELOCITY') # data['VELOCITY'][0]
       if frame:
         self.frame = frame
       #self.logger.debug("compute_X_axis: requested frame is %s", frame)
@@ -668,24 +684,31 @@ class DSNFITSexaminer(object):
     
       @return: float (km/s)
       """
+      if row == 0:
+        equinox =  self.get_first_good_value('EQUINOX')
+        ra =       self.get_first_good_value('CRVAL2')
+        dec =      self.get_first_good_value('CRVAL3')
+        source =   self.get_first_good_value('OBJECT')
+        unixtime = self.get_first_good_value('UNIXtime')
+      else:
+        equinox  = self.data['EQUINOX'][row]
+        ra       = self.data['CRVAL2'][row]
+        dec      = self.data['CRVAL3'][row]
+        source   = self.data["OBJECT"][row]
+        unixtime = self.data["UNIXtime"][row]
       try:
-        if self.data['EQUINOX'][row] == 1950:
-          position = SkyCoord(self.data['CRVAL2'][row],
-                              self.data['CRVAL3'][row],
-                              frame=FK4, unit=(u.hourangle, u.deg))
+        if equinox == 1950:
+          position = SkyCoord(ra, dec, frame=FK4, unit=(u.hourangle, u.deg))
       except KeyError:
         # assume J2000
         pass
       else:
-        position = SkyCoord(self.data['CRVAL2'][row],
-                            self.data['CRVAL3'][row],
-                            frame=FK5, unit=(u.hourangle, u.deg))
+        position = SkyCoord(ra, dec, frame=FK5, unit=(u.hourangle, u.deg))
       ra = position.ra.hour
       dec = position.dec.deg
       #self.logger.debug("V_LSR: ra = %f, dec = %f", ra, dec)
-      cat_entry = novas.make_cat_entry(self.data["OBJECT"][row],
-                                       "", 0, ra, dec, 0, 0, 0, 0)
-      source = novas.make_object(2, 0, self.data["OBJECT"][0], cat_entry)
+      cat_entry = novas.make_cat_entry(source, "", 0, ra, dec, 0, 0, 0, 0)
+      source = novas.make_object(2, 0, source, cat_entry)
       longdeg = self.header['SITELONG']
       #self.logger.debug("V_LSR: longitude in degrees W = %f", longdeg)
       if longdeg > 180:
@@ -694,7 +717,7 @@ class DSNFITSexaminer(object):
     
       DSS43 = novas.make_observer_on_surface(self.header['SITELAT'], longdeg,
                                              self.header['SITEELEV'], 0, 0)
-      dt = UnixTime_to_datetime(self.get_first_value('UNIXtime', row))
+      dt = UnixTime_to_datetime(unixtime)
       #self.logger.debug("V_LSR: computing for %s", dt.ctime())
       jd = novas.julian_date(dt.year,dt.month,dt.day,dt.hour+dt.minute/60.)
       mjd = MJD(dt.year,dt.month,dt.day)
@@ -804,24 +827,43 @@ class DSNFITSexaminer(object):
         IF           - 1-based number sequence, usually representing pol
       The other keys have only a time axis.
       """
-      on_rows = numpy.array(list(set(self.rows).intersection(
-                               set(numpy.where(self.data['SIG'] == True)[0]))))
-      self.logger.debug("get_wx_datacubes: rows for SIG=True: %s", on_rows)
-      of_rows = numpy.array(list(set(self.rows).intersection(
-                              set(numpy.where(self.data['SIG'] == False)[0]))))
-      self.logger.debug("get_wx_datacubes: rows for SIG=False: %s", of_rows)
+      # the following give rows for both cycles independent of spectrum quality
+      #
+      #on_rows = numpy.array(list(set(self.rows).intersection(
+      #                         set(numpy.where(self.data['SIG'] == True)[0]))))
+      goodtime = numpy.intersect1d(numpy.unique(self.data['UNIXtime'],
+                                   return_index=True)[1],
+                                   numpy.nonzero(self.data['UNIXtime'])[0])
+      onweather = numpy.intersect1d(numpy.unique(self.data['UNIXtime'],
+                                                  return_index=True)[1],
+                                    numpy.where(self.data['SIG'] == True)[0])
+      onweather = numpy.intersect1d(onweather, goodtime)
+      self.logger.debug("get_wx_datacubes: rows for SIG=True: %s", onweather)
+      #of_rows = numpy.array(list(set(self.rows).intersection(
+      #                        set(numpy.where(self.data['SIG'] == False)[0]))))
+      ofweather = numpy.intersect1d(numpy.unique(self.data['UNIXtime'],
+                                                  return_index=True)[1],
+                                     numpy.where(self.data['SIG'] == False)[0])
+      ofweather = numpy.intersect1d(ofweather, goodtime)
+      self.logger.debug("get_wx_datacubes: rows for SIG=False: %s", ofweather)
       
       valid_data, indices =  self.validate_wx_data()
       param_keys = valid_data.keys()
       param_keys.remove('TSYS') # to be handled separately
       
-      num_cycles = self.props['num cycles']
+      # populate the dict with the simple parameters
+      # these are the same for both cycles
       wx_data = {}
+      goodonweather = numpy.intersect1d(onweather, numpy.nonzero(self.data['CYCLE'])[0])
+      goodofweather = numpy.intersect1d(ofweather, numpy.nonzero(self.data['CYCLE'])[0])
       for key in param_keys:
-        wx_data[key] = {True: self.data[key][on_rows[::num_cycles]].flatten()}
+        #wx_data[key] = {True: self.data[key][on_rows[::num_cycles]].flatten()}
+        wx_data[key] = {True: self.data[key][goodonweather].flatten()}
         self.logger.debug("get_wx_datacubes: got %s for SIG=True", key)
-        if len(of_rows):
-          wx_data[key][False] = self.data[key][of_rows[::num_cycles]].flatten()
+        # it is possible that there was no position switching, e.g. pulsars
+        if len(goodofweather):
+          #wx_data[key][False] = self.data[key][of_rows[::num_cycles]].flatten()
+          wx_data[key][False] = self.data[key][goodofweather].flatten()
           self.logger.debug("get_wx_datacubes: got %s for SIG=False", key)
 
       # now organize extra TSYS dimensions
@@ -831,14 +873,18 @@ class DSNFITSexaminer(object):
       # of records
       num_records = self.props['num records'][1]
       tsys_shape = {}
-      tsys_shape[True] = num_records*(len(on_rows)/self.props['num cycles'],
-                    self.props['num cycles'],
-                    self.props['num beams'],
-                    self.props['num IFs'])
-      tsys_shape[False] = num_records*(len(of_rows)/self.props['num cycles'],
-                    self.props['num cycles'],
-                    self.props['num beams'],
-                    self.props['num IFs'])
+      goodons = numpy.intersect1d(onweather, numpy.nonzero(self.data['CYCLE'])[0])
+      goodofs = numpy.intersect1d(ofweather, numpy.nonzero(self.data['CYCLE'])[0])
+      #tsys_shape[True] = num_records*(len(on_rows)/self.props['num cycles'],
+      tsys_shape[True] = num_records*(len(goodons),
+                         self.props['num cycles'],
+                         self.props['num beams'],
+                         self.props['num IFs'])
+      #tsys_shape[False] = num_records*(len(of_rows)/self.props['num cycles'],
+      tsys_shape[False] = num_records*(len(goodofs),
+                          self.props['num cycles'],
+                          self.props['num beams'],
+                          self.props['num IFs'])
       self.logger.debug("get_wx_datacubes: weather TSYS shape is %s", tsys_shape)
       wx_data['TSYS'][True] = numpy.zeros(tsys_shape[True])
       wx_data['TSYS'][False] = numpy.zeros(tsys_shape[False])
@@ -849,14 +895,19 @@ class DSNFITSexaminer(object):
           time_axis = 2
         else:
           time_axis = 1
-        num_scans = self.data['TSYS'][on_rows].shape[0]
-        num_recs  = self.data['TSYS'][on_rows].shape[time_axis]
+        #num_scans = self.data['TSYS'][on_rows].shape[0]
+        #num_recs  = self.data['TSYS'][on_rows].shape[time_axis]
+        num_scans = self.data['TSYS'][goodonweather].shape[0]
+        num_recs  = self.data['TSYS'][goodonweather].shape[time_axis]
         num_on = num_scans*num_recs        # there is always SIG=True data
-        if len(self.data['SIG'][of_rows]):
+        #if len(self.data['SIG'][of_rows]):
+        if len(self.data['SIG'][goodofweather]):
           # there are SIG=False rows
           num_states = 2
-          num_of = self.data['TSYS'][of_rows].shape[0] \
-                  *self.data['TSYS'][of_rows].shape[time_axis]
+          #num_of = self.data['TSYS'][of_rows].shape[0] \
+          #        *self.data['TSYS'][of_rows].shape[time_axis]
+          num_of = self.data['TSYS'][goodofweather].shape[0] \
+                  *self.data['TSYS'][goodofweather].shape[time_axis]
         # fill in the TSYS data
         self.logger.debug("get_wx_datacubes: %s props: %s", self, self.props)
         for subch_idx in range(self.props['num cycles']):
@@ -865,16 +916,20 @@ class DSNFITSexaminer(object):
               if self.props['num beams'] > 1:
                 # this therefore has a time axis too
                 data_on = \
-                   self.data['TSYS'][on_rows,beam_idx,:,IF_idx,0,0,0].flatten()
+                   self.data['TSYS'][goodonweather,beam_idx,:,IF_idx,0,0,0].flatten()
+                   #self.data['TSYS'][on_rows,beam_idx,:,IF_idx,0,0,0].flatten()
               else:
-                data_on = self.data['TSYS'][on_rows,:,IF_idx,0,0,0].flatten()
+                #data_on = self.data['TSYS'][on_rows,:,IF_idx,0,0,0].flatten()
+                data_on = self.data['TSYS'][goodonweather,:,IF_idx,0,0,0].flatten()
               wx_data['TSYS'][True][:,subch_idx,beam_idx,IF_idx] = data_on
               if num_states == 2:
                 if self.props['num beams'] > 1:
                   data_of = \
-                   self.data['TSYS'][of_rows,beam_idx,:,IF_idx,0,0,0].flatten()
+                   self.data['TSYS'][goodofweather,beam_idx,:,IF_idx,0,0,0].flatten()
+                   #self.data['TSYS'][of_rows,beam_idx,:,IF_idx,0,0,0].flatten()
                 else:
-                  data_of = self.data['TSYS'][of_rows,:,IF_idx,0,0,0].flatten()
+                  #data_of = self.data['TSYS'][of_rows,:,IF_idx,0,0,0].flatten()
+                  data_of = self.data['TSYS'][goodofweather,:,IF_idx,0,0,0].flatten()
                 wx_data['TSYS'][False][:,subch_idx,beam_idx,IF_idx] = data_of            
       elif self.header['BACKEND'][:4].upper() == 'WVSR':
         # this currently has no time axis but it has cycles, and only one beam
@@ -888,12 +943,13 @@ class DSNFITSexaminer(object):
             #length = len(wx_data['TSYS'][True][:,subch_idx,beam_idx,IF_idx])
             #self.logger.debug("get_wx_datacubes: axis length is %d", length)
             wx_data['TSYS'][True][:,subch_idx,beam_idx,IF_idx] = \
-              self.data['TSYS'][on_rows[subch_idx::2],IF_idx,0,0,0].flatten()
+              self.data['TSYS'][goodonweather,IF_idx,0,0,0].flatten()
+              #self.data['TSYS'][on_rows[subch_idx::2],IF_idx,0,0,0].flatten()
               #self.data['TSYS'][on_rows[subch_idx:length:2],IF_idx,0,0,0].flatten()
-            if len(of_rows):
-              tsys_of = self.data['TSYS'][of_rows[subch_idx::],IF_idx,0,0,0].flatten()
+            if len(goodofweather):
               wx_data['TSYS'][False][:,subch_idx,beam_idx,IF_idx] = \
-                self.data['TSYS'][of_rows[subch_idx::2],IF_idx,0,0,0].flatten()
+                self.data['TSYS'][goodofweather,IF_idx,0,0,0].flatten()
+                #self.data['TSYS'][of_rows[subch_idx::2],IF_idx,0,0,0].flatten()
                 #self.data['TSYS'][of_rows[subch_idx:length:2],IF_idx,0,0,0].flatten()
       return wx_data
 
@@ -905,17 +961,44 @@ class DSNFITSexaminer(object):
       axis of the data cube.  Often, just the first value is needed
       corresponding to the start of the scan.  This relieves the user of having
       to known how to access that datum.
+      
+      @param column : name of the column
+      @type  column : str
+      
+      @param row : number of the row in the table
+      @type  row : int
       """
       try:
         cellshape = self.data[column][row].shape
       except AttributeError:
-        return self.data[column][row]
+        # if the table cell has no shape then it is just a single value; for
+        # example, self.data['OBJECT'][0] has no shape
+        value =  self.data[column][row]
       else:
         if cellshape == ():
-          return self.data[column][row]
+          # if the shape is empty the cell is a numpy array of zero dimensions
+          # such as self.data['UNIXtime'][0].shape
+          value = self.data[column][row]
         else:
-          idx = len(cellshape)*[[0]]
-          return self.data[column][row][idx][0]
+          # create an index with the right number of indices, such as
+          # tb.data['TSYS'][0].shape which has a shape (2, 1, 1, 1) so that
+          # (not clear why I wrote the following this way
+          #idx = len(cellshape)*[[0]]
+          #return self.data[column][row][idx][0]
+          idx = len(cellshape)*[0]
+          value = self.data[column][row][idx]
+      return value
+  
+    def get_first_good_value(self, column):
+      """
+      Get the first good value in the named column.
+      
+      A row with UNIX time of 0.0 does not have valid data
+      """
+      row = 0
+      while self.data['UNIXtime'][row] == 0.0:
+        row += 1
+      return self.get_first_value(column, row)
       
     def prepare_summary_arrays(self, num_chans):
       """
@@ -1828,7 +1911,8 @@ class DSNFITSexaminer(object):
             unixtime = midnight_unixtime + rectime
             datime = datetime.datetime.fromtimestamp(unixtime) # datetime
             # round to roughly 0.1 s
-            good_data['mpltime'][sig].append(round(date2num(datime),6))
+            #good_data['mpltime'][sig].append(round(date2num(datime),6))
+            good_data['mpltime'][sig].append(round(datime.toordinal(),6))
             good_data['elev'][sig].append(self.data['ELEVATIO'][row,0,rec,0,0,0,0])
             for beam_idx in range(self.props["num beams"]):
               beam = beam_idx+1
@@ -1859,7 +1943,8 @@ class DSNFITSexaminer(object):
                                                     self.data['TSYS'][indices])
           if cycle == 1:
             # these are the same for all cycles
-            good_data['mpltime'][sig].append(round(date2num(datime),6))
+            #good_data['mpltime'][sig].append(round(date2num(datime),6))
+            good_data['mpltime'][sig].append(round(datime.toordinal(),6))
             good_data['elev'][sig].append(self.data['ELEVATIO'][row])
             good_data['Tambient'][sig].append(self.data['TAMBIENT'][row])
             good_data['pressure'][sig].append(self.data['PRESSURE'][row])
