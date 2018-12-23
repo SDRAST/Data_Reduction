@@ -164,6 +164,10 @@ if __name__ == "__main__":
   html = "<HTML>\n"
   html += "<CENTER><H1>Session Summary for %s on %4d/%03d</H1></CENTER>\n" % \
          (args.project, year, doy)
+  if signames:
+    pass
+  else:
+    html += "<P><CENTER>The Q channel (second IF) was not working properly</CENTER></P>"
   for signame in signames:
     html += "<HR/>" 
     #   get the images
