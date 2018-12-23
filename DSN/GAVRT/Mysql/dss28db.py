@@ -85,7 +85,7 @@ logger = logging.getLogger(__name__)
 
 import Astronomy as A
 
-from MonitorControl.Configurations.coordinates import DSS
+from Astronomy.DSN_coordinates import DSS
 from Radio_Astronomy import HPBW
 
 _host,_user,_pw = pickle.load(open(os.environ['HOME']+"/.GAVRTlogin.p",
