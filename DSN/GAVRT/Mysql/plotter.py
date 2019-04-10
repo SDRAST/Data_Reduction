@@ -50,6 +50,10 @@ class SessionPlotter(Session):
     mylogger = logging.getLogger(logger.name+".SessionPlotter")
     Session.__init__(self, parent, year, doy, plotter=True)
     self.logger = mylogger
+    obs_dir = "/usr/local/projects/SolarPatrol/Observations/dss28/"
+    self.session_dir = obs_dir + "%4d" % self.year +"/"+ "%03d" % self.doy +"/"
+    if not os.path.exists(self.session_dir):
+      os.makedirs(self.session_dir, mode=0777)
     self.get_map_plotters()
       
   def get_map_plotters(self):
@@ -60,11 +64,15 @@ class SessionPlotter(Session):
                          "select raster_cfg_id from raster_cfg where year = " +
                          str(self.year) + " and doy = " + str(self.doy) + 
                          ";")
-    self.logger.debug("get_maps_plotters: map IDs: %s", map_cfg_ids[:,0])
+    self.logger.debug("get_map_plotters: cfg IDs: %s", map_cfg_ids)
     self.maps = {}
-    for map_id in map_cfg_ids[:,0]:
-      self.logger.debug("get_maps_plotters: getting %d", map_id)
-      self.maps[map_id] = MapPlotter(self, map_id)
+    if map_cfg_ids.shape == (0,):
+      self.logger.error("get_map_plotters: no maps for this session")
+    else:
+      self.logger.debug("get_maps_plotters: map IDs: %s", map_cfg_ids[:,0])
+      for map_id in map_cfg_ids[:,0]:
+        self.logger.debug("get_maps_plotters: getting %d", map_id)
+        self.maps[map_id] = MapPlotter(self, map_id)
     return self.maps
 
   def plot_centered_offsets(self, mapkeys=None):
@@ -122,38 +130,106 @@ class SessionPlotter(Session):
     @type  mapkeys : list of int
     """
     if mapkeys:
-      self.logger.info("show_images:")
+      pass
     else:
       mapkeys = self.maps.keys()
-      mapkeys.sort()
+    mapkeys.sort()
+    first_map = mapkeys[0]
+    last_map = mapkeys[-1]
+    self.logger.debug("show_images: map keys: %s", mapkeys)
+    self.logger.debug("show_images: first map is %d", first_map)
+    self.logger.debug("show_images: last map is %d", last_map)
+    last_map = mapkeys[-1]
     for key in mapkeys:
+      self.logger.debug("show_images: for map %d", key)
       try:
         self.maps[key].map_data.keys()
       except AttributeError:
-        self.maps[key].maps_from_tlogs()
-    fig, ax = subplots(nrows=4, ncols=5)
-    fig.set_size_inches(32,30,forward=True)
-    width = 0.8; height = 0.8
-    for row in range(4):
-      for col in range(5):
-        map_id = first_map + 5*row + col
-        try:
-          Map = self.maps[map_id]
-          x,y,z = Map.regrid(width=width, height=height)
-          ax[row][col].contourf(x, y, z, cmap=plt.cm.jet)
+        if self.maps[key].raster_keys == None:
+          self.logger.error("show_images: map has no data")
+          continue
+        else:
+          self.maps[key].maps_from_tlogs()
+    
+    for mapno in mapkeys:
+      try:
+        num_chan = len(self.maps[mapno].channels)
+      except AttributeError, details:
+        # if there is no map data, probably
+        self.logger.error("show_images: map %d failed due to attribute err %s",
+                          mapno, str(details))
+        continue
+      if num_chan == 0:
+        continue
+      if num_chan <= 4:
+        fig, axis = subplots(nrows=1, ncols=num_chan)
+        ax = [axis] # needs to be a list to be compatible
+      else:
+        fig, ax = subplots(nrows=2, ncols=num_chan-4)
+      fig.set_size_inches(16,10,forward=True)
+      width = 0.8; height = 0.8
+      self.logger.debug("show_images: processing map %d", mapno)
+      Map = self.maps[mapno]
+      try:
+        channels = Map.channels
+      except AttributeError:
+        continue
+      Map.center_map()
+      x,y,z = Map.regrid(width=width, height=height)
+      for chan in channels:
+        if z.has_key(chan):
+          index = channels.index(chan)
+          col = index % 4
+          row = index//4
+          self.logger.debug("show_images: processing map %d channel %d", mapno, chan)
+          ax[row][col].contourf(x, y, z[chan], cmap=plt.cm.jet)
           ax[row][col].grid(True)
           ax[row][col].set_aspect('equal')
           ax[row][col].set_xlim(-width/2., width/2.)
           ax[row][col].set_ylim(-height/2., height/2.)
           ax[row][col].set_xlabel("Cross-declination offset")
           ax[row][col].set_ylabel("Declination offset")
-          ax[row][col].set_title(Map.name+" at " + str(Map.cfg['freq']) +
-                                 " MHz " + Map.rss_cfg['pol'][0].upper())
-        except KeyError:
-          break
-    fig.suptitle(str(int(Map.cfg['year']))+"/"+str(int(Map.cfg['doy'])))
-    show()    
-    
+          ax[row][col].set_title(
+                      Map.name+" at " + str(Map.rss_cfg[chan]['sky_freq'][0]) +
+                               " MHz " + Map.rss_cfg[chan]['pol'][0].upper())
+          self.logger.debug("show_images: finished row %d, column %d for map %d ch %d",
+                          row, col, mapno, chan)
+        else:
+          continue
+      #fig.suptitle(str(int(Map.cfg['year']))+"/"+str(int(Map.cfg['doy'])))
+      fig.suptitle(str(self.year)+"/"+str(self.doy))
+      fig.savefig(self.session_dir+"map"+ ("%04d" % mapno) +".png")
+    show() 
+  
+  def show_boresights(self, channel=None):
+    """
+    """
+    try:
+      bs_keys = self.bs_data.keys()
+    except AttributeError:
+      self.get_boresight_data(chan=channel)
+      bs_keys = self.bs_data.keys()
+    bs_keys.sort()
+    for key in bs_keys:
+      axis = self.xpwr_metadata[:,4][where(self.xpwr_metadata[:,0]==str(key))][0]
+      src_id = self.xpwr_metadata[:,3][where(self.xpwr_metadata[:,0]==str(key))][0]
+      src_name = self.db.get_source_names([src_id])['source'][0]
+      fig = figure()
+      if channel:
+        if type(channel) == int:
+          channels = [channel]
+      else:
+        channels = unique(self.bs_data[key][:,6])
+      for ch in channels:
+        UNIXtime = self.bs_data[key][:,0][where(self.bs_data[key][:,6]==ch)]
+        Top      = self.bs_data[key][:,1][where(self.bs_data[key][:,6]==ch)]
+        plot(UNIXtime, Top, label=str(ch))
+      title(src_name+' '+axis+' ('+str(key)+')')
+      grid()
+      legend()
+      fig.savefig(self.session_dir+"boresight"+ ("%05d" % key) +".png")
+
+            
 class MapPlotter(Map):
   """
   """

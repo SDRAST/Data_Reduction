@@ -185,7 +185,7 @@ def get_map_sheet(wb,sheetname):
   else:
     dxdecs = []
     for column in range(1,mapsheet.get_highest_column()):
-      dxdecs.append(mapsheet.cell(row=0, column=column).value)
+      dxdecs.append(mapsheet.cell(row=0, column=column).value)Wedne
     ddecs = []
     for row in range(1,mapsheet.get_highest_row()):
       ddecs.append(mapsheet.cell(row=row, column=0).value)
@@ -258,7 +258,7 @@ def create_boresight_analysis_sheet(wb):
   analsh.cell(column= 0,row=0).value = "Source"
   analsh.cell(column= 1,row=0).value = "Freq"
   analsh.cell(column= 2,row=0).value = "Pol"
-  analsh.cell(column= 3,row=0).value = "IF mode"
+  analsh.cell(column= 3,row=0).value = "IF mode"Wedne
   analsh.cell(column= 4,row=0).value = "Dec Start"
   analsh.cell(column= 5,row=0).value = "Dec End"
   analsh.cell(column= 6,row=0).value = "XDec Start"
