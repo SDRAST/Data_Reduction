@@ -10,6 +10,8 @@ from pylab import *
 
 from Data_Reduction.DSN.GAVRT.Mysql.dss28db import DSS28db, Map, Session
 from Data_Reduction.maps import plot_xdec_dec
+from DatesTimes import UnixTime_to_MPL
+
 logger = logging.getLogger(__name__)
 
 _host,_user,_pw = pickle.load(open(os.environ['HOME']+"/.GAVRTlogin.p",
@@ -43,17 +45,21 @@ class DBPlotter(DSS28db):
 
 class SessionPlotter(Session):
   """
+  Class to add plotting capability to a Session object
+  
+  This instantiates MapPlotter objects which are a subclass of Map. This means
+  that the Session initialization should not get the maps.
   """
   def __init__(self, parent, year, doy):
     """
+    initialize as SessionPlotter
+    
+    @param parent : 'self' of the method which invokes this
+    @type  parent : DSS28db object
     """
     mylogger = logging.getLogger(logger.name+".SessionPlotter")
     Session.__init__(self, parent, year, doy, plotter=True)
     self.logger = mylogger
-    obs_dir = "/usr/local/projects/SolarPatrol/Observations/dss28/"
-    self.session_dir = obs_dir + "%4d" % self.year +"/"+ "%03d" % self.doy +"/"
-    if not os.path.exists(self.session_dir):
-      os.makedirs(self.session_dir, mode=0777)
     self.get_map_plotters()
       
   def get_map_plotters(self):
@@ -182,7 +188,8 @@ class SessionPlotter(Session):
           col = index % 4
           row = index//4
           self.logger.debug("show_images: processing map %d channel %d", mapno, chan)
-          ax[row][col].contourf(x, y, z[chan], cmap=plt.cm.jet)
+          mapimg = ax[row][col].contourf(x, y, z[chan], cmap=plt.cm.jet)
+          ax[row][col].colorbar(mappable=mapimg, ax=ax[row][col])
           ax[row][col].grid(True)
           ax[row][col].set_aspect('equal')
           ax[row][col].set_xlim(-width/2., width/2.)
@@ -196,39 +203,101 @@ class SessionPlotter(Session):
                           row, col, mapno, chan)
         else:
           continue
-      #fig.suptitle(str(int(Map.cfg['year']))+"/"+str(int(Map.cfg['doy'])))
       fig.suptitle(str(self.year)+"/"+str(self.doy))
       fig.savefig(self.session_dir+"map"+ ("%04d" % mapno) +".png")
     show() 
   
-  def show_boresights(self, channel=None):
+  def show_boresights(self, bs_keys=None, channel=None):
     """
+    shows boresight data as a function time.
     """
-    try:
-      bs_keys = self.bs_data.keys()
-    except AttributeError:
-      self.get_boresight_data(chan=channel)
-      bs_keys = self.bs_data.keys()
-    bs_keys.sort()
-    for key in bs_keys:
-      axis = self.xpwr_metadata[:,4][where(self.xpwr_metadata[:,0]==str(key))][0]
-      src_id = self.xpwr_metadata[:,3][where(self.xpwr_metadata[:,0]==str(key))][0]
-      src_name = self.db.get_source_names([src_id])['source'][0]
-      fig = figure()
+    if bs_keys:
+      keys = bs_keys
+    else:
+      keys = self.boresights.keys()
+    keys.sort()
+    fig = figure()
+    for key in keys:
+      axis = self.boresights[key].axis
+      src_name = self.boresights[key].source
       if channel:
+        # do only this channel
         if type(channel) == int:
           channels = [channel]
       else:
-        channels = unique(self.bs_data[key][:,6])
-      for ch in channels:
-        UNIXtime = self.bs_data[key][:,0][where(self.bs_data[key][:,6]==ch)]
-        Top      = self.bs_data[key][:,1][where(self.bs_data[key][:,6]==ch)]
-        plot(UNIXtime, Top, label=str(ch))
-      title(src_name+' '+axis+' ('+str(key)+')')
-      grid()
-      legend()
-      fig.savefig(self.session_dir+"boresight"+ ("%05d" % key) +".png")
+        try:
+          channels = self.boresights[key].channels
+        except AttributeError:
+          continue
+      if channels.any():
+        for ch in channels:
+          if self.boresights[key].logdata[ch]:
+            UNIXtime = self.boresights[key].logdata[ch]['epoch'].astype(float)
+            mpltime = UnixTime_to_MPL(UNIXtime)
+            Top      = self.boresights[key].logdata[ch]['top'].astype(float)
+            plot_date(mpltime, Top, '-', label=str(key)+'-'+str(ch)+'-'+axis)
+    title("Boresight Summary")
+    grid()
+    legend(loc="upper center")
+    fig.autofmt_xdate()
+    filename = "bs_summary"
+    if bs_keys:
+      filename += " ["+str(keys[0])+"-"+str(keys[-1])+"]"
+    fig.savefig(self.session_dir+filename
+                + ("%4d-%03d" % (self.year, self.doy)) +".png")
 
+  def show_good_boresights(self):
+    """
+    From boresight 33940 I concluded that 'data' has one extra sample at the
+    beginning compared to 'logdata'.  This needs to be done more carefully.
+    """
+    good_boresights = self.get_good_boresights()
+    scanaxis = {'dec': 'ha', 'xdec': 'ha'}
+    xlabel = {'dec': "Hour Angle", 'xdec': "Hour Angle"}
+    for key in good_boresights.keys():
+      nchans = len(good_boresights[key])
+      fig, ax = subplots(nrows=2, ncols=nchans)
+      width, height = tuple(fig.get_size_inches())
+      fig.set_size_inches(width*nchans, 2*height, forward=True)
+      axis = self.boresights[key].axis
+      for ch in good_boresights[key]:
+        rowidx = 0
+        colidx = good_boresights[key].index(ch) % 2
+        ax[rowidx,colidx].plot(self.boresights[key].data['ha'],
+                       self.boresights[key].data['dec'], label="ha-dec")
+        ax[rowidx,colidx].set_title("Chan " + str(ch)
+                            + "(" + str(self.boresights[key].logdata[ch]['freq'])
+                            + "-" + str(self.boresights[key].logdata[ch]['pol']) +")")
+        ax[rowidx,colidx].grid(True)
+        ax[rowidx,colidx].set_xlabel("Hour Angle")
+        ax[rowidx,colidx].set_ylabel("Declination")
+        ax[rowidx,colidx].legend()
+        
+        rowidx = 1
+        datalen = len(self.boresights[key].data['epoch'])
+        logdatalen = len(self.boresights[key].logdata[ch]['epoch'])
+        offset = datalen - logdatalen
+        self.logger.debug("show_good_boresights: %d ch %d offset is %d", key, ch, offset)
+        if offset > 0:
+          ax[rowidx,colidx].plot(self.boresights[key].data[scanaxis[axis]][offset:],
+                       self.boresights[key].logdata[ch]['top'], label="Tsys")
+        elif offset < 0:
+          self.logger.debug("show_good_boresights: %d ch %d data length mismatch: %d", key, ch, offset)
+          continue
+        else:
+          ax[rowidx,colidx].plot(self.boresights[key].data[scanaxis[axis]],
+                       self.boresights[key].logdata[ch]['top'], label="Tsys")
+        ax[rowidx,colidx].set_title("Chan " + str(ch)
+                            + " (" + str(self.boresights[key].logdata[ch]['freq'])
+                            + "-" + str(self.boresights[key].logdata[ch]['pol']) +")")
+        ax[rowidx,colidx].grid(True)
+        ax[rowidx,colidx].set_xlabel(xlabel[axis])
+        ax[rowidx,colidx].legend()
+      fig.suptitle(str(key) + " ("+self.boresights[key].axis + ")")
+      fig.show()
+      fig.savefig(self.session_dir+"boresight-"+str(key)+".png")
+      
+        
             
 class MapPlotter(Map):
   """

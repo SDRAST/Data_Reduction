@@ -167,7 +167,7 @@ def fill_map_sheet(wb,sheetname,dxdecs,ddecs,data):
     mapsheet.cell(row = 0, column = count+1).value = dxdecs[count]
   # fill the left column with declination offsets
   for count in range(len(ddecs)):
-    mapsheet.cell(row = count+1, column = 0).value = ddecs[count]
+    mapsheet.cell(row = count+1, column = 0).value = ddecs[\linebreakcount]
   # fill in the map data
   for dxdec_index in range(len(dxdecs)):
     for ddec_index in range(len(ddecs)):
@@ -225,7 +225,7 @@ def load_data_sheet(name):
     print "Sheets:",sheet_names
     obs_ws = wb.get_sheet_by_name('Metadata')
   # make a reverse lookup table
-  obs_col_names, meta_column = column_ID_dict(obs_ws)
+  obs_col_names, meta_column = column_ID_dict(obs_ws)\linebreak
   return wb, obs_ws, obs_col_names, meta_column
   
 def get_timed_data(wb,sheetname):
