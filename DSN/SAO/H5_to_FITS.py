@@ -273,51 +273,6 @@ class FITSfile_from_SAO(FITSfile):
     # now fill in the rows
     tabhdu = self.add_data(tabhdu, dataset, nrecs, equipment)
     return tabhdu
-    
-  def get_hardware_metadata(self, BE):
-    """
-    Initializes columns for the backends.
-
-    Creates SDFITS columns for the backends.  Each distinct backend gets its
-    own extension so BACKEND doesn't need a column.
-
-    Notes
-    =====
-    Data Axes
-    ---------
-    Backend data are represented by a multi-dimensional cube.  For DSN FITS::
-     - axis 1 = frequency
-     - axis 2 = right ascension
-     - axis 3 = declination
-     - axis 4 = Stokes code
-    Axis 2, 3 and 4 have only a single value, so that a data table is only a
-    spectrum compatible with ASAP and GBTIDL.
-
-    Beyond these there is an optional axes::
-     - axis 5 = time (as for dynamic spectra)
-    This makes the table incompatible with ASAP and GBTIDL but those programs
-    can't handle dynamic spectra anyway.
-
-    @param hdr : pyFITS header object
-
-    @param cols : pyFITS columns object
-
-    @return: tuple
-      (hdr, cols) a revised header object and a revised column object
-    """
-    self.exthead['backend'] = BE.name
-    try:
-      self.exthead['firmware'] = BE.firmware
-    except AttributeError:
-      pass
-    try:
-      self.exthead['boffile']= str(BE.roach.bitstream)
-    except AttributeError:
-      pass
-    self.exthead['maxis1'] =  (BE['num_chan'], "length of DATA axis 1")
-    self.logger.debug("get_hardware_metadata: MAXIS1 = %d",
-                      self.exthead['maxis1'])
-    self.exthead['freqres'] =  BE['freqres']
   
   def add_data(self, tabhdu, dataset, numrecs, equipment):
     """
