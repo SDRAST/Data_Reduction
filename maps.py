@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from pylab import *
-from matplotlib.mlab import griddata
 import ephem
 from Astronomy.solar import ra_dec_to_xy
 

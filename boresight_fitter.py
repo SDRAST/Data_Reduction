@@ -1,3 +1,8 @@
+"""
+This is supposed to be a general purpose boresight fitter but it has too many
+DSS-28 dependencies.
+"""
+
 import logging
 from math import log10, pi
 from matplotlib.dates import date2num
@@ -9,69 +14,65 @@ from DatesTimes import UnixTime_to_MPL
 from Math.least_squares import fit_gaussian, gaussian_error_function, st_dev
 from Radio_Astronomy import HPBW
 from support import nearest_index
-from support.Ephem import calibrator, DSS, EphemException
+from Astronomy.Ephem import calibrator, DSS, EphemException
 
 logger = logging.getLogger(__name__)
 dss28 = DSS(28)
-beam_limit = 2.5 # beam widths
-
-def DSS28_beamtaper(freq):
-  """
-  ad hoc fit to beamwidth vs frequency plot
-  """
-  if freq < 7:
-    taper=0
-  else:
-    taper = 50*(log10(freq)-log10(7))
-  return taper
-  
-def DSS28_beamwidth(freq):
-  """
-  beamwidth in deg. with edge taper
-  """
-  return HPBW(DSS28_beamtaper(freq), 0.3/float(freq), 34)*180/pi
 
 class ScanFitter(object):
   """
   Create an object to fit a scan in one direction to a baseline and a Gaussian
+  
+  Public attributes::
+    atten         - (float) receiver channel attenuation for this can
+    baseline_pars - (nparray) polynomial parameters for baseline
+    calibrator    - (Astronomy.Ephem.calibrator) calibrator source
+    data          - (nparray) VFC count
+    ddecs         - (nparray) declination offsets
+    direction     - (str) scan axis
+    dxdecs        - (nparray) cross-declination offsets
+    logger        - (logging.Logger)
+    pars          - (nparray) Gaussian parameters
   """
-  def __old__(self, date_nums, ras, decs, data, source, direction, freq):
-    """
-    Initiate a scan fitter
-    """
-    self.logger = logging.getLogger(logger.name+".ScanFitter")
-    self.calibrator = calibrator(source)
-    self.direction = direction
-    self.freq = freq
-    self.data = data
-    self.dxdecs,self.ddecs = center_data(date_nums,
-                                         ras, decs,
-                                         self.calibrator,
-                                         dss28)
-    #self.logger.debug("__init__: delta-X-dec: %s", self.dxdecs)
-    #self.logger.debug("__init__: delta-dec: %s", self.ddecs)
 
   def __init__(self, scan):
     """
+    Initiate a scan fitter
+    
+    This takes a 'scan' object with these attributes::
+      axis
+      datenums
+      conv_cfg
+      decs
+      freq
+      ras
+      source
+      tsys
     """
     self.logger = logging.getLogger(logger.name+".ScanFitter")
+    # the following returns an ephem planet or quasar
     self.calibrator = calibrator(scan.source)
-    self.direction = scan.axis
+    self.axis = scan.axis
     self.freq = scan.freq
-    self.data = scan.tsys
-    self.atten = scan.conv_cfg['atten']
+    self.tsys = scan.tsys
     self.dxdecs,self.ddecs = center_data(scan.date_nums,
                                          scan.ras, scan.decs,
                                          self.calibrator,
                                          dss28)
     
-  def fit_gaussian(self):
-    # Extract the appropriate data
-    #    For raster scans, 'xdec' means that 'xdec' stays fixed while the
-    #    antenna moves up and down; 'dec' means that 'dec' stays fixed while the
-    #    left and right
-    self.logger.debug("fit_gaussian: direction is %s", self.direction)
-    if self.direction.lower() == 'xdec':
+  def fit_gaussian(self, beam_limit=2.5):
+    """
+    Extract the appropriate data::
+        For raster scans, 'xdec' means that 'xdec' stays fixed while the
+        antenna moves up and down; 'dec' means that 'dec' stays fixed while the
+        left and right.
+     The Gaussian is assumed to fit the inner five beamwidths of the data,
+     though that limit can be adjusted.  The baseline is the rest of the data,
+     although the lower baseline includes at least data[:5] and the upper
+     baseline includes data[-5:]
+    """
+    self.logger.debug("fit_gaussian: direction is %s", self.axis)
+    if self.axis.lower() == 'xdec':
       x = NP.array(self.ddecs)
     else:
       x = NP.array(self.dxdecs)
@@ -115,13 +116,13 @@ class ScanFitter(object):
     # define the baseline data
     xdata = NP.append(x[lower_baseline[0]:lower_baseline[1]],
                       x[upper_baseline[0]:upper_baseline[1]]).astype(float)
-    ydata = NP.append(self.data[lower_baseline[0]:lower_baseline[1]],
-                      self.data[upper_baseline[0]:upper_baseline[1]]).astype(float)
+    ydata = NP.append(self.tsys[lower_baseline[0]:lower_baseline[1]],
+                      self.tsys[upper_baseline[0]:upper_baseline[1]]).astype(float)
     #   Fit baseline
     self.baseline_pars = polyfit(xdata,ydata,1)
     self.logger.debug("fit_gaussian: baseline parameters: %s", self.baseline_pars)
     #   Fit the beam
-    zdata = NP.array(self.data).astype(float)
+    zdata = NP.array(self.tsys).astype(float)
     self.logger.debug("fit_gaussian: zdata: %s", zdata)
     height = zdata[beam_index] - polyval(self.baseline_pars, x[beam_index])
     self.logger.debug("fit_gaussian: height: %s", height)

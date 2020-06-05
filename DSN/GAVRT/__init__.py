@@ -1,15 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Classes for reducing Solar Patrol data
-
-DBPlotter (from Data_Reduction.DSN.GAVRT.Mysql.plotter) is used to reduce data
-stored in the LCER GAVRT MySQL database.  The following example gets the 
-coordinate data for a map made during a given session::
-  In [1]: from Data_Reduction.DSN.GAVRT.Mysql.plotter import DBPlotter
-  In [2]: pl = DBPlotter()
-  In [3]: sp = pl.get_session_plotter(2017,233)
-  In [4]: map69data = sp.maps[69].maps_from_tlogs()
-  In [5]: xdec,dec = sp.maps[69].center_map()
+Functions for reducing Solar Patrol data
 
 A lot of modules under this need fixing up because of change from package 
 Observatory to MonitorControl and algorithmic to object-oriented programming.
@@ -27,7 +18,7 @@ import Astronomy
 from support.excel import get_row_number
 from Data_Reduction import nearest_index
 from Data_Reduction.DSN.GAVRT.solar import create_metadata_sheet
-from DSMS.excel import set_column_dimensions
+from support.excel import set_column_dimensions
 
 logger = logging.getLogger(__name__)
 

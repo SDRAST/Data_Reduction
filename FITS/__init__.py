@@ -34,7 +34,7 @@ creating a simple 1-table file is this:
      Additional tables may be appended with::
        hdulist.append(tb2hdu)
 """
-import pyfits
+import astropy.io.fits as pyfits
 import numpy
 import logging
 

@@ -2,6 +2,7 @@
 plots data from the DSS-28 EAC database
 """
 import logging
+import numpy
 import os
 import pickle
 import time
@@ -19,6 +20,8 @@ _host,_user,_pw = pickle.load(open(os.environ['HOME']+"/.GAVRTlogin.p",
 
 class DBPlotter(DSS28db):
   """
+  Database class with plotting capability.
+  
   Attributes::
     logger - logging.Logger object
   
@@ -184,12 +187,12 @@ class SessionPlotter(Session):
       x,y,z = Map.regrid(width=width, height=height)
       for chan in channels:
         if z.has_key(chan):
-          index = channels.index(chan)
+          index = list(channels).index(chan)
           col = index % 4
           row = index//4
           self.logger.debug("show_images: processing map %d channel %d", mapno, chan)
           mapimg = ax[row][col].contourf(x, y, z[chan], cmap=plt.cm.jet)
-          ax[row][col].colorbar(mappable=mapimg, ax=ax[row][col])
+          fig.colorbar(mappable=mapimg, ax=ax[row][col])
           ax[row][col].grid(True)
           ax[row][col].set_aspect('equal')
           ax[row][col].set_xlim(-width/2., width/2.)
@@ -223,7 +226,7 @@ class SessionPlotter(Session):
       if channel:
         # do only this channel
         if type(channel) == int:
-          channels = [channel]
+          channels = numpy.array([channel])
       else:
         try:
           channels = self.boresights[key].channels
@@ -235,10 +238,16 @@ class SessionPlotter(Session):
             UNIXtime = self.boresights[key].logdata[ch]['epoch'].astype(float)
             mpltime = UnixTime_to_MPL(UNIXtime)
             Top      = self.boresights[key].logdata[ch]['top'].astype(float)
-            plot_date(mpltime, Top, '-', label=str(key)+'-'+str(ch)+'-'+axis)
+            Top = numpy.where(Top<=0, nan, Top)
+            if numpy.all(numpy.isnan(Top)):
+              # skip this one
+              continue
+            else:
+              plot_date(mpltime, Top, '-', label=str(key)+'-'+str(ch)+'-'+axis)
     title("Boresight Summary")
     grid()
-    legend(loc="upper center")
+    ylabel("Uncalibrated $T_{op}$")
+    legend(loc="best", fontsize="x-small")
     fig.autofmt_xdate()
     filename = "bs_summary"
     if bs_keys:
@@ -352,10 +361,14 @@ class MapPlotter(Map):
     ax.set_title(self.name+" at " + str(self.rss_cfg[channel]['sky_freq']) + 
                  " MHz " + self.rss_cfg[channel]['pol'][0].upper())
     colorbar(shrink=0.6) # draw colorbar
-    hh = self.cfg['utc'].seconds/3600
-    mm = (self.cfg['utc'].seconds-3600*hh)/60
-    fig.suptitle(str(int(self.cfg['year'])) +
-                 "/"+str(int(self.cfg['doy'])) + (" %02d:%02d UT" % (hh,mm)))
+    #hh = self.cfg['utc'].seconds/3600
+    #mm = (self.cfg['utc'].seconds-3600*hh)/60
+    timestruct = time.gmtime(self.start)
+    yr = timestruct.tm_year
+    dy = timestruct.tm_yday
+    hh = timestruct.tm_hour
+    mm = timestruct.tm_min
+    fig.suptitle("%4d/%03d %02d:%02d UT" % (yr,dy,hh,mm))
     
     
     

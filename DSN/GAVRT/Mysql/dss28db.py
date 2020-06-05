@@ -1,10 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-Support for GAVRT mysql database
+Classes for GAVRT mysql database
 
-Example::
- 
+Example
+=======
+DBPlotter (from Data_Reduction.DSN.GAVRT.Mysql.plotter) is used to reduce data
+stored in the LCER GAVRT MySQL database.  The following example gets the 
+coordinate data for a map made during a given session::
+  In [1]: from Data_Reduction.DSN.GAVRT.Mysql.plotter import DBPlotter
+  In [2]: pl = DBPlotter()
+  In [3]: sp = pl.get_session_plotter(2017,233)
+  In [4]: map69data = sp.maps[69].maps_from_tlogs()
+  In [5]: xdec,dec = sp.maps[69].center_map()
 
+Databases
+=========
 The databases and their schemas are described in
 http://gsc.lewiscenter.org/data_info/dss28_eac.php.
 
@@ -13,7 +23,10 @@ The server has these databases::
  'dss28_spec'
  'gavrt_sources'.
 
-Database 'dss28_eac' has these tables::
+
+Database 'dss28_eac'
+--------------------
+has these tables::
   In [17]: dbplotter.get_public_tables()
   Out[17]: 
   (('angles',),
@@ -36,33 +49,67 @@ Database 'dss28_eac' has these tables::
    ('zplot',),
    ('zplot_cfg',))
 
-Database 'gavrt_sources' has these tables::
+Database 'gavrt_sources'
+------------------------
+has these tables::
  'catalog',
  'class',
  'source'
 
+Table columns
+-------------
+'angles' columns::
+  angles_id,
+  year, doy, utc, epoch, az, el, status
+'catalog' columns::
+  catalog_id, name
+'chan_cfg' columns::
+  chan_cfg_id,
+  year, doy, utc, epoch, chan, center_freq, tdiode
+'class' columns::
+  class_id, name, description
+'conv_cfg' columns::
+  conv_cfg_id,
+  year, doy, utc, epoch, converter, mode_a, ifbw_a, bbbw_a, atten_a, mode_b,
+  ifbw_b, bbbw_b, atten_b, lock_status
+'five_point' columns::
+  five_point_id,
+  xpwr_cfg_id, year, doy, utc, epoch, source_id, chan, tsrc, az, el, ha, dec, 
+  xdec_off, dec_off
+'pointing_cfg' columns::
+  pointing_cfg_id,
+  year, doy, utc, epoch, man, plx, semod, refrctn, delut, model
 'raster' columns::
   raster_id,
   raster_cfg_id, year, doy, utc, epoch, xdecoff, decoff, ha, dec, tsrc
+'raster_cfg' columns::
+  raster_cfg_id,
+  rss_cfg_id, year, doy, utc, epoch, source_id, chan, freq, rate, step
+'rf_cfg' columns::
+  rf_cfg_id,
+  year, doy, utc, epoch, feed, diodex, diodey, pol, transfer
 'rss_cfg' columns::
   rss_cfg_id,
   year, doy, utc, chan, sky_freq, feed, pol, nd, if_mode, if_bw, bb_bw, fiber_chan
 'source' columns::
   source_id, catalog_id, class_id,
   name, RA, Dec, size_dec, size_xdec, reference, aka
+'tlog' columns::
+  tlog_id,
+  rss_cfg_id, year, doy, utc, epoch, chan, top, integ, az, el, diode, level, cryo
 'weather' columns::
   weather_id,
   datetime, pressure, temp, humidity, wind_speed, wind_dir
 'xpwr' columns::
-  xpwr_id, xpwr_cfg_id,
-  year, doy, utc, epoch, tsys, az, el, ha, dec, offset
+  xpwr_id,
+  xpwr_cfg_id, year, doy, utc, epoch, tsys, az, el, ha, dec, offset
 'xpwr_cfg' columns::
-  xpwr_cfg_id, source_id,
-  axis, chan
+  xpwr_cfg_id, 
+  rss_cfg_id, source_id, cal_src_id, year, doy, utc, epoch, axis, chan, cal_flux
 'xscan' columns::
-  xscan_id, xpwr_cfg_id,
-  year, doy, utc, epoch, tsrc, stdev, bl_stdev, az, az_offset, el, el_offset,
-  ha, dec, offset, bw, corr
+  xscan_id,
+  xpwr_cfg_id, year, doy, utc, epoch, tsrc, stdev, bl_stdev, az, az_offset, el,
+  el_offset, ha, dec, offset, bw, corr
 """
 import cPickle as pickle
 import datetime
@@ -78,43 +125,69 @@ import time
 from math import cos, pi
 from matplotlib.mlab import griddata
 from matplotlib.pylab import date2num, num2date
-from numpy import arange, unique, where
+from numpy import arange, array, unique, where
 from time import gmtime, strftime
 
 from local_dirs import projects_dir
-import Astronomy
+import Astronomy as A
+from Astronomy.Ephem import calibrator, DSS, Quasar
 from Data_Reduction.DSN.GAVRT.Mysql import BaseDB, MysqlException
-#from support.lists import unique
+from Math.least_squares import fit_gaussian, gaussian_error_function, st_dev
+from Radio_Astronomy import HPBW
+from support import nearest_index
 
 logger = logging.getLogger(__name__)
 
-import Astronomy as A
-
-from Astronomy.DSN_coordinates import DSS
-from Radio_Astronomy import HPBW
-
 _host,_user,_pw = pickle.load(open(os.environ['HOME']+"/.GAVRTlogin.p", "rb" ))
-dss28 = DSS(28)
-longitude = -dss28.long*180/pi
-latitude = dss28.lat*180/pi
-f_max = 16. # GHz
-wl_min = f_max/300
-taper = 12 # dB
-hpbw = HPBW(taper, wl_min, 34)*180/pi # deg
+dss28        = DSS(28)
+longitude    = -dss28.long*180/pi
+latitude     = dss28.lat*180/pi
+f_max        = 16. # GHz
+wl_min       = f_max/300
+taper        = 12 # dB
+hpbw         = HPBW(taper, wl_min, 34)*180/pi # deg
 default_step = hpbw/3.
+
+def DSS28_beamtaper(freq):
+  """
+  ad hoc fit to beamwidth vs frequency plot
+  """
+  if freq < 7:
+    taper=0
+  else:
+    taper = 50*(log10(freq)-log10(7))
+  return taper
+  
+def DSS28_beamwidth(freq):
+  """
+  beamwidth in deg. with edge taper
+  """
+  return HPBW(DSS28_beamtaper(freq), 0.3/float(freq), 34)*180/pi
 
 class Observation(object):
   """
   Class for any group of data for a single purpose.
   
   Attributes::
-    parent - a collection or group of observations
+    channels - active channels
+    conv_cfg - converter configuration
+    data     - result of get_data_from_tlogs()
+    end      - provided by the subclasses
+    logger   - logging.Logger instance
+    parent   - a collection or group of observations
+    rss_cfg  - receiver configuration
+    start    - provided by the subclasses
+  Methods::
+    get_active_channels - returns channels which took tlog data during this map    
+    get_data_from_tlogs - re-organizes tlog table data into map form
+    get_offsets
+    get_channel_attenuation
   """
   def __init__(self, parent):
     """
     """
     self.logger = logging.getLogger(parent.logger.name+".Observation")
-    self.parent = parent
+    self.session = parent
 
   def get_conv_config(self, time, converter):
     """
@@ -127,6 +200,153 @@ class Observation(object):
                        +" and epoch >= "+str(float(time)-1e6)
                        +" and converter = "+str(converter)
                        +" order by epoch desc limit 1;")
+
+  def get_active_channels(self):
+    """
+    returns the receiver channels that were active between 'start' and 'end'
+    
+    This requires attributes 'start' and 'end' to be defined which happens
+    during 'BoresightScan' or 'Map' initialization
+    
+    Example::
+      In [5]: map56.get_active_channels()
+      Out[5]: [2, 4]
+    """
+    # find out which channels were active
+    response = self.session.db.get("select chan from tlog where epoch >= " +
+                       str(self.start) + " and epoch <=" + str(self.end) + ";")
+    self.channels = NP.unique(response[:].flatten()) # unique(list(response[:].flatten()))
+    # for the active channels get the rss_cfg data
+    self.rss_cfg = {}
+    for chan in self.channels:
+      # get the RSS configuration for that channel
+      response = self.session.db.get(
+                       "select rss_cfg_id from tlog where chan = " +str(chan)
+                       + " and epoch >= " + str(self.start) + " and epoch <="
+                       + str(self.end) + ";")
+      rss_cfg_id = NP.unique(response[:].flatten())[0] # unique(list(response[:,0].flatten()))[0]
+      self.rss_cfg[chan] = self.session.db.get_as_dict(
+                                  "select * from rss_cfg where rss_cfg_id = " +
+                                  str(rss_cfg_id) + ";")
+      # get the attenuation for that channel
+      self.rss_cfg[chan]['atten'] = self.get_channel_attenuation(self.start, chan)
+    return self.channels
+    
+  def get_data_from_tlogs(self):
+    """
+    Gets the data for the specified channel and polarization for this observation
+    """
+    try:
+      chan_list = self.channels
+    except:
+      self.channels = self.get_active_channels()
+    if self.channels.any():
+      pass
+    else:
+      self.logger.warning("get_data_from_tlogs: this map has no active channels")
+      return None
+    self.data = {}
+    for channel in self.channels:
+      ch_index = list(self.channels).index(channel)
+      query = "select tlog.epoch, tlog.az, tlog.el, tlog.top, tlog.rss_cfg_id" +               \
+            " from tlog, rss_cfg where tlog.rss_cfg_id = rss_cfg.rss_cfg_id" +\
+            " and tlog.epoch >= "  + str(self.start) +                        \
+            " and tlog.epoch <= "  + str(self.end  ) +                        \
+            " and rss_cfg.chan = " + str(channel)      +";"
+      self.logger.debug("get_data_from_tlogs: query: %s", query)
+      data = self.session.db.get(query)
+      # get receiver configuration
+      self.rss_cfg[channel] = self.session.db.get_as_dict(
+                                  "select * from rss_cfg where rss_cfg_id = " +
+                                  str(int(data[:,4][0])) + ";")
+      if ch_index == 0:
+        # first channel only: these are common to all channels
+        self.data['UNIXtime']    = data[:,0].astype(float)
+        self.data['azimuth']     = data[:,1].astype(float)
+        self.data['elevation']   = data[:,2].astype(float)
+        self.data['RA']          = []
+        self.data['declination'] = []
+        self.data['MPL_datenum'] = []
+        self.data['VFC_counts']  = {}
+        self.data['freq']        = {}
+        self.data['pol']         = {}
+        for index in range(len(self.data['UNIXtime'])):
+          dt = datetime.datetime.utcfromtimestamp(
+                                     self.data['UNIXtime'][index])
+          time_tuple = (dt.year,
+                        A.day_of_year(dt.year,dt.month,dt.day)
+                        + (  dt.hour
+                           + dt.minute/60.
+                           + dt.second/3600.
+                           + dt.microsecond/3600./1e6)/24.)
+          ra, dec = A.AzEl_to_RaDec(
+                             float(self.data['azimuth'][index]),
+                             float(self.data['elevation'][index]),
+                             latitude,
+                             longitude,
+                             time_tuple)
+          self.data['RA'].append(ra)
+          self.data['declination'].append(dec)
+          self.data['MPL_datenum'].append(date2num(dt))
+      # only the VFC counts differ between channels
+      self.data['VFC_counts'][channel]  = data[:,3].astype(float)
+      self.data['freq'][channel] = self.rss_cfg[channel]['sky_freq']
+      self.data['pol'][channel] = self.rss_cfg[channel]['pol'][0].upper()
+    return self.data
+
+  def get_offsets(self, source="Sun", xdec_ofst=0., dec_ofst=0.):
+    """
+    Generates a map in coordinates relative to a source
+    
+    If the source is the default, the position of the Sun will be computed for
+    the time of each sample. IT SEEMS LIKE A GOOD IDEA TO DO THIS FOR PLANETS
+    ALSO.
+    
+    This adds elements with keys 'xdec_offset' and 'dec_offset' to the
+    attribute 'data'.  If this attribute does not exist then
+    'get_data_from_tlogs' is called first
+
+    @param source : source at map center
+    @type  source : ephem source instance
+
+    @param xdec_ofst : relative X-dec position of sample
+    @type  xdec_ofst : float
+
+    @param dec_ofst : relative dec position of sample
+    @type  dec_ofst : float
+    
+    @return: (dxdecs,ddecs) in degrees
+    """
+    try:
+      self.data.keys()
+    except AttributeError:
+      self.get_data_from_tlogs()
+    if self.data.has_key('MPL_datenum'):
+      pass
+    else:
+      # 'tlog' did not have good data
+      return None
+    if source.lower() == "sun":
+      src = ephem.Sun()
+    else:
+      src = self.calibrator
+    self.data['dec_offset'] = []
+    self.data['xdec_offset'] = []
+    for count in range(len(self.data['MPL_datenum'])):
+      dt = num2date(self.data['MPL_datenum'][count])
+      if type(src) == Quasar:
+        pass
+      else:
+        src.compute(dt)
+      ra_center = src.ra*12/pi    # hours
+      dec_center = src.dec*180/pi # degrees
+      decrad = src.dec
+      # right ascension increases to the left, cross-dec to the right
+      self.data['xdec_offset'].append(xdec_ofst - 
+                       (self.data['RA'][count] - ra_center)*15*cos(decrad) )
+      self.data['dec_offset'].append(  dec_ofst + 
+                        self.data['declination'][count] - dec_center)
+    return self.data['xdec_offset'], self.data['dec_offset']
   
   def get_channel_attenuation(self, time, channel):
     """
@@ -140,7 +360,9 @@ class Observation(object):
                       channel, converter, side)
     attenuator = "atten_"+side
     self.logger.debug("get_channel_attenuation: using %s", attenuator)
-    self.conv_cfg['atten'] = self.conv_cfg[attenuator]
+    atten = self.conv_cfg[attenuator]
+    self.rss_cfg[channel]['atten'] = atten
+    return atten
     
 
 class Map(Observation):
@@ -163,11 +385,9 @@ class Map(Observation):
     
   Public methods::
     center_map          - converts map coordinates to be relative to Sun
-    get_active_channels - returns channels which took tlog data during this map
     get_map_config      - returns a dict with the raster map configuration
     get_raster_data     - gets the data for a raster scan map used for Zplot
     get_raster_keys     - returns rasters associated with a given configuration
-    maps_from_tlogs     - re-organizes tlog table data into map form
   """
   def __init__(self, parent, raster_cfg_id, name=None):
     """
@@ -240,7 +460,6 @@ class Map(Observation):
       self.raster_keys = None
     return self.raster_keys
     
-      
   def get_raster_data(self):
     """
     gets the data for a raster scan map extracted for Zplot
@@ -257,96 +476,15 @@ class Map(Observation):
     self.start = self.raster_data['UNIXtime'][0]
     self.end   = self.raster_data['UNIXtime'][-1]
     return self.raster_data
-
-  def get_active_channels(self):
-    """
-    returns the receiver channels that were active between 'start' and 'end'
-    
-    Example::
-      In [5]: map56.get_active_channels()
-      Out[5]: [2, 4]
-    """
-    # find out which channels were active
-    response = self.session.db.get("select chan from tlog where epoch >= " +
-                       str(self.start) + " and epoch <=" + str(self.end) + ";")
-    self.channels = NP.unique(response[:].flatten()) # unique(list(response[:].flatten()))
-    # for the active channels get the rss_cfg data
-    self.rss_cfg = {}
-    for chan in self.channels:
-      # get the RSS configuration for that channel
-      response = self.session.db.get(
-                       "select rss_cfg_id from tlog where chan = " +str(chan)
-                       + " and epoch >= " + str(self.start) + " and epoch <="
-                       + str(self.end) + ";")
-      rss_cfg_id = NP.unique(response[:].flatten())[0] # unique(list(response[:,0].flatten()))[0]
-      self.rss_cfg[chan] = self.session.db.get_as_dict(
-                                  "select * from rss_cfg where rss_cfg_id = " +
-                                  str(rss_cfg_id) + ";")
-      # get the converter configuration for that channel
-      self.get_channel_attenuation(self.start, chan)
-      self.rss_cfg[chan].update(self.conv_cfg)
-    return self.channels
     
   def maps_from_tlogs(self):
     """
     Gets the data for the specified channel and polarization for this map
+    
+    For backward compatibility.  map_data is not used anywhere in this module.
+    It's used by plot_centered_offsets().
     """
-    try:
-      chan_list = self.channels
-    except:
-      self.channels = self.get_active_channels()
-    if self.channels.any():
-      pass
-    else:
-      self.logger.warning("maps_from_tlogs: this map has no active channels")
-      return None
-    self.map_data = {}
-    for channel in self.channels:
-      ch_index = self.channels.index(channel)
-      query = "select tlog.epoch, tlog.az, tlog.el, tlog.top, tlog.rss_cfg_id" +               \
-            " from tlog, rss_cfg where tlog.rss_cfg_id = rss_cfg.rss_cfg_id" +\
-            " and tlog.epoch >= "  + str(self.start) +                        \
-            " and tlog.epoch <= "  + str(self.end  ) +                        \
-            " and rss_cfg.chan = " + str(channel)      +";"
-      self.logger.debug("maps_from_tlogs: query: %s", query)
-      data = self.session.db.get(query)
-      # get receiver configuration
-      self.rss_cfg[channel] = self.session.db.get_as_dict(
-                                  "select * from rss_cfg where rss_cfg_id = " +
-                                  str(int(data[:,4][0])) + ";")
-      if ch_index == 0:
-        # first channel only: these are common to all channels
-        self.map_data['UNIXtime']    = data[:,0].astype(float)
-        self.map_data['azimuth']     = data[:,1].astype(float)
-        self.map_data['elevation']   = data[:,2].astype(float)
-        self.map_data['RA']          = []
-        self.map_data['declination'] = []
-        self.map_data['MPL_datenum'] = []
-        self.map_data['VFC_counts']  = {}
-        self.map_data['freq']        = {}
-        self.map_data['pol']         = {}
-        for index in range(len(self.map_data['UNIXtime'])):
-          dt = datetime.datetime.utcfromtimestamp(
-                                     self.map_data['UNIXtime'][index])
-          time_tuple = (dt.year,
-                        A.day_of_year(dt.year,dt.month,dt.day)
-                        + (  dt.hour
-                           + dt.minute/60.
-                           + dt.second/3600.
-                           + dt.microsecond/3600./1e6)/24.)
-          ra, dec = A.AzEl_to_RaDec(
-                             float(self.map_data['azimuth'][index]),
-                             float(self.map_data['elevation'][index]),
-                             latitude,
-                             longitude,
-                             time_tuple)
-          self.map_data['RA'].append(ra)
-          self.map_data['declination'].append(dec)
-          self.map_data['MPL_datenum'].append(date2num(dt))
-      # only the VFC counts differ between channels
-      self.map_data['VFC_counts'][channel]  = data[:,3].astype(float)
-      self.map_data['freq'][channel] = self.rss_cfg[channel]['sky_freq']
-      self.map_data['pol'][channel] = self.rss_cfg[channel]['pol'][0].upper()
+    self.map_data = self.get_data_from_tlogs()
     return self.map_data
 
   def center_map(self, source="Sun", xdec_ofst=0., dec_ofst=0.):
@@ -359,10 +497,10 @@ class Map(Observation):
     @return: (dxdecs,ddecs) in degrees
     """
     try:
-      self.map_data.keys()
+      self.data.keys()
     except AttributeError:
       self.maps_from_tlogs()
-    if self.map_data.has_key('MPL_datenum'):
+    if self.data.has_key('MPL_datenum'):
       pass
     else:
       # 'tlog' did not have good data
@@ -371,10 +509,10 @@ class Map(Observation):
       src = ephem.Sun()
     else:
       pass
-    self.map_data['dec_offset'] = []
-    self.map_data['xdec_offset'] = []
-    for count in range(len(self.map_data['MPL_datenum'])):
-      dt = num2date(self.map_data['MPL_datenum'][count])
+    self.data['dec_offset'] = []
+    self.data['xdec_offset'] = []
+    for count in range(len(self.data['MPL_datenum'])):
+      dt = num2date(self.data['MPL_datenum'][count])
       if source.lower() == "sun":
         src.compute(dt)
       else:
@@ -383,11 +521,11 @@ class Map(Observation):
       dec_center = src.dec*180/pi # degrees
       decrad = src.dec
       # right ascension increases to the left, cross-dec to the right
-      self.map_data['xdec_offset'].append(xdec_ofst - 
-                       (self.map_data['RA'][count] - ra_center)*15*cos(decrad) )
-      self.map_data['dec_offset'].append(  dec_ofst + 
-                        self.map_data['declination'][count] - dec_center)
-    return self.map_data['xdec_offset'], self.map_data['dec_offset']
+      self.data['xdec_offset'].append(xdec_ofst - 
+                       (self.data['RA'][count] - ra_center)*15*cos(decrad) )
+      self.data['dec_offset'].append(  dec_ofst + 
+                        self.data['declination'][count] - dec_center)
+    return self.data['xdec_offset'], self.data['dec_offset']
   
   def regrid(self, width=1.0, height=1.0, step=None):
     """
@@ -407,25 +545,25 @@ class Map(Observation):
       step = self.cfg['step']
     nx = int(round(width/step))
     ny = int(round(height/step))
-    self.map_data['grid_x'] = NP.arange( -width/2,  width/2 + step, step/2)
-    self.map_data['grid_y'] = NP.arange(-height/2, height/2 + step, step/2)
-    self.map_data['grid_z'] = {}
+    self.data['grid_x'] = NP.arange( -width/2,  width/2 + step, step/2)
+    self.data['grid_y'] = NP.arange(-height/2, height/2 + step, step/2)
+    self.data['grid_z'] = {}
     for channel in self.channels:
-      cx = self.map_data['xdec_offset']
-      cy = self.map_data['dec_offset']
-      cz = self.map_data['VFC_counts'][channel]
-      xi = self.map_data['grid_x']
-      yi = self.map_data['grid_y']
+      cx = self.data['xdec_offset']
+      cy = self.data['dec_offset']
+      cz = self.data['VFC_counts'][channel]
+      xi = self.data['grid_x']
+      yi = self.data['grid_y']
       try:
-        self.map_data['grid_z'][channel] = griddata(cx,cy,cz, xi, yi, interp=u'nn')
+        self.data['grid_z'][channel] = griddata(cx,cy,cz, xi, yi, interp=u'nn')
       except ValueError, details:
         self.logger.error("regrid: gridding failed: %s", str(details))
         self.logger.debug("regrid: channel %d length of cx is %d", channel, len(cx))
         self.logger.debug("regrid: channel %d length of cy is %d", channel, len(cy))
         self.logger.debug("regrid: channel %d length of cz is %d", channel, len(cz))
         continue
-    return self.map_data['grid_x'], self.map_data['grid_y'], \
-           self.map_data['grid_z']
+    return self.data['grid_x'], self.data['grid_y'], \
+           self.data['grid_z']
 
 
 class BoresightScan(Observation):
@@ -433,20 +571,22 @@ class BoresightScan(Observation):
   class for a single scan during a boresight
   
   Attributes::
-    axis     - direction of the scan (footnote 1)
+    axis     - direction of the scan
+    bs_data  - scan data (time, positions and Tsys) from 'xpwr' table
     cal_flux - flux of the calibrator source
     cal_src  - source used to set the flux scale
-    chan     - channel used for the boresight
-    data     - scan data (time, positions and Tsys)
+    chan     - channel used for the boresight by EAC program 'xant'
+    data     - scan data (time, positions and Tsys) from 'tlog' table
     diode    - state of the noise diode
-    epoch    - UNIX time
-    freq     - channel frequency in MHz
+    epoch    - UNIX time start of scan
+    freq     - frequency xant used to fit 'xpwr' data, in MHz
     IFbw     - IF band width in MHz
     IFmode   - IF phasing
     logger   - logging.Logger object
+    log_data - data from 'tlog' table
     name     - identifier string based on xpwr_cfg_id
     pol      - channel polarization
-    session  - Session object
+    session  - parent Session object
     source   - name of scanned source
   """
   def __init__(self, parent, xpwr_cfg_id):
@@ -457,60 +597,65 @@ class BoresightScan(Observation):
     @type  parent : Session object
     @param xpwr_cfg_id : row identifier in table 'xpwr_cfg'
     @type  xpwr_cfg_id : int
+    
+    From examination of the data it was concluded that the correct values of
+    'axis' and 'source-Id' are those for row 'xpwr_cfg_id" + 1.
     """
+    Observation.__init__(self, parent)
     self.logger = logging.getLogger(parent.logger.name+".BoresightScan")
-    self.session = parent
     self.name = "boresight"+str(xpwr_cfg_id)
     # get the metadata
+    #   see docstring for this ad hoc fix
     columns = "rss_cfg_id, chan, cal_flux, epoch, source_id, cal_src_id, axis"
+    #good_columns = "rss_cfg_id, chan, cal_flux, epoch, source_id, cal_src_id, axis"
     meta = self.session.db.get_as_dict(
               "select "+columns
               + " from xpwr_cfg where xpwr_cfg_id="+str(xpwr_cfg_id)+";")
     rss_cfg_id = int(meta['rss_cfg_id'])
-    self.chan = int(meta['chan'])
     self.cal_flux = float(meta['cal_flux'])
     self.epoch = float(meta['epoch'])
     source_id = int(meta['source_id'])
     if source_id:  # source ID 0 is no source
+      # this is the source at the center of the scan
       self.source = self.session.db.get_source_names([source_id])['source'][0]
+      self.logger.debug("__init__: central source is %s", self.source)
+      self.calibrator = calibrator(self.source)
+      # this is the source whose flux is used for calibration
       cal_src_id = int(meta['cal_src_id'])
       self.cal_src = self.session.db.get_source_names([cal_src_id])['source'][0]
       self.axis = meta['axis'][0]
       # receiver metadata
-      rss_cols = "sky_freq, feed, pol, nd, if_mode, if_bw"
-      rss_cfg = self.session.db.get_as_dict(
-              "select "+rss_cols
-              + " from rss_cfg where rss_cfg_id="+str(rss_cfg_id)+";")
-      self.freq = float(rss_cfg['sky_freq'])
-      self.pol = rss_cfg['pol'][0]
-      self.diode = rss_cfg['nd'][0]
-      self.IFmode = rss_cfg['if_mode'][0]
-      self.IFbw = float(rss_cfg['if_bw'])
+      #self.rss_cfg = self.session.db.get_as_dict(
+      #        "select "+rss_cols
+      #        + " from rss_cfg where rss_cfg_id="+str(rss_cfg_id)+";")
       # scan data
       scan_cols = "epoch, tsys, az, el, ha, `dec`"
-      self.data = self.session.db.get_as_dict(
+      self.bs_data = self.session.db.get_as_dict(
                 "select "+scan_cols
                 +" from xpwr where xpwr_cfg_id="+str(xpwr_cfg_id)+";")
       # tlog data
-      if self.data.has_key('epoch'):
-        start = self.data['epoch'][0]
-        end   = self.data['epoch'][-1]
+      if self.bs_data.has_key('epoch'):
+        self.start = self.bs_data['epoch'][0]
+        self.end   = self.bs_data['epoch'][-1]
         self.channels = NP.unique(
                     self.session.db.get("select chan from tlog where epoch >= "
-                                    +str(start)+" and epoch <= "+str(end)+";"))
+                          +str(self.start)+" and epoch <= "+str(self.end)+";"))
         logcols = "epoch, chan, top, integ, az, el, diode, rss_cfg_id"
+        rss_cols = "sky_freq, feed, pol, nd, if_mode, if_bw"
         self.logdata = {}
+        self.channels = self.get_active_channels()
         for chan in self.channels:
           response = self.session.db.get("select "+logcols
                                        +" from tlog where epoch >= "
-                                     +str(start)+" and epoch <= "+str(end)+";")
+                           +str(self.start)+" and epoch <= "+str(self.end)+";")
+          channel_selector = NP.where(response[:,1] == chan)
           self.logdata[chan] = {}
-          self.logdata[chan]['epoch'] = response[:,0][NP.where(response[:,1] == chan)]
-          self.logdata[chan]['top']   = response[:,2][NP.where(response[:,1] == chan)]
-          self.logdata[chan]['integ'] = response[:,3][NP.where(response[:,1] == chan)]
-          self.logdata[chan]['az']    = response[:,4][NP.where(response[:,1] == chan)]
-          self.logdata[chan]['el']    = response[:,5][NP.where(response[:,1] == chan)]
-          rss_cfg_id = NP.unique(response[:,7][NP.where(response[:,1] == chan)])[0]
+          self.logdata[chan]['epoch'] = response[:,0][channel_selector]
+          self.logdata[chan]['top']   = response[:,2][channel_selector]
+          self.logdata[chan]['integ'] = response[:,3][channel_selector]
+          self.logdata[chan]['az']    = response[:,4][channel_selector]
+          self.logdata[chan]['el']    = response[:,5][channel_selector]
+          rss_cfg_id = NP.unique(response[:,7][channel_selector])[0]
           response = self.session.db.get_as_dict("select "
               +rss_cols +" from rss_cfg where rss_cfg_id="+str(rss_cfg_id)+";")
           self.logdata[chan]['feed']    = response['feed'][0]
@@ -519,9 +664,104 @@ class BoresightScan(Observation):
           self.logdata[chan]['nd']      = response['nd'][0]
           self.logdata[chan]['pol']     = response['pol'][0]
           self.logdata[chan]['freq']    = response['sky_freq'][0]
-          self.logdata.atten = get_channel_attenuation(self, start, chan)
+          self.logdata[chan]['atten']   = self.get_channel_attenuation(
+                                                              self.start, chan)
     else:
       delete(self)
+    
+  def fit_gaussian(self, channel, beam_limit=2.5):
+    """
+    Fit the scan to a Gaussian and a baseline
+    
+    Extract the appropriate data::
+        For raster scans, 'xdec' means that 'xdec' stays fixed while the
+        antenna moves up and down; 'dec' means that 'dec' stays fixed while the
+        left and right.
+    The Gaussian is assumed to fit the inner five beamwidths of the data,
+    though that limit can be adjusted.  The baseline is the rest of the data,
+    although the lower baseline includes at least data[:5] and the upper
+    baseline includes data[-5:]
+    
+    @param channel : channel whose data will be fit (required)
+    @type  channel : int
+    
+    @param beam_limit : distance from the center included in Gaussian fit
+    @type  beam_limit : float
+    """
+    self.logger.debug("fit_gaussian: direction is %s", self.axis)
+    # get offsets if necessary
+    if self.__dict__.has_key('data') == False:
+      self.get_offsets()
+    # remember that GAVRT nomenclature seems backwards
+    if self.axis.lower() == 'xdec':
+      x = NP.array(self.data['dec_offset'])  # NP.array(self.ddecs)
+    else:
+      x = NP.array(self.data['xdec_offset']) # NP.array(self.dxdecs)
+    self.logger.debug("fit_gaussian: selected x: %s", x)
+    tsys = self.data['VFC_counts'][channel]
+    # define the domain of the Gaussian fit:
+    beam_index = tsys.argmax()                  # NP.array(self.data).argmax()
+    self.logger.debug("fit_gaussian: peak at index %d", beam_index)
+    beam_center = x[beam_index]
+    self.logger.debug("fit_gaussian: peak at x = %f", beam_center)
+    beamwidth = DSS28_beamwidth(self.data['freq'][channel]/1000)
+    self.logger.debug("fit_gaussian: beamwidth = %f deg", beamwidth)
+    lower_limit = beam_center - beam_limit*beamwidth # source scan starts here
+    upper_limit = beam_center + beam_limit*beamwidth # source scan ends here
+    self.logger.debug("fit_gaussian: scan lower limit: %f", lower_limit)
+    self.logger.debug("fit_gaussian: scan upper limit: %f", upper_limit)
+    # Define baseline ranges for the lower end and the upper end of the spectrum
+    #  * 'lower_baseline' and 'upper_baseline' are 2-item lists
+    #  * assume that there are at least 5 data points for each baseline section
+    if x[0] < x[-1]: # increasing X-coordinate
+      # scans go from low sample to high sample
+      if lower_limit < x[5]: # source scan starts inside lower baseline segment
+        lower_baseline = [0,5] # force 5 baseline points
+      else:
+        lower_baseline = [0, nearest_index(x, lower_limit)]
+      if upper_limit > x[-5]: # source scan starts inside upper baseline segment
+        upper_baseline = [-6,-1] # force 5 baseline points
+      else:
+        upper_baseline = [nearest_index(x, upper_limit), -1]
+    else:
+      # scans go from high sample to low sample
+      if upper_limit > x[5]: 
+        upper_baseline = [0, nearest_index(x,upper_limit)]
+      else:
+        upper_baseline = [0,5]
+      if lower_limit < x[-5]:
+        lower_baseline = [-6,-1]
+      else:
+        lower_baseline = [nearest_index(x,lower_limit), -1]
+    self.logger.debug("fit_gaussian: lower baseline: %s", lower_baseline)
+    self.logger.debug("fit_gaussian: upper baseline: %s", upper_baseline)
+    # define the baseline data
+    xdata = NP.append(x[lower_baseline[0]:lower_baseline[1]],
+                      x[upper_baseline[0]:upper_baseline[1]]).astype(float)
+    ydata = NP.append(tsys[lower_baseline[0]:lower_baseline[1]],
+                      tsys[upper_baseline[0]:upper_baseline[1]]).astype(float)
+    #   Fit baseline
+    self.baseline_pars = NP.polyfit(xdata,ydata,1)
+    self.logger.debug("fit_gaussian: baseline parameters: %s", self.baseline_pars)
+    #   Fit the beam
+    zdata = NP.array(tsys).astype(float)
+    self.logger.debug("fit_gaussian: zdata: %s", zdata)
+    height = zdata[beam_index] - NP.polyval(self.baseline_pars, x[beam_index])
+    self.logger.debug("fit_gaussian: height: %s", height)
+    sigma = st_dev(beamwidth)
+    initial_guess = [height, beam_center, sigma]
+    # in this case we only fit out to one beamwidth
+    if x[0] < x[-1]:
+      xfit =  x[nearest_index(x,beam_center-beamwidth):nearest_index(x,beam_center+beamwidth)]
+      y = zdata[nearest_index(x,beam_center-beamwidth):nearest_index(x,beam_center+beamwidth)]
+    else:
+      xfit =  x[nearest_index(x,beam_center+beamwidth):nearest_index(x,beam_center-beamwidth)]
+      y = zdata[nearest_index(x,beam_center+beamwidth):nearest_index(x,beam_center-beamwidth)]
+    self.pars, err = fit_gaussian(gaussian_error_function,
+                            initial_guess,
+                            xfit,
+                            y-NP.polyval(self.baseline_pars,xfit))
+    return self.baseline_pars, self.pars, err
 
 class Session(object):
   """
@@ -564,8 +804,14 @@ class Session(object):
   def __init__(self, parent, year, doy, plotter=False):
     """
     """
-    self.logger = logging.getLogger(parent.logger.name+".Session")
-    self.db = parent
+    if parent:
+      self.logger = logging.getLogger(parent.logger.name+".Session")
+    else:
+      self.logger = logging.getLogger(logger.name+".Session")
+    if parent:
+      self.db = parent
+    else:
+      self.db = DSS28db() # default is GAVRT
     self.year = year
     self.doy = doy
     if plotter == False:
@@ -579,31 +825,57 @@ class Session(object):
       self.session_dir = obs_dir + "%4d" % self.year +"/"+ "%03d" % self.doy +"/"
       if not os.path.exists(self.session_dir):
         os.makedirs(self.session_dir, mode=0775)
+  
+  def summary(self, save=False):
+    if not self.list_maps(save=save):
+      print "no usable maps found"
+    else:
+      self.show_images()
+    if not self.make_bs_dir(save=save):
+      print "no usable boresights found"
+    else:
+      self.show_boresights()
 
   # ------------------------------ maps ---------------------------------------
-  
-  def get_maps(self):
+  def get_map_IDs(self):
     """
-    Returns maps from the raster configuration IDs for the specified date
     """
     map_cfg_ids = self.db.get(
                          "select raster_cfg_id from raster_cfg where year = " +
                          str(self.year) + " and doy = " + str(self.doy) + 
                          ";")
     self.logger.debug("get_maps: map IDs: %s", map_cfg_ids)
-    self.maps = {}
-    for map_id in map_cfg_ids[:,0]:
-      self.logger.debug("get_maps: getting %d", map_id)
-      self.maps[map_id] = Map(self, map_id)
-    self.logger.info("%4d/%03d found %d maps", self.year, self.doy,
-                     len(self.maps.keys()))
+    return map_cfg_ids
 
+  def get_maps(self, map_IDs=[]):
+    """
+    Returns maps from the raster configuration IDs for the specified date
+    """
+    if map_IDs == []:
+      map_cfg_ids = self.get_map_IDs()
+    else:
+      map_cfg_ids = array(map_IDs)
+    self.logger.debug("get_maps: map IDs: %s", map_cfg_ids)
+    if map_cfg_ids.any():
+      self.maps = {}
+      for map_id in map_cfg_ids[:,0]:
+        self.logger.debug("get_maps: getting %d", map_id)
+        self.maps[map_id] = Map(self, map_id)
+      self.logger.info("%4d/%03d found %d maps", self.year, self.doy,
+                     len(self.maps.keys()))
+    else:
+      self.logger.info("No maps found for %4d/%03d", self.year, self.doy)
+      
   def get_boresights(self):
     """
     Returns boresights from the xpwr configurations
     """
-    xpwr_cfg_ids = self.db.get("select xpwr_cfg_id from xpwr_cfg where year = "
+    try:
+      xpwr_cfg_ids = self.db.get("select xpwr_cfg_id from xpwr_cfg where year = "
                           +str(self.year)+" and doy = "+str(self.doy)+";")[:,0]
+    except IndexError:
+      # 'too many indices for array' means no data were returned
+      xpwr_cfg_ids =  []
     xpwr_cfg_ids.sort()
     self.boresights = {}
     for xpwr_cfg_id in xpwr_cfg_ids:
@@ -840,10 +1112,10 @@ class Session(object):
         if bool(bs_channels.any()):
           for ch in bs_channels:
             UNIXtime = self.boresights[bs].epoch
-            top =      self.boresights[bs].data['tsys'][0]
+            top =      self.boresights[bs].bs_data['tsys'][0]
             axis =     self.boresights[bs].axis
-            az =       self.boresights[bs].data['az'][0]
-            el =       self.boresights[bs].data['el'][0]  
+            az =       self.boresights[bs].bs_data['az'][0]
+            el =       self.boresights[bs].bs_data['el'][0]  
             print >> fileobj, "%6d %13s %2s %4s %6.0f %4s %4.0f %16s %6.2f %6s %5.1f %4.1f" % (
                             bs, 
                             strftime("%Y/%j %H%M", gmtime(UNIXtime)),

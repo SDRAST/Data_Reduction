@@ -14,11 +14,11 @@ import time
 
 from os.path import basename, dirname, splitext
 
+from Astronomy.DSN_coordinates import DSN_complex_of
 from Data_Reduction import get_obs_dirs, get_obs_session
 from Data_Reduction.FITS.DSNFITS import FITSfile
 from Data_Reduction.FITS.SDFITSexaminer import DSNFITSexaminer
 from Data_Reduction.tipping import airmass, fit_tipcurve_data
-from DSMS import DSN_complex_of
 from MonitorControl import Observatory
 from MonitorControl.Antenna import Telescope
 from Radio_Astronomy import rms_noise

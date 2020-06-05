@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """
+Classes for using MySQL tables
+
 This module defines the classes BaseDB and MysqlException.  It can be used as
 is if you give it all the connection parameters.  It does not have defaults.
 It mainly serves as a super class for subclasses which are specific to certain
