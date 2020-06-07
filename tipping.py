@@ -65,15 +65,15 @@ class AtmosAnalyzer(object):
     @type  linear : True
     """
     # get Tsys data structure  
-    if self.data.has_key('TSYS'):
+    if 'TSYS' in self.data:
       nrows, num_cy, num_bm, num_pl = self.data['TSYS'][True].shape
     else:
       self.logger.error("fit_Tsys_to_airmass: no system temperature data")
       return None
-    states = self.data['TSYS'].keys()
+    states = list(self.data['TSYS'].keys())
     num_st = len(states)
     
-    if self.data.has_key('ELEVATIO'):
+    if 'ELEVATIO' in self.data:
       pass
     else:
       self.logger.error("fit_Tsys_to_airmass: no elevation data")

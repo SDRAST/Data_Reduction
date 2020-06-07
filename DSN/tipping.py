@@ -212,27 +212,27 @@ if __name__ == "__main__":
   
   sys.exit()
   tipfiles = sort_by_time(logdir, tiplogs)
-  numfiles = len(tipfiles.keys())
+  numfiles = len(list(tipfiles.keys()))
   #index = randint(numfiles)
   for index in range(-20,-2):
-    filename = tipfiles.keys()[index]
+    filename = list(tipfiles.keys())[index]
     e,t = get_tipping_data(filename)
     datestr = num2date(tipfiles[filename]).ctime()
-    print("Selected file %d: %s from %s" %
-              (index, filename, datestr))
-    print("min/max elevation = %4.1f/%4.1f, airmass =  %4.1f/%4.1f" % 
-          (e.min(), e.max(), airmass(e.min()), airmass(e.max()) ) )
+    print(("Selected file %d: %s from %s" %
+              (index, filename, datestr)))
+    print(("min/max elevation = %4.1f/%4.1f, airmass =  %4.1f/%4.1f" % 
+          (e.min(), e.max(), airmass(e.min()), airmass(e.max()) ) ))
     figure(index)
     plot_tipcurves(e, t, plot_title=datestr, fig_title=filename)
     savefig(basename(filename)+".png")
     try:
       Trx,tau,imin,imax = fit_tipping_data(e, t)
-    except Exception, details:
-      print "Fit failed because %s" % details
-    print("Trx = %s" % Trx)
-    print("tau = %s" % tau)
-    print("from points %d to %d" % (imin,imax))
+    except Exception as details:
+      print("Fit failed because %s" % details)
+    print(("Trx = %s" % Trx))
+    print(("tau = %s" % tau))
+    print(("from points %d to %d" % (imin,imax)))
     slope, intercept = fit_airmasses(e,t)
-    print "airmass slope = %s" % slope
-    print "airmass intercept = %s" % intercept
+    print("airmass slope = %s" % slope)
+    print("airmass intercept = %s" % intercept)
     

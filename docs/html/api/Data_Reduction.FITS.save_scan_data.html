@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>save_scan_data &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="SAOhdf5" href="Data_Reduction.DSN.SAO.SAOhdf5.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.SAO.SAOhdf5.html" title="SAOhdf5"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.SAO.SAOhdf5.html"
+                        title="previous chapter">SAOhdf5</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.FITS.save_scan_data.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="save-scan-data">
+<h1>save_scan_data<a class="headerlink" href="#save-scan-data" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="Data_Reduction.FITS.save_scan_data">
+<code class="sig-prename descclassname">Data_Reduction.FITS.</code><code class="sig-name descname">save_scan_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">row</span></em>, <em class="sig-param"><span class="n">scan</span></em>, <em class="sig-param"><span class="n">dateobs</span></em>, <em class="sig-param"><span class="n">source</span></em>, <em class="sig-param"><span class="n">interval</span></em>, <em class="sig-param"><span class="n">antenna</span></em>, <em class="sig-param"><span class="n">be</span></em>, <em class="sig-param"><span class="n">spectrum</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.FITS.save_scan_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a scan to the FITS table</p>
+<p>This collect relevant backend data to write to FITS data table. It is for a
+“standard” (e.g. ASAP-compatible) SDFITS file initialized with the steps in
+this module’s docstring.</p>
+<p>:param scan : Scan number
+:type  scan : int</p>
+<p>:param dateobs : ISO format time
+:type  dateobs : str</p>
+<p>:param source : Source name
+:type  source : str</p>
+<p>:param interval : Integration time
+:type  interval : float</p>
+<p>:param antenna : Antenna parameters like RA and decl.
+:type  antenna : dict</p>
+<p>:param be : Backend parameters
+:type  be : dict</p>
+<dl class="simple">
+<dt>:param spectrum<span class="classifier">dictionary</span></dt><dd><p>Spectra indexed by polarization</p>
+</dd>
+<dt>:param row<span class="classifier">int</span></dt><dd><p>Row into which to put the data</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.SAO.SAOhdf5.html" title="SAOhdf5"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

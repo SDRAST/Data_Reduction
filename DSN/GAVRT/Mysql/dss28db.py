@@ -111,7 +111,7 @@ Table columns
   xpwr_cfg_id, year, doy, utc, epoch, tsrc, stdev, bl_stdev, az, az_offset, el,
   el_offset, ha, dec, offset, bw, corr
 """
-import cPickle as pickle
+import pickle as pickle
 import datetime
 import ephem
 import logging
@@ -318,10 +318,10 @@ class Observation(object):
     @return: (dxdecs,ddecs) in degrees
     """
     try:
-      self.data.keys()
+      list(self.data.keys())
     except AttributeError:
       self.get_data_from_tlogs()
-    if self.data.has_key('MPL_datenum'):
+    if 'MPL_datenum' in self.data:
       pass
     else:
       # 'tlog' did not have good data
@@ -442,7 +442,7 @@ class Map(Observation):
                               "where raster_cfg_id = " + str(self.cfg_id) +";")
 
     self.cfg = {}
-    for key in cfg.keys():
+    for key in list(cfg.keys()):
       self.cfg[key] = cfg[key][0]
     return self.cfg
         
@@ -497,10 +497,10 @@ class Map(Observation):
     @return: (dxdecs,ddecs) in degrees
     """
     try:
-      self.data.keys()
+      list(self.data.keys())
     except AttributeError:
       self.maps_from_tlogs()
-    if self.data.has_key('MPL_datenum'):
+    if 'MPL_datenum' in self.data:
       pass
     else:
       # 'tlog' did not have good data
@@ -555,8 +555,8 @@ class Map(Observation):
       xi = self.data['grid_x']
       yi = self.data['grid_y']
       try:
-        self.data['grid_z'][channel] = griddata(cx,cy,cz, xi, yi, interp=u'nn')
-      except ValueError, details:
+        self.data['grid_z'][channel] = griddata(cx,cy,cz, xi, yi, interp='nn')
+      except ValueError as details:
         self.logger.error("regrid: gridding failed: %s", str(details))
         self.logger.debug("regrid: channel %d length of cx is %d", channel, len(cx))
         self.logger.debug("regrid: channel %d length of cy is %d", channel, len(cy))
@@ -634,7 +634,7 @@ class BoresightScan(Observation):
                 "select "+scan_cols
                 +" from xpwr where xpwr_cfg_id="+str(xpwr_cfg_id)+";")
       # tlog data
-      if self.bs_data.has_key('epoch'):
+      if 'epoch' in self.bs_data:
         self.start = self.bs_data['epoch'][0]
         self.end   = self.bs_data['epoch'][-1]
         self.channels = NP.unique(
@@ -690,7 +690,7 @@ class BoresightScan(Observation):
     """
     self.logger.debug("fit_gaussian: direction is %s", self.axis)
     # get offsets if necessary
-    if self.__dict__.has_key('data') == False:
+    if ('data' in self.__dict__) == False:
       self.get_offsets()
     # remember that GAVRT nomenclature seems backwards
     if self.axis.lower() == 'xdec':
@@ -824,15 +824,15 @@ class Session(object):
       obs_dir = projects_dir+"SolarPatrol/Observations/dss28/"
       self.session_dir = obs_dir + "%4d" % self.year +"/"+ "%03d" % self.doy +"/"
       if not os.path.exists(self.session_dir):
-        os.makedirs(self.session_dir, mode=0775)
+        os.makedirs(self.session_dir, mode=0o775)
   
   def summary(self, save=False):
     if not self.list_maps(save=save):
-      print "no usable maps found"
+      print("no usable maps found")
     else:
       self.show_images()
     if not self.make_bs_dir(save=save):
-      print "no usable boresights found"
+      print("no usable boresights found")
     else:
       self.show_boresights()
 
@@ -862,7 +862,7 @@ class Session(object):
         self.logger.debug("get_maps: getting %d", map_id)
         self.maps[map_id] = Map(self, map_id)
       self.logger.info("%4d/%03d found %d maps", self.year, self.doy,
-                     len(self.maps.keys()))
+                     len(list(self.maps.keys())))
     else:
       self.logger.info("No maps found for %4d/%03d", self.year, self.doy)
       
@@ -881,7 +881,7 @@ class Session(object):
     for xpwr_cfg_id in xpwr_cfg_ids:
       self.boresights[xpwr_cfg_id] = BoresightScan(self, xpwr_cfg_id)
     self.logger.info("%4d/%03d found %d boresights", self.year, self.doy,
-                     len(self.boresights.keys()))
+                     len(list(self.boresights.keys())))
           
   def list_maps(self, save=False):
     """
@@ -890,20 +890,20 @@ class Session(object):
       fileobj = open(self.session_dir+"maps.txt", "w")
     else:
       fileobj = sys.stdout
-    print >> fileobj, "----------------- Session Maps for %4d/%03d -------------------" %\
-          (self.year, self.doy)
-    print >> fileobj, " ID start-stop ch  freq.  pol.  b.w. IFmode attn.        source"
-    print >> fileobj, "--- ---------- -- ------ ----- ----- ------ ----- -------------"
-    mapkeys = self.maps.keys()
+    print("----------------- Session Maps for %4d/%03d -------------------" %\
+          (self.year, self.doy), file=fileobj)
+    print(" ID start-stop ch  freq.  pol.  b.w. IFmode attn.        source", file=fileobj)
+    print("--- ---------- -- ------ ----- ----- ------ ----- -------------", file=fileobj)
+    mapkeys = list(self.maps.keys())
     mapkeys.sort()
     if mapkeys == []:
-      print >> fileobj, "no valid maps with tlog data found"
+      print("no valid maps with tlog data found", file=fileobj)
       return False
-    for mapno in self.maps.keys():
+    for mapno in list(self.maps.keys()):
       try:
         channels = self.maps[mapno].channels
         for chno in channels:
-          print >> fileobj, " %3d %4s-%4s %2d %6.0f %4s %4.2f %4s %4.1d %16s" % (
+          print(" %3d %4s-%4s %2d %6.0f %4s %4.2f %4s %4.1d %16s" % (
             mapno,
             strftime("%H%M", gmtime(self.maps[mapno].start)),
             strftime("%H%M", gmtime(self.maps[mapno].end)),
@@ -913,9 +913,9 @@ class Session(object):
             self.maps[mapno].rss_cfg[chno]["if_bw"],
             self.maps[mapno].rss_cfg[chno]["if_mode"][0],
             self.maps[mapno].rss_cfg[chno]["atten"],
-            self.maps[mapno].source)
+            self.maps[mapno].source), file=fileobj)
       except AttributeError:
-        print "map", mapno, "has no channels"
+        print("map", mapno, "has no channels")
     return True
 
   def save_map_data(self, mapkeys=None):
@@ -930,21 +930,21 @@ class Session(object):
     if mapkeys:
       self.logger.info("show_images:")
     else:
-      mapkeys = self.maps.keys()
+      mapkeys = list(self.maps.keys())
       mapkeys.sort()
     for key in mapkeys:
       try:
-        self.maps[key].map_data.keys()
+        list(self.maps[key].map_data.keys())
         self.logger.debug("save_map_data: mapdata[%d] exists", key)
       except AttributeError:
         self.maps[key].maps_from_tlogs()
         self.logger.debug("save_map_data: loaded mapdata[%d]", key)
-      if self.maps[key].map_data.has_key('dec_offset'):
+      if 'dec_offset' in self.maps[key].map_data:
         self.logger.debug("save_map_data: mapdata[%d] is centered", key)
       else:
         self.maps[key].center_map()
         self.logger.debug("save_map_data: mapdata[%d] has been centered", key)
-      if self.maps[key].map_data.has_key('grid_x'):
+      if 'grid_x' in self.maps[key].map_data:
         self.logger.debug("save_map_data: mapdata[%d] is regridded", key)
       else:
         self.maps[key].regrid()
@@ -1052,7 +1052,7 @@ class Session(object):
       6 - chan (if chan=None)
     
     """
-    keys = self.boresights.keys()
+    keys = list(self.boresights.keys())
     keys.sort()
     self.good_boresights = {}
     for key in keys:
@@ -1085,26 +1085,26 @@ class Session(object):
     else:
       fileobj = sys.stdout
     if good_only:
-      bs_keys = self.get_good_boresights().keys()
+      bs_keys = list(self.get_good_boresights().keys())
     else:
       # these are the keys for all boresights, good or bad
-      bs_keys = self.boresights.keys()
+      bs_keys = list(self.boresights.keys())
     bs_keys.sort()
     num_scans = len(bs_keys)
     if num_scans == 0:
       # no data
-      print >> fileobj, " Boresight Summary for %4d/%03d" % (self.year, self.doy)
-      print >> fileobj, "\nNo valid boresights with tlog data found"
+      print(" Boresight Summary for %4d/%03d" % (self.year, self.doy), file=fileobj)
+      print("\nNo valid boresights with tlog data found", file=fileobj)
       return False
-    print >> fileobj, " Boresight Summary for %4d/%03d" % (self.year, self.doy)
-    print >> fileobj, "  ID   date          ch axis  freq.  pol IF bw   source         Top   diode   az    el"
-    print >> fileobj, "------ ------------- -- ---- ------ ---- ---- ---------------- ------ ------ ----- ----"
+    print(" Boresight Summary for %4d/%03d" % (self.year, self.doy), file=fileobj)
+    print("  ID   date          ch axis  freq.  pol IF bw   source         Top   diode   az    el", file=fileobj)
+    print("------ ------------- -- ---- ------ ---- ---- ---------------- ------ ------ ----- ----", file=fileobj)
     for bs in bs_keys:
       source =  self.boresights[bs].source
       try:
         bs_channels = self.boresights[bs].channels
       except AttributeError:
-        print >> fileobj, "%6d has no channels" % bs
+        print("%6d has no channels" % bs, file=fileobj)
       else:
         bs_channels.sort()
         #self.logger.debug("make_bs_dir: boresight %d channels: %s", bs, bs_channels)
@@ -1116,7 +1116,7 @@ class Session(object):
             axis =     self.boresights[bs].axis
             az =       self.boresights[bs].bs_data['az'][0]
             el =       self.boresights[bs].bs_data['el'][0]  
-            print >> fileobj, "%6d %13s %2s %4s %6.0f %4s %4.0f %16s %6.2f %6s %5.1f %4.1f" % (
+            print("%6d %13s %2s %4s %6.0f %4s %4.0f %16s %6.2f %6s %5.1f %4.1f" % (
                             bs, 
                             strftime("%Y/%j %H%M", gmtime(UNIXtime)),
                             ch, axis,
@@ -1124,9 +1124,9 @@ class Session(object):
                             self.boresights[bs].pol,
                             self.boresights[bs].IFbw,
                             source, top, 
-                            self.boresights[bs].diode, az, el)
+                            self.boresights[bs].diode, az, el), file=fileobj)
         else:
-          print >> fileobj, "%6d has no channels" % bs
+          print("%6d has no channels" % bs, file=fileobj)
     return True
 
 
@@ -1224,7 +1224,7 @@ class DSS28db(BaseDB):
       response = self.get_as_dict("select "
                         + columns
                         + " from xpwr_cfg where xpwr_cfg_id="+str(cfg_id)+";")
-    for key in response.keys():
+    for key in list(response.keys()):
       boresight_data[key].append(response[key][0])
     boresight_data['source'] = []
     for source_id in boresight_data['source_id']:
@@ -1313,7 +1313,7 @@ class DSS28db(BaseDB):
     try:
       response = self.get_as_dict(query)
       return response
-    except Exception, details:
+    except Exception as details:
       self.logger.error("get_Tsys: error: %s", str(details))
       return None
  
@@ -1321,7 +1321,7 @@ class DSS28db(BaseDB):
     """
     get IDs for an observing session
     """
-    if self.sessions.has_key(year) == False:
+    if (year in self.sessions) == False:
       self.sessions[year] = {}
     self.sessions[year][doy] = Session(self, year, doy)
     return self.sessions[year][doy]

@@ -217,7 +217,7 @@ class BaseDB():
     # This returns the column names
     descr = [x[0] for x in self.c.description]
     # This returns the row as a dictionary
-    return dict(zip(descr,res))
+    return dict(list(zip(descr,res)))
   
   def getRecordById(self,table,rec_id):
     """
@@ -235,7 +235,7 @@ class BaseDB():
     self.c.execute("SELECT * FROM " + table + " WHERE ID = %s;",(rec_id,))
     res = self.c.fetchone()
     descr = [x[0] for x in self.c.description]
-    return dict(zip(descr,res))
+    return dict(list(zip(descr,res)))
     
   def get(self,*args):
     """
@@ -317,7 +317,7 @@ class BaseDB():
     try:
       self.c.execute("""SHOW TABLES;""")
       result = self.c.fetchall()
-    except MySQLdb.Error, e:
+    except MySQLdb.Error as e:
       self.logger.error(
                   "get_public_tables: MySQLdb error: Cannot connect to server")
       self.logger.error("get_public_tables: error code:",e.args[0])
@@ -391,8 +391,8 @@ class BaseDB():
       response = self.get_as_dict("select " + columnstr
                         + " from "+table+" where year=%s and doy=%s",
                         (year,doy))
-    except Mysql.MySQLdb.OperationalError, details:
-      print "MySQLdb OperationalError:",details
+    except Mysql.MySQLdb.OperationalError as details:
+      print("MySQLdb OperationalError:",details)
     else:
       return response
 
@@ -470,13 +470,13 @@ def show_databases(host, user, passwd):
   @return: printed report all the tables in each database.
   """
   dbs = get_databases(host, user, passwd)
-  print("Databases on %s" % host)
+  print(("Databases on %s" % host))
   for db in dbs:
-    print "  ",db[0]
+    print("  ",db[0])
   for line in dbs:
     if line[0] != 'information_schema' and line[0] != 'mysql' and \
       not re.search('wiki',line[0]):
-      print "Tables in",line[0]
+      print("Tables in",line[0])
       db = open_db(line[0],host,user,passwd)
       tbs = get_public_tables(db)
       logging.debug(str(tbs))
@@ -484,10 +484,10 @@ def show_databases(host, user, passwd):
         try:
           reserved_index = reserved.index(tb[0].upper())
           query = "SELECT COUNT(*) FROM `"+tb[0]+"`;"
-        except ValueError,details:
+        except ValueError as details:
           query = "SELECT COUNT(*) FROM "+tb[0]+";"
         result = ask_db(db,query)
-        print "  ",tb[0],"has",result[0][0],"rows"
+        print("  ",tb[0],"has",result[0][0],"rows")
       db.close()
   logging.info("Disconnected from server on %s",host)
 
@@ -594,8 +594,8 @@ def check_table(db_conn, table): ## convert to BaseDB method
   elif len(q) == 0:
     return False
   else:
-    print "check_table: did not understand response"
-    print q
+    print("check_table: did not understand response")
+    print(q)
     return False
     
 def update_record(db, table, fields, condition): # not allowed in DSS28db
@@ -621,21 +621,21 @@ def update_record(db, table, fields, condition): # not allowed in DSS28db
   except:
     pass
   query = "UPDATE "+ table + " SET "
-  for k,v in fields.items():
+  for k,v in list(fields.items()):
     query += k + " = " + "%s" +", "
     values.append(v)
   query = query[:-2]    #strip final ,
   query += " WHERE " + condition[0] + " = " + str(condition[1]) + ";"
   try:
     c = db.cursor()
-  except Exception,details:
+  except Exception as details:
     logging.error("Could not get cursor")
     return (-1,details)
   try:
     c.executemany(query,[tuple(values)])
     # This should return ()
     result = c.fetchall()
-  except Exception, details:
+  except Exception as details:
     logging.error("insert_record: could not execute: "+query,tuple(values))
     result = (-2,details)
   logging.debug("update_record: "+result)
@@ -674,7 +674,7 @@ def create_table(database,name,keys):
   cursor = database.cursor()
   # assemble the CREATE string
   create_string = 'CREATE TABLE '+tbname+' ('
-  for key in key_types.keys():
+  for key in list(key_types.keys()):
     try:
       colname = sql.reserved(key)
     except:
@@ -682,13 +682,13 @@ def create_table(database,name,keys):
     create_string = create_string + ' '+colname+' '+key_types[key]+','
   create_string = create_string.rstrip(',') + ');'
   if diag:
-    print "create_table:",create_string
+    print("create_table:",create_string)
   try:
     cursor.execute(create_string)
     return tbname
-  except Exception, detail:
-    print "create_table: execution failed"
-    print detail
+  except Exception as detail:
+    print("create_table: execution failed")
+    print(detail)
     return None
   
 def make_table(database,table_data):
@@ -723,17 +723,17 @@ def make_table(database,table_data):
       return None
   else:
     if diag:
-      print "make_table:",tbname,"exists"
+      print("make_table:",tbname,"exists")
     # get a cursor
     cursor = database.cursor()
   # Insert the data
   for datum in data:
     try:
       sql.insert_record(database,tbname,datum)
-    except Exception, detail:
+    except Exception as detail:
       # row exists
-      print "make_table: Error for",datum
-      print detail
+      print("make_table: Error for",datum)
+      print(detail)
       errtype, value, traceback = sys.exc_info()
       sys.excepthook(errtype,value,traceback)
   return tbname

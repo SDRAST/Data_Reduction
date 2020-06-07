@@ -38,9 +38,9 @@ class SessionPlotter(SessionAnalyzer):
     self.logger.info("__init__: getting FITS examiners for DSS%2d on %4d/%03d",
                      dss, year, DOY)
     if self.examiners:
-      for ekey in self.examiners.keys():
+      for ekey in list(self.examiners.keys()):
         self.examiners[ekey].plotter = {}
-        for tkey in self.examiners[ekey].tables.keys():
+        for tkey in list(self.examiners[ekey].tables.keys()):
           self.examiners[ekey].plotter[tkey] = DSNFITSplotter.Plotter(self,
                                              self.examiners[ekey].tables[tkey])
     else:
@@ -91,27 +91,27 @@ class SessionPlotter(SessionAnalyzer):
     fig1.set_size_inches(12,5, forward=True)
     ax2 = ax[0].twinx()
     
-    if weather_data.has_key('ELEVATIO') or weather_data.has_key('TSYS'):
+    if 'ELEVATIO' in weather_data or 'TSYS' in weather_data:
       ax[0].xaxis.set_major_formatter( DateFormatter('%H:%M') )
-    if weather_data.has_key('TSYS'):
+    if 'TSYS' in weather_data:
       nrows, num_cy, num_bm, num_pl = weather_data['TSYS'][True].shape
-    states = weather_data['TSYS'].keys()
+    states = list(weather_data['TSYS'].keys())
     num_st = len(states)
     for sig in states:
       # axes 0: left side, elevation vs time
-      if weather_data.has_key('ELEVATIO'):
+      if 'ELEVATIO' in weather_data:
         # plot elevation vs time
         mpltime = epoch2num(weather_data['UNIXtime'][True])
         ax[0].plot_date(mpltime, weather_data['ELEVATIO'][True], "-k",
                         label=sigref[sig])
       # axes 0, right side, plot system temperature or average power vs time
-      if weather_data.has_key('TSYS'):
+      if 'TSYS' in weather_data:
         for subch_idx in range(num_cy):  # subchannels first
           for beam in range(num_bm): # beams second
             for pol in range(num_pl): #pols third
-              label = make_legend_labels(sckeys=range(num_cy),
-                                         bmkeys=range(num_bm),
-                                         plkeys=range(num_pl),
+              label = make_legend_labels(sckeys=list(range(num_cy)),
+                                         bmkeys=list(range(num_bm)),
+                                         plkeys=list(range(num_pl)),
                                          sckey=subch_idx,
                                          bmkey=beam,
                                          plkey=pol)
@@ -124,13 +124,13 @@ class SessionPlotter(SessionAnalyzer):
                             marker='.',
                             color=colors[color_index]) # , label=label+"s")
       # right axes: plot tsys or average power vs airmass
-      if weather_data.has_key('ELEVATIO') and weather_data.has_key('TSYS'):
+      if 'ELEVATIO' in weather_data and 'TSYS' in weather_data:
         for subch in range(num_cy):
           for beam in range(num_bm):
             for pol in range(num_pl):
-              label = make_legend_labels(sckeys=range(num_cy),
-                                         bmkeys=range(num_bm),
-                                         plkeys=range(num_pl),
+              label = make_legend_labels(sckeys=list(range(num_cy)),
+                                         bmkeys=list(range(num_bm)),
+                                         plkeys=list(range(num_pl)),
                                          sckey=subch,
                                          bmkey=beam,
                                          plkey=pol)
@@ -142,7 +142,7 @@ class SessionPlotter(SessionAnalyzer):
                          '.', color=colors[color_index],
                          label=label+sigref[sig])
     # set axis labels or report missing data
-    if weather_data.has_key('ELEVATIO') == False:
+    if ('ELEVATIO' in weather_data) == False:
       ax[0].text(0.5, 0.6,'bad elevation data',
                horizontalalignment='center',
                verticalalignment='center',
@@ -150,7 +150,7 @@ class SessionPlotter(SessionAnalyzer):
     ax[0].set_xlabel("UT")
     ax[0].set_ylabel("Elevation (deg)")
     ax[0].grid()
-    if weather_data.has_key('TSYS'):
+    if 'TSYS' in weather_data:
       if ax2.get_ylim()[1] > 1000:
         ax2.set_ylabel("power (count)")
       elif ax2.get_ylim()[1] > 10:
@@ -161,7 +161,7 @@ class SessionPlotter(SessionAnalyzer):
     for tick in ax[0].get_xticklabels():
       tick.set_rotation(30)
 
-    if weather_data.has_key('ELEVATIO') == False:
+    if ('ELEVATIO' in weather_data) == False:
       ax[1].text(0.5, 0.5,'bad elevation data',
                horizontalalignment='center',
                verticalalignment='center',
@@ -206,24 +206,24 @@ class SessionPlotter(SessionAnalyzer):
     fig2.subplots_adjust(left=0.15)
     mpltime = epoch2num(weather_data['UNIXtime'][True])
     # left axes: temperature
-    if weather_data.has_key('TAMBIENT'):
+    if 'TAMBIENT' in weather_data:
       wax[0].plot_date(mpltime, weather_data['TAMBIENT'][True],"-k")
     # middle axes: pressure
-    if weather_data.has_key('PRESSURE'):
+    if 'PRESSURE' in weather_data:
       wax[1].plot_date(mpltime, weather_data['PRESSURE'][True],"-k")
     # right axes: humidity
-    if weather_data.has_key('HUMIDITY'):
+    if 'HUMIDITY' in weather_data:
       wax[2].plot_date(mpltime, weather_data['HUMIDITY'][True],"-k")
-    if weather_data.has_key('TAMBIENT') or weather_data.has_key('PRESSURE'):
+    if 'TAMBIENT' in weather_data or 'PRESSURE' in weather_data:
       wax[2].xaxis.set_major_formatter( DateFormatter('%H:%M') )
-    if weather_data.has_key('TAMBIENT') == False:
+    if ('TAMBIENT' in weather_data) == False:
       wax[0].text(0.5,0.5,'bad ambient temperature data',
                 horizontalalignment='center',
                 verticalalignment='center',
                 transform = wax[0].transAxes)
     wax[0].set_ylabel("Temp (C)")
     wax[0].grid(True)
-    if weather_data.has_key('PRESSURE'):
+    if 'PRESSURE' in weather_data:
       wax[1].yaxis.set_major_formatter( FormatStrFormatter('%6.2f') )
     else:
       wax[1].text(0.5,0.5,'bad pressure data',
@@ -232,17 +232,17 @@ class SessionPlotter(SessionAnalyzer):
                 transform = wax[1].transAxes)
     wax[1].grid(True)
     wax[1].set_ylabel("Pres (mb)")
-    if weather_data.has_key('PRESSURE'):
+    if 'PRESSURE' in weather_data:
       wax[1].yaxis.set_major_formatter( FormatStrFormatter('%6.2f') )
-    if weather_data.has_key('HUMIDITY') == False:
+    if ('HUMIDITY' in weather_data) == False:
       wax[2].text(0.5,0.5,'bad humidity data',
                 horizontalalignment='center',
                 verticalalignment='center',
                 transform = wax[2].transAxes)
     wax[2].grid(True)
     wax[2].set_ylabel("Humidity")
-    if weather_data.has_key('TAMBIENT') or weather_data.has_key('PRESSURE') or \
-      weather_data.has_key('HUMIDITY'):
+    if 'TAMBIENT' in weather_data or 'PRESSURE' in weather_data or \
+      'HUMIDITY' in weather_data:
       fig2.autofmt_xdate()
     #fig2.show()
     fig2.savefig(savepath+"-weather.png")
@@ -271,7 +271,7 @@ class SessionPlotter(SessionAnalyzer):
     fig3.subplots_adjust(hspace=0) # no space between plots in a column
     mpltime = epoch2num(weather_data['UNIXtime'][True])
     # left axes: windspeed
-    if weather_data.has_key('WINDSPEE'):
+    if 'WINDSPEE' in weather_data:
       wax3[0].plot_date(mpltime, weather_data['WINDSPEE'][True],"-k")
       wax3[0].set_ylabel("Speed (km/h)")
       wax3[0].grid(True)
@@ -281,7 +281,7 @@ class SessionPlotter(SessionAnalyzer):
                  verticalalignment='center',
                  transform = wax3[0].transAxes)
     # right axes: wind direction
-    if weather_data.has_key('WINDDIRE'):
+    if 'WINDDIRE' in weather_data:
       wax3[1].plot_date(mpltime, weather_data['WINDDIRE'][True],"-k")
       wax3[1].xaxis.set_major_formatter( DateFormatter('%H:%M') )
       wax3[1].set_ylabel("Direction")
@@ -291,7 +291,7 @@ class SessionPlotter(SessionAnalyzer):
                  horizontalalignment='center',
                  verticalalignment='center',
                  transform = wax3[1].transAxes)
-    if weather_data.has_key('WINDSPEE') or weather_data.has_key('WINDDIRE'):
+    if 'WINDSPEE' in weather_data or 'WINDDIRE' in weather_data:
       fig3.autofmt_xdate()
     #fig3.show()
     fig3.savefig(savepath+"-wind.png")
@@ -306,7 +306,7 @@ class SessionPlotter(SessionAnalyzer):
     for dfindex in self.examiner_keys:
       session_name = splitext(basename(self.examiners[dfindex].file))[0]
       savefile = self.datapath + session_name   
-      for tablekey in self.examiners[dfindex].tables.keys():
+      for tablekey in list(self.examiners[dfindex].tables.keys()):
         table = self.examiners[dfindex].tables[tablekey]
         plotter = self.examiners[dfindex].plotter[tablekey]
         if len(table.obsmodes) > 1:
@@ -323,7 +323,7 @@ class SessionPlotter(SessionAnalyzer):
     """
     for dfindex in self.examiner_keys:
       examiner = self.examiners[dfindex]
-      for tablekey in examiner.tables.keys():
+      for tablekey in list(examiner.tables.keys()):
         table = self.examiners[dfindex].tables[tablekey]
         plotter = self.examiners[dfindex].plotter[tablekey]
         if len(table.obsmodes) > 1:
@@ -407,8 +407,8 @@ class SessionPlotter(SessionAnalyzer):
             for beam in range(0,table.props["num beams"],2):
               # beams taken by pairs
               for pol in range(table.props["num IFs"]):
-                label = make_legend_labels(sckeys=range(num_cycles),
-                                           plkeys=range(num_pols),
+                label = make_legend_labels(sckeys=list(range(num_cycles)),
+                                           plkeys=list(range(num_pols)),
                                            sckey=subch,
                                            plkey=pol)                           
                 # beam-1 minus beam-2 differences
@@ -447,7 +447,7 @@ class SessionPlotter(SessionAnalyzer):
       session_name = splitext(basename(self.examiners[dfindex].file))[0]
       savefile = self.datapath + session_name
       self.logger.debug("plot_possw_diff: saving as %s", savefile)
-      for tablekey in self.examiners[dfindex].tables.keys():
+      for tablekey in list(self.examiners[dfindex].tables.keys()):
         plotter = self.examiners[dfindex].plotter[tablekey]
         if len(plotter.obsmodes) > 1:
           raise RuntimeError("multiple observing modes not yet supported")

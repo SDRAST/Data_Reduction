@@ -146,7 +146,7 @@ def get_STATS_ASCII_data_block(fd,nchan,nsamps):
     Each array shape is (nsamps,nchan).
   """
   if diag_read:
-    print "Reading",fd
+    print("Reading",fd)
   counter = 0
   while(counter < nsamps):
     fd.flush()
@@ -162,7 +162,7 @@ def get_STATS_ASCII_data_block(fd,nchan,nsamps):
     line = line.strip()
     if line != '':
       if diag_read:
-        print "Read:",line
+        print("Read:",line)
       # mean, rms, kurt and skew are lists whose length is the number of
       # channels
       sec,ms,mean,rms,kurt,skew = process_STATS_ASCII_data_line(line,nchan)
@@ -283,7 +283,7 @@ def get_binary_stats_header(fd):
   first_word = fd.read(2)
   first = struct.unpack_from('=H',first_word)
   if diag_read:
-    print "Header size =",first
+    print("Header size =",first)
   # Unpack returns a tuple
   if first[0] != 13:
     # header_size = first[0]
@@ -438,37 +438,37 @@ def find_STATS_bin_block_times(ses_date,year,month,day,DOY):
   datestr = strftime("%y-%j",TT)
   datafiles = glob(ravi_data_dir+"STATS*"+datestr+"*-bin")
   if diag:
-    print "STAT bin files:\n",datafiles
+    print("STAT bin files:\n",datafiles)
   for datafile in datafiles:
     fd = open(datafile,'r')
     st_mode, st_ino, st_dev, st_nlink, st_uid, st_gid, st_size, st_atime, \
 	   st_mtime, st_ctime = os.stat(datafile)
     if diag:
-      print "\nProcessing ",basename(datafile)," for block times"
-      print "File size =",st_size
+      print("\nProcessing ",basename(datafile)," for block times")
+      print("File size =",st_size)
     chanID = basename(datafile[15:22]).upper()
     outfile = obs_dir+ses_date+"/recording_times."+chanID
     if diag:
-      print "Writing output to",basename(outfile)
-      print "Be patient.  Have lunch.  Play solitaire."
+      print("Writing output to",basename(outfile))
+      print("Be patient.  Have lunch.  Play solitaire.")
     outfd = open(outfile,'w')
     outfd.write("Processing "+basename(datafile)+" for block times\n")
     header,header_size = get_binary_stats_header(fd)
     num_recs = (st_size-header_size)/STATS_binary_record_size
     if diag:
-      print "File data size =",st_size-header_size
-      print STATS_binary_record_size,"bytes per record"
-      print num_recs,"samples of data"
+      print("File data size =",st_size-header_size)
+      print(STATS_binary_record_size,"bytes per record")
+      print(num_recs,"samples of data")
     spcid, vsrid, chanid, bps, srate, errflg, year, doy, sec, freq, \
          orate,nsubchan = parse_STATS_header(header)
     if diag:
-      print "Number of records per second =",orate
-      print (st_size-header_size)/STATS_binary_record_size/orate/60., \
-            "minutes of data"
+      print("Number of records per second =",orate)
+      print((st_size-header_size)/STATS_binary_record_size/orate/60., \
+            "minutes of data")
     # First recording start time
     TSprev = VSR_tuple_to_timestamp(year,doy,sec)
     if diag:
-      print "Header time:",ctime(TSprev)
+      print("Header time:",ctime(TSprev))
     sleep(5)
     outfd.write("From "+ctime(TSprev))
     for rec_id in range(1,num_recs,orate):
@@ -479,20 +479,20 @@ def find_STATS_bin_block_times(ses_date,year,month,day,DOY):
       sec = data[1]
       TS = VSR_tuple_to_timestamp(year,doy,sec)
       if diag:
-        print "Examining  record", rec_id,"\r",
+        print("Examining  record", rec_id,"\r", end=' ')
       if TS - TSprev > 1:
         if diag:
-          print "Break at    record",rec_id, \
+          print("Break at    record",rec_id, \
                 "time =",doy,sec, \
-                "\nfrom",ctime(TSprev),'to',ctime(TS)
+                "\nfrom",ctime(TSprev),'to',ctime(TS))
         outfd.write(" to "+ctime(TSprev)+'\n')
         outfd.write("From "+ctime(TS))
       TSprev = TS
       # final end
     if diag:
-      print "Finished at record",rec_id, \
+      print("Finished at record",rec_id, \
             "time =",doy,sec, \
-            'at',ctime(TS)
+            'at',ctime(TS))
     outfd.write(" to "+ctime(TS)+'\n')
     fd.close()
     outfd.close()
@@ -530,15 +530,15 @@ def find_STATS_log_block_times(ses_date,year,month,day,DOY):
   datafiles = glob(obs_dir+ses_date+"/vsr1*"+datestr+"*log")
   if datafiles != []:
     if diag:
-      print "find_STATS_log_block_times: STAT log files:\n",datafiles
+      print("find_STATS_log_block_times: STAT log files:\n",datafiles)
     for datafile in datafiles:
       if diag:
-        print "\nfind_STATS_log_block_times: processing ",\
-          basename(datafile)," for block times"
+        print("\nfind_STATS_log_block_times: processing ",\
+          basename(datafile)," for block times")
       chanID = basename(datafile)[4:9]
       outfile = obs_dir+ses_date+"/recording_times.1"+chanID.upper()
       if diag:
-        print "find_STATS_log_block_times: writing output to",basename(outfile)
+        print("find_STATS_log_block_times: writing output to",basename(outfile))
       outfd = open(outfile,'w')
       outfd.write("#find_STATS_log_block_times: processing "+\
         basename(datafile)+" for block times\n")
@@ -562,23 +562,23 @@ def find_STATS_log_block_times(ses_date,year,month,day,DOY):
             TSprev = TS
             first_record = False
             if diag:
-              print "From ",ctime(start),
+              print("From ",ctime(start), end=' ')
           if TS - TSprev > 1:
             stop = TSprev
             outfd.write(str(start)+" "+str(stop)
                         +" # From "+ctime(start)+" to "+ctime(stop)+'\n')
             start = TS
             if diag:
-              print "Break at",year,DOY,sec
-              print "to",ctime(TSprev)
-              print 
+              print("Break at",year,DOY,sec)
+              print("to",ctime(TSprev))
+              print() 
           TSprev = TS
         elif line == "":
           not_EOF = False
       outfd.write(str(start)+" "+str(stop)
                         +" # From "+ctime(start)+" to "+ctime(stop)+"\n")
       if diag:
-        print "to",ctime(TSprev)
+        print("to",ctime(TSprev))
       fd.close()
       outfd.close()
     return True
@@ -595,11 +595,11 @@ def print_record(data):
   @return: None
   """
   TS,means,variances,skews,kurts = data
-  print timestamp_to_str_with_ms(TS)
-  print "Mean:     %8.5f, %8.5f (should be 0)" % means
-  print "Variance: %8.3f, %8.3f (power)" % variances
-  print "Skewness: %8.5f, %8.5f (should be zero)" % skews
-  print "Kurtosis: %8.5f, %8.5f" % kurts
+  print(timestamp_to_str_with_ms(TS))
+  print("Mean:     %8.5f, %8.5f (should be 0)" % means)
+  print("Variance: %8.3f, %8.3f (power)" % variances)
+  print("Skewness: %8.5f, %8.5f (should be zero)" % skews)
+  print("Kurtosis: %8.5f, %8.5f" % kurts)
 
 def get_block_time(fd,TS0,orate,blk_index):
   """

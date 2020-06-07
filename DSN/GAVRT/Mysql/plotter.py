@@ -40,7 +40,7 @@ class DBPlotter(DSS28db):
     """
     get IDs for an observing session
     """
-    if self.sessions.has_key(year) == False:
+    if (year in self.sessions) == False:
       self.sessions[year] = {}
     self.sessions[year][doy] = SessionPlotter(self, year, doy)
     return self.sessions[year][doy]
@@ -94,13 +94,13 @@ class SessionPlotter(Session):
     if mapkeys:
       self.logger.info("plot_centered_offsets: processing: %s", mapkeys)
     else:
-      mapkeys = self.maps.keys()
+      mapkeys = list(self.maps.keys())
       mapkeys.sort()
       self.logger.info("plot_centered_offsets: keys found: %s", mapkeys)
     good_maps = []
     for key in mapkeys:
       try:
-        self.maps[key].map_data.keys()
+        list(self.maps[key].map_data.keys())
       except AttributeError:
         # there is no map data yet
         self.logger.info("plot_centered_offsets: getting maps for %s", key)
@@ -141,7 +141,7 @@ class SessionPlotter(Session):
     if mapkeys:
       pass
     else:
-      mapkeys = self.maps.keys()
+      mapkeys = list(self.maps.keys())
     mapkeys.sort()
     first_map = mapkeys[0]
     last_map = mapkeys[-1]
@@ -152,7 +152,7 @@ class SessionPlotter(Session):
     for key in mapkeys:
       self.logger.debug("show_images: for map %d", key)
       try:
-        self.maps[key].map_data.keys()
+        list(self.maps[key].map_data.keys())
       except AttributeError:
         if self.maps[key].raster_keys == None:
           self.logger.error("show_images: map has no data")
@@ -163,7 +163,7 @@ class SessionPlotter(Session):
     for mapno in mapkeys:
       try:
         num_chan = len(self.maps[mapno].channels)
-      except AttributeError, details:
+      except AttributeError as details:
         # if there is no map data, probably
         self.logger.error("show_images: map %d failed due to attribute err %s",
                           mapno, str(details))
@@ -186,7 +186,7 @@ class SessionPlotter(Session):
       Map.center_map()
       x,y,z = Map.regrid(width=width, height=height)
       for chan in channels:
-        if z.has_key(chan):
+        if chan in z:
           index = list(channels).index(chan)
           col = index % 4
           row = index//4
@@ -217,7 +217,7 @@ class SessionPlotter(Session):
     if bs_keys:
       keys = bs_keys
     else:
-      keys = self.boresights.keys()
+      keys = list(self.boresights.keys())
     keys.sort()
     fig = figure()
     for key in keys:
@@ -263,7 +263,7 @@ class SessionPlotter(Session):
     good_boresights = self.get_good_boresights()
     scanaxis = {'dec': 'ha', 'xdec': 'ha'}
     xlabel = {'dec': "Hour Angle", 'xdec': "Hour Angle"}
-    for key in good_boresights.keys():
+    for key in list(good_boresights.keys()):
       nchans = len(good_boresights[key])
       fig, ax = subplots(nrows=2, ncols=nchans)
       width, height = tuple(fig.get_size_inches())

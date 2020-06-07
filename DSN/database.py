@@ -43,10 +43,10 @@ def get_scan_times(db,dss,start_time,end_time):
     ".pointing_status WHERE UnixTime >= " + str(start_time) + \
     " AND UnixTime <= " + str(end_time) +" ORDER BY UnixTime;"
   if diag:
-    print "get_scan_times query:\n",query
+    print("get_scan_times query:\n",query)
   result = sql.get_as_dict(db,query)
   if diag:
-    print result
+    print(result)
   return result
 
 def get_scans(db,dss,scan_times_dict):
@@ -121,10 +121,10 @@ def get_scans(db,dss,scan_times_dict):
       query = "SELECT azimuth, elevation, pointing_cmd_id FROM dss" + \
           str(dss) + ".pointing WHERE ID = " + str(pointing_id) + ";"
       if diag:
-        print "get_scans query (on point):\n",query
+        print("get_scans query (on point):\n",query)
       pointing_dict = sql.get_as_dict(db, query)
       if diag:
-        print pointing_dict
+        print(pointing_dict)
       az_start = pointing_dict['azimuth'][0]
       el_start = pointing_dict['elevation'][0]
       pointing_cmd_id = pointing_dict['pointing_cmd_id'][0]
@@ -135,10 +135,10 @@ def get_scans(db,dss,scan_times_dict):
         query = "SELECT * FROM dss" + str(dss) + \
           ".pointing_cmd WHERE ID = " + str(pointing_cmd_id) + ";"
         if diag:
-          print "get_scans_query:\n",query
+          print("get_scans_query:\n",query)
         result_dict = sql.get_as_dict(db,query)
         if diag:
-          print result_dict
+          print(result_dict)
         source_name_id = result_dict['source_name_id'][0]
         beamaoff = result_dict['beamaoff'][0] # azimuth offset
         beamxoff = result_dict['beamxoff'][0] # cross-elevation offset
@@ -148,14 +148,14 @@ def get_scans(db,dss,scan_times_dict):
         beamdoff = result_dict['beamdoff'][0] # declination offset
         # get the source names
         if diag:
-          print "Source name ID:",source_name_id
+          print("Source name ID:",source_name_id)
         query = "SELECT source_name FROM dsn.source_name WHERE ID = " + \
           str(source_name_id) + ";"
         if diag:
-          print "Source name query:",query
+          print("Source name query:",query)
         source_name = sql.ask_db(db,query)[0][0]
         if diag:
-         print "Result:",source_name
+         print("Result:",source_name)
         onpoint = True
     if status == 'moving' and onpoint == True:
       # This ends a scan
@@ -163,17 +163,17 @@ def get_scans(db,dss,scan_times_dict):
       query = "SELECT azimuth, elevation, pointing_cmd_id FROM dss" + \
           str(dss) + ".pointing WHERE ID = " + str(pointing_id) + ";"
       if diag:
-        print "get_scans query (moving):",query
+        print("get_scans query (moving):",query)
       pointing_dict = sql.get_as_dict(db, query)
       if diag:
-        print pointing_dict
+        print(pointing_dict)
       az_end = pointing_dict['azimuth'][0]
       el_end = pointing_dict['elevation'][0]
       query = "SELECT freq,pol,tsys FROM dss" + str(dss) + \
         ".tsys WHERE UnixTime >= " + str(start_scan) + \
         " AND UnixTime <= " + str(end_scan) + ";"
       if diag:
-        print "get_scans query:",query
+        print("get_scans query:",query)
       tsys_data = sql.get_as_dict(db,query)
       tsys = 0.0
       num_tsys = len(tsys_data['tsys'])
@@ -204,16 +204,16 @@ def report_scans(scan_data):
   """
 
   for i in range(len(scan_data['scan_time'])):
-    print T.ctime(scan_data['scan_time'][i]), \
+    print(T.ctime(scan_data['scan_time'][i]), \
           ("%6s" % scan_data['source'][i]), \
           ("%4d" % scan_data['exposure'][i]), \
           ("%5.1f" % scan_data['azimuth'][i]), \
           ("%5.1f" % scan_data['elevation'][i]), \
-          ("%5.1f" % scan_data['tsys'][i]),
+          ("%5.1f" % scan_data['tsys'][i]), end=' ')
     for k in beam_keys:
       if scan_data[k][i] != 0.0:
-        print k,'=',scan_data[k][i],
-    print ""
+        print(k,'=',scan_data[k][i], end=' ')
+    print("")
 
 def test():
   """
@@ -226,14 +226,14 @@ def test():
   passwd = 'dsnra'
   ion()
   if check_database(host,user,passwd,dbname) == False:
-    print "Could not access database",dbname
+    print("Could not access database",dbname)
     sys.exit(0)
   else:
     db = sql.open_db(dbname,host,user,passwd)
     scan_times_dict = get_scan_times(db,1275017199.0,1275023207.0)
     if diag:
-      print len(scan_times_dict),"scans"
-      print "Keys:",scan_times_dict.keys()
+      print(len(scan_times_dict),"scans")
+      print("Keys:",list(scan_times_dict.keys()))
     scan_data = get_scans(scan_times_dict)
     report_scans(scan_data)
 

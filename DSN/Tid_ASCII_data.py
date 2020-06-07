@@ -66,9 +66,9 @@ def get_scan_data(data,index,block_size):
           try:
             numbers.append(float(new_str))
           except ValueError:
-            print "Could not convert to float"
-            print number_str,'->',new_str
-            print "in:",line
+            print("Could not convert to float")
+            print(number_str,'->',new_str)
+            print("in:",line)
             exit()
       except:
         # No more numbers on this line
@@ -104,7 +104,7 @@ def group_files(files):
   for f in files:
     name = basename(f)
     if diag:
-      print "Examining",name
+      print("Examining",name)
     if name[6] == '.':
       # This may be a standalone file or the start of a new group
       # remember its name
@@ -113,7 +113,7 @@ def group_files(files):
         # If the previous group was not empty, append it to groups
         groups.append(group)
         if diag:
-          print "Completed group:",group
+          print("Completed group:",group)
       # Initialize a new group
       group = [name]
       if f == files[-1]:
@@ -129,7 +129,7 @@ def group_files(files):
         if group != []:
           groups.append(group)
           if diag:
-            print "Completed group:",group
+            print("Completed group:",group)
         group = [name]
       else:
         # This continues a group
@@ -140,8 +140,8 @@ def group_files(files):
       if f == files[-1]:
         groups.append(group)
         if diag:
-          print "Last file:",name
-          print "Completed group:",group
+          print("Last file:",name)
+          print("Completed group:",group)
   return groups
 
 def num_scans_in_group(path,groups):
@@ -322,7 +322,7 @@ def get_scans(path,groups,group_index):
   # This is a dictionary of row number indexed by scan number
   tid_scans = {}
   if diag:
-    print "Doing group",group_index,"in",groups
+    print("Doing group",group_index,"in",groups)
   for f in groups[group_index]:
     fd = open(path+'/'+f,'r')
     data = fd.readlines()
@@ -330,7 +330,7 @@ def get_scans(path,groups,group_index):
     # find the beginning of each scan.  The
     scan_indices, block_size = Tid.get_scan_indices(data)
     if diag:
-      print "File",f,"scan indices:",scan_indices
+      print("File",f,"scan indices:",scan_indices)
 
     # Now process all the scans in the file.
     for scan_index in scan_indices:
@@ -339,7 +339,7 @@ def get_scans(path,groups,group_index):
                                        scan_index,
                                        block_size)
       if numbers == None:
-        print "Premature end-of-file"
+        print("Premature end-of-file")
         break
       tid_scan = Tid.Tid_scan(dss,numbers)
       if len(numbers) == 64+tid_scan.header['MAXIS1'] or \
@@ -351,7 +351,7 @@ def get_scans(path,groups,group_index):
           if name and tid_scan.header['OBJECT'][0] == 'U':
             # If the scan has no name but the scan first line does
             tid_scan.header['OBJECT'] = name
-          if tid_scans.has_key(tid_scan.header['SCAN']) == False:
+          if (tid_scan.header['SCAN'] in tid_scans) == False:
             # If this scan number is not yet a key
             tid_scans[tid_scan.header['SCAN']] = tid_scan
           else:
@@ -362,9 +362,9 @@ def get_scans(path,groups,group_index):
               tid_scans[tid_scan.header['SCAN']] = tid_scan
               # Otherwise leave it be
         else:
-          print "Scan",tid_scan.header['SCAN'],"has bad data"
+          print("Scan",tid_scan.header['SCAN'],"has bad data")
       else:
-        print "Incomplete scan",str(numbers[0])+":",len(numbers),"numbers"
+        print("Incomplete scan",str(numbers[0])+":",len(numbers),"numbers")
         break
   return tid_scans
 
@@ -380,7 +380,7 @@ def report_count(filename,scan_indices):
 
   @return: None
   """
-  print filename,'has',len(scan_indices),'scans'
+  print(filename,'has',len(scan_indices),'scans')
 
 def check_backend(path,fname,backends):
   """

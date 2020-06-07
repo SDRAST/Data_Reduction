@@ -1,0 +1,135 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>get_obs_date &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="header_report" href="Data_Reduction.DSN.header_report.html" />
+    <link rel="prev" title="get_last_line" href="Data_Reduction.DSN.get_last_line.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.header_report.html" title="header_report"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.get_last_line.html" title="get_last_line"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.get_last_line.html"
+                        title="previous chapter">get_last_line</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.header_report.html"
+                        title="next chapter">header_report</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.DSN.get_obs_date.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="get-obs-date">
+<h1>get_obs_date<a class="headerlink" href="#get-obs-date" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="Data_Reduction.DSN.get_obs_date">
+<code class="sig-prename descclassname">Data_Reduction.DSN.</code><code class="sig-name descname">get_obs_date</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.get_obs_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a filename for the date of observation.</p>
+<p>Given a VSR or RAVI data file, return the year, month, day of
+observation as a tuple.  Generally, the data file has the year and DOY
+in its header but, if not, they are encoded in the file name.</p>
+<p class="rubric">Notes</p>
+<dl class="simple">
+<dt>A raw VSR UNIX file has the form::</dt><dd><p>vsr1X.CCC.YY-DDD-HHMM.raw</p>
+</dd>
+</dl>
+<p>where X = a|b, CCC = 1w1 | 2w1 (and possibly 1N1 or 2N1) and the rest are
+the date info. The 1 in front of the X could be 2 or 3 but not at DSS-13.</p>
+<dl class="simple">
+<dt>A signal statistics file has the form::</dt><dd><p>STATS_NP1000_vsr1X.CCC.YY-DDD-HHMM</p>
+</dd>
+</dl>
+<p>encoded as above. It may also have the suffix -qlook and -bin, and HHMM
+may be ‘mars’ for some older files.</p>
+<dl class="simple">
+<dt>FFT file names are::</dt><dd><p>FFT_vsr1X.CCC.YY-DDD-HHMM.raw_DDD-HH:MM:SS_HH:MM:SS</p>
+</dd>
+</dl>
+<p>where the part after ‘raw’ gives the start and end of the data segment
+processed. The HHMM may be ‘mars’ for some older files, in which case the
+file name form is FFT_vsr1X.CCC.YY-DDD-mars_097-04:19:45_04:20:00</p>
+<p>:param filename : string</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.header_report.html" title="header_report"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.get_last_line.html" title="get_last_line"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

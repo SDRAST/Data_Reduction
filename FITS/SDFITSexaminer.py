@@ -64,20 +64,21 @@ logger = logging.getLogger(__name__)
 import support.lists
 
 from Astronomy import c, MJD, v_sun
+from Astronomy.DSN_coordinates import DSS
 from Astronomy.redshift import doppler_radio, doppler_optical, doppler_relat
 from Data_Reduction import clobber
 from Data_Reduction.FITS.DSNFITS import get_indices
 from Data_Reduction.tipping import airmass, fit_tipcurve_data
 from DatesTimes import ISOtime2datetime, UnixTime_to_datetime
-from MonitorControl.BackEnds import get_freq_array
-try:
-  from MonitorControl.Configurations.CDSCC.FO_patching import DistributionAssembly
-  from MonitorControl.FrontEnds.K_band import K_4ch
-  K_4ch = None
-except ImportError:
-  logger.warning("SDFITSexaminer cannot handle DSS-43 K-band: no configuration")
-from MonitorControl.Configurations.coordinates import DSS
-from MonitorControl.FrontEnds.DSN import DSN_fe
+from Data_Reduction import get_freq_array
+# I don't think these classes are needed 2020/06/06
+#try:
+#  from MonitorControl.Configurations.CDSCC.FO_patching import DistributionAssembly
+#  from MonitorControl.FrontEnds.K_band import K_4ch
+#  K_4ch = None
+#except ImportError:
+#  logger.warning("SDFITSexaminer cannot handle DSS-43 K-band: no configuration")
+#from MonitorControl.FrontEnds.DSN import DSN_fe
 from Radio_Astronomy import rms_noise
 from support import mkdir_if_needed, nearest_index
 from support.dicts import make_key_if_needed
@@ -168,7 +169,7 @@ class DSNFITSexaminer(object):
     """
     """
     sources = []
-    for key in self.tables.keys():
+    for key in list(self.tables.keys()):
       for source in self.tables[key].sources:
         if source: # is not empty
           sources.append(source)
@@ -285,12 +286,14 @@ class DSNFITSexaminer(object):
       else:
         self.FE = DSN_fe(self.header['FRONTEND'])
       try:
-        self.BE = self.header['BACKEND']
-        if self.BE == 'SAO spectrometer':
+        #self.BE = self.header['BACKEND']
+        #if self.BE == 'SAO spectrometer':
+        # trying to see if this works without the actual BE class 2020/06/06
+        if self.header['BACKEND'] == 'SAO spectrometer':
           # hack until SAO2SDFITS.py is fixed
           self.cycle_keys = [1]
         else:
-          rows = range(len(self.data))
+          rows = list(range(len(self.data)))
           self.cycle_keys = list(numpy.unique(self.data['CYCLE'][rows]))
       except KeyError:
         # must be a column
@@ -298,14 +301,15 @@ class DSNFITSexaminer(object):
         if backends[0] == '':
           # deduce from number of channels
           numchans = self.data[self.dataname].shape[-1]
-          if numchans == 16384:
-            self.BE = 'DAVOS'
-          elif numchans == 256:
-            self.BE = 'SpectraData'
-          else:
-            self.logger.error("__init__: no name for backend with %d channels",
-                              numchans)
-            raise RuntimeError("no name for backend")
+          # I don't think BE is used so trying without 2020/06/06
+          #if numchans == 16384:
+          #  self.BE = 'DAVOS'
+          #elif numchans == 256:
+          #  self.BE = 'SpectraData'
+          #else:
+          #  self.logger.error("__init__: no name for backend with %d channels",
+          #                    numchans)
+          #  raise RuntimeError("no name for backend")
           self.data['CYCLE'] = numpy.ones(len(self.data))
       # more convenience attributes
       self.get_table_stats()
@@ -448,7 +452,7 @@ class DSNFITSexaminer(object):
       The maximum is (beam,record,IF,0,0) which will return a spectrum or whatever
       is in the first column of the multi-dimensional array.
       """
-      print "These are the indices to provide to retrieve a spectrum:",
+      print("These are the indices to provide to retrieve a spectrum:", end=' ')
       if self.num_indices < 3:
         raise RuntimeWarning("minimum data array index is 'row, RA, dec'")
         return None
@@ -573,7 +577,7 @@ class DSNFITSexaminer(object):
       #self.logger.debug("rel_freq_units: frame velocity is %.3f", v_frame)
       self.frame = frame
       if frame == "CHAN-OBS": # channel number
-        return range(len(rel_freqs))
+        return list(range(len(rel_freqs)))
       elif frame == "FREQ-OBS": # receiver frequency in the observer's frame
         return self.freqs(row=row, num_chans=num_chans)
       elif frame == "DELF-OBS": # frequency relative to the reference pixel
@@ -740,17 +744,17 @@ class DSNFITSexaminer(object):
       labels = "Row Scan ch      Source       Sig  Freq      intg      date/time"
       flines = "--- ---- -- ---------------- ----- --------- ---- -------------------"
       lbform = "%3d  %3d %2d %16s %5s %6.0f %s %4d %20s"
-      print >> dest, labels
-      print >> dest, flines
+      print(labels, file=dest)
+      print(flines, file=dest)
       for row in self.rows:
-        print >> dest, lbform % (row, self.data['SCAN'][row],
+        print(lbform % (row, self.data['SCAN'][row],
                                       self.data['CYCLE'][row],
                                       self.data['OBJECT'][row],
                                       self.data['SIG'][row],
                                       self.data['OBSFREQ'][row]/1e6,
                                       SBcode[self.data['SIDEBAND'][row]],
                                       self.data['EXPOSURE'][row],
-                                      time.ctime(self.data['UNIXtime'][row])[4:])        
+                                      time.ctime(self.data['UNIXtime'][row])[4:]), file=dest)        
     def validate(self, colname, allow_zero=False):
       """
       """
@@ -848,7 +852,7 @@ class DSNFITSexaminer(object):
       self.logger.debug("get_wx_datacubes: rows for SIG=False: %s", ofweather)
       
       valid_data, indices =  self.validate_wx_data()
-      param_keys = valid_data.keys()
+      param_keys = list(valid_data.keys())
       param_keys.remove('TSYS') # to be handled separately
       
       # populate the dict with the simple parameters
@@ -1349,7 +1353,7 @@ class DSNFITSexaminer(object):
       d = UnixTime_to_datetime(self.get_first_value('UNIXtime',0)).timetuple()
       da.get_sheet_by_date("%4d/%03d" % (d.tm_year, d.tm_yday))
       pms = da.get_signals('Power Meter')
-      pm_keys = pms.keys()
+      pm_keys = list(pms.keys())
       pm_keys.sort()
       for pm_key in pm_keys:
         self.logger.debug("get_HP_PM_ID: processing %s", pm_key)
@@ -1521,7 +1525,7 @@ class DSNFITSexaminer(object):
       good_wx_data = self.get_wx_datacubes()
       paramaters = numpy.zeros_like(good_wx_data['TSYS'][True])
       std_devs = numpy.zeros_like(parameters)
-      for sig in good_wx_data['TSYS'].keys():
+      for sig in list(good_wx_data['TSYS'].keys()):
         self.logger.debug('fit_mean_power_to_airmass: processing SIG=%s',
                            sig)
         for beam_idx in range(self.props['num beams']):
@@ -1535,7 +1539,7 @@ class DSNFITSexaminer(object):
             msg = "estimated %sCP zenith Tsys in vacuum= %6.2f" % (pol, Tvac)
             self.header.add_history(msg)
             # average records here if needed.
-            subch_IDs = range(self.props['num cycles'])
+            subch_IDs = list(range(self.props['num cycles']))
             self.logger.debug("fit_mean_power_to_airmass: subchannels: %s",
                               subch_IDs)
             for subch in subch_IDs:
@@ -1667,7 +1671,7 @@ class DSNFITSexaminer(object):
         # time axis length may vary due to corrupted records
         if len(spectrumshape) >= 5: # (time, pol, dec, RA, freq)
           props["num records"] = {}
-          cycle_indices = range(props["num cycles"])
+          cycle_indices = list(range(props["num cycles"]))
           for row in cycle_indices: # check each cycle
             cycle = self.data['CYCLE'][row]
             spectrumshape = self.data[self.dataname][row].shape
@@ -1715,7 +1719,7 @@ class DSNFITSexaminer(object):
           self.logger.debug("remove_tones: tone %d channel = %d",
                             tone, tone_channel)
           if self.props['full Stokes']:
-            pols = range(4)
+            pols = list(range(4))
           else:
             pols = self.props['num IFs']
           for pol in pols:
@@ -1734,7 +1738,7 @@ class DSNFITSexaminer(object):
       
       'selections' is a dict like 
       """
-      keys = selections.keys()
+      keys = list(selections.keys())
       key = keys[0]
       value = selections[key]
       selected = set(self.get_rows(key, value))
@@ -1870,7 +1874,7 @@ class DSNFITSexaminer(object):
         posnsw = True
       self.logger.debug("get_good_wx_data: position switching is %s", posnsw)
       # create empty lists or dicts
-      for paramkey in good_data.keys():
+      for paramkey in list(good_data.keys()):
         # there are always ONs
         if paramkey == 'TSYS':
           good_data[paramkey][True] = {}

@@ -1,0 +1,120 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>is_skinny &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="load_csv_with_header" href="Data_Reduction.load_csv_with_header.html" />
+    <link rel="prev" title="get_smoothed_bandshape" href="Data_Reduction.get_smoothed_bandshape.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.load_csv_with_header.html" title="load_csv_with_header"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.get_smoothed_bandshape.html" title="get_smoothed_bandshape"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.get_smoothed_bandshape.html"
+                        title="previous chapter">get_smoothed_bandshape</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.load_csv_with_header.html"
+                        title="next chapter">load_csv_with_header</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.is_skinny.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="is-skinny">
+<h1>is_skinny<a class="headerlink" href="#is-skinny" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="Data_Reduction.is_skinny">
+<code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">is_skinny</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_array</span></em>, <em class="sig-param"><span class="n">index</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.is_skinny" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether a data value is an isolated outlier</p>
+<p>Returns True if the data values adjacent to the test value are
+less that 1/10 of the test value, i.e., the data point is a spike</p>
+<p>:param data_array : numpy array</p>
+<p>:param index : int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.load_csv_with_header.html" title="load_csv_with_header"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.get_smoothed_bandshape.html" title="get_smoothed_bandshape"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

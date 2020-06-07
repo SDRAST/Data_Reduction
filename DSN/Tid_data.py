@@ -172,7 +172,7 @@ class Tid_scan():
     @return: None
     """
     if diag:
-      print "================================================"
+      print("================================================")
     self.header['SCAN'] = int(numbers[0])        # header variable 1
     self.header['EXPOSURE'] = float(numbers[1])  # header variable 2
     year = int(numbers[2])
@@ -202,8 +202,8 @@ class Tid_scan():
     # which is not as accurate as the full Manchester-Gordon code
     dopfac = float(numbers[12])                  # header variable 13
     if diag:
-      print "HP9825 dopfac =",dopfac
-      print "HP 9825 computed Doppler shift =",(1-dopfac)*P.c/1000,"km/s"
+      print("HP9825 dopfac =",dopfac)
+      print("HP 9825 computed Doppler shift =",(1-dopfac)*P.c/1000,"km/s")
     # The Doppler calculation is probably not as good as this one
     # as it was Manchester Gordon FORTRAN converted to HP9825 language
     lst,vdop = \
@@ -214,15 +214,15 @@ class Tid_scan():
                     self.header['SITELONG'],
                     self.header['SITEELEV'])
     if diag:
-      print "Manchester-Gordon computed Doppler shift =", \
-            vdop+self.header['VELOCITY'],"km/s"
+      print("Manchester-Gordon computed Doppler shift =", \
+            vdop+self.header['VELOCITY'],"km/s")
     MG_dopfac = (1-(vdop+self.header['VELOCITY'])/(P.c/1000))
     if diag:
-      print "Manchester-Gordon computed dopfac =",MG_dopfac
+      print("Manchester-Gordon computed dopfac =",MG_dopfac)
     # It appears that the recorded LST is for the start of the scan
     # and the recorded UT for the end.
     if diag:
-      print "Manchester-Gordon LST =",lst*24
+      print("Manchester-Gordon LST =",lst*24)
     self.header['LST'] = lst*24 # float(numbers[13])
     HA = self.header['LST'] - self.header['ra']
     self.header['AZIMUTH'],self.header['ELEVATIO'] = \
@@ -233,14 +233,14 @@ class Tid_scan():
     # 13778.80 instead of  Lovas 13778.804
     self.header['RESTFREQ'] = float(numbers[14])*1e6
     if diag:
-      print "Frequency of interest in the source frame =", \
-        self.header['RESTFREQ'],"Hz"
+      print("Frequency of interest in the source frame =", \
+        self.header['RESTFREQ'],"Hz")
     # The observing frequency is what was calculated with the HP9825
     # Doppler factor calculation
     obs_freq = dopfac*self.header['RESTFREQ'] # Hz
     if diag:
-      print "Frequency of interest in the observer frame =",obs_freq,"Hz"
-      print "corresponding velocity =",(1-MG_dopfac)*P.c/1000,"km/s"
+      print("Frequency of interest in the observer frame =",obs_freq,"Hz")
+      print("corresponding velocity =",(1-MG_dopfac)*P.c/1000,"km/s")
     # Generally, the frequency can be calculated from these numbers
     self.header['synth'] = float(numbers[15])
     self.header['IFsig'] = float(numbers[16]) # MHz
@@ -314,7 +314,7 @@ class Tid_scan():
              + (1-int(numbers[18])) * self.header['IFsig'] # MHz
     freq_offset = chan_ofst * self.header['CDELT1']/1.e6   # MHz
     if diag:
-      print "Frequency offset =",freq_offset,"MHz"
+      print("Frequency offset =",freq_offset,"MHz")
     # Center frequency during reference phase of frequency switching
     self.header['FOFFREF1'] = float(numbers[34])*self.header['CDELT1'] # Hz
     if recvfreq != 0.0:
@@ -322,8 +322,8 @@ class Tid_scan():
       self.header['OBSFREQ'] = recvfreq*1.e6 # Hz
       exp_freq = (recvfreq + freq_offset)*1.e6      # Hz
       if diag:
-        print "Actual receiver center frequency =",recvfreq,"MHz"
-        print "Frequency where line is expected =",exp_freq,"MHz"
+        print("Actual receiver center frequency =",recvfreq,"MHz")
+        print("Frequency where line is expected =",exp_freq,"MHz")
     else:
       # Receiver frequency calculation failed
       # Assume that the line is where it is expected to be
@@ -333,7 +333,7 @@ class Tid_scan():
       self.header['OBSFREQ'] = recvfreq # Hz
       exp_freq = obs_freq # Hz
       if diag:
-        print "Putative receiver center frequency =",recvfreq,"MHz"
+        print("Putative receiver center frequency =",recvfreq,"MHz")
     self.header['CRVAL1'] = exp_freq
     # Frequency offset in MHz from spectrum center
     self.header['CRPIX1'] = self.header['MAXIS1']/2 - chan_ofst
@@ -351,9 +351,9 @@ class Tid_scan():
     v_obs = v_doppler - self.header['VELOCITY']
     self.header['VFRAME'] = v_obs
     if diag:
-      print "Velocity offset =",v_doppler,"km/s"
-      print "Velocity of source w.r.t. LSR =",self.header['VELOCITY'],"km/s"
-      print "Velocity of the observatory w.r.t. LSR =",v_obs,"km/s"
+      print("Velocity offset =",v_doppler,"km/s")
+      print("Velocity of source w.r.t. LSR =",self.header['VELOCITY'],"km/s")
+      print("Velocity of the observatory w.r.t. LSR =",v_obs,"km/s")
     # Make these up, sort of
     self.header['TEMPSCAL'] = 'TA'
     if self.header['OBSFREQ']/1e6 > 10000. and \
@@ -385,9 +385,9 @@ class Tid_scan():
 
     @return: None
     """
-    print "--------------------------------------------"
-    for k in self.header.keys():
-      print k,self.header[k]
+    print("--------------------------------------------")
+    for k in list(self.header.keys()):
+      print(k,self.header[k])
 
 def number_of_channels(numbers):
   """

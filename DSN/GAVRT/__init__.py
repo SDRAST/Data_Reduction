@@ -129,11 +129,11 @@ def zenith_gain(freq):
   parfile.close()
   effic = {}
   avg_effic = 0
-  for key in pars.keys():
+  for key in list(pars.keys()):
     effic[key] = pars[key](freq)/100.
     avg_effic += effic[key]
   # right now I don't know what Pol A and Pol B are
-  avg_effic /= len(pars.keys())
+  avg_effic /= len(list(pars.keys()))
   return avg_effic
 
 def DSS28_beamwidth(freq):
@@ -212,12 +212,12 @@ def extract_data(datatype, wb, start, stop, meta_column, files):
     logger.debug("Attempting to create worksheet %s", sheetname)
     try:
       metasheet = wb.get_sheet_by_name('Metadata')
-    except Exception, details:
+    except Exception as details:
       logger.error("Could not get spreadsheet metadata", exc_info=True)
       return None
     try:
       wb.add_sheet(copy.deepcopy(metasheet))
-    except Exception, details:
+    except Exception as details:
       logger.error("Could not copy metadata sheet", exc_info=True)
       return None
     else:

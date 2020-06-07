@@ -10,6 +10,7 @@ import datetime
 import glob
 import logging
 import math
+import numpy
 import os
 import re
 import readline
@@ -62,8 +63,8 @@ def get_obs_session(project=None, dss=None, date=None, path='proj'):
           dirs.append(basename(name))
       dirs.sort()
       for name in dirs:
-        print name,
-      return raw_input('\n>')
+        print((name), end=' ')
+      return input('\n>')
     else:
       return []
       
@@ -85,7 +86,7 @@ def get_obs_session(project=None, dss=None, date=None, path='proj'):
   # get the station
   if path[:4].lower() == 'wvsr':
     # special call
-    print "from_wvsr_dir()"
+    print("from_wvsr_dir()")
   if path[:4].lower() == 'proj':
     os.chdir(projectpath+"/Observations/")
   elif path[:4].lower() == 'hdf5':
@@ -476,3 +477,95 @@ def clobber(data_array,index):
     data_array[index] = (data_array[index-1] + data_array[index+1])/2.
   return data_array
 
+def get_freq_array(bandwidth, n_chans):
+  """
+  Create an array of frequencies for the channels of a backend
+
+  @param bandwidth : bandwidth
+  @type  bandwidth : float
+
+  @param n_chans : number of channels
+  @type  n_chans : int
+
+  @return: frequency of each channel in same units as bandwidth
+  """
+  return numpy.arange(n_chans)*float(bandwidth)/n_chans
+
+def freq_to_chan(frequency,bandwidth,n_chans):
+  """
+  Returns the channel number where a given frequency is to be found.
+
+  @param frequency : frequency of channel in sane units as bandwidth.
+  @type  frequency : float
+
+  @param bandwidth : upper limit of spectrometer passband
+  @type  bandwidth : float
+
+  @param n_chans : number of channels in the spectrometer
+  @type  n_chans : int
+
+  @return: channel number (int)
+  """
+  if frequency < 0:
+    frequency = bandwidth + frequency
+  if frequency > bandwidth:
+    raise RuntimeError("that frequency is too high.")
+  return round(float(frequency)/bandwidth*n_chans) % n_chans
+
+def get_smoothed_bandshape(spectrum, degree = None, poly_order=15):
+  """
+  Do a Gaussian smoothing of the spectrum and then fit a polynomial.
+  Optionally, the raw and smoothed data and the fitted polynomial can be
+  plotted.
+
+  Note on polyfit
+  ===============
+  numpy.polyfit(x, y, deg, rcond=None, full=False, w=None, cov=False)
+  Least squares polynomial fit.
+  Fit a polynomial::
+     p(x) = p[0] * x**deg + ... + p[deg]
+  of degree deg to points (x, y).
+  Returns a vector of coefficients p that minimises the squared error.
+
+  @param spectrum : input data
+  @type  spectrum : list of float
+
+  @param degree : number of samples to smoothed (Gaussian FWHM)
+  @type  degree : int
+
+  @param poly_order : order of the polynomial
+  @type  poly_order : int
+
+  @param plot : plotting option
+  @type  plot : boolean
+
+  @return: (polynomial_coefficient, smoothed_spectrum)
+  """
+  if degree == None:
+    degree = len(spectrum)/100
+  # normalize the spectrum so max is 1 and convert to dB.
+  max_lev = numpy.max(spectrum)
+  norm_spec = numpy.array(spectrum)/float(max_lev)
+  norm_spec_db = 10*numpy.log10(norm_spec)
+  # optionally plot normalized spectrum
+  if plot:
+    pylab.plot(norm_spec_db)
+  # do a Gaussian smoothing
+  norm_spec_db_smoothed = smoothListGaussian(norm_spec_db, degree=degree)
+  # deal with the edges by making them equal to the smoothed end points
+  norm_spec_db_smoothed_resized = numpy.ones(len(spectrum))
+  # left end
+  norm_spec_db_smoothed_resized[0:degree] = norm_spec_db_smoothed[0]
+  # middle
+  norm_spec_db_smoothed_resized[degree:degree+len(norm_spec_db_smoothed)] = \
+      norm_spec_db_smoothed
+  # right end
+  norm_spec_db_smoothed_resized[degree+len(norm_spec_db_smoothed):] = \
+      norm_spec_db_smoothed[-1]
+  if plot:
+    pylab.plot(norm_spec_db_smoothed_resized)
+    poly = numpy.polyfit(list(range(len(norm_spec_db_smoothed))),
+                         norm_spec_db_smoothed,poly_order)
+    pylab.plot(numpy.polyval(poly, list(range(len(norm_spec_db_smoothed)))))
+    pylab.show()
+  return poly, norm_spec_db_smoothed_resized

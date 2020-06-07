@@ -1,0 +1,148 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>AtmosAnalyzer &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="fit_tipcurve_data" href="Data_Reduction.tipping.fit_tipcurve_data.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.tipping.fit_tipcurve_data.html" title="fit_tipcurve_data"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.tipping.fit_tipcurve_data.html"
+                        title="previous chapter">fit_tipcurve_data</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.tipping.AtmosAnalyzer.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="atmosanalyzer">
+<h1>AtmosAnalyzer<a class="headerlink" href="#atmosanalyzer" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Data_Reduction.tipping.AtmosAnalyzer">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.tipping.</code><code class="sig-name descname">AtmosAnalyzer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">datacube</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.tipping.AtmosAnalyzer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Analyzer for environmental data contained in a weather data cube</p>
+<p>Weather data cubes are created with the DSNFITSexaminer method
+get_wx_datacubes(), or the SessionAnalyzer method get_good_weather_data().
+A weather data cube is a dict with keys ‘TAMBIENT’, ‘WINDDIRE’, ‘UNIXtime’,
+‘TSYS’, ‘HUMIDITY’, ‘PRESSURE’, ‘ELEVATIO’, ‘WINDSPEE’.  The data asociated
+with each key is a dict with numpy array for (SIG state) True and for False.
+The ‘TSYS’ array has four axes representing:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">time</span> <span class="n">index</span>   <span class="o">-</span> <span class="mi">0</span><span class="o">-</span><span class="n">based</span> <span class="n">sequence</span> <span class="ow">in</span> <span class="n">order</span> <span class="n">of</span> <span class="n">matplotlib</span> <span class="n">datenum</span>
+<span class="n">subchannel</span>   <span class="o">-</span> <span class="n">CYCLE</span> <span class="n">value</span>
+<span class="n">beam</span>         <span class="o">-</span> <span class="mi">1</span><span class="o">-</span><span class="n">based</span> <span class="n">number</span> <span class="n">sequence</span>
+<span class="n">IF</span>           <span class="o">-</span> <span class="mi">1</span><span class="o">-</span><span class="n">based</span> <span class="n">number</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">usually</span> <span class="n">representing</span> <span class="n">pol</span>
+</pre></div>
+</div>
+<p>The other keys have only a time axis.</p>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.tipping.AtmosAnalyzer.fit_Tsys_to_airmass" title="Data_Reduction.tipping.AtmosAnalyzer.fit_Tsys_to_airmass"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_Tsys_to_airmass</span></code></a>([Tatm, linear])</p></td>
+<td><p>Fit tipping curve data implicit in sessions elev and Tsys data</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="Data_Reduction.tipping.AtmosAnalyzer.fit_Tsys_to_airmass">
+<code class="sig-name descname">fit_Tsys_to_airmass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Tatm</span><span class="o">=</span><span class="default_value">250</span></em>, <em class="sig-param"><span class="n">linear</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.tipping.AtmosAnalyzer.fit_Tsys_to_airmass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit tipping curve data implicit in sessions elev and Tsys data</p>
+<p>Returns numpy arrays with indices for sig/ref state, subchannel, beam, IF.</p>
+<p>When linear=True then a straight line fit is performed. This would be
+appropriate when the TSYS units are not kelvin but count or something else.
+The parameters are zero airmass power intercept and its standard deviation,
+and power per airmass and its standard deviation.</p>
+<p>If the Tsys units are in K, then a linear=False fit is appropriate, which
+fits the data to a radiative transfer model. The returned parameters are
+then the system temperature above the atmosphere, its standard deviation,
+and the optical depth per airmass and its standard deviation. The average
+of the physical temperature of the atmosphere defaults to 250 K.</p>
+<p>:param Tatm : air temperature along line of sight
+:type  Tatm : float</p>
+<p>:param linear : use the linear (low tau) approximation
+:type  linear : True</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.tipping.fit_tipcurve_data.html" title="fit_tipcurve_data"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

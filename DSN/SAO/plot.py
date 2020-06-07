@@ -118,7 +118,7 @@ class SAOplotter(SAOexaminer):
       self.get_datasets()
     ds0 = self.dataset[0]
     fig = figure()
-    for dskey in self.dataset.keys():
+    for dskey in list(self.dataset.keys()):
       ds = self.dataset[dskey]
       self.logger.debug("plot_Tsys: dataset %d scan keys: %s", dskey, ds.scan_keys)
       for key in ds.scan_keys:

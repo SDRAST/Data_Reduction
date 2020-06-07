@@ -3,12 +3,14 @@
 hyperfine_fit -  Fit Gaussian lines to hyperfine components
 
 Functions needed to fit data::
+
   ammonia_data()
   model()
   error_func()
 
 Here is the basic procedure, assuming that the data are in arrays
 x(in MHz) and y::
+
   plot(x,y)                          # to see what to expect
   set_model(line)                    # see ammonia_data
   parameter_guess = [.3,-0.6,width]  # Put in appropriate numbers
@@ -99,36 +101,6 @@ def noise_data(SNR,width,span):
   noisy_data = hpf_model(x, SNR/s[0], 0, width) + norm.rvs(size=nsamps)
   return x, noisy_data
 
-def ammonia_data_old(line):
-  """
-  hyperfine data for ammonia
-
-  @type line : int
-  @param line : line specifier
-    1  - 23694.4955 MHz ammonia 1,1 line
-    2  - 23722.6333 MHz ammonia 2,2
-    -1 - 23694.4955 MHz ammonia 1,1 with very fine splitting
-
-  @return: (name, freq_offset, rel_intensity)
-  """
-  if line == 1:
-    # Parameters for 23694.4955 MHz ammonia 1,1 line
-    name = r"$\mbox{NH}_3 ~~~1_1$"
-    df = [-1.539, -0.599, 0.000,  0.599, 1.539] # frequency offsets
-    s  = [ 0.110,  0.140, 0.500,  0.140, 0.110] # fraction of line strength
-  elif line == -1:
-    # Rydbeck et al, Ap.J. 215, L35, 1977
-    name = r"$\mbox{NH}_3 ~~~1_1$"
-    df = [-1.569, -1.525, -0.623, -0.587, -0.015, 0.010, 0.572, 0.615, 1.539]
-    #ref [ 0.280,  0.480,  0.330,  0.560,  0.860, 1.000, 0.380, 0.520, 0.630]
-    s  = [ 0.056,  0.095 , 0.065,  0.111,  0.171, 0.198, 0.075, 0.103, 0.125]
-  elif line == 2:
-    name = r"$\mbox{NH}_3 ~~~2_2$"
-    # Parameters for 23722.6333 MHz ammonia 2,2
-    df = [0.0, -1.315, 1.315, -2.046, 2.046] # frequency offsets
-    s  = [0.796, 0.052, 0.052, 0.050, 0.050] # fraction of line strength
-  return name,df,s
-
 def ammonia_data(ju,ku,jl,kl):
   spec_lines = []
   nh3_file = open("/usr/local/line_cat/jpl/c017002.cat","r")
@@ -141,24 +113,23 @@ def ammonia_data(ju,ku,jl,kl):
     #(ju,ku,V,
     line_data = M.jpl.parse_catalog_line(line)
     if first_line:
-      print "Upper -> lower,",
-      print M.jpl.quantum_label(17002,line_data['q lower'],
+      print("Upper -> lower,", end=' ')
+      print(M.jpl.quantum_label(17002,line_data['q lower'],
                                       line_data['qn format'],
-                                      line_data['deg free'])[0]
+                                      line_data['deg free'])[0])
       first_line = False
     freq   = float(line_data['freq'])
     intens = float(line_data['int'])
     g_up   = int(line_data['g upper'])
     E_lo   = float(line_data['E lower'])
     A_ul = M.jpl.einstein_a(intens, freq, part_fn_300, g_up, E_lo)
-    print M.jpl.quantum_label(17002,line_data['q upper'],
+    prin(M.jpl.quantum_label(17002,line_data['q upper'],
                                     line_data['qn format'],
-                                    line_data['deg free'])[1],
-    print M.jpl.quantum_label(17002,line_data['q lower'],
+                                    line_data['deg free'])[1]),
+    print(M.jpl.quantum_label(17002,line_data['q lower'],
                                     line_data['qn format'],
-                                    line_data['deg free'])[1],
-    print "%7.1f %5.2f" % ((freq-23694.4955)*1e3, (10.**intens)/6.4e-6)
-    #print "%7.1f %5.2f" % ((freq-23694.4955)*1e3, A_ul/0.78e-7)
+                                    line_data['deg free'])[1], end=' ')
+    print("%7.1f %5.2f" % ((freq-23694.4955)*1e3, (10.**intens)/6.4e-6))
   return
   
 def fit_data(x,data,model,parameter_guess):
@@ -183,7 +154,7 @@ def fit_data(x,data,model,parameter_guess):
   result, msg = leastsq(error_func,
                       x0 = parameter_guess,
                       args=(x,data,model))
-  print msg
+  print(msg)
   return result
 
 def set_model(line):
@@ -191,8 +162,7 @@ def set_model(line):
   Make the model parameters global
 
   @type line : int
-  @param line : line identifier
-    see ammonia_data()
+  @param line : line identifier; see ammonia_data()
 
   @return: True if it worked
   """
@@ -200,8 +170,8 @@ def set_model(line):
   try:
     name, df, s = ammonia_data(line)
     return True
-  except Exception,details:
-    print Exception, details
+  except Exception as details:
+    print(Exception, details)
     return False
 
 def test():
@@ -211,7 +181,7 @@ def test():
   global nsamps
   width  = 0.1 # MHz
   ion()
-  o = raw_input("Simulation (s) or real data (d)? ")
+  o = input("Simulation (s) or real data (d)? ")
   if o.lower()[0] == 's':
     # make a set of noisy data samples
     SNR    = 6   # for central component
@@ -361,7 +331,7 @@ def test():
     parameter_guess = [.3,-0.6,width]
   plot(x,y)
   draw()  #  time.sleep(0.1)
-  line = int(raw_input("Main lines (1) or all lines (-1)? "))
+  line = int(input("Main lines (1) or all lines (-1)? "))
   set_model(line)
 
   result = fit_data(x,y,hpf_model,parameter_guess)
@@ -371,9 +341,9 @@ def test():
   xlabel("Relative frequency (MHz)")
   ylabel("Amplitude (r.m.s = 1)")
 
-  print "Amplitude: %6.3f" % (result[0]*s[0])
-  print "Position:  %6.3f" % result[1]
-  print "Width:     %6.3f" % result[2]
+  print("Amplitude: %6.3f" % (result[0]*s[0]))
+  print("Position:  %6.3f" % result[1])
+  print("Width:     %6.3f" % result[2])
   
 if __name__ == "__main__":
   test()

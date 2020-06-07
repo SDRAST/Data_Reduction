@@ -55,7 +55,7 @@ class TidTipFinder(object):
     if date:
       pass
     else:
-      date = raw_input("Session date (YYYY/DDD)? ")
+      date = input("Session date (YYYY/DDD)? ")
     self.date = date
     yearstr, doystr = date.split('/')
     self.year = int(yearstr)
@@ -87,7 +87,7 @@ class TidTipFinder(object):
     for name in files:
       unixtime = float(os.path.basename(name)[12:-4])
       filedict[unixtime] = name
-    keys = filedict.keys()
+    keys = list(filedict.keys())
     keys.sort()
     ordered = OrderedDict()
     for key in keys:
@@ -101,7 +101,7 @@ class TidTipFinder(object):
     year,month,day = calendar_date(self.year, self.DOY)
     UNIXstart = calendar.timegm((self.year,month,day,  0, 0, 0, 0,0))
     UNIXend   = calendar.timegm((self.year,month,day, 23,59,59, 0,0))
-    filekeys = self.files.keys()
+    filekeys = list(self.files.keys())
     if filekeys:
       pass
     else:

@@ -24,14 +24,14 @@ def load_spreadsheet(filename, sheet='Metadata'):
   """
   try:
     wb = load_workbook(filename)
-  except IOError, details:
+  except IOError as details:
     logger.error("load_spreadsheet: Loading spreadsheet failed with IO error.",exc_info=True)
     return None,None
-  except AttributeError, details:
+  except AttributeError as details:
     logger.error("load_spreadsheet: Loading spreadsheet failed with attribute error",
                    exc_info=True)
     return None,None
-  except InvalidFileException, details:
+  except InvalidFileException as details:
     logger.error("load_spreadsheet: File "+filename+" does not exist.",exc_info=True)
     return None,None
   else:
@@ -75,13 +75,13 @@ def open_metadata_spreadsheet(filename,create_if_needed=True):
   """
   try:
     wb = load_workbook(filename)
-  except IOError, details:
+  except IOError as details:
     logger.error("open_metadata_spreadsheet: loading failed with IO error: %s", str(details))
     raise IOError
-  except AttributeError, details:
+  except AttributeError as details:
     logger.error("open_metadata_spreadsheet: loading failed with attribute error: %s", str(details))
     raise AttributeError
-  except InvalidFileException, details:
+  except InvalidFileException as details:
     logger.warning("open_metadata_spreadsheet: file does not exist.")
     if create_if_needed:
       logger.info("open_metadata_spreadsheet: creating workbook.")
@@ -114,7 +114,7 @@ def load_meta_sheet(wb,obs_ws):
   # make a reverse lookup table
   meta_column = {}
   logger.debug("load_meta_sheet: Worksheet %s columns: %s", obs_ws.title, str(obs_col_names))
-  for col in obs_col_names.keys():
+  for col in list(obs_col_names.keys()):
     meta_column[obs_col_names[col]]  = get_column_id(obs_ws,obs_col_names[col])
   return obs_col_names, meta_column
 
@@ -189,12 +189,12 @@ def get_file_freqs_and_pols(ws, meta_column, files):
     filename = basename(fn)
     f = freq[filename]
     p = pol[filename]
-    if filename_dict.has_key(f):
+    if f in filename_dict:
       filename_dict[f][p] = filename
     else:
       filename_dict[f] = {p: filename}
 
-  fkeys = filename_dict.keys()
+  fkeys = list(filename_dict.keys())
   fkeys.sort
   pkeys = ["LCP","RCP"]
   return fkeys, pkeys, filename_dict

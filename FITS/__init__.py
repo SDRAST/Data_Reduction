@@ -5,21 +5,28 @@ A package for managing FITS files.
 The core module creates and operates on SDFITS-format files.
 
 SDFITS files are composed mainly of FITS binary tables.  The basic method for
-creating a simple 1-table file is this:
+creating a simple 1-table file is this::
+
   1. Create a primary HDU::
+  
        hdu = pyfits.PrimaryHDU()
      There are optional named arguments.
       - 'data=' allows a data array to be included in the primary HDU.
       - 'header=' allows additional header data to be included, beyond
       - the bare minimum.
+      
   2. Create the columns::
+  
       scan_array = numpy.array([0]*tablesize)
       scan_col   = pyfits.Column(name='SCAN',format='1I',array=scan_array)
       date_array = strings.array(['']*tablesize)
       date_col   = pyfits.Column(name='DATE-OBS',format='A16',array=date_array)
+      
   3. Create a column definitions object::
       cols  = pyfits.ColDefs([scan_col,date_col])
+      
   4. Create a binary table::
+  
       tbhdu = pyfits.new_table(cols)
      This also initializes a table header with required information.
      There are optional named arguments:
@@ -29,7 +36,9 @@ creating a simple 1-table file is this:
        - 'nrows=' specifies the number of rows in the table; default 0
        - 'fill=' specifies the initial value to put in the rows; default 0
        - 'tbtype=' specifies the table type; default 'BinTableHDU'
+       
   5. Create an HDU list with the primary HDU and the table::
+  
        hdulist = pyfits.HDUList([hdu, tbhdu])
      Additional tables may be appended with::
        hdulist.append(tb2hdu)

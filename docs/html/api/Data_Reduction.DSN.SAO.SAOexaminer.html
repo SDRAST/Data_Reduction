@@ -1,0 +1,197 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>SAOexaminer &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="SAOhdf5" href="Data_Reduction.DSN.SAO.SAOhdf5.html" />
+    <link rel="prev" title="Data" href="Data_Reduction.DSN.SAO.Data.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.SAO.SAOhdf5.html" title="SAOhdf5"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.SAO.Data.html" title="Data"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.SAO.Data.html"
+                        title="previous chapter">Data</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.SAO.SAOhdf5.html"
+                        title="next chapter">SAOhdf5</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.DSN.SAO.SAOexaminer.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="saoexaminer">
+<h1>SAOexaminer<a class="headerlink" href="#saoexaminer" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Data_Reduction.DSN.SAO.SAOexaminer">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.DSN.SAO.</code><code class="sig-name descname">SAOexaminer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class for examining SAOdataset objects</p>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.DSN.SAO.SAOexaminer.beam_switched_average" title="Data_Reduction.DSN.SAO.SAOexaminer.beam_switched_average"><code class="xref py py-obj docutils literal notranslate"><span class="pre">beam_switched_average</span></code></a>([index, mode])</p></td>
+<td><p>Returns pol average spectrum and total integration of given dataset(s)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.DSN.SAO.SAOexaminer.extract_window" title="Data_Reduction.DSN.SAO.SAOexaminer.extract_window"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_window</span></code></a>(xlimits[, dsetidx, frame])</p></td>
+<td><p>Extracts a subset of a avg_diff spectrum</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.DSN.SAO.SAOexaminer.get_datasets" title="Data_Reduction.DSN.SAO.SAOexaminer.get_datasets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_datasets</span></code></a>([project, dss, date])</p></td>
+<td><p>Loads selected datasets and defines additional attributes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.DSN.SAO.SAOexaminer.get_obs_dirs" title="Data_Reduction.DSN.SAO.SAOexaminer.get_obs_dirs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_dirs</span></code></a>([project, dss, date, rawfmt])</p></td>
+<td><p>Gets the directories used for an observing session.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.DSN.SAO.SAOexaminer.load_HDF5_files" title="Data_Reduction.DSN.SAO.SAOexaminer.load_HDF5_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_HDF5_files</span></code></a>([project, dss, date])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.DSN.SAO.SAOexaminer.load_ephemeris" title="Data_Reduction.DSN.SAO.SAOexaminer.load_ephemeris"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_ephemeris</span></code></a>(sourcename)</p></td>
+<td><p>Loads the ephemeris and returns a spline for the radial velocity with date</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="Data_Reduction.DSN.SAO.SAOexaminer.beam_switched_average">
+<code class="sig-name descname">beam_switched_average</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'LINE-PBSW'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer.beam_switched_average" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns pol average spectrum and total integration of given dataset(s)</p>
+<p>Also computes the average spectrum and total integration time for each pol
+and accumulates them in the SAOexaminer attributes avg_diff and tau.</p>
+<p>:param index : dataset index
+:type  index : int</p>
+<p>:param mode : observing mode (which aught to be in the header)
+:type  mode : str</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.DSN.SAO.SAOexaminer.extract_window">
+<code class="sig-name descname">extract_window</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">xlimits</span></em>, <em class="sig-param"><span class="n">dsetidx</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">frame</span><span class="o">=</span><span class="default_value">'RADI-LSR'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer.extract_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts a subset of a avg_diff spectrum</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.DSN.SAO.SAOexaminer.get_datasets">
+<code class="sig-name descname">get_datasets</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer.get_datasets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads selected datasets and defines additional attributes.</p>
+<p>:param project : the project for which the observations were made
+:type  project : str</p>
+<p>:param dss : DSN station number
+:type  dss : int</p>
+<p>:param date : year and day of year as YYYY/DDD
+:type  data : str</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.DSN.SAO.SAOexaminer.get_obs_dirs">
+<code class="sig-name descname">get_obs_dirs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rawfmt</span><span class="o">=</span><span class="default_value">'HDF5'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer.get_obs_dirs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the directories used for an observing session.</p>
+<p>If the session details are not provided, a menu-based inquiry is made</p>
+<p>The attribute rawdatapath is also computed but not returned.</p>
+<p>:param project : the project for which the observations were made
+:type  project : str</p>
+<p>:param dss : DSN station number
+:type  dss : int</p>
+<p>:param date : year and day of year as YYYY/DDD
+:type  data : str</p>
+<p>:param raw : get HDF5 data from RA_data store if True
+:type  raw : bool</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.DSN.SAO.SAOexaminer.load_HDF5_files">
+<code class="sig-name descname">load_HDF5_files</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer.load_HDF5_files" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.DSN.SAO.SAOexaminer.load_ephemeris">
+<code class="sig-name descname">load_ephemeris</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sourcename</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer.load_ephemeris" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the ephemeris and returns a spline for the radial velocity with date</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.SAO.SAOhdf5.html" title="SAOhdf5"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.SAO.Data.html" title="Data"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

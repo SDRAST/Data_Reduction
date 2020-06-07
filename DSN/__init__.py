@@ -7,8 +7,11 @@ A lot of stuff here is either obsolete or no longer accurate
 This package has functions to generate scripts, download and parse DSN logs,
 and manage data files. The module also initializes path names relative
 to a root directory whose default is::
+
   root_dir = "/usr/local/projects/PESD/"
+  
 The observations are kept in subdirectories with names like YYYY-MM-DD in::
+
   obs_dir  = root_dir + "observations/"
 
 Notes
@@ -99,16 +102,16 @@ def verify_ssh_mount(server):
     test = 'media'
   target = root_dir + ""+svr+"/"+test
   if diag:
-    print "Looking for",target
+    print(("Looking for",target))
   if not os.path.exists(target):
     try:
       os.system(root_dir + "bin/"+servername[svr]+"-mount")
-      print svr,"has been mounted"
+      print((svr,"has been mounted"))
       return True
     except:
-      print "sshfs mount",svr+":/home/ops with"
-      print "   /usr/local/projects/PESD/bin/"+servername[svr]+"-tunnel"
-      print "   /usr/local/projects/PESD/bin/"+servername[svr]+"-mount"
+      print(("sshfs mount",svr+":/home/ops with"))
+      print(("   /usr/local/projects/PESD/bin/"+servername[svr]+"-tunnel"))
+      print(("   /usr/local/projects/PESD/bin/"+servername[svr]+"-mount"))
       return False
   else:
     return True
@@ -135,11 +138,11 @@ def check_vsr():
         timecode[name] = strptime(timedata,"%b %d %Y")
   fd = os.popen('/usr/local/projects/PESD/bin/venus-vsr-ssh bls_ls')
   response = fd.readlines()
-  print response
+  print(response)
   fd.close()
   size = {}
   for line in response:
-    print ">",line
+    print((">",line))
     items = line.strip().split()
     if len(items) < 4:
       name = items[0]
@@ -172,16 +175,16 @@ def clear_vsr(year,DOY):
       if re.search(sessionID, line.strip()):
         data_file = line.split()[0]
         command = "bls_rm "+data_file
-        print command
+        print(command)
         std_in, std_out, std_err = \
           os.popen3(ssh_command+command)
         status = std_err.readline().strip()
         std_in.close()
         std_out.close()
         std_err.close()
-        print status
+        print(status)
   else:
-    print "Error:",status
+    print(("Error:",status))
 
 
 def backup_one_line(fd):
@@ -317,7 +320,7 @@ def set_file_pointer(fd,new_pos):
   """
   pos = fd.tell()
   if diag:
-    print "Current file position =",pos
+    print(("Current file position =",pos))
   if new_pos != pos:
     whence = 0
     if new_pos > 2000000000: # cover for a bug in Python 2.5.2
@@ -329,7 +332,7 @@ def set_file_pointer(fd,new_pos):
         new_pos = int(new_pos - 2000000000)
     fd.seek(new_pos,whence)
     if diag:
-      print "New file position =",fd.tell()
+      print(("New file position =",fd.tell()))
   
 def set_binary_record_pointer(fd,file_header_size,record_size,index):
   """
@@ -349,8 +352,8 @@ def set_binary_record_pointer(fd,file_header_size,record_size,index):
   pos = fd.tell()
   current_index = (pos - file_header_size)/record_size
   if diag:
-    print "Current record index =",current_index
-    print "Moving to",index
+    print(("Current record index =",current_index))
+    print(("Moving to",index))
   if index != current_index:
     new_pos = pos + record_size*(index-current_index)
     set_file_pointer(fd,new_pos)
@@ -384,14 +387,14 @@ def print_header(header):
   """
   spcid, vsrid, chanid, bps, srate, errflg, year, doy, sec, freq, orate, \
     nsubchan = header
-  print "SPC %2d, VSR %1d, channel %1d" % (spcid,vsrid,chanid)
-  print "%5f ksamp/sec, %2d b/samp" % (srate/1000,bps)
-  print "error flag =",errflg
+  print(("SPC %2d, VSR %1d, channel %1d" % (spcid,vsrid,chanid)))
+  print(("%5f ksamp/sec, %2d b/samp" % (srate/1000,bps)))
+  print(("error flag =",errflg))
   TS = DT.VSR_tuple_to_timestamp(year,doy,sec)
-  print "date/time at start: ",DT.timestamp_to_str_with_ms(TS)
-  print "Frequency = %9.3f MHz" % (freq/1e6)
-  print "Averages/sec:",orate
-  print nsubchan,"subchannels"
+  print(("date/time at start: ",DT.timestamp_to_str_with_ms(TS)))
+  print(("Frequency = %9.3f MHz" % (freq/1e6)))
+  print(("Averages/sec:",orate))
+  print((nsubchan,"subchannels"))
 
 def rx_band(freq):
   """

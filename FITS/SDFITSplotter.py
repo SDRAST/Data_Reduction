@@ -84,7 +84,7 @@ class DSNFITSplotter(DSNFITSexaminer):
                              hdulist=hdulist)
     self.logger = mylogger
     self.plotter = {}
-    for key in self.tables.keys():
+    for key in list(self.tables.keys()):
       table = self.tables[key]
       self.logger.debug("__init__: processing %s", table)
       self.plotter[key] = self.Plotter(self, table)
@@ -99,7 +99,7 @@ class DSNFITSplotter(DSNFITSexaminer):
       """
       self.logger = logging.getLogger(parent.logger.name+".Plotter")
       self.logger.debug("__init__: subclass of %s", table)
-      for attr in table.__dict__.keys():
+      for attr in list(table.__dict__.keys()):
         self.__setattr__(attr, table.__getattribute__(attr))
         self.logger.debug("__init__: copying %s", attr)
 
@@ -120,11 +120,11 @@ class DSNFITSplotter(DSNFITSexaminer):
                         freewidth)
       self.logger.debug("figure_rows_and_columns: height available = %f in",
                         freeheight)
-      if kwargs.has_key("width"):
+      if "width" in kwargs:
         width = kwargs["width"] # inches
       else:
         width = 4
-      if kwargs.has_key("heigth"):
+      if "heigth" in kwargs:
         height = kwargs["width"] # inches
       else:
         height = 4
@@ -345,9 +345,9 @@ class DSNFITSplotter(DSNFITSexaminer):
       for subch in range(num_cycles):
         for beam in range(self.props["num beams"]):
           for pol in range(self.props["num IFs"]):
-            label = make_legend_labels(sckeys=range(num_cycles),
-                                       bmkeys=range(num_beams),
-                                       plkeys=range(num_pols),
+            label = make_legend_labels(sckeys=list(range(num_cycles)),
+                                       bmkeys=list(range(num_beams)),
+                                       plkeys=list(range(num_pols)),
                                        sckey=subch,
                                        bmkey=beam,
                                        plkey=pol)
@@ -400,9 +400,9 @@ class DSNFITSplotter(DSNFITSexaminer):
       nfigs, nrows, ncols, size = self.figure_rows_and_columns(num_graphs)
       figs, axs = self.init_multiplots("Basic Spectra", nfigs, nrows, ncols, 
                                        size, sharey=sharey)
-      self.logger.debug("show_all_spectra: figure keys: %s", figs.keys())
-      self.logger.debug("show_all_spectra: axes   keys: %s", axs.keys())
-      for fignum in figs.keys():
+      self.logger.debug("show_all_spectra: figure keys: %s", list(figs.keys()))
+      self.logger.debug("show_all_spectra: axes   keys: %s", list(axs.keys()))
+      for fignum in list(figs.keys()):
         fig = figs[fignum]
         ax = axs[fignum]
         for row in range(nrows):
@@ -483,12 +483,12 @@ class DSNFITSplotter(DSNFITSexaminer):
                            bmkey=None, plkey=None):
       dskeys=[]
       tbkeys=[]
-      sckeys = range(self.props['num cycles'])
-      bmkeys = range(self.props['num beams'])
+      sckeys = list(range(self.props['num cycles']))
+      bmkeys = list(range(self.props['num beams']))
       if self.props['full Stokes']:
-        plkeys = range(4)
+        plkeys = list(range(4))
       else:
-        plkeys = range(self.props['num IFs'])
+        plkeys = list(range(self.props['num IFs']))
       return make_legend_labels(dskeys=dskeys, tbkeys=tbkeys, sckeys=sckeys,
                                 bmkeys=bmkeys, plkeys=plkeys,
                                 dskey=dskey, tbkey=tbkey, sckey=sckey,
@@ -514,7 +514,7 @@ class DSNFITSplotter(DSNFITSexaminer):
         rows = self.acs_rows
         spectra = self.BPSW_spectra(rows)
         npairs = len(spectra)
-      pairs = range(npairs)
+      pairs = list(range(npairs))
       nrows, ncols = self.figure_rows_and_columns(len(spectra))
       fig, ax = self.init_multiplot("BPSW Spectra", nrows, ncols)
       for row in range(nrows):
@@ -589,9 +589,9 @@ class DSNFITSplotter(DSNFITSexaminer):
           beam = beam_idx + 1
           for pol_idx in range(self.props["num IFs"]):
             pol = pol_idx+1
-            label = make_legend_labels(sckeys=range(num_cycles),
-                                       bmkeys=range(num_beams),
-                                       plkeys=range(num_pols),
+            label = make_legend_labels(sckeys=list(range(num_cycles)),
+                                       bmkeys=list(range(num_beams)),
+                                       plkeys=list(range(num_pols)),
                                        sckey=subch_idx,
                                        bmkey=beam_idx,
                                        plkey=pol_idx)
@@ -623,7 +623,7 @@ class DSNFITSplotter(DSNFITSexaminer):
                                            beam=beam)
                 self.logger.debug("plot_PSSW_spectra: scan %d on indices: %s",
                                   on_scan, indices)
-              except ValueError, details:
+              except ValueError as details:
                 self.logger.warning("plot_PSSW_spectra: %s", str(details))
                 continue
               row = indices[0]
@@ -642,7 +642,7 @@ class DSNFITSplotter(DSNFITSexaminer):
                 self.logger.debug("plot_PSSW_spectra: scan %d off indices: %s",
                                   of_scan, ref_indices)
                 off =  self.data[datasource][ref_indices]
-              except ValueError, details:
+              except ValueError as details:
                 self.logger.warning("plot_PSSW_spectra: %s", str(details))
                 continue
               spectrum = (on-off)/off

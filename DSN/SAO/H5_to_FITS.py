@@ -109,7 +109,7 @@ class FITSfile_from_SAO(FITSfile):
     @type  observer : str
     """
     self.tables = {}
-    for BE in datasets.keys():
+    for BE in list(datasets.keys()):
       tabhdu = self.make_SAO_table(dss, BE, datasets[BE], equipment,
                                    tablesize=tablesize,
                                    project=project, observer=observer)
@@ -156,7 +156,7 @@ class FITSfile_from_SAO(FITSfile):
     """
     # Get the dimensions of the data cube
     #  Use the first scan to get the axis length
-    scans = dataset.data.keys()
+    scans = list(dataset.data.keys())
     numscans = len(scans)
     dims = dataset.data[scans[0]].shape
     self.logger.debug("make_SAO_table: first scan shape is %s", dims)
@@ -288,12 +288,12 @@ class FITSfile_from_SAO(FITSfile):
     
     """
     self.logger.debug("add_data: with %d records/scan", numrecs)
-    scans = dataset.data.keys()
+    scans = list(dataset.data.keys())
     numscans = len(scans)
     
     # add beam dimension to data shape if needed
     #   dims in C/Python order are: beam, record, pol, dec, RA, freq
-    if "MAXIS6" in tabhdu.header.keys():
+    if "MAXIS6" in list(tabhdu.header.keys()):
       time_shp = (1,numrecs,1,1,1,1) # same for both beams
       beam_shp = (2,numrecs,2,1,1,1)
     else:
@@ -326,7 +326,7 @@ class FITSfile_from_SAO(FITSfile):
       tabhdu.data[index]['EXPOSURE'] = dataset.header['EXPOSURE'][0] # for B1P1
       tabhdu.data[index]['BANDWIDT'] = dataset.header['BANDWIDT']
       
-      if "MAXIS6" in tabhdu.header.keys():
+      if "MAXIS6" in list(tabhdu.header.keys()):
         tabhdu.data[index]['TSYS'] = \
                   dataset.header['TSYS'][index][:,:numrecs,:].reshape(beam_shp)
         # THIS IS A HACK BECAUSE dataset.header['OBSFREQ'][index] IS WRONG !!!!
@@ -410,7 +410,7 @@ class FITSfile_from_SAO(FITSfile):
                                       -seconds_from_midnight[0] )/(numrecs-1)
     
       # sixth data axis (beam)
-      if "MAXIS6" in tabhdu.header.keys():
+      if "MAXIS6" in list(tabhdu.header.keys()):
         tabhdu.data[index]['CRVAL6'] = 0
         tabhdu.data[index]['CDELT6'] = 1
         # the data in dataset in keyed on scan number

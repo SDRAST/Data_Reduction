@@ -1,0 +1,320 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>SAOhdf5 &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="save_scan_data" href="Data_Reduction.FITS.save_scan_data.html" />
+    <link rel="prev" title="SAOexaminer" href="Data_Reduction.DSN.SAO.SAOexaminer.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.FITS.save_scan_data.html" title="save_scan_data"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.SAO.SAOexaminer.html" title="SAOexaminer"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.SAO.SAOexaminer.html"
+                        title="previous chapter">SAOexaminer</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.FITS.save_scan_data.html"
+                        title="next chapter">save_scan_data</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.DSN.SAO.SAOhdf5.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="saohdf5">
+<h1>SAOhdf5<a class="headerlink" href="#saohdf5" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Data_Reduction.DSN.SAO.SAOhdf5">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.DSN.SAO.</code><code class="sig-name descname">SAOhdf5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em>, <em class="sig-param"><span class="n">clobber_0</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">clobber_center</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOhdf5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Container for data in SAOspec HDF5 data files</p>
+<p class="rubric">Notes</p>
+<p><strong>SAO HDF5 File Structure</strong></p>
+<p>SAO spectra are acquired from each ROACH once every five seconds.  Each of
+these is a <code class="docutils literal notranslate"><span class="pre">record</span></code>.  Records are grouped into <code class="docutils literal notranslate"><span class="pre">scans</span></code>.  So a 2-min
+integration will have 24 records for each of the four ROACH boards.</p>
+<p>A typical dataset looks like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">8</span><span class="p">]:</span> <span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">8</span><span class="p">]:</span>
+<span class="p">[</span><span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;NSCANS&quot;</span><span class="p">:</span>          <span class="n">shape</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;&lt;f4&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;SITEELEV&quot;</span><span class="p">:</span>        <span class="n">shape</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;|S13&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;SITELAT&quot;</span><span class="p">:</span>         <span class="n">shape</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;|S13&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;SITELONG&quot;</span><span class="p">:</span>        <span class="n">shape</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;|S13&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;obs_freq&quot;</span><span class="p">:</span>        <span class="n">shape</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;&lt;f4&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;rest_freq&quot;</span><span class="p">:</span>       <span class="n">shape</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;&lt;f4&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;v_ref&quot;</span><span class="p">:</span>           <span class="n">shape</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;|S10&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;vsys&quot;</span><span class="p">:</span>            <span class="n">shape</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;&lt;f4&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;integ_time&quot;</span><span class="p">:</span>      <span class="n">shape</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;&lt;f4&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;scan_number&quot;</span><span class="p">:</span>     <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;&lt;f4&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;date_obs&quot;</span><span class="p">:</span>        <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;|S10&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;time_obs&quot;</span><span class="p">:</span>        <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;|S10&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span>       <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;&lt;i8&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;LST&quot;</span><span class="p">:</span>             <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;|S13&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;scan_duration&quot;</span><span class="p">:</span>   <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;&lt;f4&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;observer&quot;</span><span class="p">:</span>        <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;|S10&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;source_name&quot;</span><span class="p">:</span>     <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;|S10&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;onsource&quot;</span><span class="p">:</span>        <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;|b1&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;current_azel&quot;</span><span class="p">:</span>    <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;&lt;f4&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;offsets&quot;</span><span class="p">:</span>         <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;&lt;f4&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;source_azel&quot;</span><span class="p">:</span>     <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;|S12&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;source_long_lat&quot;</span><span class="p">:</span> <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;|S13&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;source_radec&quot;</span><span class="p">:</span>    <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;|S13&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;weather&quot;</span><span class="p">:</span>         <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;&lt;f4&quot;</span><span class="o">&gt;</span><span class="p">]</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;Tsys&quot;</span><span class="p">:</span>            <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;&lt;f4&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;bandwidth&quot;</span><span class="p">:</span>       <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;&lt;f4&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;mode&quot;</span><span class="p">:</span>            <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;|S10&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;pol&quot;</span><span class="p">:</span>             <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;|S3&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;spectraCh1&quot;</span><span class="p">:</span>      <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">32768</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;&lt;f4&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;spectraCh2&quot;</span><span class="p">:</span>      <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">32768</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;&lt;f4&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;spectraCh3&quot;</span><span class="p">:</span>      <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">32768</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;&lt;f4&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">HDF5</span> <span class="n">dataset</span> <span class="s2">&quot;spectraCh4&quot;</span><span class="p">:</span>      <span class="n">shape</span> <span class="p">(</span><span class="mi">326</span><span class="p">,</span> <span class="mi">32768</span><span class="p">),</span> <span class="nb">type</span> <span class="s2">&quot;&lt;f4&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+</pre></div>
+</div>
+<p>In order, the first set are parameters which do not change for the entire
+dataset. <code class="docutils literal notranslate"><span class="pre">integ_time</span></code> is specified for each backend.  The remaining
+parameters are different for each integration. Most of the remaining
+arrays are arrays with multiple values in an obvious way such as five
+sec integrations, or parameters
+for each DSProc (ROACH).  The data associated with each nominally 5 sec are
+associated with scans like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">49</span><span class="p">]:</span> <span class="n">hdf</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;weather&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">49</span><span class="p">]:</span>
+<span class="n">array</span><span class="p">([[</span> <span class="mf">28.05555725</span><span class="p">,</span> <span class="mf">946.18383789</span><span class="p">,</span>  <span class="mf">21.9917202</span> <span class="p">,</span>  <span class="mf">9.88373375</span><span class="p">,</span> <span class="mf">187.</span><span class="p">,</span>  <span class="mf">0.</span><span class="p">],</span>
+       <span class="p">[</span> <span class="mf">28.05555725</span><span class="p">,</span> <span class="mf">946.18383789</span><span class="p">,</span>  <span class="mf">21.24612045</span><span class="p">,</span>  <span class="mf">9.26599979</span><span class="p">,</span> <span class="mf">157.</span><span class="p">,</span>  <span class="mf">0.</span><span class="p">],</span>
+       <span class="p">[</span> <span class="mf">28.05555725</span><span class="p">,</span> <span class="mf">946.18383789</span><span class="p">,</span>  <span class="mf">21.24612045</span><span class="p">,</span>  <span class="mf">9.26599979</span><span class="p">,</span> <span class="mf">157.</span><span class="p">,</span>  <span class="mf">0.</span><span class="p">],</span>
+       <span class="o">...</span><span class="p">,</span>
+       <span class="p">[</span> <span class="mf">28.38888931</span><span class="p">,</span> <span class="mf">945.9130249</span> <span class="p">,</span>  <span class="mf">19.21655655</span><span class="p">,</span>  <span class="mf">5.55959988</span><span class="p">,</span>  <span class="mf">42.</span><span class="p">,</span>  <span class="mf">0.</span><span class="p">],</span>
+       <span class="p">[</span> <span class="mf">28.38888931</span><span class="p">,</span> <span class="mf">945.9130249</span> <span class="p">,</span>  <span class="mf">18.9209938</span> <span class="p">,</span>  <span class="mf">5.55959988</span><span class="p">,</span>  <span class="mf">44.</span><span class="p">,</span>  <span class="mf">0.</span><span class="p">],</span>
+       <span class="p">[</span>  <span class="mf">0.</span>        <span class="p">,</span>   <span class="mf">0.</span>        <span class="p">,</span>   <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>   <span class="mf">0.</span><span class="p">,</span>  <span class="mf">0.</span><span class="p">]],</span>
+      <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The records are associated with scans like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">48</span><span class="p">]:</span> <span class="n">hdf</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;scan_number&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">48</span><span class="p">]:</span>
+<span class="n">array</span><span class="p">([[</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],[</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],[</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],[</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],[</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],[</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],[</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],[</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],[</span><span class="o">-</span><span class="mf">1.</span><span class="p">],[</span><span class="o">-</span><span class="mf">1.</span><span class="p">],</span>
+       <span class="p">[</span>  <span class="mf">1.</span><span class="p">],[</span>  <span class="mf">1.</span><span class="p">],[</span>  <span class="mf">1.</span><span class="p">],[</span>  <span class="mf">1.</span><span class="p">],[</span>  <span class="mf">1.</span><span class="p">],[</span>  <span class="mf">1.</span><span class="p">],[</span>  <span class="mf">1.</span><span class="p">],[</span>  <span class="mf">1.</span><span class="p">],[</span> <span class="mf">1.</span><span class="p">],[</span> <span class="mf">1.</span><span class="p">],</span>
+       <span class="p">[</span>  <span class="mf">1.</span><span class="p">],[</span>  <span class="mf">1.</span><span class="p">],</span>
+       <span class="p">[</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],[</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],</span>
+       <span class="p">[</span>  <span class="mf">2.</span><span class="p">],[</span>  <span class="mf">2.</span><span class="p">],[</span>  <span class="mf">2.</span><span class="p">],[</span>  <span class="mf">2.</span><span class="p">],[</span>  <span class="mf">2.</span><span class="p">],[</span>  <span class="mf">2.</span><span class="p">],[</span>  <span class="mf">2.</span><span class="p">],[</span>  <span class="mf">2.</span><span class="p">],[</span> <span class="mf">2.</span><span class="p">],[</span> <span class="mf">2.</span><span class="p">],</span>
+       <span class="p">[</span>  <span class="mf">2.</span><span class="p">],[</span>  <span class="mf">2.</span><span class="p">],</span>
+       <span class="p">[</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],[</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],[</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],</span>
+        <span class="o">...</span>
+       <span class="p">[</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],[</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],</span>
+       <span class="p">[</span> <span class="mf">19.</span><span class="p">],[</span> <span class="mf">19.</span><span class="p">],[</span> <span class="mf">19.</span><span class="p">],[</span> <span class="mf">19.</span><span class="p">],[</span> <span class="mf">19.</span><span class="p">],[</span> <span class="mf">19.</span><span class="p">],[</span> <span class="mf">19.</span><span class="p">],[</span> <span class="mf">19.</span><span class="p">],[</span><span class="mf">19.</span><span class="p">],[</span><span class="mf">19.</span><span class="p">],</span>
+       <span class="p">[</span> <span class="mf">19.</span><span class="p">],[</span> <span class="mf">19.</span><span class="p">],[</span> <span class="mf">19.</span><span class="p">],</span>
+       <span class="p">[</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],[</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],</span>
+       <span class="p">[</span> <span class="mf">20.</span><span class="p">],[</span> <span class="mf">20.</span><span class="p">],[</span> <span class="mf">20.</span><span class="p">],[</span> <span class="mf">20.</span><span class="p">],[</span> <span class="mf">20.</span><span class="p">],[</span> <span class="mf">20.</span><span class="p">],[</span> <span class="mf">20.</span><span class="p">],[</span> <span class="mf">20.</span><span class="p">],[</span><span class="mf">20.</span><span class="p">],[</span><span class="mf">20.</span><span class="p">],</span>
+       <span class="p">[</span> <span class="mf">20.</span><span class="p">],[</span> <span class="mf">20.</span><span class="p">],</span>
+       <span class="p">[</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],</span>
+       <span class="p">[</span>  <span class="mf">0.</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This class has an attribute ‘container’ similar to an SDFITS table.
+The ‘spec’ axes are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">frequency</span>   <span class="o">-</span> <span class="mi">32768</span> <span class="n">equally</span> <span class="n">spaced</span> <span class="n">frequencies</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">topocentric</span> <span class="n">frame</span>
+<span class="n">R</span><span class="o">.</span><span class="n">A</span><span class="o">.</span>        <span class="o">-</span>     <span class="mi">1</span> <span class="n">J2000</span> <span class="n">coordinate</span>
+<span class="n">declination</span> <span class="o">-</span>     <span class="mi">1</span> <span class="n">J2000</span> <span class="n">coordinate</span>
+<span class="n">pol</span>         <span class="o">-</span>     <span class="mi">2</span> <span class="k">for</span> <span class="n">E</span><span class="p">,</span><span class="n">H</span> <span class="ow">or</span> <span class="n">L</span><span class="p">,</span><span class="n">R</span>
+<span class="n">time</span>        <span class="o">-</span>     <span class="n">N</span> <span class="n">seconds</span> <span class="n">since</span> <span class="n">midnight</span> <span class="k">for</span> <span class="n">each</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">a</span> <span class="n">scan</span>
+<span class="n">beam</span>        <span class="o">-</span>     <span class="mi">2</span> <span class="k">for</span> <span class="mi">1</span><span class="p">,</span><span class="mi">2</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">clobber_0      - set 0th value to 1st value if True</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">clobber_center - set 16384th value to mean of 16383th and 16385th if True</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">container      - SAOdataset object in which the reformatted data are stored</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">data           - HDF5 file contents (temporary)</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">filename       - name of HDF5 file</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">logger         - logging.Logger instance</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">meta           - metadata from HDF5 file</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">num_DSP        - number of signal processors</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">num_uniq       - number of unique records for each scan and beam and pol</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">PROJID         - identifier string for project</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">SITEELEV       - elevation of telescope (m)</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">SITELAT        - latitude of telescope (deg)</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">SITELONG       - east longitude of telescope (deg)</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">spec           - nparray of spectra</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">uniq_recs      - dict with number of unique records for each pol and beam</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">extract_valid_records - gets non-duplicate, non-zero records</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">to_dataset            - returns an SAOdataset instance</code></dt>
+<dd></dd></dl>
+
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.DSN.SAO.SAOhdf5.extract_valid_records" title="Data_Reduction.DSN.SAO.SAOhdf5.extract_valid_records"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_valid_records</span></code></a>()</p></td>
+<td><p>Remove duplicate and empty records from each scan.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.DSN.SAO.SAOhdf5.to_dataset" title="Data_Reduction.DSN.SAO.SAOhdf5.to_dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_dataset</span></code></a>()</p></td>
+<td><p>Fills container with data in format suitable for pickling (saving to disk)</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="Data_Reduction.DSN.SAO.SAOhdf5.extract_valid_records">
+<code class="sig-name descname">extract_valid_records</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOhdf5.extract_valid_records" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove duplicate and empty records from each scan.</p>
+<p>Returns nparray of valid records, number of valid records for each pol,beam</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.DSN.SAO.SAOhdf5.to_dataset">
+<code class="sig-name descname">to_dataset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOhdf5.to_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fills container with data in format suitable for pickling (saving to disk)</p>
+<p>This method is used by the calling program which initializes this class to
+put the data in a FITS-like format that can be put in a pickle file.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.FITS.save_scan_data.html" title="save_scan_data"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.SAO.SAOexaminer.html" title="SAOexaminer"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

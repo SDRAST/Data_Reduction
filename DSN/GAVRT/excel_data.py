@@ -82,17 +82,17 @@ def get_timed_data_sheet(wb,fkeys,pkeys,date_nums,ras,decs,azs,elevs):
   if timedata_sheet == None:
     # Doesn't exist.  Make it.
     if diag:
-      print "Trying to create a new data sheet"
+      print("Trying to create a new data sheet")
     try:
       timedata_sheet = wb.create_sheet(1)
-    except Exception,details:
-      print "Could not create sheet"
-      print details
+    except Exception as details:
+      print("Could not create sheet")
+      print(details)
       return None
     timedata_sheet.title = "TimeData"
     if diag:
-      print timedata_sheet,"has been given the name",\
-            timedata_sheet.title
+      print(timedata_sheet,"has been given the name",\
+            timedata_sheet.title)
     # make column titles
     column_names = ["Date/Time","R.A.","Decl.","Az","Elev"]
     for freq in fkeys:
@@ -118,7 +118,7 @@ def get_timed_data_sheet(wb,fkeys,pkeys,date_nums,ras,decs,azs,elevs):
                column = get_column_id(timedata_sheet,"Az")).value = \
                                               azs[count]
   if diag:
-      print timedata_sheet.title,"sheet exists"
+      print(timedata_sheet.title,"sheet exists")
   return timedata_sheet
 
 def fill_map_sheet(wb,sheetname,dxdecs,ddecs,data):
@@ -149,25 +149,25 @@ def fill_map_sheet(wb,sheetname,dxdecs,ddecs,data):
   if mapsheet == None:
     # Doesn't exist, make it.
     if diag:
-      print "Attempting to create worksheet",sheetname
+      print("Attempting to create worksheet",sheetname)
     try:
       mapsheet = wb.create_sheet(-1)
-    except Exception, details:
-      print "Could not create sheet"
-      print details
+    except Exception as details:
+      print("Could not create sheet")
+      print(details)
       return None
     if diag:
-      print "Created worksheet",mapsheet,"named",sheetname
+      print("Created worksheet",mapsheet,"named",sheetname)
     mapsheet.title = sheetname
   else:
     if diag:
-      print "Opened sheet",mapsheet.title
+      print("Opened sheet",mapsheet.title)
   # fill the top row with cross-declination offsets
   for count in range(len(dxdecs)):
     mapsheet.cell(row = 0, column = count+1).value = dxdecs[count]
   # fill the left column with declination offsets
   for count in range(len(ddecs)):
-    mapsheet.cell(row = count+1, column = 0).value = ddecs[\linebreakcount]
+    mapsheet.cell(row = count+1, column = 0).value = ddecs[count]
   # fill in the map data
   for dxdec_index in range(len(dxdecs)):
     for ddec_index in range(len(ddecs)):
@@ -185,7 +185,7 @@ def get_map_sheet(wb,sheetname):
   else:
     dxdecs = []
     for column in range(1,mapsheet.get_highest_column()):
-      dxdecs.append(mapsheet.cell(row=0, column=column).value)Wedne
+      dxdecs.append(mapsheet.cell(row=0, column=column).value)
     ddecs = []
     for row in range(1,mapsheet.get_highest_row()):
       ddecs.append(mapsheet.cell(row=row, column=0).value)
@@ -207,25 +207,25 @@ def load_data_sheet(name):
   """
   try:
     wb = load_workbook(name)
-  except IOError, details:
-    print "Loading spreadsheet failed with IO error."
-    print details
+  except IOError as details:
+    print("Loading spreadsheet failed with IO error.")
+    print(details)
     sys.exit(1)
-  except AttributeError, details:
-    print "Loading spreadsheet failed with attribute error"
-    print details
+  except AttributeError as details:
+    print("Loading spreadsheet failed with attribute error")
+    print(details)
     sys.exit(1)
-  except InvalidFileException, details:
-    print "File does not exist.  Creating it."
+  except InvalidFileException as details:
+    print("File does not exist.  Creating it.")
     wb = Workbook()
     obs_ws = wb.get_active_sheet()
     obs_ws = create_metadata_sheet(obs_ws,"Metadata")
   else:
     sheet_names = wb.get_sheet_names()
-    print "Sheets:",sheet_names
+    print("Sheets:",sheet_names)
     obs_ws = wb.get_sheet_by_name('Metadata')
   # make a reverse lookup table
-  obs_col_names, meta_column = column_ID_dict(obs_ws)\linebreak
+  obs_col_names, meta_column = column_ID_dict(obs_ws)
   return wb, obs_ws, obs_col_names, meta_column
   
 def get_timed_data(wb,sheetname):
@@ -239,7 +239,7 @@ def get_timed_data(wb,sheetname):
   azs       = get_column(sheet,"Az")
   elevs     = get_column(sheet,"Elev")
   col_name_dict = get_column_names(sheet)
-  colnames = col_name_dict.values()
+  colnames = list(col_name_dict.values())
   colnames.remove("Date/Time")
   colnames.remove("R.A.")
   colnames.remove("Decl.")
@@ -258,7 +258,7 @@ def create_boresight_analysis_sheet(wb):
   analsh.cell(column= 0,row=0).value = "Source"
   analsh.cell(column= 1,row=0).value = "Freq"
   analsh.cell(column= 2,row=0).value = "Pol"
-  analsh.cell(column= 3,row=0).value = "IF mode"Wedne
+  analsh.cell(column= 3,row=0).value = "IF mode"
   analsh.cell(column= 4,row=0).value = "Dec Start"
   analsh.cell(column= 5,row=0).value = "Dec End"
   analsh.cell(column= 6,row=0).value = "XDec Start"
@@ -443,7 +443,7 @@ def create_gridded_maps(wb,map_meta_sh,filename_dict):
         # get the data from the timed data page
         column_name = pagename(f,p)
         if diag:
-          print "Processing counts column",column_name
+          print("Processing counts column",column_name)
         dxdecs,ddecs = center_data(date_nums, ras, decs,
                                    "sun", dss28)
         zi = griddata(dxdecs,ddecs,tsys[column_name],xi,yi)
@@ -487,28 +487,28 @@ def plot_track(map_type, project_path, date_info,
   @type  dt_stop : datetime.datetime() instance
   """
   if sheet:
-    print "Processing segment sheet",sheet
+    print("Processing segment sheet",sheet)
     seg_file, name_parts = get_segment_filename(project_path,date_info,sheet)
     if exists(seg_file):
       if diag:
-        print "Loading",seg_file
+        print("Loading",seg_file)
       wb = load_workbook(seg_file)
       date_nums, ras, decs, azs, elevs, tsys_dict = get_timed_data(wb,
                                                                   "TimeData")
     else:
       if diag:
-        print seg_file,"does not exist"
+        print(seg_file,"does not exist")
       seg_file = None
       return fig
   else:
     if diag:
-      print "Processing the entire session"
+      print("Processing the entire session")
   # plot the elevation vs azimuth, one figure per frequency
   for f in fkeys:
     fig += 1
     figure(fig)
     subpl = 0
-    for p in filename_dict[f].keys():
+    for p in list(filename_dict[f].keys()):
       subpl += 1
       subplot(1,2,subpl)
       if seg_file:
@@ -540,7 +540,7 @@ def plot_track(map_type, project_path, date_info,
         plot_xdec_dec(dxdecs,ddecs,title_str)
         suffix = "-decxdec.png"
       else:
-        print "Invalid map type:",map_type
+        print("Invalid map type:",map_type)
         suffix = None
     if suffix:
       savefig(("../%s/%4d-%03d_%05.2f" % (date_info[0],
@@ -587,7 +587,7 @@ def show_contoured_image(wb, meta_sheet_name, mean_time, fig):
     subpl = 0
     aper_effic = zenith_gain(f*1000.)
     if diag:
-      print "Zenith gain =",aper_effic,"at",f,"GHz"
+      print("Zenith gain =",aper_effic,"at",f,"GHz")
     for p in pkeys:
       # This steps through the polarizations
       row = OP.get_row_number(map_meta_sh,pol_column,p)
@@ -619,7 +619,7 @@ def show_contoured_image(wb, meta_sheet_name, mean_time, fig):
         pass
       CS = contour( xi, yi, Jy_to_K*gain*zi, V, linewidths=0.5, colors='k')
       CS = contourf(xi, yi, Jy_to_K*gain*zi, V, cmap=plt.cm.jet)
-      print "%5.2f %s %7.0f" % (f,p,(Jy_to_K*gain*zi).max())
+      print("%5.2f %s %7.0f" % (f,p,(Jy_to_K*gain*zi).max()))
       ax.set_aspect('equal')
       colorbar(shrink=0.6) # draw colorbar
       grid()

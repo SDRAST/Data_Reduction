@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>reduce_spectrum_channels &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="select_data_files" href="Data_Reduction.select_data_files.html" />
+    <link rel="prev" title="load_csv_with_header" href="Data_Reduction.load_csv_with_header.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.select_data_files.html" title="select_data_files"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.load_csv_with_header.html" title="load_csv_with_header"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.load_csv_with_header.html"
+                        title="previous chapter">load_csv_with_header</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.select_data_files.html"
+                        title="next chapter">select_data_files</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.reduce_spectrum_channels.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="reduce-spectrum-channels">
+<h1>reduce_spectrum_channels<a class="headerlink" href="#reduce-spectrum-channels" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="Data_Reduction.reduce_spectrum_channels">
+<code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">reduce_spectrum_channels</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">spectrum</span></em>, <em class="sig-param"><span class="n">refval</span></em>, <em class="sig-param"><span class="n">refpix</span></em>, <em class="sig-param"><span class="n">delta</span></em>, <em class="sig-param"><span class="n">num_chan</span><span class="o">=</span><span class="default_value">1024</span></em>, <em class="sig-param"><span class="n">axis</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.reduce_spectrum_channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reduce the number of channels in the spectrum.</p>
+<p>The default option is to reduce the spectrum to a specified number of
+channels with a default of 1024. The input spectrum is presumed to have
+2**N channels so that num_chan/num_chan_in is an integer.</p>
+<p>If ‘spectrum’ is an N-D array, then the spectrum axis is given by ‘axis’
+which defaults to 0.</p>
+<p>‘delta’ is negative for lower sideband or reversed double sideband spectra.</p>
+<p>:param spectrum : spectrum values
+:type  spectrum : list or nparray</p>
+<p>:param refval : X-axis value at the reference pixel of ‘spectrum’
+:type  refval : float</p>
+<p>:param refpix : reference pixel for ‘spectrum’
+:type  refpix : int</p>
+<p>:param delta : interval between pixels on the X-axis
+:type  delta : float</p>
+<p>:param num_chan : optional number of channels to be returned (default: 2^10)
+:type  num_chan : int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>numpy.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.select_data_files.html" title="select_data_files"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.load_csv_with_header.html" title="load_csv_with_header"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

@@ -39,12 +39,12 @@ def eac_macro_file_name(datadir,year,DOY):
   """
   pattern = "PESD-pm-%4d-%03d*.log" % (year,DOY)
   if diag:
-    print "Looking for file pattern",pattern
+    print("Looking for file pattern",pattern)
   files = glob(datadir+pattern)
   if len(files) == 0:
     return []
   elif len(files) > 1:
-    print "Warning! more than one eac macro log. Using the last one."
+    print("Warning! more than one eac macro log. Using the last one.")
     return files[-1]
   else:
     return files[0]
@@ -243,13 +243,13 @@ def find_minical_logs(logdir,year,doy):
   """
   global log_dict
   pattern = logdir+"m"+YYYYDDD_datecode(year,'',doy)+'*'
-  print "Initial pattern:",pattern
+  print("Initial pattern:",pattern)
   logs = glob(logdir+"m"+YYYYDDD_datecode(year,'',doy)+'*')
   requested_doy = doy
   while logs == []:
     # Try the previous day
     doy -= 1
-    print "Trying DOY",doy
+    print("Trying DOY",doy)
     pattern = logdir+"m"+YYYYDDD_datecode(year,'',doy)+'*'
     logs = glob(pattern)
     if requested_doy-doy > 7:
@@ -310,15 +310,15 @@ def get_boresights(bore_files):
       - ON(1):      bore_data['fivept.pri']['ON(1)'] = ['0', '0']
       - ON(2):      bore_data['fivept.pri']['ON(2)'] = ['0', '0']
   """
-  print "Bore files:",bore_files
+  print("Bore files:",bore_files)
   data = {}
   for bore_file in bore_files:
-    print "Bore file:",bore_file
+    print("Bore file:",bore_file)
     fd = open(bore_file,'r')
     # The first line has the keys for the columns
     keys = fd.readline().strip().split()
     for key in keys:
-      if not data.has_key(key):
+      if key not in data:
         data[key] = []
     # The remaining lines are data
     lines = fd.readlines()
@@ -431,16 +431,16 @@ def get_EAC_macro_log(year,DOY,dest_path):
   @return: list
     EAC macro processor logs copied.
   """
-  print "Entered get_EAC_macro_log for",year,DOY,dest_path
+  print("Entered get_EAC_macro_log for",year,DOY,dest_path)
   pm_logs = find_EAC_macro_log(year,DOY)
   if pm_logs!= None:
     # We found one or more logs
     for f in pm_logs:
       try:
         shutil.copy(f,dest_path)
-        print basename(f),"copied to",dest_path
+        print(basename(f),"copied to",dest_path)
       except:
-        print "Could not copy",basename(f),'because', sys.exc_info()[0]
+        print("Could not copy",basename(f),'because', sys.exc_info()[0])
   return pm_logs
 
 def get_EAC_logs(year,DOY,dest_path):
@@ -458,31 +458,31 @@ def get_EAC_logs(year,DOY,dest_path):
     EAC logs copied
   """
   eac_logs = find_EAC_logs(eaclogdir,year,DOY)
-  for key in eac_logs.keys():
-    print "In get_EAC_logs, processing",key
+  for key in list(eac_logs.keys()):
+    print("In get_EAC_logs, processing",key)
     # an item in the logs list could itself be a list
     if type(eac_logs[key]) == list:
       # process the item as a list
-      print "EAC log files:",eac_logs[key]
+      print("EAC log files:",eac_logs[key])
       for logfile in eac_logs[key]:
         # This overwrites anything of the same name
         shutil.copy(logfile,dest_path)
-        print basename(logfile),"copied"
+        print(basename(logfile),"copied")
     else:
       # process the item as a file
-      print "EAC log file:",eac_logs[key]
+      print("EAC log file:",eac_logs[key])
       shutil.copy(eac_logs[key],dest_path)
-      print basename(eac_logs[key]),"copied"
+      print(basename(eac_logs[key]),"copied")
   # also get the 'process_macro' input file
   eac_logs['macro'] = find_log_file(eaclogdir,'PESD-pm-',year,'-',DOY,'*.log',1)
   if eac_logs['macro'] != None:
     if type(eac_logs['macro']) == list:
       for macrofile in eac_logs['macro']:
         shutil.copy(macrofile,dest_path)
-        print macrofile,"copied"
+        print(macrofile,"copied")
     else:
       shutil.copy(eac_logs['macro'],dest_path)
-      print eac_logs['macro'],"copied"
+      print(eac_logs['macro'],"copied")
   return eac_logs
 
 def get_log_data(logs):
@@ -504,13 +504,13 @@ def get_log_data(logs):
   tsys_data = {}
   bore_data = {}
   track_data = {}
-  for key in logs.keys():
+  for key in list(logs.keys()):
     if key[0:3] == 'cal':
       cal_data[key] = get_cals(logs[key])
     elif key[0] == 'T':
       tsys_data[key] = get_tsys(logs[key])
     elif key[0:4] == 'five':
-      print "In get_log_data:", logs[key]
+      print("In get_log_data:", logs[key])
       bore_data[key] = get_boresights(logs[key])
     elif key == 'track':
       track_data[key] = get_track_status(logs[key])
@@ -539,7 +539,7 @@ def get_on_off_times(eaclog):
   # Get the year and day-of-year from the filename
   parts = basename(eaclog).split('-')
   if diag:
-    print parts
+    print(parts)
   if len(parts) == 3:
     # old style file name
     year = int(parts[2][:4])
@@ -615,10 +615,10 @@ def get_RAC_logs(year,DOY,dest_path):
     DOY -= 1
     rac_logs = glob(raclogdir+'rac_'+("%4d.%03d" % (year,DOY)))
   for log in rac_logs:
-    print "Copying",basename(log),"to",dest_path
+    print("Copying",basename(log),"to",dest_path)
     # This overwrites anything of the same name
     shutil.copy(log,dest_path)
-    print basename(log),"copied"
+    print(basename(log),"copied")
   return rac_logs
 
 def get_RAVI_logs(year,DOY,dest_path):
@@ -641,13 +641,13 @@ def get_RAVI_logs(year,DOY,dest_path):
   for log in ravi_logs:
     # This overwrites anything of the same name
     shutil.copy(log,dest_path)
-    print basename(log),"copied"
+    print(basename(log),"copied")
   ravi_at_jobs = glob(ravi_atJobsDir
                       +"PESD-at-"+str(year)+("%03d" % DOY)+"*.ravi")
   for job in ravi_at_jobs:
     # This overwrites anything of the same name
     shutil.copy(job,dest_path)
-    print basename(job),"copied"
+    print(basename(job),"copied")
   means = glob(ravi_data_dir
                +"STATS_NP1000_vsr1*"+str(year)[2:]+("-%03d" % DOY)+"*-qlook")
   for datafile in means:
@@ -655,9 +655,9 @@ def get_RAVI_logs(year,DOY,dest_path):
     destination = dest_path + "/means_" + basename(datafile)[12:34]
     try:
       shutil.copy(datafile,destination)
-      print basename(datafile),"copied to",destination
+      print(basename(datafile),"copied to",destination)
     except:
-      print "Could not copy",basename(datafile),"to",destination
+      print("Could not copy",basename(datafile),"to",destination)
   return ravi_logs, ravi_at_jobs, means
   
 def get_tsys(tsys_files):
@@ -697,7 +697,7 @@ def get_tsys(tsys_files):
     fd.close()
     # This initializes the data lists
     for key in keys:
-      if not data.has_key(key):
+      if key not in data:
         data[key] = []
     for line in lines:
       l = line.strip().split()
@@ -732,26 +732,26 @@ def get_VSR_logs(year,DOY,dest_path):
   for log in vsr_HW_logs:
     # This overwrites anything of the same name
     shutil.copy(log,dest_path)
-    print basename(log),"copied"
+    print(basename(log),"copied")
   ses_date = dest_path.split('/')[-2]
-  print "Session",ses_date
+  print("Session",ses_date)
   vsr_SW_logs = glob(obs_dir+ses_date+"/vrt*log."+("%03d" % DOY)+"*")
   for log in vsr_SW_logs:
     # This overwrites anything of the same name
     shutil.copy(log,dest_path)
-    print basename(log),"copied"
+    print(basename(log),"copied")
   
   vsr_scripts = glob(vsrScriptDir+'PESD-'+str(year)+'-'+("%03d" % DOY)+'*.vsr')
   for script in vsr_scripts:
     # This overwrites anything of the same name
     shutil.copy(script,dest_path)
-    print basename(script),"copied"
+    print(basename(script),"copied")
     
   vsr_at_jobs = glob(vsr_atJobsDir+"PESD-at-"+str(year)+'-'+("%03d" % DOY)+"*.vsr")
   for job in vsr_at_jobs:
     # This overwrites anything of the same name
     shutil.copy(job,dest_path)
-    print basename(job),"copied"
+    print(basename(job),"copied")
   vsr_logs = vsr_HW_logs + vsr_SW_logs
   return vsr_logs, vsr_scripts, vsr_at_jobs
 
@@ -779,18 +779,18 @@ def report_logs(cal_data,tsys_data,bore_data,track_data):
 
   @return: None
   """
-  print "cal_data:"
-  for key in cal_data.keys():
-    print key
-  print "\ntsys_data:"
-  for key in tsys_data.keys():
-    print key,"for",tsys_data[key]['Frequency'][0]
-  print "\nbore_data:"
-  for key in bore_data.keys():
-    print key,"for",bore_data[key]['FREQ'][0]
-  print "\n track status data"
-  for key in track_data.keys():
-    print key
+  print("cal_data:")
+  for key in list(cal_data.keys()):
+    print(key)
+  print("\ntsys_data:")
+  for key in list(tsys_data.keys()):
+    print(key,"for",tsys_data[key]['Frequency'][0])
+  print("\nbore_data:")
+  for key in list(bore_data.keys()):
+    print(key,"for",bore_data[key]['FREQ'][0])
+  print("\n track status data")
+  for key in list(track_data.keys()):
+    print(key)
 
 def parse_boresight_line(line):
   """Parse a line of boresight data.
