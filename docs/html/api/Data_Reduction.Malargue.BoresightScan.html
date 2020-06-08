@@ -113,12 +113,12 @@ source   - name of scanned source</p>
 <dt id="Data_Reduction.Malargue.BoresightScan.fit_gaussian">
 <code class="sig-name descname">fit_gaussian</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">channel</span></em>, <em class="sig-param"><span class="n">beam_limit</span><span class="o">=</span><span class="default_value">2.5</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.BoresightScan.fit_gaussian" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit the scan to a Gaussian and a baseline</p>
-<dl class="simple">
-<dt>Extract the appropriate data::</dt><dd><p>For raster scans, ‘xdec’ means that ‘xdec’ stays fixed while the
-antenna moves up and down; ‘dec’ means that ‘dec’ stays fixed while the
-left and right.</p>
-</dd>
-</dl>
+<p>Extract the appropriate data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">For</span> <span class="n">raster</span> <span class="n">scans</span><span class="p">,</span> <span class="s1">&#39;xdec&#39;</span> <span class="n">means</span> <span class="n">that</span> <span class="s1">&#39;xdec&#39;</span> <span class="n">stays</span> <span class="n">fixed</span> <span class="k">while</span> <span class="n">the</span>
+<span class="n">antenna</span> <span class="n">moves</span> <span class="n">up</span> <span class="ow">and</span> <span class="n">down</span><span class="p">;</span> <span class="s1">&#39;dec&#39;</span> <span class="n">means</span> <span class="n">that</span> <span class="s1">&#39;dec&#39;</span> <span class="n">stays</span> <span class="n">fixed</span> <span class="k">while</span> <span class="n">the</span>
+<span class="n">left</span> <span class="ow">and</span> <span class="n">right</span><span class="o">.</span>
+</pre></div>
+</div>
 <p>The Gaussian is assumed to fit the inner five beamwidths of the data,
 though that limit can be adjusted.  The baseline is the rest of the data,
 although the lower baseline includes at least data[:5] and the upper

@@ -496,51 +496,6 @@ creating a simple 1-table file is this:</p>
 <tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.DSS28_beamwidth.html#Data_Reduction.Malargue.DSS28_beamwidth" title="Data_Reduction.Malargue.DSS28_beamwidth"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DSS28_beamwidth</span></code></a>(freq)</p></td>
 <td><p>beamwidth in deg.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">HPBW</span></code>(feedtaper, wavelength, diameter)</p></td>
-<td><p>Half-power beamwidth estimate</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">arange</span></code>([start,] stop[, step,][, dtype])</p></td>
-<td><p>Return evenly spaced values within a given interval.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">array</span></code>(object[, dtype, copy, order, subok, ndmin])</p></td>
-<td><p>Create an array.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">calibrator</span></code>(name)</p></td>
-<td><p>Creates an Ephem (pyephem) Body() instance for a flux calibrator</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cos</span></code></p></td>
-<td><p>Return the cosine of x (measured in radians).</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">date2num</span></code>(d)</p></td>
-<td><p>Convert datetime objects to Matplotlib dates.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_gaussian</span></code>(error_function, initial_guess, x, y)</p></td>
-<td><p>Invoke least squares fit to a Gaussian function</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">gaussian_error_function</span></code>(p, x, y)</p></td>
-<td><p>Difference between model and actual data</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">gmtime</span></code>([seconds])</p></td>
-<td><p>tm_sec, tm_wday, tm_yday, tm_isdst)</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nearest_index</span></code>(np_array, value)</p></td>
-<td><p>Return the index of the element of the array with the nearest value</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">num2date</span></code>(x[, tz])</p></td>
-<td><p>Convert Matplotlib dates to <cite>~datetime.datetime</cite> objects.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">st_dev</span></code>(width_half_max)</p></td>
-<td><p>Standard deviation from Gaussian full width at half maxiuam</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">strftime</span></code>(format[, tuple])</p></td>
-<td><p>Convert a time tuple to a string according to a format specification.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">unique</span></code>(ar[, return_index, return_inverse, …])</p></td>
-<td><p>Find the unique elements of an array.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">where</span></code>(condition, [x, y])</p></td>
-<td><p>Return elements chosen from <cite>x</cite> or <cite>y</cite> depending on <cite>condition</cite>.</p></td>
-</tr>
 </tbody>
 </table>
 </div>
@@ -555,17 +510,11 @@ creating a simple 1-table file is this:</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.BoresightScan.html#Data_Reduction.Malargue.BoresightScan" title="Data_Reduction.Malargue.BoresightScan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BoresightScan</span></code></a>(parent, xpwr_cfg_id[, source, …])</p></td>
 <td><p>class for a single scan during a boresight</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DSS</span></code>(number)</p></td>
-<td><p>Observer class for DSN stations based on xephem Observer</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.Map.html#Data_Reduction.Malargue.Map" title="Data_Reduction.Malargue.Map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Map</span></code></a>(parent[, name, source])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.Map.html#Data_Reduction.Malargue.Map" title="Data_Reduction.Malargue.Map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Map</span></code></a>(parent[, name, source])</p></td>
 <td><p>Class for all the data and methods associated with a raster scan map</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.Observation.html#Data_Reduction.Malargue.Observation" title="Data_Reduction.Malargue.Observation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observation</span></code></a>(parent)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.Observation.html#Data_Reduction.Malargue.Observation" title="Data_Reduction.Malargue.Observation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observation</span></code></a>(parent)</p></td>
 <td><p>Class for any group of data for a single purpose.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Quasar</span></code>(name)</p></td>
-<td><p>ephem.FixedBody() with “J” or “B” name</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.Session.html#Data_Reduction.Malargue.Session" title="Data_Reduction.Malargue.Session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Session</span></code></a>(parent, year, doy[, plotter])</p></td>
 <td><p>Class for an observing session on a given year and DOY</p></td>

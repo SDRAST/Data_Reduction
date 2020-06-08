@@ -76,7 +76,7 @@
 <em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.Malargue.</code><code class="sig-name descname">Session</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="n">year</span></em>, <em class="sig-param"><span class="n">doy</span></em>, <em class="sig-param"><span class="n">plotter</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Session" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Class for an observing session on a given year and DOY</p>
-<dl>
+<dl class="simple">
 <dt>Public Attributes::</dt><dd><p>boresights    - dict keyed on ‘xpwr_cfg_id’ with 2D arrays for scan metadata
 bs_channels   - dict keyed on ‘xpwr_cfg_id’ with lists of active channels
 bs_data       - dict keyed on ‘xpwr_cfg_id’ with 2D rrays for ‘tlog’ data
@@ -88,14 +88,13 @@ session_dir   - path to results from this session
 xpwr_metadata - 2D array with data for each ‘xpwr’ configuration
 year          - year for session</p>
 </dd>
-<dt>Notes on Data Arrays::</dt><dd><ul>
-<li><p>‘boresights’ 2D-arrays have a row for each scan of the boresight and
-columns for:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">0</span> <span class="o">-</span> <span class="s1">&#39;xscan_id&#39;</span><span class="p">,</span>
-<span class="mi">1</span> <span class="o">-</span> <span class="s1">&#39;xpwr_cfg_id&#39;</span><span class="p">,</span> <span class="ow">and</span>
-<span class="mi">2</span> <span class="o">-</span> <span class="s1">&#39;epoch&#39;</span><span class="o">.</span>
-</pre></div>
-</div>
+<dt>Notes on Data Arrays::</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>‘boresights’ 2D-arrays have a row for each scan of the boresight and columns for::</dt><dd><p>0 - ‘xscan_id’,
+1 - ‘xpwr_cfg_id’, and
+2 - ‘epoch’.</p>
+</dd>
+</dl>
 </li>
 <li><dl class="simple">
 <dt>‘bs_data’ 2D-arrays have a row for each ‘tlog’ row and columns for::</dt><dd><p>0 - UNIX time,
@@ -203,26 +202,27 @@ columns for:</p>
 <p>This creates a dictionary keyed with channel number and returns a dictionary
 of the receiver configuration, keyed with specified in the columns, that was
 in effect at the given time.</p>
-<dl class="simple">
-<dt>The columns in the ‘rss_cfg’ table are::</dt><dd><p>rss_cfg_id - primary key
-year       -
-doy        -
-utc        -
-epoch      - UNIX time
-chan       -
-sky_freq   -
-feed       -
-pol        -
-nd         -
-if_mode    -
-if_bw      -
-bb_bw      -
-fiber_chan -</p>
-</dd>
-</dl>
+<p>The columns in the ‘rss_cfg’ table are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rss_cfg_id</span> <span class="o">-</span> <span class="n">primary</span> <span class="n">key</span>
+<span class="n">year</span>       <span class="o">-</span>
+<span class="n">doy</span>        <span class="o">-</span>
+<span class="n">utc</span>        <span class="o">-</span>
+<span class="n">epoch</span>      <span class="o">-</span> <span class="n">UNIX</span> <span class="n">time</span>
+<span class="n">chan</span>       <span class="o">-</span>
+<span class="n">sky_freq</span>   <span class="o">-</span>
+<span class="n">feed</span>       <span class="o">-</span>
+<span class="n">pol</span>        <span class="o">-</span>
+<span class="n">nd</span>         <span class="o">-</span>
+<span class="n">if_mode</span>    <span class="o">-</span>
+<span class="n">if_bw</span>      <span class="o">-</span>
+<span class="n">bb_bw</span>      <span class="o">-</span>
+<span class="n">fiber_chan</span> <span class="o">-</span>
+</pre></div>
+</div>
 <p>Returns a dict of dicts keyed on column name, where the sub-dicts are keyed
 on channel number.</p>
 <p class="rubric">Notes</p>
+<p><strong>Logic</strong></p>
 <p>The challenge here is to get the latest configuration data for each channel
 at or prior to the specified time.  That channel may have been configured on
 the same day or a prior day. The method we’ll use is to find the ID of last
