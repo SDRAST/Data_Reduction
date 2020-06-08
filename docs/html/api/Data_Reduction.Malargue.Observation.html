@@ -76,23 +76,54 @@
 <em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.Malargue.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Observation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Class for any group of data for a single purpose.</p>
-<dl class="simple">
-<dt>Attributes::</dt><dd><p>channels - active channels
-conv_cfg - converter configuration
-data     - result of get_data_from_tlogs()
-end      - provided by the subclasses
-logger   - logging.Logger instance
-parent   - a collection or group of observations
-rss_cfg  - receiver configuration
-start    - provided by the subclasses</p>
-</dd>
-<dt>Methods::</dt><dd><p>get_active_channels - returns channels which took tlog data during this map
-get_conv_config
-get_data_from_tlogs - re-organizes tlog table data into map form
-get_offsets
-get_channel_attenuation</p>
-</dd>
-</dl>
+<dl class="py attribute">
+<dt id="Data_Reduction.Malargue.Observation.channels">
+<code class="sig-name descname">channels</code><a class="headerlink" href="#Data_Reduction.Malargue.Observation.channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>active channels</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Data_Reduction.Malargue.Observation.conv_cfg">
+<code class="sig-name descname">conv_cfg</code><a class="headerlink" href="#Data_Reduction.Malargue.Observation.conv_cfg" title="Permalink to this definition">¶</a></dt>
+<dd><p>converter configuration</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Data_Reduction.Malargue.Observation.data">
+<code class="sig-name descname">data</code><a class="headerlink" href="#Data_Reduction.Malargue.Observation.data" title="Permalink to this definition">¶</a></dt>
+<dd><p>result of <cite>get_data_from_logs()</cite></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Data_Reduction.Malargue.Observation.end">
+<code class="sig-name descname">end</code><a class="headerlink" href="#Data_Reduction.Malargue.Observation.end" title="Permalink to this definition">¶</a></dt>
+<dd><p>observation end time, provided by the subclasses</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Data_Reduction.Malargue.Observation.logger">
+<code class="sig-name descname">logger</code><a class="headerlink" href="#Data_Reduction.Malargue.Observation.logger" title="Permalink to this definition">¶</a></dt>
+<dd><p><cite>logging.Logger</cite> instance</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Data_Reduction.Malargue.Observation.parent">
+<code class="sig-name descname">parent</code><a class="headerlink" href="#Data_Reduction.Malargue.Observation.parent" title="Permalink to this definition">¶</a></dt>
+<dd><p>‘Session` instance, a collection or group of observations</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Data_Reduction.Malargue.Observation.rss_cfg">
+<code class="sig-name descname">rss_cfg</code><a class="headerlink" href="#Data_Reduction.Malargue.Observation.rss_cfg" title="Permalink to this definition">¶</a></dt>
+<dd><p>receiver configuration</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Data_Reduction.Malargue.Observation.start">
+<code class="sig-name descname">start</code><a class="headerlink" href="#Data_Reduction.Malargue.Observation.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>observation start time,  provided by the subclasses</p>
+</dd></dl>
+
 <p class="rubric">Methods Summary</p>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -101,7 +132,7 @@ get_channel_attenuation</p>
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Observation.get_active_channels" title="Data_Reduction.Malargue.Observation.get_active_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_active_channels</span></code></a>()</p></td>
-<td><p></p></td>
+<td><p>Returns IDs of channels which took data during this observation</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Observation.get_data_from_logs" title="Data_Reduction.Malargue.Observation.get_data_from_logs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data_from_logs</span></code></a>()</p></td>
 <td><p>Gets the data for the specified channel and polarization for this observation</p></td>
@@ -115,7 +146,8 @@ get_channel_attenuation</p>
 <dl class="py method">
 <dt id="Data_Reduction.Malargue.Observation.get_active_channels">
 <code class="sig-name descname">get_active_channels</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Observation.get_active_channels" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Returns IDs of channels which took data during this observation</p>
+</dd></dl>
 
 <dl class="py method">
 <dt id="Data_Reduction.Malargue.Observation.get_data_from_logs">

@@ -56,21 +56,24 @@ class Observation(object):
   """
   Class for any group of data for a single purpose.
   
-  Attributes::
-    channels - active channels
-    conv_cfg - converter configuration
-    data     - result of get_data_from_tlogs()
-    end      - provided by the subclasses
-    logger   - logging.Logger instance
-    parent   - a collection or group of observations
-    rss_cfg  - receiver configuration
-    start    - provided by the subclasses
-  Methods::
-    get_active_channels - returns channels which took tlog data during this map 
-    get_conv_config   
-    get_data_from_tlogs - re-organizes tlog table data into map form
-    get_offsets
-    get_channel_attenuation
+  Attributes
+  ----------
+  channels
+    active channels
+  conv_cfg
+    converter configuration
+  data
+    result of `get_data_from_logs()`
+  end
+    observation end time, provided by the subclasses
+  logger
+    `logging.Logger` instance
+  parent
+    'Session` instance, a collection or group of observations
+  rss_cfg
+    receiver configuration
+  start
+    observation start time,  provided by the subclasses
   """
   def __init__(self, parent):
     """
@@ -80,6 +83,7 @@ class Observation(object):
 
   def get_active_channels(self):
     """
+    Returns IDs of channels which took data during this observation
     """
     self.channels = None # some or all of ["XL", "XR", "KaL", "KaR"]
     return self.channels
