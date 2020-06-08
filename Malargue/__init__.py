@@ -58,21 +58,22 @@ class Observation(object):
   
   Attributes
   ==========
-  channels
+  
+  ``channels``
     active channels
-  conv_cfg
+  ``conv_cfg``
     converter configuration
-  data
-    result of `get_data_from_logs()`
-  end
+  ``data``
+    result of ``get_data_from_logs()``
+  ``end``
     observation end time, provided by the subclasses
-  logger
-    `logging.Logger` instance
-  parent
-    'Session` instance, a collection or group of observations
-  rss_cfg
+  ``logger``
+    ``logging.Logger`` instance
+  ``parent``
+    ``Session`` instance, a collection or group of observations
+  ``rss_cfg``
     receiver configuration
-  start
+  ``start``
     observation start time,  provided by the subclasses
   """
   def __init__(self, parent):
