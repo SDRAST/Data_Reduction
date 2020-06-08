@@ -57,7 +57,7 @@ class Observation(object):
   Class for any group of data for a single purpose.
   
   Attributes
-  ----------
+  ==========
   channels
     active channels
   conv_cfg
@@ -77,6 +77,7 @@ class Observation(object):
   """
   def __init__(self, parent):
     """
+    Initialize an Observation object
     """
     self.logger = logging.getLogger(parent.logger.name+".Observation")
     self.session = parent
@@ -150,9 +151,9 @@ class Observation(object):
     the time of each sample. IT SEEMS LIKE A GOOD IDEA TO DO THIS FOR PLANETS
     ALSO.
     
-    This adds elements with keys 'xdec_offset' and 'dec_offset' to the
-    attribute 'data'.  If this attribute does not exist then
-    'get_data_from_tlogs' is called first
+    This adds elements with keys `xdec_offset` and `dec_offset` to the
+    attribute `data`.  If this attribute does not exist then
+    `get_data_from_logs` is called first.
 
     @param source : source at map center
     @type  source : ephem source instance
