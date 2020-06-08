@@ -23,6 +23,7 @@ Data_Reduction.DSN.GAVRT
 cannot be handled by ``automodapi`` right now.  Needs fixing.
 .. automodapi:: Data_Reduction.DSN.SAO
 .. automodapi:: Data_Reduction.FITS
+.. automodapi:: Data_Reduction.Malargue
 .. automodapi:: Data_Reduction.boresight_fitter
 .. automodapi:: Data_Reduction.hyperfine_fit
 Data_Reduction.maps
