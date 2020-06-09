@@ -483,23 +483,19 @@ creating a simple 1-table file is this:</p>
 <p>Classes for reducing observations</p>
 <p>This is barely started by extracting from GAVRT.  UNDER DEVELOPMENT</p>
 <p>An <code class="docutils literal notranslate"><span class="pre">Observation</span></code> object comprises a data structure in this form:</p>
-<blockquote>
-<div><p>UNIXtime     NP.float (N,)           seconds since 1970.0
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>UNIXtime     NP.float (N,)           seconds since 1970.0
 azimuth      NP.float (N,)           horizon system longitude (deg)
 elevation    NP.float (N,)           horizon system latitude (deg)
 RA           NP.float (N,)           apparent topocentric right ascension
 dec          NP.float (N,)           apparent topocentric declination
-MPL_datenum  NP.float (N,)           number of days since 0001-01-01 UTC, plus 1</p>
-<blockquote>
-<div><p>({<em>e.g.</em> 0001-01-01, 06:00 is 1.25)</p>
-</div></blockquote>
-<dl class="simple">
-<dt>power       NP.float  {ch:(N,),… } or equivalent, like detector volts,</dt><dd><p>for each channel</p>
-</dd>
-</dl>
-<p>freq        float     {ch: ?}        frequency of the channel (MHz)
-pol         str       {ch: ?}        polarization of the channel</p>
-</div></blockquote>
+MPL_datenum  NP.float (N,)           number of days since 0001-01-01 UTC, plus 1
+                                     ({*e.g.* 0001-01-01, 06:00 is 1.25)
+power       NP.float  {ch:(N,),... } or equivalent, like detector volts,
+                                     for each channel
+freq        float     {ch: ?}        frequency of the channel (MHz)
+pol         str       {ch: ?}        polarization of the channel
+</pre></div>
+</div>
 <p class="rubric">Notes</p>
 <ul class="simple">
 <li><p>If <code class="docutils literal notranslate"><span class="pre">azimuth</span></code> and <code class="docutils literal notranslate"><span class="pre">elevation</span></code> are given, then apparent <code class="docutils literal notranslate"><span class="pre">RA</span></code> and <code class="docutils literal notranslate"><span class="pre">dec</span></code> are computed.</p></li>

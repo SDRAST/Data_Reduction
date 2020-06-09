@@ -4,7 +4,7 @@ Classes for reducing observations
 
 This is barely started by extracting from GAVRT.  UNDER DEVELOPMENT
 
-An ``Observation`` object comprises a data structure in this form:
+An ``Observation`` object comprises a data structure in this form::
 
   UNIXtime     NP.float (N,)           seconds since 1970.0
   azimuth      NP.float (N,)           horizon system longitude (deg)
