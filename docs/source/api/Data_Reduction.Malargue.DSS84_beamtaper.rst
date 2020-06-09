@@ -1,6 +1,6 @@
-DSS28_beamtaper
+DSS84_beamtaper
 ===============
 
 .. currentmodule:: Data_Reduction.Malargue
 
-.. autofunction:: DSS28_beamtaper
+.. autofunction:: DSS84_beamtaper

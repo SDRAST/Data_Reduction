@@ -76,54 +76,25 @@
 <em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.Malargue.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Observation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Class for any group of data for a single purpose.</p>
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">``channels``</code></dt>
-<dd><p>active channels</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">``conv_cfg``</code></dt>
-<dd><p>converter configuration</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">``data``</code></dt>
-<dd><p>result of <code class="docutils literal notranslate"><span class="pre">get_data_from_logs()</span></code></p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">``end``</code></dt>
-<dd><p>observation end time, provided by the subclasses</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">``logger``</code></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">logging.Logger</span></code> instance</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">``parent``</code></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">Session</span></code> instance, a collection or group of observations</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">``rss_cfg``</code></dt>
-<dd><p>receiver configuration</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">``start``</code></dt>
-<dd><p>observation start time,  provided by the subclasses</p>
-</dd></dl>
-
+<p><strong>Attributes</strong></p>
+<dl>
+<dt>channels<span class="classifier">list of str</span></dt><dd><p>active channels</p>
+</dd>
+<dt>conv_cfg<span class="classifier">dict</span></dt><dd><p>converter configuration</p>
+</dd>
+<dt>data<span class="classifier">dict</span></dt><dd><p>result of <code class="docutils literal notranslate"><span class="pre">get_data_from_logs()</span></code></p>
+</dd>
+<dt>end<span class="classifier">float</span></dt><dd><p>observation end UNIX time, provided by the subclasses</p>
+</dd>
+<dt>logger</dt><dd><p><code class="docutils literal notranslate"><span class="pre">logging.Logger</span></code> instance</p>
+</dd>
+<dt>parent<span class="classifier"><code class="docutils literal notranslate"><span class="pre">Session</span></code> instance</span></dt><dd><p>a collection or group of observations</p>
+</dd>
+<dt>rss_cfg<span class="classifier">dict</span></dt><dd><p>receiver configuration</p>
+</dd>
+<dt>start<span class="classifier">float</span></dt><dd><p>observation start UNIX time,  provided by the subclasses</p>
+</dd>
+</dl>
 <p class="rubric">Methods Summary</p>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -162,9 +133,9 @@
 <p>If the source is the default, the position of the Sun will be computed for
 the time of each sample. IT SEEMS LIKE A GOOD IDEA TO DO THIS FOR PLANETS
 ALSO.</p>
-<p>This adds elements with keys <cite>xdec_offset</cite> and <cite>dec_offset</cite> to the
-attribute <cite>data</cite>.  If this attribute does not exist then
-<cite>get_data_from_logs</cite> is called first.</p>
+<p>This adds elements with keys <code class="docutils literal notranslate"><span class="pre">xdec_offset</span></code> and <code class="docutils literal notranslate"><span class="pre">dec_offset</span></code> to the
+attribute <code class="docutils literal notranslate"><span class="pre">data</span></code>.  If this attribute does not exist then
+<code class="docutils literal notranslate"><span class="pre">get_data_from_logs</span></code> is called first.</p>
 <p>:param source : source at map center
 :type  source : ephem source instance</p>
 <p>:param xdec_ofst : relative X-dec position of sample

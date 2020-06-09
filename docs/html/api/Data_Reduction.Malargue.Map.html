@@ -76,24 +76,22 @@
 <em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.Malargue.</code><code class="sig-name descname">Map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">source</span><span class="o">=</span><span class="default_value">'Sun'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Map" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="Data_Reduction.Malargue.Observation.html#Data_Reduction.Malargue.Observation" title="Data_Reduction.Malargue.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.Malargue.Observation</span></code></a></p>
 <p>Class for all the data and methods associated with a raster scan map</p>
+<p>** Attributes**</p>
 <dl class="simple">
-<dt>Public attributes::</dt><dd><p>cfg         - raster configuration
-cfg_id      - entry in the raster configuration tableshape
-channels    - list of channels which took tlog data
-map_data    - dict of data from tlog table; ‘tsrc’ is dict keyed on channel
-logger      - logging.Logger object
-name        - map identifier
-raster_data - data from the raster table
-regrid      - computes map data onto a rectangular grid
-rss_cfg     - receiver configuration
-session     - observing session to which this map belongs
-start       - UNIX time at start of map
-end         - UNIX time at end of map</p>
+<dt>cfg<span class="classifier">dict</span></dt><dd><p>raster configuration</p>
 </dd>
-<dt>Public methods::</dt><dd><p>center_map          - converts map coordinates to be relative to Sun
-get_map_config      - returns a dict with the raster map configuration
-get_raster_data     - gets the data for a raster scan map used for Zplot
-get_raster_keys     - returns rasters associated with a given configuration</p>
+<dt>cfg_id<span class="classifier">int</span></dt><dd><p>entry in the raster configuration tableshape</p>
+</dd>
+<dt>map_data<span class="classifier">dict</span></dt><dd><p>data from log table; <code class="docutils literal notranslate"><span class="pre">tsrc</span></code> is dict keyed on channel</p>
+</dd>
+</dl>
+<p>logger : <code class="docutils literal notranslate"><span class="pre">logging.Logger</span></code> object</p>
+<dl class="simple">
+<dt>name<span class="classifier">str</span></dt><dd><p>map identifier</p>
+</dd>
+<dt>rss_cfg</dt><dd><p>receiver configuration</p>
+</dd>
+<dt>session</dt><dd><p>observing session to which this map belongs</p>
 </dd>
 </dl>
 <p class="rubric">Methods Summary</p>

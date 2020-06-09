@@ -480,8 +480,38 @@ creating a simple 1-table file is this:</p>
 </div>
 <div class="section" id="module-Data_Reduction.Malargue">
 <span id="data-reduction-malargue-package"></span><h2>Data_Reduction.Malargue Package<a class="headerlink" href="#module-Data_Reduction.Malargue" title="Permalink to this headline">¶</a></h2>
-<p>Classes for educing observations</p>
+<p>Classes for reducing observations</p>
 <p>This is barely started by extracting from GAVRT.  UNDER DEVELOPMENT</p>
+<p>An <code class="docutils literal notranslate"><span class="pre">Observation</span></code> object comprises a data structure in this form:</p>
+<blockquote>
+<div><p>UNIXtime     NP.float (N,)           seconds since 1970.0
+azimuth      NP.float (N,)           horizon system longitude (deg)
+elevation    NP.float (N,)           horizon system latitude (deg)
+RA           NP.float (N,)           apparent topocentric right ascension
+dec          NP.float (N,)           apparent topocentric declination
+MPL_datenum  NP.float (N,)           number of days since 0001-01-01 UTC, plus 1</p>
+<blockquote>
+<div><p>({<em>e.g.</em> 0001-01-01, 06:00 is 1.25)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>power       NP.float  {ch:(N,),… } or equivalent, like detector volts,</dt><dd><p>for each channel</p>
+</dd>
+</dl>
+<p>freq        float     {ch: ?}        frequency of the channel (MHz)
+pol         str       {ch: ?}        polarization of the channel</p>
+</div></blockquote>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">azimuth</span></code> and <code class="docutils literal notranslate"><span class="pre">elevation</span></code> are given, then apparent <code class="docutils literal notranslate"><span class="pre">RA</span></code> and <code class="docutils literal notranslate"><span class="pre">dec</span></code> are computed.</p></li>
+<li><p>IF apparent <code class="docutils literal notranslate"><span class="pre">RA</span></code> and <code class="docutils literal notranslate"><span class="pre">dec</span></code> are given, then <code class="docutils literal notranslate"><span class="pre">azimuth</span></code> and <code class="docutils literal notranslate"><span class="pre">elevation</span></code> are computed.</p></li>
+<li><p>Other items may be defined for the dict (<em>e.g</em> <code class="docutils literal notranslate"><span class="pre">RA2000</span></code>, <code class="docutils literal notranslate"><span class="pre">dec2000</span></code>) but might not be
+used by the <code class="docutils literal notranslate"><span class="pre">Observation</span></code> object.</p></li>
+<li><p>If the mean astrometic geocentric position is given, then the apparent
+topocentric position is computed, and then <code class="docutils literal notranslate"><span class="pre">azimuth</span></code> and <code class="docutils literal notranslate"><span class="pre">elevation</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MPL_datenum</span></code> is computed from <code class="docutils literal notranslate"><span class="pre">UNIXtime</span></code>.</p></li>
+<li><p>The telescope position and other attributes are determined from its DSN
+number desigbation, <em>e.g.</em> <code class="docutils literal notranslate"><span class="pre">DSS(28)</span></code>.</p></li>
+</ul>
 <div class="section" id="id4">
 <h3>Functions<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
@@ -490,10 +520,10 @@ creating a simple 1-table file is this:</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.DSS28_beamtaper.html#Data_Reduction.Malargue.DSS28_beamtaper" title="Data_Reduction.Malargue.DSS28_beamtaper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DSS28_beamtaper</span></code></a>(freq)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.DSS84_beamtaper.html#Data_Reduction.Malargue.DSS84_beamtaper" title="Data_Reduction.Malargue.DSS84_beamtaper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DSS84_beamtaper</span></code></a>(freq)</p></td>
 <td><p>ad hoc fit to beamwidth vs frequency plot</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.DSS28_beamwidth.html#Data_Reduction.Malargue.DSS28_beamwidth" title="Data_Reduction.Malargue.DSS28_beamwidth"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DSS28_beamwidth</span></code></a>(freq)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.DSS84_beamwidth.html#Data_Reduction.Malargue.DSS84_beamwidth" title="Data_Reduction.Malargue.DSS84_beamwidth"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DSS84_beamwidth</span></code></a>(freq)</p></td>
 <td><p>beamwidth in deg.</p></td>
 </tr>
 </tbody>
