@@ -1,8 +1,35 @@
 # -*- coding: utf-8 -*-
 """
-Classes for educing observations
+Classes for reducing observations
 
 This is barely started by extracting from GAVRT.  UNDER DEVELOPMENT
+
+An ``Observation`` object comprises a data structure in this form:
+
+  UNIXtime     NP.float (N,)           seconds since 1970.0
+  azimuth      NP.float (N,)           horizon system longitude (deg)
+  elevation    NP.float (N,)           horizon system latitude (deg)
+  RA           NP.float (N,)           apparent topocentric right ascension
+  dec          NP.float (N,)           apparent topocentric declination
+  MPL_datenum  NP.float (N,)           number of days since 0001-01-01 UTC, plus 1
+                                       ({*e.g.* 0001-01-01, 06:00 is 1.25)
+  power       NP.float  {ch:(N,),... } or equivalent, like detector volts,
+                                       for each channel
+  freq        float     {ch: ?}        frequency of the channel (MHz)
+  pol         str       {ch: ?}        polarization of the channel
+
+Notes
+=====
+
+  * If ``azimuth`` and ``elevation`` are given, then apparent ``RA`` and ``dec`` are computed.
+  * IF apparent ``RA`` and ``dec`` are given, then ``azimuth`` and ``elevation`` are computed.
+  * Other items may be defined for the dict (*e.g* ``RA2000``, ``dec2000``) but might not be
+    used by the ``Observation`` object.
+  * If the mean astrometic geocentric position is given, then the apparent 
+    topocentric position is computed, and then ``azimuth`` and ``elevation``.
+  * ``MPL_datenum`` is computed from ``UNIXtime``.
+  * The telescope position and other attributes are determined from its DSN
+    number desigbation, *e.g.* ``DSS(28)``.  
 """
 import pickle as pickle
 import datetime
@@ -36,7 +63,7 @@ taper        = 12 # dB
 hpbw         = RA.HPBW(taper, wl_min, 34)*180/math.pi # deg
 default_step = hpbw/3.
 
-def DSS28_beamtaper(freq):
+def DSS84_beamtaper(freq):
   """
   ad hoc fit to beamwidth vs frequency plot
   """
@@ -46,35 +73,34 @@ def DSS28_beamtaper(freq):
     taper = 50*(log10(freq)-log10(7))
   return taper
   
-def DSS28_beamwidth(freq):
+def DSS84_beamwidth(freq):
   """
   beamwidth in deg. with edge taper
   """
-  return RA.HPBW(DSS28_beamtaper(freq), 0.3/float(freq), 34)*180/math.pi
+  return RA.HPBW(DSS84_beamtaper(freq), 0.3/float(freq), 34)*180/math.pi
 
 class Observation(object):
   """
   Class for any group of data for a single purpose.
   
-  Attributes
-  ==========
+  **Attributes**
   
-  ``channels``
+  channels : list of str
     active channels
-  ``conv_cfg``
+  conv_cfg : dict
     converter configuration
-  ``data``
+  data : dict
     result of ``get_data_from_logs()``
-  ``end``
-    observation end time, provided by the subclasses
-  ``logger``
+  end : float
+    observation end UNIX time, provided by the subclasses
+  logger
     ``logging.Logger`` instance
-  ``parent``
-    ``Session`` instance, a collection or group of observations
-  ``rss_cfg``
+  parent : ``Session`` instance
+    a collection or group of observations
+  rss_cfg : dict
     receiver configuration
-  ``start``
-    observation start time,  provided by the subclasses
+  start : float
+    observation start UNIX time,  provided by the subclasses
   """
   def __init__(self, parent):
     """
@@ -152,9 +178,9 @@ class Observation(object):
     the time of each sample. IT SEEMS LIKE A GOOD IDEA TO DO THIS FOR PLANETS
     ALSO.
     
-    This adds elements with keys `xdec_offset` and `dec_offset` to the
-    attribute `data`.  If this attribute does not exist then
-    `get_data_from_logs` is called first.
+    This adds elements with keys ``xdec_offset`` and ``dec_offset`` to the
+    attribute ``data``.  If this attribute does not exist then
+    ``get_data_from_logs`` is called first.
 
     @param source : source at map center
     @type  source : ephem source instance
@@ -204,25 +230,25 @@ class Map(Observation):
   """
   Class for all the data and methods associated with a raster scan map
   
-  Public attributes::
-    cfg         - raster configuration
-    cfg_id      - entry in the raster configuration tableshape
-    channels    - list of channels which took tlog data
-    map_data    - dict of data from tlog table; 'tsrc' is dict keyed on channel
-    logger      - logging.Logger object
-    name        - map identifier
-    raster_data - data from the raster table
-    regrid      - computes map data onto a rectangular grid
-    rss_cfg     - receiver configuration
-    session     - observing session to which this map belongs
-    start       - UNIX time at start of map
-    end         - UNIX time at end of map
+  ** Attributes**
+  
+  cfg : dict
+    raster configuration
+  cfg_id : int
+    entry in the raster configuration tableshape
     
-  Public methods::
-    center_map          - converts map coordinates to be relative to Sun
-    get_map_config      - returns a dict with the raster map configuration
-    get_raster_data     - gets the data for a raster scan map used for Zplot
-    get_raster_keys     - returns rasters associated with a given configuration
+  map_data : dict
+    data from log table; ``tsrc`` is dict keyed on channel
+    
+  logger : ``logging.Logger`` object
+  
+  name : str
+    map identifier
+
+  rss_cfg
+    receiver configuration
+  session
+    observing session to which this map belongs
   """
   def __init__(self, parent, name=None, source="Sun"):
     """
@@ -401,7 +427,7 @@ class BoresightScan(Observation):
     self.logger.debug("fit_gaussian: peak at index %d", beam_index)
     beam_center = x[beam_index]
     self.logger.debug("fit_gaussian: peak at x = %f", beam_center)
-    beamwidth = DSS28_beamwidth(self.data['freq'][channel]/1000)
+    beamwidth = DSS84_beamwidth(self.data['freq'][channel]/1000)
     self.logger.debug("fit_gaussian: beamwidth = %f deg", beamwidth)
     lower_limit = beam_center - beam_limit*beamwidth # source scan starts here
     upper_limit = beam_center + beam_limit*beamwidth # source scan ends here
