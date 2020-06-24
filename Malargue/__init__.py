@@ -6,25 +6,32 @@ This is barely started by extracting from GAVRT.  UNDER DEVELOPMENT
 
 An ``Observation`` object comprises a data structure in this form::
 
-  UNIXtime     NP.float (N,)           seconds since 1970.0
-  azimuth      NP.float (N,)           horizon system longitude (deg)
-  elevation    NP.float (N,)           horizon system latitude (deg)
-  RA           NP.float (N,)           apparent topocentric right ascension
-  dec          NP.float (N,)           apparent topocentric declination
-  MPL_datenum  NP.float (N,)           number of days since 0001-01-01 UTC, plus 1
-                                       ({*e.g.* 0001-01-01, 06:00 is 1.25)
-  power       NP.float  {ch:(N,),... } or equivalent, like detector volts,
-                                       for each channel
-  freq        float     {ch: ?}        frequency of the channel (MHz)
-  pol         str       {ch: ?}        polarization of the channel
+  UNIXtime     NP.float (N,)            seconds since 1970.0
+  azimuth      NP.float (N,)            horizon system longitude (deg)
+  elevation    NP.float (N,)            horizon system latitude (deg)
+  RA           NP.float (N,)            apparent topocentric right ascension
+  dec          NP.float (N,)            apparent topocentric declination
+  MPL_datenum  NP.float (N,)            number of days since 0001-01-01 UTC, plus 1
+                                        ({*e.g.* 0001-01-01, 06:00 is 1.25)
+  power        NP.float {ch:(N,),... }  or equivalent, like detector volts,
+                                        for each channel
+  freq         float    {ch: ?}         frequency of the channel (MHz)
+  pol          str      {ch: ?}         polarization of the channel
 
 Notes
 =====
 
-  * If ``azimuth`` and ``elevation`` are given, then apparent ``RA`` and ``dec`` are computed.
-  * IF apparent ``RA`` and ``dec`` are given, then ``azimuth`` and ``elevation`` are computed.
-  * Other items may be defined for the dict (*e.g* ``RA2000``, ``dec2000``) but might not be
-    used by the ``Observation`` object.
+  * If the data are provided as a 2D NP array, then each provided parameter must
+    be a column and a dict must be provided to map parameter name (defined above)
+    to column number.
+  * If the data are provided as a structured NP array, then the ``names`` item
+    of the array must use those defined above.
+  * If ``azimuth`` and ``elevation`` are given, then apparent ``RA`` and ``dec``
+    are computed.
+  * IF apparent ``RA`` and ``dec`` are given, then ``azimuth`` and ``elevation``
+    are computed.
+  * Other items may be defined for the dict (*e.g* ``RA2000``, ``dec2000``) but 
+    might not be used by the ``Observation`` object.
   * If the mean astrometic geocentric position is given, then the apparent 
     topocentric position is computed, and then ``azimuth`` and ``elevation``.
   * ``MPL_datenum`` is computed from ``UNIXtime``.
@@ -106,68 +113,100 @@ class Observation(object):
     """
     Initialize an Observation object
     """
-    self.logger = logging.getLogger(parent.logger.name+".Observation")
+    if parent:
+        loggername = parent.logger.name+".Observation"
+    else:
+        loggername = "ObservationLogger"
+    self.logger = logging.getLogger(loggername)
     self.session = parent
 
-  def get_active_channels(self):
+  def get_active_channels(self, filename):
     """
     Returns IDs of channels which took data during this observation
+    
+    This will be the names of the power columns. For now we'll allow one or
+    more of "XL", "XR", "KaL", "KaR", or "power"
     """
-    self.channels = None # some or all of ["XL", "XR", "KaL", "KaR"]
+    allowed = ["XL", "XR", "KaL", "KaR", "power"]
+    try:
+        self.logger.debug("get_active_channels: %s", self.channels)
+    except:
+        self.channels = []
+        fd = open(filename,"rt")
+        self.names = fd.readline().strip().split()
+        self.logger.debug("get_active_channels: columns=%s", self.names)
+        for name in self.names:
+            if name in allowed:
+                self.channels.append(name)
+        fd.close()
     return self.channels
     
-  def get_data_from_logs(self):
+  def get_data_from_logs(self, filename):
     """
     Gets the data for the specified channel and polarization for this observation
     """
     try:
+      # for GAVRT compatibility; not not happen here
       chan_list = self.channels
     except:
-      self.channels = self.get_active_channels()
-    if self.channels.any():
+      self.channels = self.get_active_channels(filename)
+    if self.channels:
       pass
     else:
       self.logger.warning("get_data_from_logs: this map has no active channels")
       return None
-    self.data = {}
-    data = None # replace with numpy.loadtxt with a column for each channel
-    for channel in self.channels:
-      ch_index = list(self.channels).index(channel)
-      if ch_index == 0:
-        # first channel only: these are common to all channels
-        # actual columns depend on way file is structured
-        self.data['UNIXtime']    = data[:,0].astype(float)
-        self.data['azimuth']     = data[:,1].astype(float)
-        self.data['elevation']   = data[:,2].astype(float)
-        self.data['RA']          = []
-        self.data['declination'] = []
-        self.data['MPL_datenum'] = [] # needed for time series plots
-        self.data['power']  = {}
-        self.data['freq']        = {}
-        self.data['pol']         = {}
-        # this only needed if coords are az/el
-        for index in range(len(self.data['UNIXtime'])):
-          dt = datetime.datetime.utcfromtimestamp(
+    # Now we need to be able to handle data in various formats; do plain text
+    # for now
+    filetype = "text"
+    if filetype=="text":
+        data = NP.loadtxt(filename, skiprows=1)
+        self.data = {}
+        self.data['UNIXtime'] = data[:,self.names.index('UNIXtime')].astype(float)
+        self.data['RA2000']   = data[:,self.names.index('RA2000')].astype(float)
+        self.data['dec2000']  = data[:,self.names.index('dec2000')].astype(float)
+        for channel in self.channels:
+            ch_index = list(self.names).index(channel)
+            self.data[channel] = data[:,ch_index].astype(float)
+    else:
+        # the following support GAVRT
+        data = None # replace with numpy.loadtxt with a column for each channel
+        for channel in self.channels:
+            ch_index = list(self.names).index(channel)
+            if ch_index == 0:
+                # first channel only: these are common to all channels
+                # actual columns depend on way file is structured
+                self.data['UNIXtime']    = data[:,0].astype(float)
+                self.data['azimuth']     = data[:,1].astype(float)
+                self.data['elevation']   = data[:,2].astype(float)
+                self.data['RA']          = []
+                self.data['declination'] = []
+                self.data['MPL_datenum'] = [] # needed for time series plots
+                self.data['power']  = {}
+                self.data['freq']        = {}
+                self.data['pol']         = {}
+                # this only needed if coords are az/el
+                for index in range(len(self.data['UNIXtime'])):
+                    dt = datetime.datetime.utcfromtimestamp(
                                      self.data['UNIXtime'][index])
-          time_tuple = (dt.year,
+                    time_tuple = (dt.year,
                         A.day_of_year(dt.year,dt.month,dt.day)
                         + (  dt.hour
                            + dt.minute/60.
                            + dt.second/3600.
                            + dt.microsecond/3600./1e6)/24.)
-          ra, dec = A.AzEl_to_RaDec(
+                    ra, dec = A.AzEl_to_RaDec(
                              float(self.data['azimuth'][index]),
                              float(self.data['elevation'][index]),
                              latitude,
                              longitude,
                              time_tuple)
-          self.data['RA'].append(ra)
-          self.data['declination'].append(dec)
-          self.data['MPL_datenum'].append(date2num(dt))
-      # only the power differs between channels
-      self.data['power'][channel]  = data[:,3].astype(float)
-      self.data['freq'][channel] = self.rss_cfg[channel]['sky_freq']
-      self.data['pol'][channel] = self.rss_cfg[channel]['pol'][0].upper()
+                    self.data['RA'].append(ra)
+                    self.data['declination'].append(dec)
+                    self.data['MPL_datenum'].append(date2num(dt))
+            # only the power differs between channels
+            self.data['power'][channel]  = data[:,3].astype(float)
+            self.data['freq'][channel] = self.rss_cfg[channel]['sky_freq']
+            self.data['pol'][channel] = self.rss_cfg[channel]['pol'][0].upper()
     return self.data
 
   def get_offsets(self, source="Sun", xdec_ofst=0., dec_ofst=0.):

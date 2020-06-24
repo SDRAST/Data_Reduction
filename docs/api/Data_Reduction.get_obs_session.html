@@ -75,13 +75,13 @@
 <dt id="Data_Reduction.get_obs_session">
 <code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">get_obs_session</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">path</span><span class="o">=</span><span class="default_value">'proj'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.get_obs_session" title="Permalink to this definition">¶</a></dt>
 <dd><p>Provides project, station, year and DOY, asking as needed.</p>
-<dl class="simple">
-<dt>It follows one of several possible paths to get to the session::</dt><dd><p>proj - path through /usr/local/projects/project
-hdf5 - path through /usr/local/RA_data/HDF5
-fits - path through /usr/local/RA_data/FITS
-wvsr - path through /data</p>
-</dd>
-</dl>
+<p>It follows one of several possible paths to get to the session:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">proj</span> <span class="o">-</span> <span class="n">path</span> <span class="n">through</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">projects</span><span class="o">/</span><span class="n">project</span>
+<span class="n">hdf5</span> <span class="o">-</span> <span class="n">path</span> <span class="n">through</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">RA_data</span><span class="o">/</span><span class="n">HDF5</span>
+<span class="n">fits</span> <span class="o">-</span> <span class="n">path</span> <span class="n">through</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">RA_data</span><span class="o">/</span><span class="n">FITS</span>
+<span class="n">wvsr</span> <span class="o">-</span> <span class="n">path</span> <span class="n">through</span> <span class="o">/</span><span class="n">data</span>
+</pre></div>
+</div>
 <p>:param project : optional name as defined in /usr/local/projects
 :type  project : str</p>
 <p>:param dss : optional station number

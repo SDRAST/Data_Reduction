@@ -9,7 +9,7 @@ import time
 
 from pylab import *
 
-from Data_Reduction.DSN.GAVRT.Mysql.dss28db import DSS28db, Map, Session
+from Data_Reduction.GAVRT.Mysql.dss28db import DSS28db, Map, Session
 from Data_Reduction.maps import plot_xdec_dec
 from DatesTimes import UnixTime_to_MPL
 

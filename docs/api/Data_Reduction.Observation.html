@@ -1,0 +1,268 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Observation &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="backup_one_line" href="Data_Reduction.DSN.backup_one_line.html" />
+    <link rel="prev" title="select_data_files" href="Data_Reduction.select_data_files.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.backup_one_line.html" title="backup_one_line"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.select_data_files.html" title="select_data_files"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.select_data_files.html"
+                        title="previous chapter">select_data_files</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.backup_one_line.html"
+                        title="next chapter">backup_one_line</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.Observation.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="observation">
+<h1>Observation<a class="headerlink" href="#observation" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Data_Reduction.Observation">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">channel_names</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">longitude</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">latitude</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>superclass for a data structure and methods</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">channel - (dict) a signal path</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">data    - (dict) table contents</code></dt>
+<dd></dd></dl>
+
+<p><strong>Reserved Column Names</strong></p>
+<p>These column names are recognized.</p>
+<p>These quantities must be present in some form:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">unixtime</span>   <span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="n">UNIX</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">sec</span>
+<span class="n">chan_name</span>  <span class="p">(</span><span class="nb">str</span><span class="p">)</span>   <span class="n">channel</span> <span class="n">name</span>
+<span class="n">integr</span>     <span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="n">integration</span> <span class="p">(</span><span class="n">exposure</span><span class="p">)</span> <span class="ow">in</span> <span class="n">sec</span>
+<span class="n">azel</span>       <span class="p">(</span><span class="nb">float</span><span class="p">,</span><span class="nb">float</span><span class="p">)</span> <span class="n">azimuth</span> <span class="ow">and</span> <span class="n">elevation</span> <span class="ow">in</span> <span class="n">decimal</span> <span class="n">deg</span>
+</pre></div>
+</div>
+<p>Alternative for <code class="docutils literal notranslate"><span class="pre">unixtime</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">year</span>       <span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="n">year</span> <span class="n">of</span> <span class="n">observation</span>
+<span class="n">doy</span>        <span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="n">day</span> <span class="n">of</span> <span class="n">year</span>
+<span class="n">utc</span>        <span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="n">HH</span><span class="p">:</span><span class="n">MM</span><span class="p">:</span><span class="n">SS</span>
+</pre></div>
+</div>
+<p>Alternative for <code class="docutils literal notranslate"><span class="pre">unixtime</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">timestr</span>    <span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="n">something</span> <span class="n">like</span> <span class="mi">2020</span><span class="o">/</span><span class="mi">06</span><span class="o">/</span><span class="mi">14</span><span class="o">/</span><span class="mi">14</span><span class="p">:</span><span class="mi">22</span><span class="p">:</span><span class="mf">21.00</span>
+</pre></div>
+</div>
+<p>Alternative for <code class="docutils literal notranslate"><span class="pre">chan_name</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">chan</span>       <span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">receiver</span> <span class="n">channel</span> <span class="n">names</span>
+</pre></div>
+</div>
+<p>Alternative for <code class="docutils literal notranslate"><span class="pre">azel</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">radec</span>      <span class="p">(</span><span class="nb">float</span><span class="p">,</span><span class="nb">float</span><span class="p">)</span> <span class="n">precessed</span> <span class="n">right</span> <span class="n">ascension</span> <span class="ow">in</span> <span class="n">decimal</span> <span class="n">hours</span> <span class="ow">and</span>
+           <span class="n">precessed</span> <span class="n">declination</span> <span class="ow">in</span> <span class="n">decimal</span> <span class="n">deg</span>
+<span class="n">radec1950</span>  <span class="p">(</span><span class="nb">float</span><span class="p">,</span><span class="nb">float</span><span class="p">)</span> <span class="n">mean</span> <span class="n">right</span> <span class="n">ascension</span> <span class="ow">in</span> <span class="n">decimal</span> <span class="n">hours</span> <span class="ow">and</span>
+           <span class="n">mean</span> <span class="n">declination</span> <span class="ow">in</span> <span class="n">decimal</span> <span class="n">deg</span> <span class="n">at</span> <span class="n">epoch</span>
+<span class="n">radec2000</span>  <span class="p">(</span><span class="nb">float</span><span class="p">,</span><span class="nb">float</span><span class="p">)</span> <span class="n">mean</span> <span class="n">right</span> <span class="n">ascension</span> <span class="ow">in</span> <span class="n">decimal</span> <span class="n">hours</span> <span class="ow">and</span>
+           <span class="n">mean</span> <span class="n">declination</span> <span class="n">at</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="n">decimal</span> <span class="n">deg</span>
+<span class="n">az</span>         <span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="n">azimuth</span> <span class="ow">in</span> <span class="n">decimal</span> <span class="n">deg</span>
+<span class="n">el</span>         <span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="n">elevation</span> <span class="ow">in</span> <span class="n">decimal</span> <span class="n">deg</span>
+<span class="n">ra</span>         <span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="n">precessed</span> <span class="n">right</span> <span class="n">ascension</span> <span class="ow">in</span> <span class="n">decimal</span> <span class="n">hours</span>
+<span class="n">dec</span>        <span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="n">precessed</span> <span class="n">declination</span> <span class="ow">in</span> <span class="n">decimal</span> <span class="n">deg</span>
+<span class="n">ra1950</span>     <span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="n">mean</span> <span class="n">right</span> <span class="n">ascension</span> <span class="ow">in</span> <span class="n">decimal</span> <span class="n">hours</span> <span class="n">at</span> <span class="n">epoch</span>
+<span class="n">dec1950</span>    <span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="n">mean</span> <span class="n">declination</span> <span class="ow">in</span> <span class="n">decimal</span> <span class="n">deg</span> <span class="n">at</span> <span class="n">epoch</span>
+<span class="n">ra2000</span>     <span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="n">mean</span> <span class="n">right</span> <span class="n">ascension</span> <span class="ow">in</span> <span class="n">decimal</span> <span class="n">hours</span> <span class="n">at</span> <span class="n">epoch</span>
+<span class="n">dec2000</span>    <span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="n">mean</span> <span class="n">declination</span> <span class="ow">in</span> <span class="n">decimal</span> <span class="n">deg</span> <span class="n">at</span> <span class="n">epoch</span>
+</pre></div>
+</div>
+<p>Optional:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>tsys       (float) power level if only a single channel
+Top        (float) alternative for ``tsys``
+diode      (float) 0 or power in K (integers OK)
+level      (float) (unidentified -- in ``tlog`` table)
+cryotemp   (float) cryostat temp in K
+windspeed  (float) km/hr
+winddir    (float) deg
+ambtemp    (float) deg C
+pressure   (float) mbar
+</pre></div>
+</div>
+<p>Columns to be computed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>mpldatenum (float) matplotlib ``datenum``
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">data</span></code> structure is a dict.</p></li>
+<li><p>The value of a <code class="docutils literal notranslate"><span class="pre">data</span></code> item is either a numpy array or a object
+like <code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">int</span></code>, or <code class="docutils literal notranslate"><span class="pre">str</span></code>.</p></li>
+<li><p>The keys have reserved words defined above and will be lowercase.</p></li>
+<li><p>Items with other keys may be added, typically by a child class.</p></li>
+<li><p>Coordinates shall be in pairs, <cite>e.g. ``azel`</cite>, <code class="docutils literal notranslate"><span class="pre">radec</span></code>. (This way you
+never get one without the other.)</p></li>
+</ul>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Observation.load_text_with_header" title="Data_Reduction.Observation.load_text_with_header"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_text_with_header</span></code></a>(filename[, delimiter, …])</p></td>
+<td><p>Takes a text table with headers and converts it into a structured numpy array.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Observation.sideband_separate" title="Data_Reduction.Observation.sideband_separate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sideband_separate</span></code></a>(data)</p></td>
+<td><p>Converts a complex spectrum array and returns two reals with USB and LSB</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Observation.unpack_to_complex" title="Data_Reduction.Observation.unpack_to_complex"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unpack_to_complex</span></code></a>(rawdata)</p></td>
+<td><p>Converts a sequence of alternating real/imag samples to complex</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="Data_Reduction.Observation.load_text_with_header">
+<code class="sig-name descname">load_text_with_header</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="o">=</span><span class="default_value">' '</span></em>, <em class="sig-param"><span class="n">channels</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ignore</span><span class="o">=</span><span class="default_value">[]</span></em>, <em class="sig-param"><span class="n">skip_header</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">names</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">aliases</span><span class="o">=</span><span class="default_value">{'epoch': 'unixtime'}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.load_text_with_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a text table with headers and converts it into a structured numpy
+array. That means that a column can be extracted using <cite>data[label]</cite>.</p>
+<p>Ideally, there must be a header word for each column and the separator must
+not be  ambiguous, for example, a space if the column headers also include
+spaces.  However, the <code class="docutils literal notranslate"><span class="pre">numpy</span></code> function <code class="docutils literal notranslate"><span class="pre">genfromtxt()</span></code> is very flexible.
+Here is an example of reading DSS-28 text files from solar observations in
+2012, 9 columns but 7 header words, when database access was not yet
+practical:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="kn">from</span> <span class="nn">Data_Reduction</span> <span class="kn">import</span> <span class="n">Observation</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="kn">from</span> <span class="nn">Astronomy.DSN_coordinates</span> <span class="kn">import</span> <span class="n">DSS</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">4</span><span class="p">]:</span> <span class="n">tel</span> <span class="o">=</span> <span class="n">DSS</span><span class="p">(</span><span class="mi">28</span><span class="p">)</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">Observation</span><span class="p">(</span><span class="n">longitude</span><span class="o">=</span><span class="n">tel</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">latitude</span><span class="o">=</span><span class="n">tel</span><span class="o">.</span><span class="n">lat</span><span class="p">)</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">6</span><span class="p">]:</span> <span class="n">obs</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">7</span><span class="p">]:</span> <span class="n">obs</span><span class="o">.</span><span class="n">load_text_with_header</span><span class="p">(</span><span class="s1">&#39;t12127.10&#39;</span><span class="p">,</span>
+                <span class="n">delimiter</span><span class="o">=</span><span class="p">[</span><span class="mi">17</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">6</span><span class="p">],</span>
+                <span class="n">names</span><span class="o">=</span><span class="s2">&quot;UTC Epoch Chan Tsys Int Az El Diode Level&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span>
+                <span class="n">skip_header</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">names</span></code> string was just copied by hand from the first line in the
+file. It could also be done with <code class="docutils literal notranslate"><span class="pre">file.readline()</span></code>.</p>
+<p>By default, columns with unknown names are assumed to be power from the
+channel whose name is the column name. Columns that have unknown names
+(i.e. not in ‘reserved’) must have their names in ‘ignore’.</p>
+<p>:param filename : name of the data file
+:type  filename : str</p>
+<p>:param delimiter : column separator
+:type  delimiter : str</p>
+<p>:param aliases : alternative names for keywords
+:type  aliases : dict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>column headers (str), data array(str)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.Observation.sideband_separate">
+<code class="sig-name descname">sideband_separate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.sideband_separate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a complex spectrum array and returns two reals with USB and LSB</p>
+<p>This applies a Hilbert transform to the complex data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.Observation.unpack_to_complex">
+<code class="sig-name descname">unpack_to_complex</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rawdata</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.unpack_to_complex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a sequence of alternating real/imag samples to complex</p>
+<p>:param rawdata : alternating real and imaginary bytes
+:type  rawdata : numpy array of signed int8</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>numpy array of complex</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.backup_one_line.html" title="backup_one_line"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.select_data_files.html" title="select_data_files"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

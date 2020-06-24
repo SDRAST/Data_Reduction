@@ -2,37 +2,402 @@
 """
 Modules to support data reduction in Python.
 
-A lot of the modules in DSN need work because of the change from Observatory
-to MonitorControl.
+Note
+====
+These provides the base class ``Observation``. IN PROGRESS!  The definition
+of the keywords is done.
 """
 # standard Python modules
 import datetime
 import glob
 import logging
 import math
-import numpy
+import matplotlib.dates as MPLd
+import numpy as NP
 import os
 import re
 import readline
 import scipy.fftpack
 
-from numpy import array, argmin, argmax, loadtxt, mean, ndarray, sqrt, var
-from os.path import basename, isdir, splitext
-
+import Astronomy as A
+import DatesTimes as DT
 from local_dirs import fits_dir, hdf5_dir, projects_dir, wvsr_dir
-from support import nearest_index # for older code
-from support.text import select_files
+import support
 
 # enable raw_input Tab completion
 readline.parse_and_bind("tab: complete")
 
-logger = logging.getLogger(__name__) # module logger
+module_logger = logging.getLogger(__name__) # module logger
 
+class Observation(object):
+  """
+  superclass for a data structure and methods
+  
+  Attributes
+  ==========
+    channel - (dict) a signal path
+    data    - (dict) table contents
+  
+  **Reserved Column Names**
+  
+  These column names are recognized.
+  
+  These quantities must be present in some form::
+  
+    unixtime   (float) UNIX time in sec
+    chan_name  (str)   channel name
+    integr     (float) integration (exposure) in sec
+    azel       (float,float) azimuth and elevation in decimal deg
+    
+  Alternative for ``unixtime``::
+  
+    year       (int) year of observation 
+    doy        (int) day of year
+    utc        (str) HH:MM:SS
+  
+  Alternative for ``unixtime``::
+  
+    timestr    (str) something like 2020/06/14/14:22:21.00
+  
+  Alternative for ``chan_name``::
+  
+    chan       (int) index in receiver channel names
+
+  Alternative for ``azel``::
+  
+    radec      (float,float) precessed right ascension in decimal hours and
+               precessed declination in decimal deg
+    radec1950  (float,float) mean right ascension in decimal hours and
+               mean declination in decimal deg at epoch
+    radec2000  (float,float) mean right ascension in decimal hours and
+               mean declination at epoch in decimal deg
+    az         (float) azimuth in decimal deg
+    el         (float) elevation in decimal deg
+    ra         (float) precessed right ascension in decimal hours
+    dec        (float) precessed declination in decimal deg
+    ra1950     (float) mean right ascension in decimal hours at epoch
+    dec1950    (float) mean declination in decimal deg at epoch
+    ra2000     (float) mean right ascension in decimal hours at epoch
+    dec2000    (float) mean declination in decimal deg at epoch
+  Optional::
+  
+    tsys       (float) power level if only a single channel
+    Top        (float) alternative for ``tsys``
+    diode      (float) 0 or power in K (integers OK)
+    level      (float) (unidentified -- in ``tlog`` table)
+    cryotemp   (float) cryostat temp in K
+    windspeed  (float) km/hr
+    winddir    (float) deg
+    ambtemp    (float) deg C
+    pressure   (float) mbar
+  
+  Columns to be computed::
+  
+    mpldatenum (float) matplotlib ``datenum``
+  
+  Notes
+  =====
+  * The ``data`` structure is a dict.
+  * The value of a ``data`` item is either a numpy array or a object 
+    like ``float``, ``int``, or ``str``.
+  * The keys have reserved words defined above and will be lowercase.
+  * Items with other keys may be added, typically by a child class.
+  * Coordinates shall be in pairs, `e.g. ``azel``, ``radec``. (This way you 
+    never get one without the other.)
+  """
+  reserved = ['unixtime','chan_name','integr','az','el','year','doy','utc',
+              'timestr','chan','Tsys','top','diode','level','cryotemp',
+              'windspeed','winddir','ambtemp','pressure',
+              'ra','dec','ra1950','dec1950','ra2000','dec2000']
+  def __init__(self, channel_names=None, 
+                     longitude=None,
+                     latitude=None):
+    """
+    Arguments
+    =========
+    channel_names:string: like "XL"
+    """
+    self.logger = logging.getLogger(module_logger.name+".Observation")
+    if longitude and latitude:
+      self.longitude = longitude
+      self.latitude = latitude
+    else:
+      self.logger.error("__init__: this requires observatory location")
+      raise Exception("Where were the data taken?")
+    self.channel = {}
+    if channel_names:
+      for ch in channel_names:
+        self.channel[ch] = Observation.Channel(ch)
+
+  def load_text_with_header(self, filename, delimiter=" ",
+                            channels=None, ignore=[], skip_header=0,
+                            names=True, aliases={"epoch": "unixtime"}):
+    """
+    Takes a text table with headers and converts it into a structured numpy
+    array. That means that a column can be extracted using `data[label]`.
+
+    Ideally, there must be a header word for each column and the separator must
+    not be  ambiguous, for example, a space if the column headers also include
+    spaces.  However, the ``numpy`` function ``genfromtxt()`` is very flexible.
+    Here is an example of reading DSS-28 text files from solar observations in
+    2012, 9 columns but 7 header words, when database access was not yet 
+    practical::
+    
+      In [1]: from Data_Reduction import Observation
+      In [2]: from Astronomy.DSN_coordinates import DSS
+      In [3]: import logging
+      In [4]: tel = DSS(28)
+      In [5]: obs = Observation(longitude=tel.long, latitude=tel.lat)
+      In [6]: obs.logger.setLevel(logging.INFO)
+      In [7]: obs.load_text_with_header('t12127.10',
+                      delimiter=[17,16,3,11,7,9,8,2,6],
+                      names="UTC Epoch Chan Tsys Int Az El Diode Level".split(),
+                      skip_header=1)
+
+    The ``names`` string was just copied by hand from the first line in the
+    file. It could also be done with ``file.readline()``.
+    
+    By default, columns with unknown names are assumed to be power from the
+    channel whose name is the column name. Columns that have unknown names
+    (i.e. not in 'reserved') must have their names in 'ignore'.
+
+    @param filename : name of the data file
+    @type  filename : str
+
+    @param delimiter : column separator
+    @type  delimiter : str
+
+    @param aliases : alternative names for keywords
+    @type  aliases : dict
+    
+    @return: column headers (str), data array(str)
+    """
+    data = NP.genfromtxt(filename, delimiter=delimiter, dtype=None, names=names,
+                         case_sensitive='lower', skip_header=skip_header)
+    numdata = len(data)
+    self.logger.debug("load_text_with_header: %d samples", numdata)
+    names = data.dtype.names
+    self.logger.debug("load_text_with_header: names type is %s", type(names))
+    self.logger.info("load_text_with_header: names = %s", names)
+    # get the known columns:
+    self.data = {}
+    self.unknown_cols = []
+    for name in names:
+        if name.casefold() in map(str.casefold, aliases):
+            key = aliases[name].lower() # we use only lower case names
+        else:
+            key = name.lower()
+        if key in map(str.casefold, Observation.reserved):
+            self.data[key] = data[name]
+        elif name in ignore:
+            pass
+        else:
+            self.unknown_cols.append(name)
+    for name in self.unknown_cols:
+        self.data[name] = data[name]
+    # get columns that are better computed once instead of as needed
+    colnames = list(self.data.keys())
+    if 'unixtime' in colnames:
+        self.data['datetime'] = []
+        self.data['date_num'] = []
+        for idx in list(range(numdata)):
+            tm = data[next(key for key, value in aliases.items() if value == 'unixtime')][idx]
+            dt = datetime.datetime.utcfromtimestamp(tm)
+            self.data['datetime'].append(dt)
+            self.data['date_num'].append(MPLd.date2num(dt))
+    if self.check_for(data, 'azel'):
+      # azel exists; compute radec if needed; then radec2000 if needed
+      if self.check_for(data, 'radec'):
+        pass
+      else:
+        # compute RA and dec
+        RA = []; decs = []; RAdecs = []
+        for idx in list(range(numdata)):
+          # setup
+          dt = self.data['datetime'][idx]
+          time_tuple = (dt.year,
+                        DT.day_of_year(dt.year,dt.month,dt.day)
+                        + (  dt.hour
+                           + dt.minute/60.
+                           + dt.second/3600.
+                           + dt.microsecond/3600./1e6)/24.)
+          azimuth = data['az'][idx]
+          elevation = data['el'][idx]
+          # compute
+          ra,dec = A.AzEl_to_RaDec(azimuth, elevation,
+                                   self.latitude, self.longitude,
+                                   time_tuple)
+          RA.append(ra)
+          decs.append(dec)
+          RAdecs.append((RA,decs))
+        self.data['ra'] = RA
+        self.data['dec'] = dec
+        self.data['radec'] = RAdecs
+        if self.check_for(data, 'radec2000'):
+          # ra2000 and dec2000 already exist
+          pass
+        else:
+          # compute RA2000 and dec2000 from observed RA and dec
+          RA2000 = []; decs2000 = []; RAdec2000 = []
+          for idx in list(range(numdata)):
+            # setup
+            tm = self.data['unixtime'][idx]
+            mjd = DT.UnixTime_to_MJD(tm)
+            MJD = int(mjd)
+            UT = 24*(mjd-MJD)
+            ra = self.data['ra']
+            dec = self.data['dec']
+            # compute
+            ra2000,dec2000 = A.apparent_to_J2000(MJD,UT, 
+                                                 ra, dec,
+                                                 self.longitude, self.latitude)
+            RA2000.append(ra2000)
+            decs2000.append(dec2000)
+            RAdec2000.append((ra2000,dec2000))
+          self.data['ra2000'] = RA2000
+          self.data['dec2000'] = dec2000
+          self.data['radec2000'] = RAdec2000
+      # finished with azel -> radec -> radec2000
+    elif self.check_for(data, 'radec2000'):
+      # coordinates exist; compute back to azimuth and elevation
+      if self.check_for(data, 'radec'):
+        pass
+      else:
+        # compute observed RA and dec
+        RA = []; decs = []; RAdecs = []
+        for idx in list(range(numdata)):
+          # setup
+          tm = self.data['unixtime'][idx]
+          mjd = DT.UnixTime_to_MJD(tm)
+          MJD = int(mjd)
+          UT = 24*(mjd-MJD)
+          ra2000 = self.data['ra2000'][idx]
+          dec2000 = self.data['dec2000'][idx]
+          # compute
+          ra, dec = A.J2000_to_apparent(MJD, UT, 
+                                        ra2000*math.pi/12, dec2000*math.pi/180)
+          RA.append(ra)
+          decs.append(dec)
+          RAdecs.append((ra,dec))
+        self.data['ra'] = RA
+        self.data['dec'] = decs
+        self.data['radec'] = RAdecs
+        if self.check_for(data, 'azel'):
+          pass
+        else:
+          # compute az and el
+          azs = []; els = []; azels = []
+          for idx in list(range(numdata)):
+            # setup
+            ra = self.data['ra'][idx]
+            dec = self.data['dec'][idx]
+            timetuple = self.data['datetime'][idx].timetuple()
+            year = timetuple.tm_year
+            doy = timetuple.tm_yday + (timetuple.tm_hour
+                                  +(timetuple.tm_min+timetuple.tm_sec/60)/60)/24
+            # compute
+            az, el = A.RaDec_to_AzEl(ra, dec, 
+                                     self.latitude, self.longitude, (year,doy))
+            azs.append(az)
+            els.append(el)
+            azels.append((az,el))
+          self.data['az'] = azs
+          self.data['el'] = els
+          self.data['azel'] = azels
+    # in here check for 'radec'
+    else:
+      self.logger.error("no coordinates found in data")
+      raise Exception("check INFO logging for columns found")
+      
+  def splitkey(self, longlat):
+    """
+    Checks for presence of coordinates in pairs or singles
+    
+    @param longlat : "azel", or "radec", or "radecEPOC"
+    @type  longlat : str
+    """
+    longitude = longlat[:2] # 'az' or 'ra'
+    if len(longlat) > 5: # has epoch
+        epoch = longlat[-4:]
+        longitude += epoch
+        latitude = longlat[2:-4]+epoch
+    else: # date of observation
+        latitude = longlat[2:]
+        epoch = None
+    return longitude, latitude, epoch
+  
+  def check_for(self, data, longlat):
+    """
+    Checks for separate coordinates and splits if coord pairs
+    """
+    longitude, latitude, epoch = self.splitkey(longlat)
+    if longitude in data.dtype.names and \
+       latitude  in data.dtype.names:
+      self.logger.debug("check_for: data has %s and %s", longitude, latitude)
+      return True
+    elif longlat in data.dtype.names:
+      self.logger.debug("check_for: data has %s", longlat)
+      data[longitude],data[latitude] = map(None, *data[longlat])
+      self.logger.debug("check_for: added %s and %s to data", longitude, latitude)
+      return True
+    else:
+      # coords need to be computed from other coords
+      
+      return False
+    
+  def unpack_to_complex(self, rawdata):
+    """
+    Converts a sequence of alternating real/imag samples to complex
+
+    @param rawdata : alternating real and imaginary bytes
+    @type  rawdata : numpy array of signed int8
+
+    @return: numpy array of complex
+    """
+    datalen = len(rawdata)
+    real = rawdata[0:datalen:2]
+    imag = rawdata[1:datalen:2]
+    data = real + 1j*imag
+    return data
+
+  def sideband_separate(self, data):
+    """
+    Converts a complex spectrum array and returns two reals with USB and LSB
+
+    This applies a Hilbert transform to the complex data.
+    """
+    usb = (data.real + scipy.fftpack.hilbert(data).imag)
+    lsb = (scipy.fftpack.hilbert(data).real + data.imag)
+    return lsb,usb
+  
+  class Channel(support.PropertiedClass):
+    """
+    Class for a signal path
+    """
+    def __init__(self, name, freq=None, bw=None, pol=None):
+      """
+      Notes
+      =====
+      The properties can be accessed as if the class were a dict.
+      
+      Arguments
+      =========
+      freq:float or int: center frequency in MHz
+      bw:float or int:   bandwidth in MHz
+      pol:str:           polarization code
+      """
+      support.PropertiedClass.__init__(self)
+      self.name = name
+      self.data['freq'] = freq
+      self.data['bw'] = bw
+      self.data['pol'] = pol 
+  
 def get_obs_session(project=None, dss=None, date=None, path='proj'):
   """
   Provides project, station, year and DOY, asking as needed.
   
   It follows one of several possible paths to get to the session::
+  
     proj - path through /usr/local/projects/project
     hdf5 - path through /usr/local/RA_data/HDF5
     fits - path through /usr/local/RA_data/FITS
@@ -54,13 +419,13 @@ def get_obs_session(project=None, dss=None, date=None, path='proj'):
     """
     # only one trailing /
     path = path.rstrip('/')+"/*"
-    logger.debug("get_obs_session:get_directory: from %s", path)
+    module_logger.debug("get_obs_session:get_directory: from %s", path)
     names = glob.glob(path)
     if names:
       dirs = []
       for name in names:
-        if isdir(name):
-          dirs.append(basename(name))
+        if os.path.isdir(name):
+          dirs.append(os.path.basename(name))
       dirs.sort()
       for name in dirs:
         print((name), end=' ')
@@ -122,11 +487,13 @@ def get_obs_session_old(project=None, dss=None, date=None):
       dssXX/
         YEAR/
           DOY/
+  
   or if project is given::
     /usr/local/projects/project/Observations/
       dssXX/
         YEAR/
           DOY/
+          
   If neither is given it will prompt for a project.
   
   @param project : optional name as defined in /usr/local/projects
@@ -144,43 +511,43 @@ def get_obs_session_old(project=None, dss=None, date=None):
   if project:
     projectpath = projects_dir+project+"/"
   else:
-    projectpath = select_files(projects_dir+"*", ftype="dir",
+    projectpath = support.text.select_files(projects_dir+"*", ftype="dir",
                                text="Select a project by index: ", single=True)
-    project = basename(projectpath)
+    project = os.path.basename(projectpath)
     if projectpath[-1] != "/":
       projectpath += "/"
-  logger.debug("get_obs_session: project path: %s", projectpath)
+  module_logger.debug("get_obs_session: project path: %s", projectpath)
 
   # get the path to the project DSS sub-directory
   project_obs_path = projectpath + "Observations/"
   if dss:
     dsspath = project_obs_path+"dss"+str(dss)+"/"
   else:
-    dsspath = select_files(project_obs_path+"dss*", ftype="dir",
+    dsspath = support.text.select_files(project_obs_path+"dss*", ftype="dir",
                            text="Select a station by index: ", single=True)
-    logger.debug("get_obs_session: selected: %s", dsspath)
-    dss = int(basename(dsspath)[-2:])
-  logger.debug("get_obs_session: DSS path: %s", dsspath)
+    module_logger.debug("get_obs_session: selected: %s", dsspath)
+    dss = int(os.path.basename(dsspath)[-2:])
+  module_logger.debug("get_obs_session: DSS path: %s", dsspath)
   if date:
     items = date.split('/')
     yr = int(items[0])
     doy = int(items[1])
   else:
-    yrpath = select_files(dsspath+"*", ftype="dir",
+    yrpath = support.text.select_files(dsspath+"*", ftype="dir",
                                   text="Select a year by index: ", single=True)
     if yrpath:
-      logger.debug("get_obs_session: year path: %s", yrpath)
-      yr = int(basename(yrpath))
+      module_logger.debug("get_obs_session: year path: %s", yrpath)
+      yr = int(os.path.basename(yrpath))
       yrpath += "/"
-      doypath = select_files(yrpath+"/*", ftype="dir",
+      doypath = support.text.select_files(yrpath+"/*", ftype="dir",
                                    text="Select a day BY INDEX: ", single=True)
-      doy = int(basename(doypath))
+      doy = int(os.path.basename(doypath))
       doypath += '/'
-      logger.debug("get_obs_session: DOY path: %s", doypath)
+      module_logger.debug("get_obs_session: DOY path: %s", doypath)
     else:
-      logger.warning("get_obs_session: no data for dss%2d", dss)
+      module_logger.warning("get_obs_session: no data for dss%2d", dss)
       return project, None, 0, 0
-  logger.debug("get_obs_session: for %s, DSS%d, %4d/%03d",
+  module_logger.debug("get_obs_session: for %s, DSS%d, %4d/%03d",
                     project, dss, yr, doy)
   return project, dss, yr, doy
 
@@ -203,7 +570,7 @@ def get_obs_dirs(project, station, year, DOY, datafmt=None):
   @param datafmt : raw data format
   @type  datafmt : str
   """
-  logger.debug("get_obs_dirs: type %s for %s, DSS%d, %4d/%03d",
+  module_logger.debug("get_obs_dirs: type %s for %s, DSS%d, %4d/%03d",
                datafmt, project, station, year, DOY)
   obspath = "dss%2d/%4d/%03d/" %  (station,year,DOY)
   if project:
@@ -223,14 +590,16 @@ def select_data_files(datapath, name_pattern="", load_hdf=False):
   Provide the user with menu to select data files.
   
   Finding the right data store is complicated. As originally coded::
-    * If the input files are .h5 the load_hdf=True and the directory area is
+  
+    * If the input files are ``.h5`` the ``load_hdf=True`` and the directory area is
       RA_data/HDF5/.
     * If the input files are .pkl (obsolete) then load_hdf=False and the
       directory area is project_data/<project>/.
+      
   Now we need to add the possibility of getting datafiles from RA_data/FITS/.
-  Now the location of the data are implicit in 'datapath'::
-    * If datapath is ...RA_data/HDF5/... then the files could be .h5 (Ashish)
-      or .hdf5 (Dean).
+  Now the location of the data are implicit in ``datapath``::
+  
+    * If datapath is ...RA_data/HDF5/... then the files could be .h5 (Ashish) or .hdf5 (Dean).
     * If datapath is ...RA_data/FITS/... then the extent is .fits.
     * If datapath is ...project_data... then the extent is .pkl
   
@@ -246,9 +615,9 @@ def select_data_files(datapath, name_pattern="", load_hdf=False):
   @return: list of str
   """
   # Get the data files to be processed
-  logger.debug("select_data_files: looking in %s", datapath)
+  module_logger.debug("select_data_files: looking in %s", datapath)
   if name_pattern:
-    name,extent = splitext(name_pattern)
+    name,extent = os.path.splitext(name_pattern)
     if extent.isalpha(): # a proper extent with no wildcards
       # take name pattern as is
       pass
@@ -258,84 +627,29 @@ def select_data_files(datapath, name_pattern="", load_hdf=False):
   else:
     # no pattern specified.  All files.
     name_pattern = "*"
-  logger.debug("select_data_files: for pattern %s", name_pattern)
+  module_logger.debug("select_data_files: for pattern %s", name_pattern)
   if re.search('HDF5', datapath):
     load_hdf = True
   elif re.search('project_data', datapath):
     load_hdf = False
-    datafiles = select_files(datapath+name_pattern+"[0-9].pkl")
+    datafiles = support.text.select_files(datapath+name_pattern+"[0-9].pkl")
   elif re.search('FITS', datapath):
-    datafiles = select_files(datapath+name_pattern+".fits")
+    datafiles = support.text.select_files(datapath+name_pattern+".fits")
   if load_hdf:
     full = datapath+name_pattern+".h*5"
   else:
     full = datapath+name_pattern
-  logger.debug("select_data_files: from: %s", full)
-  datafiles = select_files(full)
+  module_logger.debug("select_data_files: from: %s", full)
+  datafiles = support.text.select_files(full)
 
-  logger.debug("select_data_files: found %s", datafiles)
+  module_logger.debug("select_data_files: found %s", datafiles)
   if datafiles == []:
-    logger.error("select_data_files: None found. Is the data directory mounted?")
+    module_logger.error("select_data_files: None found. Is the data directory mounted?")
     raise RuntimeError('No data files found.')  
   if type(datafiles) == str:
     datafiles = [datafiles]
-  logger.info("select_data_files: to be processed: %s", datafiles)
+  module_logger.info("select_data_files: to be processed: %s", datafiles)
   return datafiles
-
-def load_csv_with_header(filename,delimiter=""):
-  """
-  Takes a text table with headers and converts it into an ASCII array
-
-  There must be a header for each column and the separator must not be
-  ambiguous, for example, a space if the column headers also include spaces.
-
-  The data are ASCII and the program or programmer will have to convert
-  them to an appropriate form, e.g. int or float or datetime, if necessary.
-
-  A column can be extracted using data[label].
-
-  @param filename : name of the data file
-  @type  filename : str
-
-  @param delimiter : column separator
-  @type  delimiter : str
-
-  @return: column headers (str), data array(str)
-  """
-  datafile = open(filename,"r")
-  labels = datafile.readline().strip().split(',')
-  num_cols = len(labels)
-  fmts = ('S20',)*num_cols
-  datafile.close()
-  data = loadtxt(filename,skiprows=1,delimiter=',',
-                 dtype = {'names': tuple(labels),
-                          'formats':fmts})
-  return labels,data
-
-def unpack_to_complex(rawdata):
-  """
-  Converts a sequence of alternating real/imag samples to complex
-
-  @param rawdata : alternating real and imaginary bytes
-  @type  rawdata : numpy array of signed int8
-
-  @return: numpy array of complex
-  """
-  datalen = len(rawdata)
-  real = rawdata[0:datalen:2]
-  imag = rawdata[1:datalen:2]
-  data = real + 1j*imag
-  return data
-
-def sideband_separate(data):
-  """
-  Converts a complex array time series and returns two reals with USB and LSB
-
-  This applies a Hilbert transform to the complex data.
-  """
-  usb = (data.real + scipy.fftpack.hilbert(data).imag)
-  lsb = (scipy.fftpack.hilbert(data).real + data.imag)
-  return lsb,usb
 
 def get_num_chans(linefreq, bandwidth, max_vel_width):
   """
@@ -344,7 +658,7 @@ def get_num_chans(linefreq, bandwidth, max_vel_width):
   kmpspMHz = 300000./linefreq
   BW_kmps = bandwidth*kmpspMHz
   est_num_chan_out = BW_kmps/max_vel_width
-  logger.debug("get_num_chans: estimated num chans out = %d",
+  module_logger.debug("get_num_chans: estimated num chans out = %d",
                est_num_chan_out)
   return 2**int(math.ceil(math.log(est_num_chan_out,2)))
     
@@ -381,101 +695,32 @@ def reduce_spectrum_channels(spectrum, refval, refpix, delta,
   """
   if math.log(num_chan,2) % 1:
     raise RuntimeError("num_chan = %d is not a power of 2", num_chan)
-  if type(spectrum) == ndarray:
+  if type(spectrum) == NP.ndarray:
     num_chans_in = spectrum.shape[axis]
   else:
     num_chans_in = len(spectrum)
   if math.log(num_chans_in,2) % 1:
     raise RuntimeError("input spectrum length = %d is not a power of 2",
                                                                   num_chans_in)
-  logger.debug("reduce_spectrum_channels: %d channels in", num_chans_in)
+  module_logger.debug("reduce_spectrum_channels: %d channels in", num_chans_in)
   
   num_chan_avg = num_chans_in/num_chan
   newrefpix = refpix/num_chan_avg
-  logger.debug("reduce_spectrum_channels: refpix from %d to %d",
+  module_logger.debug("reduce_spectrum_channels: refpix from %d to %d",
                refpix, newrefpix)
 
   newdelta = delta*num_chan_avg
-  logger.debug("reduce_spectrum_channels: delta from %.3f to %.3f",
+  module_logger.debug("reduce_spectrum_channels: delta from %.3f to %.3f",
                delta, newdelta)
   newrefval = refval + delta*(num_chan_avg/2 - 1)
-  logger.debug("reduce_spectrum_channels: refval from %.3f to %.3f",
+  module_logger.debug("reduce_spectrum_channels: refval from %.3f to %.3f",
                refval, newrefval)
-  logger.debug("reduce_spectrum_channels: averaging %d channels", num_chan_avg)
+  module_logger.debug("reduce_spectrum_channels: averaging %d channels", num_chan_avg)
   
-  specout = array([spectrum[index*num_chan_avg:(index+1)*num_chan_avg].mean()
+  specout = NP.array([spectrum[index*num_chan_avg:(index+1)*num_chan_avg].mean()
                                                  for index in range(num_chan)])
-  logger.debug("reduce_spectrum_channels: %d channels out", num_chan)
+  module_logger.debug("reduce_spectrum_channels: %d channels out", num_chan)
   return specout, newrefval, newrefpix, newdelta
-  
-def trim_extremes(data):
-  """
-  Remove extreme values from a data array.
-
-  Extreme values are those greater than 10x the standard deviation
-  and are 'skinny'.: numpy array
-
-  @param data : numpy array
-  """
-  data_array = array(data)
-  amean   = mean(data_array)
-  avar    = var(data_array)
-  astdev  = sqrt(avar)
-  amax = data_array.max()
-  amin = data_array.min()
-  # Check the maximum
-  if abs(amax-amean) > 10*astdev:
-    index = argmax(data_array)
-    if is_skinny(data_array,index):
-      data_array = clobber(data_array,index)
-  # check the minimum
-  if abs(amin-amean) > 10*astdev:
-    index = argmin(data_array)
-    if is_skinny(data_array,index):
-      data_array = clobber(data_array,index)
-  return data_array
-
-def is_skinny(data_array,index):
-  """
-  Test whether a data value is an isolated outlier
-
-  Returns True if the data values adjacent to the test value are
-  less that 1/10 of the test value, i.e., the data point is a spike
-
-  @param data_array : numpy array
-
-  @param index : int
-
-  @return: boolean
-  """
-  amean   = mean(data_array)
-  test_value = abs(data_array[index]-amean)
-  if index == 0:
-    ref_value = abs(data_array[index+1] - amean)
-  elif index == len(data_array)-1:
-    ref_value = abs(data_array[index-1] - amean)
-  else:
-    ref_value = (data_array[index-1] + data_array[index+1])/2. - amean
-  if test_value > 10 * ref_value:
-    return True
-  else:
-    return False
-
-def clobber(data_array,index):
-  """
-  Replace a data array value with the adjacent value(s)
-
-  @param data_array : numpy array
-
-  @param index : int
-  """
-  if index == 0:
-    data_array[index] = data_array[index+1]
-  elif index == len(data_array)-1:
-    data_array[index] = data_array[index-1]
-  else:
-    data_array[index] = (data_array[index-1] + data_array[index+1])/2.
-  return data_array
 
 def get_freq_array(bandwidth, n_chans):
   """
@@ -489,7 +734,7 @@ def get_freq_array(bandwidth, n_chans):
 
   @return: frequency of each channel in same units as bandwidth
   """
-  return numpy.arange(n_chans)*float(bandwidth)/n_chans
+  return NP.arange(n_chans)*float(bandwidth)/n_chans
 
 def freq_to_chan(frequency,bandwidth,n_chans):
   """
@@ -518,12 +763,14 @@ def get_smoothed_bandshape(spectrum, degree = None, poly_order=15):
   Optionally, the raw and smoothed data and the fitted polynomial can be
   plotted.
 
-  Note on polyfit
-  ===============
-  numpy.polyfit(x, y, deg, rcond=None, full=False, w=None, cov=False)
+  Note
+  ====
+  ``numpy.polyfit(x, y, deg, rcond=None, full=False, w=None, cov=False)``
   Least squares polynomial fit.
   Fit a polynomial::
+  
      p(x) = p[0] * x**deg + ... + p[deg]
+  
   of degree deg to points (x, y).
   Returns a vector of coefficients p that minimises the squared error.
 
@@ -544,16 +791,16 @@ def get_smoothed_bandshape(spectrum, degree = None, poly_order=15):
   if degree == None:
     degree = len(spectrum)/100
   # normalize the spectrum so max is 1 and convert to dB.
-  max_lev = numpy.max(spectrum)
-  norm_spec = numpy.array(spectrum)/float(max_lev)
-  norm_spec_db = 10*numpy.log10(norm_spec)
+  max_lev = NP.max(spectrum)
+  norm_spec = NP.array(spectrum)/float(max_lev)
+  norm_spec_db = 10*NP.log10(norm_spec)
   # optionally plot normalized spectrum
   if plot:
     pylab.plot(norm_spec_db)
   # do a Gaussian smoothing
   norm_spec_db_smoothed = smoothListGaussian(norm_spec_db, degree=degree)
   # deal with the edges by making them equal to the smoothed end points
-  norm_spec_db_smoothed_resized = numpy.ones(len(spectrum))
+  norm_spec_db_smoothed_resized = NP.ones(len(spectrum))
   # left end
   norm_spec_db_smoothed_resized[0:degree] = norm_spec_db_smoothed[0]
   # middle
@@ -564,8 +811,8 @@ def get_smoothed_bandshape(spectrum, degree = None, poly_order=15):
       norm_spec_db_smoothed[-1]
   if plot:
     pylab.plot(norm_spec_db_smoothed_resized)
-    poly = numpy.polyfit(list(range(len(norm_spec_db_smoothed))),
+    poly = NP.polyfit(list(range(len(norm_spec_db_smoothed))),
                          norm_spec_db_smoothed,poly_order)
-    pylab.plot(numpy.polyval(poly, list(range(len(norm_spec_db_smoothed)))))
+    pylab.plot(NP.polyval(poly, list(range(len(norm_spec_db_smoothed)))))
     pylab.show()
   return poly, norm_spec_db_smoothed_resized

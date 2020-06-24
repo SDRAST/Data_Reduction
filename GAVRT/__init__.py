@@ -17,7 +17,7 @@ import logging
 import Astronomy
 from support.excel import get_row_number
 from Data_Reduction import nearest_index
-from Data_Reduction.DSN.GAVRT.solar import create_metadata_sheet
+from Data_Reduction.GAVRT.solar import create_metadata_sheet
 from support.excel import set_column_dimensions
 
 logger = logging.getLogger(__name__)

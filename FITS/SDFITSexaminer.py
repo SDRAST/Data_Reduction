@@ -63,14 +63,14 @@ logger = logging.getLogger(__name__)
 
 import support.lists
 
-from Astronomy import c, MJD, v_sun
+from Astronomy import c, v_sun
 from Astronomy.DSN_coordinates import DSS
 from Astronomy.redshift import doppler_radio, doppler_optical, doppler_relat
-from Data_Reduction import clobber
 from Data_Reduction.FITS.DSNFITS import get_indices
 from Data_Reduction.tipping import airmass, fit_tipcurve_data
 from DatesTimes import ISOtime2datetime, UnixTime_to_datetime
 from Data_Reduction import get_freq_array
+from DatesTimes import MJD
 # I don't think these classes are needed 2020/06/06
 #try:
 #  from MonitorControl.Configurations.CDSCC.FO_patching import DistributionAssembly
@@ -80,7 +80,7 @@ from Data_Reduction import get_freq_array
 #  logger.warning("SDFITSexaminer cannot handle DSS-43 K-band: no configuration")
 #from MonitorControl.FrontEnds.DSN import DSN_fe
 from Radio_Astronomy import rms_noise
-from support import mkdir_if_needed, nearest_index
+from support import clobber, mkdir_if_needed, nearest_index
 from support.dicts import make_key_if_needed
 
 

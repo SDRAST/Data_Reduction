@@ -123,7 +123,8 @@ import sys
 import time
 
 from math import cos, pi
-from matplotlib.mlab import griddata
+#from matplotlib.mlab import griddata
+from scipy.interpolate import griddata
 from matplotlib.pylab import date2num, num2date
 from numpy import arange, array, unique, where
 from time import gmtime, strftime
@@ -131,7 +132,7 @@ from time import gmtime, strftime
 from local_dirs import projects_dir
 import Astronomy as A
 from Astronomy.Ephem import calibrator, DSS, Quasar
-from Data_Reduction.DSN.GAVRT.Mysql import BaseDB, MysqlException
+from Data_Reduction.GAVRT.Mysql import BaseDB, MysqlException
 from Math.least_squares import fit_gaussian, gaussian_error_function, st_dev
 from Radio_Astronomy import HPBW
 from support import nearest_index
@@ -407,7 +408,7 @@ class Map(Observation):
     self.cfg = self.get_map_config()
     # this is used by get_raster_data
     self.get_raster_keys()
-    if self.raster_keys != None:
+    if self.raster_keys.any():
       # this defines 'start' and 'end'
       self.get_raster_data()
       # gets from 'tlog' the channels used between 'start' and 'end'
@@ -815,6 +816,7 @@ class Session(object):
       self.db = DSS28db() # default is GAVRT
     self.year = year
     self.doy = doy
+    self.logger.info("Getting maps and boresights; this may take a while."
     if plotter == False:
       # instantiating map plotters also gets the maps
       self.get_maps()
