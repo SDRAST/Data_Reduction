@@ -73,17 +73,57 @@
 <h1>Observation<a class="headerlink" href="#observation" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="Data_Reduction.Observation">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">channel_names</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">longitude</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">latitude</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">channel_names</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>superclass for a data structure and methods</p>
 <dl class="py attribute">
 <dt>
-<code class="sig-name descname">channel - (dict) a signal path</code></dt>
+<code class="sig-name descname">channel      - (dict) a signal path</code></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt>
-<code class="sig-name descname">data    - (dict) table contents</code></dt>
+<code class="sig-name descname">data         - (dict) table contents</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">end          - (float) UNIX time at the end</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">latitude     - (float) from obs</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">logger       - (logging.Logger)</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">longitude    - (float) from obs</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">name         - (str) user assigned, defaults to YEAR/DOY</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">obs          - (AE.DSS) observatory</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">start        - (float) UNIX time at the begining</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">unknown_cols - (list of str)</code></dt>
 <dd></dd></dl>
 
 <p><strong>Reserved Column Names</strong></p>
@@ -128,7 +168,7 @@
 </div>
 <p>Optional:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>tsys       (float) power level if only a single channel
-Top        (float) alternative for ``tsys``
+top        (float) alternative for ``tsys``
 diode      (float) 0 or power in K (integers OK)
 level      (float) (unidentified -- in ``tlog`` table)
 cryotemp   (float) cryostat temp in K
@@ -196,6 +236,9 @@ practical:</p>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">names</span></code> string was just copied by hand from the first line in the
 file. It could also be done with <code class="docutils literal notranslate"><span class="pre">file.readline()</span></code>.</p>
+<p>However, the subclass <code class="docutils literal notranslate"><span class="pre">GAVRT.Observation</span></code> will read all the t-files in a
+directory and instead of <code class="docutils literal notranslate"><span class="pre">Tsys</span></code> has <code class="docutils literal notranslate"><span class="pre">counts</span></code> which is itself a dict with
+an item for each receiver channel.</p>
 <p>By default, columns with unknown names are assumed to be power from the
 channel whose name is the column name. Columns that have unknown names
 (i.e. not in ‘reserved’) must have their names in ‘ignore’.</p>

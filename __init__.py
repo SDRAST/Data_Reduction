@@ -20,6 +20,7 @@ import readline
 import scipy.fftpack
 
 import Astronomy as A
+import Astronomy.Ephem as AE
 import DatesTimes as DT
 from local_dirs import fits_dir, hdf5_dir, projects_dir, wvsr_dir
 import support
@@ -27,7 +28,7 @@ import support
 # enable raw_input Tab completion
 readline.parse_and_bind("tab: complete")
 
-module_logger = logging.getLogger(__name__) # module logger
+logger = logging.getLogger(__name__) # module logger
 
 class Observation(object):
   """
@@ -35,8 +36,16 @@ class Observation(object):
   
   Attributes
   ==========
-    channel - (dict) a signal path
-    data    - (dict) table contents
+    channel      - (dict) a signal path
+    data         - (dict) table contents
+    end          - (float) UNIX time at the end
+    latitude     - (float) from obs
+    logger       - (logging.Logger)
+    longitude    - (float) from obs
+    name         - (str) user assigned, defaults to YEAR/DOY
+    obs          - (AE.DSS) observatory
+    start        - (float) UNIX time at the begining
+    unknown_cols - (list of str)
   
   **Reserved Column Names**
   
@@ -79,10 +88,11 @@ class Observation(object):
     dec1950    (float) mean declination in decimal deg at epoch
     ra2000     (float) mean right ascension in decimal hours at epoch
     dec2000    (float) mean declination in decimal deg at epoch
+    
   Optional::
   
     tsys       (float) power level if only a single channel
-    Top        (float) alternative for ``tsys``
+    top        (float) alternative for ``tsys``
     diode      (float) 0 or power in K (integers OK)
     level      (float) (unidentified -- in ``tlog`` table)
     cryotemp   (float) cryostat temp in K
@@ -106,28 +116,31 @@ class Observation(object):
     never get one without the other.)
   """
   reserved = ['unixtime','chan_name','integr','az','el','year','doy','utc',
-              'timestr','chan','Tsys','top','diode','level','cryotemp',
+              'timestr','chan','tsys','top','diode','level','cryotemp',
               'windspeed','winddir','ambtemp','pressure',
               'ra','dec','ra1950','dec1950','ra2000','dec2000']
-  def __init__(self, channel_names=None, 
-                     longitude=None,
-                     latitude=None):
+  def __init__(self, name=None, dss=None, channel_names=None):
     """
     Arguments
     =========
     channel_names:string: like "XL"
     """
-    self.logger = logging.getLogger(module_logger.name+".Observation")
-    if longitude and latitude:
-      self.longitude = longitude
-      self.latitude = latitude
+    self.logger = logging.getLogger(logger.name+".Observation")
+    if name:
+      self.name = name
+    else:
+      self.name = "DSS"+str(dss)+"obs"
+    if dss:
+      self.obs = AE.DSS(dss)
+      self.longitude = self.obs.long
+      self.latitude = self.obs.lat
     else:
       self.logger.error("__init__: this requires observatory location")
       raise Exception("Where were the data taken?")
     self.channel = {}
     if channel_names:
       for ch in channel_names:
-        self.channel[ch] = Observation.Channel(ch)
+        self.channel[ch] = self.Channel(self, ch)
 
   def load_text_with_header(self, filename, delimiter=" ",
                             channels=None, ignore=[], skip_header=0,
@@ -156,6 +169,10 @@ class Observation(object):
 
     The ``names`` string was just copied by hand from the first line in the
     file. It could also be done with ``file.readline()``.
+    
+    However, the subclass ``GAVRT.Observation`` will read all the t-files in a
+    directory and instead of ``Tsys`` has ``counts`` which is itself a dict with
+    an item for each receiver channel.
     
     By default, columns with unknown names are assumed to be power from the
     channel whose name is the column name. Columns that have unknown names
@@ -201,10 +218,11 @@ class Observation(object):
         self.data['datetime'] = []
         self.data['date_num'] = []
         for idx in list(range(numdata)):
-            tm = data[next(key for key, value in aliases.items() if value == 'unixtime')][idx]
-            dt = datetime.datetime.utcfromtimestamp(tm)
-            self.data['datetime'].append(dt)
-            self.data['date_num'].append(MPLd.date2num(dt))
+          tm = data[next(key for key, value in aliases.items()
+                                                   if value == 'unixtime')][idx]
+          dt = datetime.datetime.utcfromtimestamp(tm)
+          self.data['datetime'].append(dt)
+          self.data['date_num'].append(MPLd.date2num(dt))
     if self.check_for(data, 'azel'):
       # azel exists; compute radec if needed; then radec2000 if needed
       if self.check_for(data, 'radec'):
@@ -308,6 +326,8 @@ class Observation(object):
     else:
       self.logger.error("no coordinates found in data")
       raise Exception("check INFO logging for columns found")
+    self.start = self.data['unixtime'].min()
+    self.end   = self.data['unixtime'].max()
       
   def splitkey(self, longlat):
     """
@@ -374,7 +394,7 @@ class Observation(object):
     """
     Class for a signal path
     """
-    def __init__(self, name, freq=None, bw=None, pol=None):
+    def __init__(self, parent, name, freq=None, bw=None, pol=None):
       """
       Notes
       =====
@@ -387,6 +407,8 @@ class Observation(object):
       pol:str:           polarization code
       """
       support.PropertiedClass.__init__(self)
+      self.parent = parent
+      self.logger = logging.getLogger(self.parent.name+".Channel")
       self.name = name
       self.data['freq'] = freq
       self.data['bw'] = bw
@@ -419,7 +441,7 @@ def get_obs_session(project=None, dss=None, date=None, path='proj'):
     """
     # only one trailing /
     path = path.rstrip('/')+"/*"
-    module_logger.debug("get_obs_session:get_directory: from %s", path)
+    logger.debug("get_obs_session:get_directory: from %s", path)
     names = glob.glob(path)
     if names:
       dirs = []
@@ -458,6 +480,8 @@ def get_obs_session(project=None, dss=None, date=None, path='proj'):
     os.chdir(hdf5_dir)
   elif path[:4].lower() == 'fits':
     os.chdir(fits_dir)
+  
+  # get the station
   if dss:
     pass
   else:
@@ -516,7 +540,7 @@ def get_obs_session_old(project=None, dss=None, date=None):
     project = os.path.basename(projectpath)
     if projectpath[-1] != "/":
       projectpath += "/"
-  module_logger.debug("get_obs_session: project path: %s", projectpath)
+  logger.debug("get_obs_session: project path: %s", projectpath)
 
   # get the path to the project DSS sub-directory
   project_obs_path = projectpath + "Observations/"
@@ -525,9 +549,9 @@ def get_obs_session_old(project=None, dss=None, date=None):
   else:
     dsspath = support.text.select_files(project_obs_path+"dss*", ftype="dir",
                            text="Select a station by index: ", single=True)
-    module_logger.debug("get_obs_session: selected: %s", dsspath)
+    logger.debug("get_obs_session: selected: %s", dsspath)
     dss = int(os.path.basename(dsspath)[-2:])
-  module_logger.debug("get_obs_session: DSS path: %s", dsspath)
+  logger.debug("get_obs_session: DSS path: %s", dsspath)
   if date:
     items = date.split('/')
     yr = int(items[0])
@@ -536,18 +560,18 @@ def get_obs_session_old(project=None, dss=None, date=None):
     yrpath = support.text.select_files(dsspath+"*", ftype="dir",
                                   text="Select a year by index: ", single=True)
     if yrpath:
-      module_logger.debug("get_obs_session: year path: %s", yrpath)
+      logger.debug("get_obs_session: year path: %s", yrpath)
       yr = int(os.path.basename(yrpath))
       yrpath += "/"
       doypath = support.text.select_files(yrpath+"/*", ftype="dir",
                                    text="Select a day BY INDEX: ", single=True)
       doy = int(os.path.basename(doypath))
       doypath += '/'
-      module_logger.debug("get_obs_session: DOY path: %s", doypath)
+      logger.debug("get_obs_session: DOY path: %s", doypath)
     else:
-      module_logger.warning("get_obs_session: no data for dss%2d", dss)
+      logger.warning("get_obs_session: no data for dss%2d", dss)
       return project, None, 0, 0
-  module_logger.debug("get_obs_session: for %s, DSS%d, %4d/%03d",
+  logger.debug("get_obs_session: for %s, DSS%d, %4d/%03d",
                     project, dss, yr, doy)
   return project, dss, yr, doy
 
@@ -570,7 +594,7 @@ def get_obs_dirs(project, station, year, DOY, datafmt=None):
   @param datafmt : raw data format
   @type  datafmt : str
   """
-  module_logger.debug("get_obs_dirs: type %s for %s, DSS%d, %4d/%03d",
+  logger.debug("get_obs_dirs: type %s for %s, DSS%d, %4d/%03d",
                datafmt, project, station, year, DOY)
   obspath = "dss%2d/%4d/%03d/" %  (station,year,DOY)
   if project:
@@ -615,7 +639,7 @@ def select_data_files(datapath, name_pattern="", load_hdf=False):
   @return: list of str
   """
   # Get the data files to be processed
-  module_logger.debug("select_data_files: looking in %s", datapath)
+  logger.debug("select_data_files: looking in %s", datapath)
   if name_pattern:
     name,extent = os.path.splitext(name_pattern)
     if extent.isalpha(): # a proper extent with no wildcards
@@ -627,7 +651,7 @@ def select_data_files(datapath, name_pattern="", load_hdf=False):
   else:
     # no pattern specified.  All files.
     name_pattern = "*"
-  module_logger.debug("select_data_files: for pattern %s", name_pattern)
+  logger.debug("select_data_files: for pattern %s", name_pattern)
   if re.search('HDF5', datapath):
     load_hdf = True
   elif re.search('project_data', datapath):
@@ -639,16 +663,16 @@ def select_data_files(datapath, name_pattern="", load_hdf=False):
     full = datapath+name_pattern+".h*5"
   else:
     full = datapath+name_pattern
-  module_logger.debug("select_data_files: from: %s", full)
+  logger.debug("select_data_files: from: %s", full)
   datafiles = support.text.select_files(full)
 
-  module_logger.debug("select_data_files: found %s", datafiles)
+  logger.debug("select_data_files: found %s", datafiles)
   if datafiles == []:
-    module_logger.error("select_data_files: None found. Is the data directory mounted?")
+    logger.error("select_data_files: None found. Is the data directory mounted?")
     raise RuntimeError('No data files found.')  
   if type(datafiles) == str:
     datafiles = [datafiles]
-  module_logger.info("select_data_files: to be processed: %s", datafiles)
+  logger.info("select_data_files: to be processed: %s", datafiles)
   return datafiles
 
 def get_num_chans(linefreq, bandwidth, max_vel_width):
@@ -658,7 +682,7 @@ def get_num_chans(linefreq, bandwidth, max_vel_width):
   kmpspMHz = 300000./linefreq
   BW_kmps = bandwidth*kmpspMHz
   est_num_chan_out = BW_kmps/max_vel_width
-  module_logger.debug("get_num_chans: estimated num chans out = %d",
+  logger.debug("get_num_chans: estimated num chans out = %d",
                est_num_chan_out)
   return 2**int(math.ceil(math.log(est_num_chan_out,2)))
     
@@ -702,24 +726,24 @@ def reduce_spectrum_channels(spectrum, refval, refpix, delta,
   if math.log(num_chans_in,2) % 1:
     raise RuntimeError("input spectrum length = %d is not a power of 2",
                                                                   num_chans_in)
-  module_logger.debug("reduce_spectrum_channels: %d channels in", num_chans_in)
+  logger.debug("reduce_spectrum_channels: %d channels in", num_chans_in)
   
   num_chan_avg = num_chans_in/num_chan
   newrefpix = refpix/num_chan_avg
-  module_logger.debug("reduce_spectrum_channels: refpix from %d to %d",
+  logger.debug("reduce_spectrum_channels: refpix from %d to %d",
                refpix, newrefpix)
 
   newdelta = delta*num_chan_avg
-  module_logger.debug("reduce_spectrum_channels: delta from %.3f to %.3f",
+  logger.debug("reduce_spectrum_channels: delta from %.3f to %.3f",
                delta, newdelta)
   newrefval = refval + delta*(num_chan_avg/2 - 1)
-  module_logger.debug("reduce_spectrum_channels: refval from %.3f to %.3f",
+  logger.debug("reduce_spectrum_channels: refval from %.3f to %.3f",
                refval, newrefval)
-  module_logger.debug("reduce_spectrum_channels: averaging %d channels", num_chan_avg)
+  logger.debug("reduce_spectrum_channels: averaging %d channels", num_chan_avg)
   
   specout = NP.array([spectrum[index*num_chan_avg:(index+1)*num_chan_avg].mean()
                                                  for index in range(num_chan)])
-  module_logger.debug("reduce_spectrum_channels: %d channels out", num_chan)
+  logger.debug("reduce_spectrum_channels: %d channels out", num_chan)
   return specout, newrefval, newrefpix, newdelta
 
 def get_freq_array(bandwidth, n_chans):

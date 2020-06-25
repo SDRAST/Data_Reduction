@@ -816,7 +816,7 @@ class Session(object):
       self.db = DSS28db() # default is GAVRT
     self.year = year
     self.doy = doy
-    self.logger.info("Getting maps and boresights; this may take a while."
+    self.logger.info("Getting maps and boresights; this may take a while.")
     if plotter == False:
       # instantiating map plotters also gets the maps
       self.get_maps()
