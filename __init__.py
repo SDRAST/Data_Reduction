@@ -2,10 +2,32 @@
 """
 Modules to support data reduction in Python.
 
+The base module is intended for reading data from a text file as a ``numpy``
+structured array.  The function ``examine_text_data_file()`` reveals the
+structure of the file.
+
+Examples
+========
+Using the original header line::
+
+  obs = Observation(dss=28, datafile=datadir+'t12127.10', 
+                    delimiter=[17,16,3,11,7,9,8,2,6], skip_header=1,
+                    names="UTC Epoch Chan Tsys Int Az El Diode Level".split())
+                      
+In this case the column "UTC" comprises the first three data columns.
+
+Using a new set of headers::
+
+  obs2 = Observation(dss=28, datafile=datadir+'t12127.10', 
+                     skip_header=1,
+          names="Year DOY UTC Epoch Chan Tsys Integr Az El Diode Level".split())
+
+This adds names for the first two columns and replaces "Int" with "Integr".
+
 Note
 ====
-These provides the base class ``Observation``. IN PROGRESS!  The definition
-of the keywords is done.
+
+Still IN PROGRESS!
 """
 # standard Python modules
 import datetime
@@ -30,6 +52,34 @@ readline.parse_and_bind("tab: complete")
 
 logger = logging.getLogger(__name__) # module logger
 
+def examine_text_data_file(filename):
+  """
+  Examine a file to guide ``genfromtxt()``
+  
+  Things to look for::
+  
+    * Is there a header line with column names? If not, use argument ``names``.
+    * Is the number of names equal to the number of columns? If not::
+      - use argument ``names`` and ``skip_header=1``, or
+      - use argument ``delimiter`` with a list of column widths 
+        and ``skip_header=1``.
+  """
+  print(examine_text_data_file.__doc__)
+  fd = open(filename, "r")
+  lines = fd.readlines()
+  fd.close()
+  topline = lines[0].strip().split()
+  print("          1         2         3         4         5         6         7")
+  print("01234567890123456789012345678901234567890123456789012345678901234567890123456789")
+  print(lines[0].strip())
+  print(lines[1].strip())
+  print(" ...")
+  print(lines[-1].strip())
+  data = NP.genfromtxt(filename, dtype=None, names=None, skip_header=1, encoding=None)
+  print("%d datatypes:" % len(data.dtype.fields))
+  for item in data.dtype.fields:
+    print(item, data.dtype.fields[item])
+  
 class Observation(object):
   """
   superclass for a data structure and methods
@@ -119,11 +169,17 @@ class Observation(object):
               'timestr','chan','tsys','top','diode','level','cryotemp',
               'windspeed','winddir','ambtemp','pressure',
               'ra','dec','ra1950','dec1950','ra2000','dec2000']
-  def __init__(self, name=None, dss=None, channel_names=None):
+              
+  def __init__(self, parent=None, name=None, dss=None, date=None, project=None):
     """
-    Arguments
-    =========
-    channel_names:string: like "XL"
+    Initialize the base Observation class.
+    
+    Args:
+      parent (Session):   session to which thos ibservation belongs
+      name (str):         an identifier; default is station ID + "obs"
+      dss (int):          station number
+      date (str):         "YEAR/DOY"
+      project (str):      directory under /usr/local/projects
     """
     self.logger = logging.getLogger(logger.name+".Observation")
     if name:
@@ -135,19 +191,110 @@ class Observation(object):
       self.longitude = self.obs.long
       self.latitude = self.obs.lat
     else:
-      self.logger.error("__init__: this requires observatory location")
+      self.logger.error("__init__: requires observatory location")
       raise Exception("Where were the data taken?")
-    self.channel = {}
-    if channel_names:
-      for ch in channel_names:
-        self.channel[ch] = self.Channel(self, ch)
-
-  def load_text_with_header(self, filename, delimiter=" ",
-                            channels=None, ignore=[], skip_header=0,
-                            names=True, aliases={"epoch": "unixtime"}):
+    if date:
+      y,d = date.split('/')
+      self.year = int(y); self.DOY = int(d)
+      projdatapath, self.sessionpath, rawdatapath = \
+                              get_obs_dirs(project, dss, self.year, self.DOY,
+                                           datafmt=None)
+      self.logger.debug("__init__: session path: %s", self.sessionpath)
+    else:
+      self.logger.error("__init__: requires a date")
+      raise Exception("When were the date taken?")
+    if project:
+      self.project = project
+    else:
+      self.logger.error("__init__: requires a project")
+      raise Exception("Where are the session's working files?")
+      
+    
+  def make_channels(self, signals, props=None):
     """
-    Takes a text table with headers and converts it into a structured numpy
-    array. That means that a column can be extracted using `data[label]`.
+    Assign properties to the channels.  
+    
+    The prop keys are "freq", "pol", and "IFtype".
+    
+    Args:
+      props (dict of dicts): signal channel properties.
+    """
+    self.channel = {}
+    for ch in signals:
+      chindex = signals.index(ch)
+      if props:
+        self.channel[ch] = self.Channel(self, ch, 
+                                        freq=props['freq'][ch],
+                                        bw=props['bw'][ch],
+                                        pol=props['pol'][ch],
+                                        IFtype=props['IFtype'][ch])
+      else:
+        self.channel[ch] = self.Channel(self, ch)
+      if props:
+        for prop in props:
+          self.channel[ch][prop] = props[prop]
+      
+  def open_datafile(self, filename, delimiter=" ", names=True, skip_header=0):
+    """
+    Opens and reads a data file
+    
+    Args:
+      filename (str):    text data file name
+      delimiter (str):   separator between columns (default: whitespace)
+      names (bool):      file row has column names (default: True)
+      skip_header (int): number of rows to skip at beginning of file
+    
+    Returns:
+      ndarray: 
+    """
+    data = NP.genfromtxt(filename, 
+                         delimiter=delimiter,
+                         dtype=None,
+                         names=names,
+                         case_sensitive='lower', 
+                         skip_header=skip_header,
+                         encoding=None)
+    return data
+  
+  def get_data_channels(self, data, ignore=None):
+    """
+    Gets or sets the names of the signal columns
+    
+    Args:
+      data (ndarray): data read from text file
+      ignore (list of str): columns to ignore; default None
+    
+    Returns:
+      (list of str, list of str): metadata, signals
+    """
+    names = data.dtype.names
+    metadata = []
+    signals = []
+    for name in names:
+      if ignore:
+        if name in ignore:
+          pass
+      if name.casefold() in map(str.casefold, self.aliases):
+        key = self.aliases[name].lower() # we use only lower case names
+      else:
+        key = name.lower()
+      self.logger.debug("get_data_channels: doing %s for %s", key, name)
+      if key in map(str.casefold, Observation.reserved):
+        if key.casefold() in ['top', 'tsys']:
+          signals.append(key)
+        else:
+          metadata.append(key)
+      else:
+        signals.append(key)
+    self.logger.debug("get_data_channels: signals: %s", signals)
+    self.logger.debug("get_data_channels: metadata: %s", metadata)
+    return metadata, signals  
+
+  def make_data_struct(self, data, metadata, signals):
+    """
+    Takes a text table with headers and converts it into a numpy ``ndarray``.
+    
+    That means that a column can be extracted using `data[label]`.
 
     Ideally, there must be a header word for each column and the separator must
     not be  ambiguous, for example, a space if the column headers also include
@@ -159,13 +306,9 @@ class Observation(object):
       In [1]: from Data_Reduction import Observation
       In [2]: from Astronomy.DSN_coordinates import DSS
       In [3]: import logging
-      In [4]: tel = DSS(28)
-      In [5]: obs = Observation(longitude=tel.long, latitude=tel.lat)
-      In [6]: obs.logger.setLevel(logging.INFO)
-      In [7]: obs.load_text_with_header('t12127.10',
-                      delimiter=[17,16,3,11,7,9,8,2,6],
-                      names="UTC Epoch Chan Tsys Int Az El Diode Level".split(),
-                      skip_header=1)
+      In [4]: logger = logging.getLogger()
+      In [5]: logger.setLevel(logging.INFO)
+      In [6]: obs = Observation(dss=28)
 
     The ``names`` string was just copied by hand from the first line in the
     file. It could also be done with ``file.readline()``.
@@ -189,139 +332,58 @@ class Observation(object):
     
     @return: column headers (str), data array(str)
     """
-    data = NP.genfromtxt(filename, delimiter=delimiter, dtype=None, names=names,
-                         case_sensitive='lower', skip_header=skip_header)
-    numdata = len(data)
-    self.logger.debug("load_text_with_header: %d samples", numdata)
-    names = data.dtype.names
-    self.logger.debug("load_text_with_header: names type is %s", type(names))
-    self.logger.info("load_text_with_header: names = %s", names)
     # get the known columns:
     self.data = {}
-    self.unknown_cols = []
-    for name in names:
-        if name.casefold() in map(str.casefold, aliases):
-            key = aliases[name].lower() # we use only lower case names
-        else:
-            key = name.lower()
-        if key in map(str.casefold, Observation.reserved):
-            self.data[key] = data[name]
-        elif name in ignore:
-            pass
-        else:
-            self.unknown_cols.append(name)
-    for name in self.unknown_cols:
-        self.data[name] = data[name]
+    self.numdata = len(data)
+    self.logger.debug("make_data_struct: using aliases: %s", self.aliases)
     # get columns that are better computed once instead of as needed
-    colnames = list(self.data.keys())
-    if 'unixtime' in colnames:
-        self.data['datetime'] = []
-        self.data['date_num'] = []
-        for idx in list(range(numdata)):
-          tm = data[next(key for key, value in aliases.items()
-                                                   if value == 'unixtime')][idx]
-          dt = datetime.datetime.utcfromtimestamp(tm)
-          self.data['datetime'].append(dt)
-          self.data['date_num'].append(MPLd.date2num(dt))
+    for signal in signals:
+      self.logger.debug("make_data_struct: for signal: %s", signal)
+      if signal in self.aliases.items():
+        self.data[signal] = data[next(key for key, value in self.aliases.items()
+                                                       if value == signal)][idx]
+      else:
+        self.data[signal] = data[signal]
+    if 'unixtime' in metadata:
+      if 'unixtime' in data.dtype.names:
+        self.data['unixtime'] = data['unixtime']
+      else:
+        self.data['unixtime'] = data[next(key 
+                                          for key, value in self.aliases.items()
+                                          if value == 'unixtime')]
+      self.data['datetime'] = []
+      self.data['date_num'] = []
+      for idx in list(range(self.numdata)):
+        if 'unixtime' in data.dtype.names:
+          tm = data['unixtime'][idx]
+        else:
+          tm = data[next(key for key, value in self.aliases.items()
+                                                   if value == 'unixtime')][idx]          
+        dt = datetime.datetime.utcfromtimestamp(tm)
+        self.data['datetime'].append(dt)
+        self.data['date_num'].append(MPLd.date2num(dt))
     if self.check_for(data, 'azel'):
       # azel exists; compute radec if needed; then radec2000 if needed
       if self.check_for(data, 'radec'):
         pass
       else:
-        # compute RA and dec
-        RA = []; decs = []; RAdecs = []
-        for idx in list(range(numdata)):
-          # setup
-          dt = self.data['datetime'][idx]
-          time_tuple = (dt.year,
-                        DT.day_of_year(dt.year,dt.month,dt.day)
-                        + (  dt.hour
-                           + dt.minute/60.
-                           + dt.second/3600.
-                           + dt.microsecond/3600./1e6)/24.)
-          azimuth = data['az'][idx]
-          elevation = data['el'][idx]
-          # compute
-          ra,dec = A.AzEl_to_RaDec(azimuth, elevation,
-                                   self.latitude, self.longitude,
-                                   time_tuple)
-          RA.append(ra)
-          decs.append(dec)
-          RAdecs.append((RA,decs))
-        self.data['ra'] = RA
-        self.data['dec'] = dec
-        self.data['radec'] = RAdecs
+        self.radec_from_azel()
         if self.check_for(data, 'radec2000'):
           # ra2000 and dec2000 already exist
           pass
         else:
-          # compute RA2000 and dec2000 from observed RA and dec
-          RA2000 = []; decs2000 = []; RAdec2000 = []
-          for idx in list(range(numdata)):
-            # setup
-            tm = self.data['unixtime'][idx]
-            mjd = DT.UnixTime_to_MJD(tm)
-            MJD = int(mjd)
-            UT = 24*(mjd-MJD)
-            ra = self.data['ra']
-            dec = self.data['dec']
-            # compute
-            ra2000,dec2000 = A.apparent_to_J2000(MJD,UT, 
-                                                 ra, dec,
-                                                 self.longitude, self.latitude)
-            RA2000.append(ra2000)
-            decs2000.append(dec2000)
-            RAdec2000.append((ra2000,dec2000))
-          self.data['ra2000'] = RA2000
-          self.data['dec2000'] = dec2000
-          self.data['radec2000'] = RAdec2000
-      # finished with azel -> radec -> radec2000
+          self.radec2000_from_radec()
     elif self.check_for(data, 'radec2000'):
       # coordinates exist; compute back to azimuth and elevation
       if self.check_for(data, 'radec'):
         pass
       else:
         # compute observed RA and dec
-        RA = []; decs = []; RAdecs = []
-        for idx in list(range(numdata)):
-          # setup
-          tm = self.data['unixtime'][idx]
-          mjd = DT.UnixTime_to_MJD(tm)
-          MJD = int(mjd)
-          UT = 24*(mjd-MJD)
-          ra2000 = self.data['ra2000'][idx]
-          dec2000 = self.data['dec2000'][idx]
-          # compute
-          ra, dec = A.J2000_to_apparent(MJD, UT, 
-                                        ra2000*math.pi/12, dec2000*math.pi/180)
-          RA.append(ra)
-          decs.append(dec)
-          RAdecs.append((ra,dec))
-        self.data['ra'] = RA
-        self.data['dec'] = decs
-        self.data['radec'] = RAdecs
+        self.radec_from_radec2000()
         if self.check_for(data, 'azel'):
           pass
         else:
-          # compute az and el
-          azs = []; els = []; azels = []
-          for idx in list(range(numdata)):
-            # setup
-            ra = self.data['ra'][idx]
-            dec = self.data['dec'][idx]
-            timetuple = self.data['datetime'][idx].timetuple()
-            year = timetuple.tm_year
-            doy = timetuple.tm_yday + (timetuple.tm_hour
-                                  +(timetuple.tm_min+timetuple.tm_sec/60)/60)/24
-            # compute
-            az, el = A.RaDec_to_AzEl(ra, dec, 
-                                     self.latitude, self.longitude, (year,doy))
-            azs.append(az)
-            els.append(el)
-            azels.append((az,el))
-          self.data['az'] = azs
-          self.data['el'] = els
-          self.data['azel'] = azels
+          self.azel_from_radec()
     # in here check for 'radec'
     else:
       self.logger.error("no coordinates found in data")
@@ -349,21 +411,174 @@ class Observation(object):
   def check_for(self, data, longlat):
     """
     Checks for separate coordinates and splits if coord pairs
+    
+    Args:
+      data (dict):    attribute ``data``
+      longlat (str): "azel", or "radec", or "radecEPOC"
     """
     longitude, latitude, epoch = self.splitkey(longlat)
     if longitude in data.dtype.names and \
        latitude  in data.dtype.names:
       self.logger.debug("check_for: data has %s and %s", longitude, latitude)
+      self.data[longitude] = data[longitude]
+      self.data[latitude]  = data[latitude]
       return True
     elif longlat in data.dtype.names:
       self.logger.debug("check_for: data has %s", longlat)
-      data[longitude],data[latitude] = map(None, *data[longlat])
-      self.logger.debug("check_for: added %s and %s to data", longitude, latitude)
+      self.data[longitude],self.data[latitude] = map(None, *data[longlat])
+      self.logger.debug("check_for: added %s and %s to data",
+                        longitude, latitude)
       return True
     else:
       # coords need to be computed from other coords
       
       return False
+  
+  def radec_from_azel(self):
+    """
+    compute RA and dec from az and el
+    """
+    RA = []; decs = []; RAdecs = []
+    for idx in list(range(self.numdata)):
+      # setup
+      dt = self.data['datetime'][idx]
+      time_tuple = (dt.year,
+                    DT.day_of_year(dt.year,dt.month,dt.day)
+                      + (  dt.hour
+                         + dt.minute/60.
+                         + dt.second/3600.
+                         + dt.microsecond/3600./1e6)/24.)
+      azimuth = self.data['az'][idx]
+      elevation = self.data['el'][idx]
+      # compute
+      ra,dec = A.AzEl_to_RaDec(azimuth, elevation,
+                               self.latitude, self.longitude,
+                               time_tuple)
+      RA.append(ra)
+      decs.append(dec)
+      RAdecs.append((RA,decs))
+    self.data['ra'] = RA
+    self.data['dec'] = dec
+    self.data['radec'] = RAdecs
+  
+  def radec2000_from_radec(self):
+    """
+    compute RA2000 and dec2000 from observed RA and dec
+    """
+    RA2000 = []; decs2000 = []; RAdec2000 = []
+    for idx in list(range(self.numdata)):
+      # setup
+      tm = self.data['unixtime'][idx]
+      mjd = DT.UnixTime_to_MJD(tm)
+      MJD = int(mjd)
+      UT = 24*(mjd-MJD)
+      ra = self.data['ra']
+      dec = self.data['dec']
+      # compute
+      ra2000,dec2000 = A.apparent_to_J2000(MJD,UT, 
+                                           ra, dec,
+                                           self.longitude, self.latitude)
+      RA2000.append(ra2000)
+      decs2000.append(dec2000)
+      RAdec2000.append((ra2000,dec2000))
+    self.data['ra2000'] = RA2000
+    self.data['dec2000'] = dec2000
+    self.data['radec2000'] = RAdec2000
+
+  def radec_from_radec2000(self):
+    """
+    compute apparent RA and dec. from J2000 RA and dec
+    """
+    RA = []; decs = []; RAdecs = []
+    for idx in list(range(self.numdata)):
+      # setup
+      tm = self.data['unixtime'][idx]
+      mjd = DT.UnixTime_to_MJD(tm)
+      MJD = int(mjd)
+      UT = 24*(mjd-MJD)
+      ra2000 = self.data['ra2000'][idx]
+      dec2000 = self.data['dec2000'][idx]
+      # compute
+      ra, dec = A.J2000_to_apparent(MJD, UT, 
+                                    ra2000*math.pi/12, dec2000*math.pi/180)
+      RA.append(ra)
+      decs.append(dec)
+      RAdecs.append((ra,dec))
+    self.data['ra'] = RA
+    self.data['dec'] = decs
+    self.data['radec'] = RAdecs
+
+  def azel_from_radec(self):
+    """
+    compute azimuth and elevation from apparent right ascension and declination
+    """
+    azs = []; els = []; azels = []
+    for idx in list(range(self.numdata)):
+      # setup
+      ra = self.data['ra'][idx]
+      dec = self.data['dec'][idx]
+      timetuple = self.data['datetime'][idx].timetuple()
+      year = timetuple.tm_year
+      doy = timetuple.tm_yday + (timetuple.tm_hour
+                              +(timetuple.tm_min+timetuple.tm_sec/60)/60)/24
+      # compute
+      az, el = A.RaDec_to_AzEl(ra, dec, 
+                                     self.latitude, self.longitude, (year,doy))
+      azs.append(az)
+      els.append(el)
+      azels.append((az,el))
+    self.data['az'] = azs
+    self.data['el'] = els
+    self.data['azel'] = azels
+    
+  def get_offsets(self, source="Sun", xdec_ofst=0., dec_ofst=0.):
+    """
+    Generates a map in coordinates relative to a source
+    
+    If the source is the default, the position of the Sun will be computed for
+    the time of each sample. IT SEEMS LIKE A GOOD IDEA TO DO THIS FOR PLANETS
+    ALSO.
+    
+    This adds elements with keys ``xdec_offset`` and ``dec_offset`` to the
+    attribute ``data``.
+
+    @param source : source at map center
+    @type  source : ephem source instance
+
+    @param xdec_ofst : relative X-dec position of sample
+    @type  xdec_ofst : float
+
+    @param dec_ofst : relative dec position of sample
+    @type  dec_ofst : float
+    
+    @return: (dxdecs,ddecs) in degrees
+    """
+    if 'date_num' in self.data:
+      pass
+    else:
+      self.logger.debug("get_offsets: this does not look like a good dataset")
+      raise Exception("check the datafile")
+    if source.lower() == "sun":
+      src = ephem.Sun()
+    else:
+      src = AE.calibrator(source)
+    self.data['dec_offset'] = []
+    self.data['xdec_offset'] = []
+    for count in range(len(self.data['date_num'])):
+      dt = MPLd.num2date(self.data['date_num'][count])
+      if type(src) == AE.Quasar:
+        pass
+      else:
+        src.compute(dt)
+      ra_center = src.ra*12/math.pi    # hours
+      dec_center = src.dec*180/math.pi # degrees
+      decrad = src.dec
+      # right ascension increases to the left, cross-dec to the right
+      self.data['xdec_offset'].append(xdec_ofst - 
+                       (self.data['ra'][count] - ra_center)*15*math.cos(decrad) )
+      self.data['dec_offset'].append(  dec_ofst + 
+                        self.data['dec'][count] - dec_center)
+    return self.data['xdec_offset'], self.data['dec_offset']
     
   def unpack_to_complex(self, rawdata):
     """
@@ -394,7 +609,7 @@ class Observation(object):
     """
     Class for a signal path
     """
-    def __init__(self, parent, name, freq=None, bw=None, pol=None):
+    def __init__(self, parent, name, freq=None, bw=None, pol=None, IFtype=None):
       """
       Notes
       =====
@@ -413,7 +628,8 @@ class Observation(object):
       self.data['freq'] = freq
       self.data['bw'] = bw
       self.data['pol'] = pol 
-  
+
+
 def get_obs_session(project=None, dss=None, date=None, path='proj'):
   """
   Provides project, station, year and DOY, asking as needed.

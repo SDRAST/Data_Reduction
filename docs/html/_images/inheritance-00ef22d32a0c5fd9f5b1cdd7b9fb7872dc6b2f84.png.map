@@ -1,0 +1,6 @@
+<map id="inheritanceb272fab77a" name="inheritanceb272fab77a">
+<area shape="rect" id="node1" href="api/Data_Reduction.Malargue.BoresightScan.html#Data_Reduction.Malargue.BoresightScan" target="_top" title="class for a single scan during a boresight" alt="" coords="155,53,269,79"/>
+<area shape="rect" id="node2" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" target="_top" title="superclass for a data structure and methods" alt="" coords="5,79,107,104"/>
+<area shape="rect" id="node3" href="api/Data_Reduction.Malargue.Map.html#Data_Reduction.Malargue.Map" target="_top" title="Class for all the data and methods associated with a raster scan map" alt="" coords="176,103,248,128"/>
+<area shape="rect" id="node4" href="api/Data_Reduction.Malargue.Session.html#Data_Reduction.Malargue.Session" target="_top" title="Class for an observing session on a given year and DOY" alt="" coords="20,5,92,31"/>
+</map>

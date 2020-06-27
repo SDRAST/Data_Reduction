@@ -73,7 +73,7 @@
 <h1>Observation<a class="headerlink" href="#observation" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="Data_Reduction.Observation">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">channel_names</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>superclass for a data structure and methods</p>
 <dl class="py attribute">
@@ -199,8 +199,8 @@ never get one without the other.)</p></li>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Observation.load_text_with_header" title="Data_Reduction.Observation.load_text_with_header"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_text_with_header</span></code></a>(filename[, delimiter, …])</p></td>
-<td><p>Takes a text table with headers and converts it into a structured numpy array.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observation.load_text_with_header</span></code></p></td>
+<td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Observation.sideband_separate" title="Data_Reduction.Observation.sideband_separate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sideband_separate</span></code></a>(data)</p></td>
 <td><p>Converts a complex spectrum array and returns two reals with USB and LSB</p></td>
@@ -211,50 +211,6 @@ never get one without the other.)</p></li>
 </tbody>
 </table>
 <p class="rubric">Methods Documentation</p>
-<dl class="py method">
-<dt id="Data_Reduction.Observation.load_text_with_header">
-<code class="sig-name descname">load_text_with_header</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="o">=</span><span class="default_value">' '</span></em>, <em class="sig-param"><span class="n">channels</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ignore</span><span class="o">=</span><span class="default_value">[]</span></em>, <em class="sig-param"><span class="n">skip_header</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">names</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">aliases</span><span class="o">=</span><span class="default_value">{'epoch': 'unixtime'}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.load_text_with_header" title="Permalink to this definition">¶</a></dt>
-<dd><p>Takes a text table with headers and converts it into a structured numpy
-array. That means that a column can be extracted using <cite>data[label]</cite>.</p>
-<p>Ideally, there must be a header word for each column and the separator must
-not be  ambiguous, for example, a space if the column headers also include
-spaces.  However, the <code class="docutils literal notranslate"><span class="pre">numpy</span></code> function <code class="docutils literal notranslate"><span class="pre">genfromtxt()</span></code> is very flexible.
-Here is an example of reading DSS-28 text files from solar observations in
-2012, 9 columns but 7 header words, when database access was not yet
-practical:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="kn">from</span> <span class="nn">Data_Reduction</span> <span class="kn">import</span> <span class="n">Observation</span>
-<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="kn">from</span> <span class="nn">Astronomy.DSN_coordinates</span> <span class="kn">import</span> <span class="n">DSS</span>
-<span class="n">In</span> <span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="kn">import</span> <span class="nn">logging</span>
-<span class="n">In</span> <span class="p">[</span><span class="mi">4</span><span class="p">]:</span> <span class="n">tel</span> <span class="o">=</span> <span class="n">DSS</span><span class="p">(</span><span class="mi">28</span><span class="p">)</span>
-<span class="n">In</span> <span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">Observation</span><span class="p">(</span><span class="n">longitude</span><span class="o">=</span><span class="n">tel</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">latitude</span><span class="o">=</span><span class="n">tel</span><span class="o">.</span><span class="n">lat</span><span class="p">)</span>
-<span class="n">In</span> <span class="p">[</span><span class="mi">6</span><span class="p">]:</span> <span class="n">obs</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
-<span class="n">In</span> <span class="p">[</span><span class="mi">7</span><span class="p">]:</span> <span class="n">obs</span><span class="o">.</span><span class="n">load_text_with_header</span><span class="p">(</span><span class="s1">&#39;t12127.10&#39;</span><span class="p">,</span>
-                <span class="n">delimiter</span><span class="o">=</span><span class="p">[</span><span class="mi">17</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">6</span><span class="p">],</span>
-                <span class="n">names</span><span class="o">=</span><span class="s2">&quot;UTC Epoch Chan Tsys Int Az El Diode Level&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span>
-                <span class="n">skip_header</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The <code class="docutils literal notranslate"><span class="pre">names</span></code> string was just copied by hand from the first line in the
-file. It could also be done with <code class="docutils literal notranslate"><span class="pre">file.readline()</span></code>.</p>
-<p>However, the subclass <code class="docutils literal notranslate"><span class="pre">GAVRT.Observation</span></code> will read all the t-files in a
-directory and instead of <code class="docutils literal notranslate"><span class="pre">Tsys</span></code> has <code class="docutils literal notranslate"><span class="pre">counts</span></code> which is itself a dict with
-an item for each receiver channel.</p>
-<p>By default, columns with unknown names are assumed to be power from the
-channel whose name is the column name. Columns that have unknown names
-(i.e. not in ‘reserved’) must have their names in ‘ignore’.</p>
-<p>:param filename : name of the data file
-:type  filename : str</p>
-<p>:param delimiter : column separator
-:type  delimiter : str</p>
-<p>:param aliases : alternative names for keywords
-:type  aliases : dict</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>column headers (str), data array(str)</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt id="Data_Reduction.Observation.sideband_separate">
 <code class="sig-name descname">sideband_separate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.sideband_separate" title="Permalink to this definition">¶</a></dt>

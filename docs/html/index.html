@@ -15,7 +15,7 @@
     <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="freq_to_chan" href="api/Data_Reduction.freq_to_chan.html" /> 
+    <link rel="next" title="examine_text_data_file" href="api/Data_Reduction.examine_text_data_file.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -27,7 +27,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="api/Data_Reduction.freq_to_chan.html" title="freq_to_chan"
+          <a href="api/Data_Reduction.examine_text_data_file.html" title="examine_text_data_file"
              accesskey="N">next</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
@@ -95,8 +95,8 @@
 </ul>
 
   <h4>Next topic</h4>
-  <p class="topless"><a href="api/Data_Reduction.freq_to_chan.html"
-                        title="next chapter">freq_to_chan</a></p>
+  <p class="topless"><a href="api/Data_Reduction.examine_text_data_file.html"
+                        title="next chapter">examine_text_data_file</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -136,10 +136,27 @@ name used, <em>e.g.</em> <cite>argmax()</cite>.</p>
 <div class="section" id="module-Data_Reduction">
 <span id="data-reduction-package"></span><h2>Data_Reduction Package<a class="headerlink" href="#module-Data_Reduction" title="Permalink to this headline">¶</a></h2>
 <p>Modules to support data reduction in Python.</p>
+<p>The base module is intended for reading data from a text file as a <code class="docutils literal notranslate"><span class="pre">numpy</span></code>
+structured array.  The function <code class="docutils literal notranslate"><span class="pre">examine_text_data_file()</span></code> reveals the
+structure of the file.</p>
+<p class="rubric">Examples</p>
+<p>Using the original header line:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">obs</span> <span class="o">=</span> <span class="n">Observation</span><span class="p">(</span><span class="n">dss</span><span class="o">=</span><span class="mi">28</span><span class="p">,</span> <span class="n">datafile</span><span class="o">=</span><span class="n">datadir</span><span class="o">+</span><span class="s1">&#39;t12127.10&#39;</span><span class="p">,</span>
+                  <span class="n">delimiter</span><span class="o">=</span><span class="p">[</span><span class="mi">17</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">6</span><span class="p">],</span> <span class="n">skip_header</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                  <span class="n">names</span><span class="o">=</span><span class="s2">&quot;UTC Epoch Chan Tsys Int Az El Diode Level&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>In this case the column “UTC” comprises the first three data columns.</p>
+<p>Using a new set of headers:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">obs2</span> <span class="o">=</span> <span class="n">Observation</span><span class="p">(</span><span class="n">dss</span><span class="o">=</span><span class="mi">28</span><span class="p">,</span> <span class="n">datafile</span><span class="o">=</span><span class="n">datadir</span><span class="o">+</span><span class="s1">&#39;t12127.10&#39;</span><span class="p">,</span>
+                   <span class="n">skip_header</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">names</span><span class="o">=</span><span class="s2">&quot;Year DOY UTC Epoch Chan Tsys Integr Az El Diode Level&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>This adds names for the first two columns and replaces “Int” with “Integr”.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>These provides the base class <code class="docutils literal notranslate"><span class="pre">Observation</span></code>. IN PROGRESS!  The definition
-of the keywords is done.</p>
+<p>Still IN PROGRESS!</p>
 </div>
 <div class="section" id="functions">
 <h3>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h3>
@@ -149,31 +166,34 @@ of the keywords is done.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.freq_to_chan.html#Data_Reduction.freq_to_chan" title="Data_Reduction.freq_to_chan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">freq_to_chan</span></code></a>(frequency, bandwidth, n_chans)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.examine_text_data_file.html#Data_Reduction.examine_text_data_file" title="Data_Reduction.examine_text_data_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">examine_text_data_file</span></code></a>(filename)</p></td>
+<td><p>Examine a file to guide <code class="docutils literal notranslate"><span class="pre">genfromtxt()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.freq_to_chan.html#Data_Reduction.freq_to_chan" title="Data_Reduction.freq_to_chan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">freq_to_chan</span></code></a>(frequency, bandwidth, n_chans)</p></td>
 <td><p>Returns the channel number where a given frequency is to be found.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.get_freq_array.html#Data_Reduction.get_freq_array" title="Data_Reduction.get_freq_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_freq_array</span></code></a>(bandwidth, n_chans)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.get_freq_array.html#Data_Reduction.get_freq_array" title="Data_Reduction.get_freq_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_freq_array</span></code></a>(bandwidth, n_chans)</p></td>
 <td><p>Create an array of frequencies for the channels of a backend</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.get_num_chans.html#Data_Reduction.get_num_chans" title="Data_Reduction.get_num_chans"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_num_chans</span></code></a>(linefreq, bandwidth, max_vel_width)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.get_num_chans.html#Data_Reduction.get_num_chans" title="Data_Reduction.get_num_chans"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_num_chans</span></code></a>(linefreq, bandwidth, max_vel_width)</p></td>
 <td><p>compute the base 2 number of output channels for the specified resolution</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.get_obs_dirs.html#Data_Reduction.get_obs_dirs" title="Data_Reduction.get_obs_dirs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_dirs</span></code></a>(project, station, year, DOY[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.get_obs_dirs.html#Data_Reduction.get_obs_dirs" title="Data_Reduction.get_obs_dirs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_dirs</span></code></a>(project, station, year, DOY[, …])</p></td>
 <td><p>Returns the directories where data and working files are kept</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.get_obs_session.html#Data_Reduction.get_obs_session" title="Data_Reduction.get_obs_session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_session</span></code></a>([project, dss, date, path])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.get_obs_session.html#Data_Reduction.get_obs_session" title="Data_Reduction.get_obs_session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_session</span></code></a>([project, dss, date, path])</p></td>
 <td><p>Provides project, station, year and DOY, asking as needed.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.get_obs_session_old.html#Data_Reduction.get_obs_session_old" title="Data_Reduction.get_obs_session_old"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_session_old</span></code></a>([project, dss, date])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.get_obs_session_old.html#Data_Reduction.get_obs_session_old" title="Data_Reduction.get_obs_session_old"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_session_old</span></code></a>([project, dss, date])</p></td>
 <td><p>Asks user for parameters to locate observation session paths</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.get_smoothed_bandshape.html#Data_Reduction.get_smoothed_bandshape" title="Data_Reduction.get_smoothed_bandshape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_smoothed_bandshape</span></code></a>(spectrum[, degree, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.get_smoothed_bandshape.html#Data_Reduction.get_smoothed_bandshape" title="Data_Reduction.get_smoothed_bandshape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_smoothed_bandshape</span></code></a>(spectrum[, degree, …])</p></td>
 <td><p>Do a Gaussian smoothing of the spectrum and then fit a polynomial.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.reduce_spectrum_channels.html#Data_Reduction.reduce_spectrum_channels" title="Data_Reduction.reduce_spectrum_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reduce_spectrum_channels</span></code></a>(spectrum, refval, …)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.reduce_spectrum_channels.html#Data_Reduction.reduce_spectrum_channels" title="Data_Reduction.reduce_spectrum_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reduce_spectrum_channels</span></code></a>(spectrum, refval, …)</p></td>
 <td><p>Reduce the number of channels in the spectrum.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.select_data_files.html#Data_Reduction.select_data_files" title="Data_Reduction.select_data_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_data_files</span></code></a>(datapath[, name_pattern, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.select_data_files.html#Data_Reduction.select_data_files" title="Data_Reduction.select_data_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_data_files</span></code></a>(datapath[, name_pattern, …])</p></td>
 <td><p>Provide the user with menu to select data files.</p></td>
 </tr>
 </tbody>
@@ -187,7 +207,7 @@ of the keywords is done.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" title="Data_Reduction.Observation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observation</span></code></a>([name, dss, channel_names])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" title="Data_Reduction.Observation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observation</span></code></a>([parent, name, dss, date, project])</p></td>
 <td><p>superclass for a data structure and methods</p></td>
 </tr>
 </tbody>
@@ -455,14 +475,16 @@ creating a simple 1-table file is this:</p>
 <div class="section" id="module-Data_Reduction.Malargue">
 <span id="data-reduction-malargue-package"></span><h2>Data_Reduction.Malargue Package<a class="headerlink" href="#module-Data_Reduction.Malargue" title="Permalink to this headline">¶</a></h2>
 <p>Classes for reducing observations</p>
-<p>This is barely started by extracting from GAVRT.  UNDER DEVELOPMENT</p>
+<p>This was designed to support Malargue observations but can be used for other
+observatories (identified by a DSS number) that produce a single text file in
+row/column format.</p>
 <p>An <code class="docutils literal notranslate"><span class="pre">Observation</span></code> object comprises a data structure in this form:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>UNIXtime     NP.float (N,)            seconds since 1970.0
 azimuth      NP.float (N,)            horizon system longitude (deg)
 elevation    NP.float (N,)            horizon system latitude (deg)
 RA           NP.float (N,)            apparent topocentric right ascension
 dec          NP.float (N,)            apparent topocentric declination
-MPL_datenum  NP.float (N,)            number of days since 0001-01-01 UTC, plus 1
+MPL_datenum  NP.float (N,)            number of days since 0001-01-01 UTC +1
                                       ({*e.g.* 0001-01-01, 06:00 is 1.25)
 power        NP.float {ch:(N,),... }  or equivalent, like detector volts,
                                       for each channel
@@ -471,24 +493,33 @@ pol          str      {ch: ?}         polarization of the channel
 </pre></div>
 </div>
 <p class="rubric">Notes</p>
-<ul class="simple">
-<li><p>If the data are provided as a 2D NP array, then each provided parameter must
-be a column and a dict must be provided to map parameter name (defined above)
-to column number.</p></li>
-<li><p>If the data are provided as a structured NP array, then the <code class="docutils literal notranslate"><span class="pre">names</span></code> item
-of the array must use those defined above.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">azimuth</span></code> and <code class="docutils literal notranslate"><span class="pre">elevation</span></code> are given, then apparent <code class="docutils literal notranslate"><span class="pre">RA</span></code> and <code class="docutils literal notranslate"><span class="pre">dec</span></code>
-are computed.</p></li>
-<li><p>IF apparent <code class="docutils literal notranslate"><span class="pre">RA</span></code> and <code class="docutils literal notranslate"><span class="pre">dec</span></code> are given, then <code class="docutils literal notranslate"><span class="pre">azimuth</span></code> and <code class="docutils literal notranslate"><span class="pre">elevation</span></code>
-are computed.</p></li>
-<li><p>Other items may be defined for the dict (<em>e.g</em> <code class="docutils literal notranslate"><span class="pre">RA2000</span></code>, <code class="docutils literal notranslate"><span class="pre">dec2000</span></code>) but
-might not be used by the <code class="docutils literal notranslate"><span class="pre">Observation</span></code> object.</p></li>
-<li><p>If the mean astrometic geocentric position is given, then the apparent
-topocentric position is computed, and then <code class="docutils literal notranslate"><span class="pre">azimuth</span></code> and <code class="docutils literal notranslate"><span class="pre">elevation</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MPL_datenum</span></code> is computed from <code class="docutils literal notranslate"><span class="pre">UNIXtime</span></code>.</p></li>
-<li><p>The telescope position and other attributes are determined from its DSN
-number desigbation, <em>e.g.</em> <code class="docutils literal notranslate"><span class="pre">DSS(28)</span></code>.</p></li>
-</ul>
+<p>Data from a text file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>* The original data are provided as a 2D text array. Each provided parameter
+  must be in a column.
+* If the column names in the text file are not suitable, then there must be
+  a dict to map parameter name to column number.
+* The telescope position and other attributes are determined from its DSN
+  number designation, *e.g.* ``DSS(28)``.
+* If the mean astrometic geocentric position (RA, dec from a catalog at some
+  epoch) is given, then the topocentric apparent celestial position
+  (RA, dec for the date of observation) is computed, and then the
+  topocentric horizontal position (az, el) is computed.
+* If a topocentric position is given, then the topocentric apparent celestial
+  position is computed.
+</pre></div>
+</div>
+<p>Data from a <code class="docutils literal notranslate"><span class="pre">numpy</span></code> (structured) <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>* If the data are provided as a structured NP array, then the ``names`` item
+  of the array must use those defined above.
+</pre></div>
+</div>
+<p>Additional items:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>* Other items may be defined for the dict but might not be used by the
+  ``Observation`` object.
+* ``MPL_datenum`` is computed from ``UNIXtime`` for convenience in plotting
+  time series.
+</pre></div>
+</div>
 <div class="section" id="id6">
 <h3>Functions<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
@@ -520,7 +551,7 @@ number desigbation, <em>e.g.</em> <code class="docutils literal notranslate"><sp
 <tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.Map.html#Data_Reduction.Malargue.Map" title="Data_Reduction.Malargue.Map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Map</span></code></a>(parent[, name, source])</p></td>
 <td><p>Class for all the data and methods associated with a raster scan map</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.Observation.html#Data_Reduction.Malargue.Observation" title="Data_Reduction.Malargue.Observation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observation</span></code></a>(parent)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.Observation.html#Data_Reduction.Malargue.Observation" title="Data_Reduction.Malargue.Observation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observation</span></code></a>([parent, name, dss, date, …])</p></td>
 <td><p>Class for any group of data for a single purpose.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.Session.html#Data_Reduction.Malargue.Session" title="Data_Reduction.Malargue.Session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Session</span></code></a>(parent, year, doy[, plotter])</p></td>
@@ -531,11 +562,11 @@ number desigbation, <em>e.g.</em> <code class="docutils literal notranslate"><sp
 </div>
 <div class="section" id="id8">
 <h3>Class Inheritance Diagram<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
-<div class="graphviz"><img src="_images/inheritance-cc99905c3386e881bcc507ce607c1d0cd75f2ba7.png" alt="Inheritance diagram of Data_Reduction.Malargue.BoresightScan, Data_Reduction.Malargue.Map, Data_Reduction.Malargue.Observation, Data_Reduction.Malargue.Session" usemap="#inheritanceb272fab77a" class="inheritance graphviz" /></div>
+<div class="graphviz"><img src="_images/inheritance-00ef22d32a0c5fd9f5b1cdd7b9fb7872dc6b2f84.png" alt="Inheritance diagram of Data_Reduction.Malargue.BoresightScan, Data_Reduction.Malargue.Map, Data_Reduction.Malargue.Observation, Data_Reduction.Malargue.Session" usemap="#inheritanceb272fab77a" class="inheritance graphviz" /></div>
 <map id="inheritanceb272fab77a" name="inheritanceb272fab77a">
-<area shape="rect" id="node1" href="api/Data_Reduction.Malargue.BoresightScan.html#Data_Reduction.Malargue.BoresightScan" target="_top" title="class for a single scan during a boresight" alt="" coords="155,29,269,55"/>
-<area shape="rect" id="node2" href="api/Data_Reduction.Malargue.Observation.html#Data_Reduction.Malargue.Observation" target="_top" title="Class for any group of data for a single purpose." alt="" coords="5,55,107,80"/>
-<area shape="rect" id="node3" href="api/Data_Reduction.Malargue.Map.html#Data_Reduction.Malargue.Map" target="_top" title="Class for all the data and methods associated with a raster scan map" alt="" coords="176,79,248,104"/>
+<area shape="rect" id="node1" href="api/Data_Reduction.Malargue.BoresightScan.html#Data_Reduction.Malargue.BoresightScan" target="_top" title="class for a single scan during a boresight" alt="" coords="155,53,269,79"/>
+<area shape="rect" id="node2" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" target="_top" title="superclass for a data structure and methods" alt="" coords="5,79,107,104"/>
+<area shape="rect" id="node3" href="api/Data_Reduction.Malargue.Map.html#Data_Reduction.Malargue.Map" target="_top" title="Class for all the data and methods associated with a raster scan map" alt="" coords="176,103,248,128"/>
 <area shape="rect" id="node4" href="api/Data_Reduction.Malargue.Session.html#Data_Reduction.Malargue.Session" target="_top" title="Class for an observing session on a given year and DOY" alt="" coords="20,5,92,31"/>
 </map></div>
 </div>
@@ -785,7 +816,7 @@ in degrees and the second the system temperature for each of the four channels.<
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="api/Data_Reduction.freq_to_chan.html" title="freq_to_chan"
+          <a href="api/Data_Reduction.examine_text_data_file.html" title="examine_text_data_file"
              >next</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>

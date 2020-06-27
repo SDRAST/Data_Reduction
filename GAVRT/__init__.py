@@ -26,7 +26,7 @@ class Observation(DR.Observation):
   """
   DSS-28 observations from before the ``tlog`` database table became available.
   """
-  def __init__(self, date, dss=28, project='SolarPatrol', channel_names=None):
+  def __init__(self, name=None, dss=28, date=None, project='SolarPatrol'):
     """
     initialize observation from t-files
   
@@ -40,12 +40,17 @@ class Observation(DR.Observation):
     @type  channel_names : list of str
     """
     self.logger = logging.getLogger(logger.name+".Observation")
-    self.obs =Astronomy.Ephem.DSS(dss)
-    y,d = date.split('/')
-    self.year = int(y); self.DOY = int(d)
-    projdatapath, self.sessionpath, rawdatapath = \
-                              DR.get_obs_dirs(project, dss, self.year, self.DOY,
-                                              datafmt=None)
+    DR.Observation.__init__(self, name=date, date=date, dss=dss, 
+                            project=project)
+    
+    #self.obs =Astronomy.Ephem.DSS(dss)
+    #y,d = date.split('/')
+    #self.year = int(y); self.DOY = int(d)
+    #projdatapath, self.sessionpath, rawdatapath = \
+    #                          DR.get_obs_dirs(project, dss, self.year, self.DOY,
+    #                                          datafmt=None)
+  
+  def extended_init(self, channels_names=None):
     datapath = self.sessionpath+'t'+str(self.year)[-2:]+("%03d" % self.DOY)
     if channel_names:
       pass
@@ -53,8 +58,6 @@ class Observation(DR.Observation):
       channel_names = self.get_channel_names(datapath)
     channel_names.sort()
     self.logger.debug("processing channels %s", channel_names)
-    DR.Observation.__init__(self, name=date, dss=dss,
-                            channel_names=channel_names)
     # this has created Channel objects which we now want to treat as
     # superclasses for the Channel class defined here
     for key in list(self.channel.keys()):
@@ -77,7 +80,7 @@ class Observation(DR.Observation):
           self.data['integr'] = self.channeldata[0]['Int']
         self.data['counts'][key] = self.channeldata[0]['Tsys']
         # del(self.channeldata)  
-    
+ 
     
   def get_channel_names(self, datapath):
     """

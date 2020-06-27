@@ -2,7 +2,9 @@
 """
 Classes for reducing observations
 
-This is barely started by extracting from GAVRT.  UNDER DEVELOPMENT
+This was designed to support Malargue observations but can be used for other
+observatories (identified by a DSS number) that produce a single text file in
+row/column format.
 
 An ``Observation`` object comprises a data structure in this form::
 
@@ -11,7 +13,7 @@ An ``Observation`` object comprises a data structure in this form::
   elevation    NP.float (N,)            horizon system latitude (deg)
   RA           NP.float (N,)            apparent topocentric right ascension
   dec          NP.float (N,)            apparent topocentric declination
-  MPL_datenum  NP.float (N,)            number of days since 0001-01-01 UTC, plus 1
+  MPL_datenum  NP.float (N,)            number of days since 0001-01-01 UTC +1
                                         ({*e.g.* 0001-01-01, 06:00 is 1.25)
   power        NP.float {ch:(N,),... }  or equivalent, like detector volts,
                                         for each channel
@@ -21,22 +23,32 @@ An ``Observation`` object comprises a data structure in this form::
 Notes
 =====
 
-  * If the data are provided as a 2D NP array, then each provided parameter must
-    be a column and a dict must be provided to map parameter name (defined above)
-    to column number.
+Data from a text file::
+
+  * The original data are provided as a 2D text array. Each provided parameter
+    must be in a column.
+  * If the column names in the text file are not suitable, then there must be
+    a dict to map parameter name to column number.
+  * The telescope position and other attributes are determined from its DSN
+    number designation, *e.g.* ``DSS(28)``.
+  * If the mean astrometic geocentric position (RA, dec from a catalog at some
+    epoch) is given, then the topocentric apparent celestial position
+    (RA, dec for the date of observation) is computed, and then the
+    topocentric horizontal position (az, el) is computed.
+  * If a topocentric position is given, then the topocentric apparent celestial
+    position is computed.
+
+Data from a ``numpy`` (structured) ``ndarray``::
+
   * If the data are provided as a structured NP array, then the ``names`` item
     of the array must use those defined above.
-  * If ``azimuth`` and ``elevation`` are given, then apparent ``RA`` and ``dec``
-    are computed.
-  * IF apparent ``RA`` and ``dec`` are given, then ``azimuth`` and ``elevation``
-    are computed.
-  * Other items may be defined for the dict (*e.g* ``RA2000``, ``dec2000``) but 
-    might not be used by the ``Observation`` object.
-  * If the mean astrometic geocentric position is given, then the apparent 
-    topocentric position is computed, and then ``azimuth`` and ``elevation``.
-  * ``MPL_datenum`` is computed from ``UNIXtime``.
-  * The telescope position and other attributes are determined from its DSN
-    number desigbation, *e.g.* ``DSS(28)``.  
+
+Additional items::
+
+  * Other items may be defined for the dict but might not be used by the
+    ``Observation`` object.
+  * ``MPL_datenum`` is computed from ``UNIXtime`` for convenience in plotting
+    time series.
 """
 import pickle as pickle
 import datetime
@@ -54,6 +66,7 @@ import time
 
 import Astronomy as A
 import Astronomy.Ephem as Aeph
+import Data_Reduction as DR
 import local_dirs
 import Math.least_squares as lsq
 import Radio_Astronomy as RA
@@ -61,7 +74,7 @@ import support
 
 logger = logging.getLogger(__name__)
 
-Malargue        = Aeph.DSS(84)
+Malargue     = Aeph.DSS(84)
 longitude    = -Malargue.long*180/math.pi
 latitude     = Malargue.lat*180/math.pi
 f_max        = 32. # GHz for default step size
@@ -86,7 +99,7 @@ def DSS84_beamwidth(freq):
   """
   return RA.HPBW(DSS84_beamtaper(freq), 0.3/float(freq), 34)*180/math.pi
 
-class Observation(object):
+class Observation(DR.Observation):
   """
   Class for any group of data for a single purpose.
   
@@ -96,8 +109,6 @@ class Observation(object):
     active channels
   conv_cfg : dict
     converter configuration
-  data : dict
-    result of ``get_data_from_logs()``
   end : float
     observation end UNIX time, provided by the subclasses
   logger
@@ -109,9 +120,25 @@ class Observation(object):
   start : float
     observation start UNIX time,  provided by the subclasses
   """
-  def __init__(self, parent):
+  def __init__(self, parent=None, name=None, # for the superclass
+                     dss=None, date=None, project='Malargue',
+                     datafile=None, delimiter=" ", # for the data file
+                     skip_header=0, names=True, aliases=None, props=None):
     """
     Initialize an Observation object
+    
+    Args:
+      parent (Session):  optional
+      name (str):        optional name for this observation
+      dss (int):         required station number
+      date (str):        YEAR/DOY, required to find session files
+      project (str):     required used to find session files
+      datafile (str):    name of file in session directory
+      delimiter (str):   as defined for ``genfromtxt``
+      skip_header (int): rows at start to ignore
+      names (bool or list of str): first row has column names
+      aliases (list of str): map text column names to data names
+      props (dict of dicts): signal properties
     """
     if parent:
         loggername = parent.logger.name+".Observation"
@@ -119,6 +146,28 @@ class Observation(object):
         loggername = "ObservationLogger"
     self.logger = logging.getLogger(loggername)
     self.session = parent
+    DR.Observation.__init__(self, parent=parent, name=name, dss=dss, date=date,
+                            project=project)
+    # map text file column names to ndarray data names
+    self.aliases = {}
+    if aliases:
+        self.aliases.update(aliases)
+    # get the data
+    self.datafile = datafile
+    if datafile:
+      data = self.open_datafile(self.sessionpath+datafile, delimiter=delimiter, 
+                                names=names, 
+                                skip_header=skip_header)
+      numdata = len(data)
+      self.logger.debug("__init__: %d samples", numdata)
+      names = data.dtype.names
+      self.logger.info("__init__: column names = \n%s", names)
+      metadata, signals = self.get_data_channels(data)
+      self.make_channels(signals, props=props)
+      self.make_data_struct(data, metadata, signals)
+    else:
+      self.logger.warning("__init__: must call method 'open_datafile()' next")
+
 
   def get_active_channels(self, filename):
     """
@@ -140,129 +189,6 @@ class Observation(object):
                 self.channels.append(name)
         fd.close()
     return self.channels
-    
-  def get_data_from_logs(self, filename):
-    """
-    Gets the data for the specified channel and polarization for this observation
-    """
-    try:
-      # for GAVRT compatibility; not not happen here
-      chan_list = self.channels
-    except:
-      self.channels = self.get_active_channels(filename)
-    if self.channels:
-      pass
-    else:
-      self.logger.warning("get_data_from_logs: this map has no active channels")
-      return None
-    # Now we need to be able to handle data in various formats; do plain text
-    # for now
-    filetype = "text"
-    if filetype=="text":
-        data = NP.loadtxt(filename, skiprows=1)
-        self.data = {}
-        self.data['UNIXtime'] = data[:,self.names.index('UNIXtime')].astype(float)
-        self.data['RA2000']   = data[:,self.names.index('RA2000')].astype(float)
-        self.data['dec2000']  = data[:,self.names.index('dec2000')].astype(float)
-        for channel in self.channels:
-            ch_index = list(self.names).index(channel)
-            self.data[channel] = data[:,ch_index].astype(float)
-    else:
-        # the following support GAVRT
-        data = None # replace with numpy.loadtxt with a column for each channel
-        for channel in self.channels:
-            ch_index = list(self.names).index(channel)
-            if ch_index == 0:
-                # first channel only: these are common to all channels
-                # actual columns depend on way file is structured
-                self.data['UNIXtime']    = data[:,0].astype(float)
-                self.data['azimuth']     = data[:,1].astype(float)
-                self.data['elevation']   = data[:,2].astype(float)
-                self.data['RA']          = []
-                self.data['declination'] = []
-                self.data['MPL_datenum'] = [] # needed for time series plots
-                self.data['power']  = {}
-                self.data['freq']        = {}
-                self.data['pol']         = {}
-                # this only needed if coords are az/el
-                for index in range(len(self.data['UNIXtime'])):
-                    dt = datetime.datetime.utcfromtimestamp(
-                                     self.data['UNIXtime'][index])
-                    time_tuple = (dt.year,
-                        A.day_of_year(dt.year,dt.month,dt.day)
-                        + (  dt.hour
-                           + dt.minute/60.
-                           + dt.second/3600.
-                           + dt.microsecond/3600./1e6)/24.)
-                    ra, dec = A.AzEl_to_RaDec(
-                             float(self.data['azimuth'][index]),
-                             float(self.data['elevation'][index]),
-                             latitude,
-                             longitude,
-                             time_tuple)
-                    self.data['RA'].append(ra)
-                    self.data['declination'].append(dec)
-                    self.data['MPL_datenum'].append(date2num(dt))
-            # only the power differs between channels
-            self.data['power'][channel]  = data[:,3].astype(float)
-            self.data['freq'][channel] = self.rss_cfg[channel]['sky_freq']
-            self.data['pol'][channel] = self.rss_cfg[channel]['pol'][0].upper()
-    return self.data
-
-  def get_offsets(self, source="Sun", xdec_ofst=0., dec_ofst=0.):
-    """
-    Generates a map in coordinates relative to a source
-    
-    If the source is the default, the position of the Sun will be computed for
-    the time of each sample. IT SEEMS LIKE A GOOD IDEA TO DO THIS FOR PLANETS
-    ALSO.
-    
-    This adds elements with keys ``xdec_offset`` and ``dec_offset`` to the
-    attribute ``data``.  If this attribute does not exist then
-    ``get_data_from_logs`` is called first.
-
-    @param source : source at map center
-    @type  source : ephem source instance
-
-    @param xdec_ofst : relative X-dec position of sample
-    @type  xdec_ofst : float
-
-    @param dec_ofst : relative dec position of sample
-    @type  dec_ofst : float
-    
-    @return: (dxdecs,ddecs) in degrees
-    """
-    # get the data if not yet read ib
-    try:
-      list(self.data.keys())
-    except AttributeError:
-      self.get_data_from_logs()
-    if 'MPL_datenum' in self.data:
-      pass
-    else:
-      # 'tlog' did not have good data
-      return None
-    if source.lower() == "sun":
-      src = ephem.Sun()
-    else:
-      src = self.calibrator
-    self.data['dec_offset'] = []
-    self.data['xdec_offset'] = []
-    for count in range(len(self.data['MPL_datenum'])):
-      dt = mpd.num2date(self.data['MPL_datenum'][count])
-      if type(src) == Aeph.Quasar:
-        pass
-      else:
-        src.compute(dt)
-      ra_center = src.ra*12/math.pi    # hours
-      dec_center = src.dec*180/math.pi # degrees
-      decrad = src.dec
-      # right ascension increases to the left, cross-dec to the right
-      self.data['xdec_offset'].append(xdec_ofst - 
-                       (self.data['RA'][count] - ra_center)*15*math.cos(decrad) )
-      self.data['dec_offset'].append(  dec_ofst + 
-                        self.data['declination'][count] - dec_center)
-    return self.data['xdec_offset'], self.data['dec_offset']
       
 
 class Map(Observation):

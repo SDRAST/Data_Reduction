@@ -4,7 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>freq_to_chan &#8212; Data_Reduction 0.9 documentation</title>
+    <title>examine_text_data_file &#8212; Data_Reduction 0.9 documentation</title>
     <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -15,8 +15,8 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="get_freq_array" href="Data_Reduction.get_freq_array.html" />
-    <link rel="prev" title="examine_text_data_file" href="Data_Reduction.examine_text_data_file.html" /> 
+    <link rel="next" title="freq_to_chan" href="Data_Reduction.freq_to_chan.html" />
+    <link rel="prev" title="Single Dish Radio Astronomy Software Tools" href="../index.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -28,10 +28,10 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.get_freq_array.html" title="get_freq_array"
+          <a href="Data_Reduction.freq_to_chan.html" title="freq_to_chan"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.examine_text_data_file.html" title="examine_text_data_file"
+          <a href="../index.html" title="Single Dish Radio Astronomy Software Tools"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
@@ -39,15 +39,15 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="Data_Reduction.examine_text_data_file.html"
-                        title="previous chapter">examine_text_data_file</a></p>
+  <p class="topless"><a href="../index.html"
+                        title="previous chapter">Single Dish Radio Astronomy Software Tools</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="Data_Reduction.get_freq_array.html"
-                        title="next chapter">get_freq_array</a></p>
+  <p class="topless"><a href="Data_Reduction.freq_to_chan.html"
+                        title="next chapter">freq_to_chan</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/api/Data_Reduction.freq_to_chan.rst.txt"
+      <li><a href="../_sources/api/Data_Reduction.examine_text_data_file.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -69,23 +69,20 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="freq-to-chan">
-<h1>freq_to_chan<a class="headerlink" href="#freq-to-chan" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="examine-text-data-file">
+<h1>examine_text_data_file<a class="headerlink" href="#examine-text-data-file" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
-<dt id="Data_Reduction.freq_to_chan">
-<code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">freq_to_chan</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">frequency</span></em>, <em class="sig-param"><span class="n">bandwidth</span></em>, <em class="sig-param"><span class="n">n_chans</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.freq_to_chan" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the channel number where a given frequency is to be found.</p>
-<p>:param frequency : frequency of channel in sane units as bandwidth.
-:type  frequency : float</p>
-<p>:param bandwidth : upper limit of spectrometer passband
-:type  bandwidth : float</p>
-<p>:param n_chans : number of channels in the spectrometer
-:type  n_chans : int</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>channel number (int)</p>
-</dd>
-</dl>
+<dt id="Data_Reduction.examine_text_data_file">
+<code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">examine_text_data_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.examine_text_data_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Examine a file to guide <code class="docutils literal notranslate"><span class="pre">genfromtxt()</span></code></p>
+<p>Things to look for:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>* Is there a header line with column names? If not, use argument ``names``.
+* Is the number of names equal to the number of columns? If not::
+  - use argument ``names`` and ``skip_header=1``, or
+  - use argument ``delimiter`` with a list of column widths
+    and ``skip_header=1``.
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -106,10 +103,10 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.get_freq_array.html" title="get_freq_array"
+          <a href="Data_Reduction.freq_to_chan.html" title="freq_to_chan"
              >next</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.examine_text_data_file.html" title="examine_text_data_file"
+          <a href="../index.html" title="Single Dish Radio Astronomy Software Tools"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>

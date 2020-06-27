@@ -73,16 +73,14 @@
 <h1>Observation<a class="headerlink" href="#observation" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="Data_Reduction.Malargue.Observation">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.Malargue.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Observation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.Malargue.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">'Malargue'</span></em>, <em class="sig-param"><span class="n">datafile</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="o">=</span><span class="default_value">' '</span></em>, <em class="sig-param"><span class="n">skip_header</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">names</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">aliases</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">props</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Observation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Data_Reduction.Observation.html#Data_Reduction.Observation" title="Data_Reduction.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.Observation</span></code></a></p>
 <p>Class for any group of data for a single purpose.</p>
 <p><strong>Attributes</strong></p>
 <dl>
 <dt>channels<span class="classifier">list of str</span></dt><dd><p>active channels</p>
 </dd>
 <dt>conv_cfg<span class="classifier">dict</span></dt><dd><p>converter configuration</p>
-</dd>
-<dt>data<span class="classifier">dict</span></dt><dd><p>result of <code class="docutils literal notranslate"><span class="pre">get_data_from_logs()</span></code></p>
 </dd>
 <dt>end<span class="classifier">float</span></dt><dd><p>observation end UNIX time, provided by the subclasses</p>
 </dd>
@@ -105,8 +103,8 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Observation.get_active_channels" title="Data_Reduction.Malargue.Observation.get_active_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_active_channels</span></code></a>(filename)</p></td>
 <td><p>Returns IDs of channels which took data during this observation</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Observation.get_data_from_logs" title="Data_Reduction.Malargue.Observation.get_data_from_logs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data_from_logs</span></code></a>(filename)</p></td>
-<td><p>Gets the data for the specified channel and polarization for this observation</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observation.get_data_from_logs</span></code></p></td>
+<td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Observation.get_offsets" title="Data_Reduction.Malargue.Observation.get_offsets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_offsets</span></code></a>([source, xdec_ofst, dec_ofst])</p></td>
 <td><p>Generates a map in coordinates relative to a source</p></td>
@@ -123,12 +121,6 @@ more of “XL”, “XR”, “KaL”, “KaR”, or “power”</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="Data_Reduction.Malargue.Observation.get_data_from_logs">
-<code class="sig-name descname">get_data_from_logs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Observation.get_data_from_logs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets the data for the specified channel and polarization for this observation</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="Data_Reduction.Malargue.Observation.get_offsets">
 <code class="sig-name descname">get_offsets</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">source</span><span class="o">=</span><span class="default_value">'Sun'</span></em>, <em class="sig-param"><span class="n">xdec_ofst</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">dec_ofst</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Observation.get_offsets" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates a map in coordinates relative to a source</p>
@@ -136,8 +128,7 @@ more of “XL”, “XR”, “KaL”, “KaR”, or “power”</p>
 the time of each sample. IT SEEMS LIKE A GOOD IDEA TO DO THIS FOR PLANETS
 ALSO.</p>
 <p>This adds elements with keys <code class="docutils literal notranslate"><span class="pre">xdec_offset</span></code> and <code class="docutils literal notranslate"><span class="pre">dec_offset</span></code> to the
-attribute <code class="docutils literal notranslate"><span class="pre">data</span></code>.  If this attribute does not exist then
-<code class="docutils literal notranslate"><span class="pre">get_data_from_logs</span></code> is called first.</p>
+attribute <code class="docutils literal notranslate"><span class="pre">data</span></code>.</p>
 <p>:param source : source at map center
 :type  source : ephem source instance</p>
 <p>:param xdec_ofst : relative X-dec position of sample
