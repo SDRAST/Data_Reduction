@@ -557,7 +557,7 @@ class Map(Observation):
       xi = self.data['grid_x']
       yi = self.data['grid_y']
       try:
-        self.data['grid_z'][channel] = griddata(cx,cy,cz, xi, yi, interp='nn')
+        self.data['grid_z'][channel] = griddata(cx,cy,cz, xi, yi, method='nearest')
       except ValueError as details:
         self.logger.error("regrid: gridding failed: %s", str(details))
         self.logger.debug("regrid: channel %d length of cx is %d", channel, len(cx))

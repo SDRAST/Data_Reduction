@@ -40,6 +40,7 @@ import os
 import re
 import readline
 import scipy.fftpack
+from scipy.interpolate import griddata
 
 import Astronomy as A
 import Astronomy.Ephem as AE
@@ -86,16 +87,18 @@ class Observation(object):
   
   Attributes
   ==========
-    channel      - (dict) a signal path
+    aliases      - (dict) data keys to replace column names
+    channel      - (dict) signal paths
     data         - (dict) table contents
     end          - (float) UNIX time at the end
     latitude     - (float) from obs
     logger       - (logging.Logger)
     longitude    - (float) from obs
     name         - (str) user assigned, defaults to YEAR/DOY
+    numdata      - (int) number of data samples
     obs          - (AE.DSS) observatory
-    start        - (float) UNIX time at the begining
-    unknown_cols - (list of str)
+    session      - (Session) set of observations
+    session_path - (str) directory for session files
   
   **Reserved Column Names**
   
@@ -174,6 +177,9 @@ class Observation(object):
     """
     Initialize the base Observation class.
     
+    This is not meant to be initialized by itself.  The subclass determines how
+    data are read in.
+    
     Args:
       parent (Session):   session to which thos ibservation belongs
       name (str):         an identifier; default is station ID + "obs"
@@ -181,11 +187,13 @@ class Observation(object):
       date (str):         "YEAR/DOY"
       project (str):      directory under /usr/local/projects
     """
-    self.logger = logging.getLogger(logger.name+".Observation")
+    logger.debug("Observation.__init__: initializing...")
+    self.session = parent
     if name:
       self.name = name
     else:
       self.name = "DSS"+str(dss)+"obs"
+    self.logger = logging.getLogger(logger.name+".Observation")
     if dss:
       self.obs = AE.DSS(dss)
       self.longitude = self.obs.long
@@ -208,35 +216,15 @@ class Observation(object):
     else:
       self.logger.error("__init__: requires a project")
       raise Exception("Where are the session's working files?")
-      
-    
-  def make_channels(self, signals, props=None):
-    """
-    Assign properties to the channels.  
-    
-    The prop keys are "freq", "pol", and "IFtype".
-    
-    Args:
-      props (dict of dicts): signal channel properties.
-    """
-    self.channel = {}
-    for ch in signals:
-      chindex = signals.index(ch)
-      if props:
-        self.channel[ch] = self.Channel(self, ch, 
-                                        freq=props['freq'][ch],
-                                        bw=props['bw'][ch],
-                                        pol=props['pol'][ch],
-                                        IFtype=props['IFtype'][ch])
-      else:
-        self.channel[ch] = self.Channel(self, ch)
-      if props:
-        for prop in props:
-          self.channel[ch][prop] = props[prop]
+    # accomodate subclass arguments
+    self.aliases = {}
       
   def open_datafile(self, filename, delimiter=" ", names=True, skip_header=0):
     """
     Opens and reads a data file
+    
+    This is used by ``Malargue`` (one data files) and ``GAVRT`` (one data file
+    for each signal).
     
     Args:
       filename (str):    text data file name
@@ -260,6 +248,8 @@ class Observation(object):
     """
     Gets or sets the names of the signal columns
     
+    Column names are separated into metadata and signals. Names in
+    ``ignore`` re ignored. Names in ``aliases`` are replaced.
     Args:
       data (ndarray): data read from text file
       ignore (list of str): columns to ignore; default None
@@ -289,6 +279,30 @@ class Observation(object):
     self.logger.debug("get_data_channels: signals: %s", signals)
     self.logger.debug("get_data_channels: metadata: %s", metadata)
     return metadata, signals  
+      
+  def make_channels(self, signals, props=None):
+    """
+    Assign properties to the channels.  
+    
+    The prop keys are "freq", "pol", and "IFtype".
+    
+    Args:
+      props (dict of dicts): signal channel properties.
+    """
+    self.channel = {}
+    for ch in signals:
+      chindex = signals.index(ch)
+      if props:
+        self.channel[ch] = self.Channel(self, ch, 
+                                        freq=props['freq'][ch],
+                                        bw=props['bw'][ch],
+                                        pol=props['pol'][ch],
+                                        IFtype=props['IFtype'][ch])
+      else:
+        self.channel[ch] = self.Channel(self, ch)
+      if props:
+        for prop in props:
+          self.channel[ch][prop] = props[prop]
 
   def make_data_struct(self, data, metadata, signals):
     """
@@ -559,7 +573,7 @@ class Observation(object):
       self.logger.debug("get_offsets: this does not look like a good dataset")
       raise Exception("check the datafile")
     if source.lower() == "sun":
-      src = ephem.Sun()
+      src = AE.ephem.Sun()
     else:
       src = AE.calibrator(source)
     self.data['dec_offset'] = []
@@ -578,6 +592,9 @@ class Observation(object):
                        (self.data['ra'][count] - ra_center)*15*math.cos(decrad) )
       self.data['dec_offset'].append(  dec_ofst + 
                         self.data['dec'][count] - dec_center)
+    # change list to NP.array
+    self.data['xdec_offset'] = NP.array(self.data['xdec_offset'])
+    self.data['dec_offset'] = NP.array(self.data['dec_offset'])
     return self.data['xdec_offset'], self.data['dec_offset']
     
   def unpack_to_complex(self, rawdata):
@@ -629,6 +646,67 @@ class Observation(object):
       self.data['bw'] = bw
       self.data['pol'] = pol 
 
+class Map(object):
+  """
+  Class for all the data and methods associated with a raster scan map
+  
+  It is expected that the parent class is a subclass of ``Observation`` already
+  by virtue of it being a superclass of subclass which inherits these methods.
+  
+  Attrs:
+    cfg (dict): 
+    data (numpy array):      from ``Observation``
+    logger (logging.Logger): replaces ``Observation`` logger
+    name (str):              replaces ``Observation`` name
+    session (Session):
+    source (str):
+    step (float):            map step size
+    
+  """  
+  def regrid(self, width=1.0, height=1.0, step=None):
+    """
+    converts a map from observed coordinates to map coordinates
+    
+    @param width : map width in deg
+    @type  width : float
+    
+    @param height : map height in deg
+    @type  height : float
+    
+    @param step : map step size in X and Y in deg
+    @type  step : (float, float)
+    """
+    if step == None:
+      # use the original step size
+      self.xstep = abs(self.data['xdec_offset'][1:]
+                      -self.data['xdec_offset'][:-1]).mean().round(6)
+      self.ystep = abs(self.data['dec_offset'][1:]
+                      -self.data['dec_offset'][:-1]).mean().round(6)
+    else:
+      self.xstep, self.ystep = step
+    nx = int(round(width/self.xstep))
+    ny = int(round(height/self.ystep))
+    self.data['grid_x'] = NP.arange( -width/2,  width/2 + self.xstep, self.xstep/2)
+    self.data['grid_y'] = NP.arange(-height/2, height/2 + self.ystep, self.ystep/2)
+    self.data['grid_z'] = {}
+    for chnl in self.channel:
+      cx = self.data['xdec_offset']
+      cy = self.data['dec_offset']
+      cz = self.data[chnl]
+      xi = self.data['grid_x']
+      yi = self.data['grid_y']
+      try:
+        self.data['grid_z'] = griddata(cx,cy,cz, xi, yi, method='nearest')
+      except ValueError as details:
+        self.logger.error("regrid: gridding failed: %s", str(details))
+        self.logger.debug("regrid: channel %d length of cx is %d", chnl, len(cx))
+        self.logger.debug("regrid: channel %d length of cy is %d", chnl, len(cy))
+        self.logger.debug("regrid: channel %d length of cz is %d", chnl, len(cz))
+        continue
+    return self.data['grid_x'], self.data['grid_y'], \
+           self.data['grid_z']
+
+# ------------------------ module functions -------------------------------
 
 def get_obs_session(project=None, dss=None, date=None, path='proj'):
   """
@@ -715,81 +793,7 @@ def get_obs_session(project=None, dss=None, date=None, path='proj'):
     yearpath = stationpath+"/"+str(year)
     DOY = int(get_directory(yearpath))
   os.chdir(cwd)
-  return project, dss, year, DOY
-  
-  
-def get_obs_session_old(project=None, dss=None, date=None):
-  """
-  Asks user for parameters to locate observation session paths
-  
-  This expects one of two directory trees to exist.  If dtype is given::
-    /usr/local/RA_data/dtype/
-      dssXX/
-        YEAR/
-          DOY/
-  
-  or if project is given::
-    /usr/local/projects/project/Observations/
-      dssXX/
-        YEAR/
-          DOY/
-          
-  If neither is given it will prompt for a project.
-  
-  @param project : optional name as defined in /usr/local/projects
-  @type  project : str
-  
-  @param dss : optional station number
-  @type  dss : int
-  
-  @param date : optional YYYY/DDD
-  @type  date : str
-  
-  @return: project, DSS, year, DOY.
-  """
-  # get the path to the session directory
-  if project:
-    projectpath = projects_dir+project+"/"
-  else:
-    projectpath = support.text.select_files(projects_dir+"*", ftype="dir",
-                               text="Select a project by index: ", single=True)
-    project = os.path.basename(projectpath)
-    if projectpath[-1] != "/":
-      projectpath += "/"
-  logger.debug("get_obs_session: project path: %s", projectpath)
-
-  # get the path to the project DSS sub-directory
-  project_obs_path = projectpath + "Observations/"
-  if dss:
-    dsspath = project_obs_path+"dss"+str(dss)+"/"
-  else:
-    dsspath = support.text.select_files(project_obs_path+"dss*", ftype="dir",
-                           text="Select a station by index: ", single=True)
-    logger.debug("get_obs_session: selected: %s", dsspath)
-    dss = int(os.path.basename(dsspath)[-2:])
-  logger.debug("get_obs_session: DSS path: %s", dsspath)
-  if date:
-    items = date.split('/')
-    yr = int(items[0])
-    doy = int(items[1])
-  else:
-    yrpath = support.text.select_files(dsspath+"*", ftype="dir",
-                                  text="Select a year by index: ", single=True)
-    if yrpath:
-      logger.debug("get_obs_session: year path: %s", yrpath)
-      yr = int(os.path.basename(yrpath))
-      yrpath += "/"
-      doypath = support.text.select_files(yrpath+"/*", ftype="dir",
-                                   text="Select a day BY INDEX: ", single=True)
-      doy = int(os.path.basename(doypath))
-      doypath += '/'
-      logger.debug("get_obs_session: DOY path: %s", doypath)
-    else:
-      logger.warning("get_obs_session: no data for dss%2d", dss)
-      return project, None, 0, 0
-  logger.debug("get_obs_session: for %s, DSS%d, %4d/%03d",
-                    project, dss, yr, doy)
-  return project, dss, yr, doy
+  return project, dss, year, DOY  
 
 def get_obs_dirs(project, station, year, DOY, datafmt=None):
   """

@@ -184,11 +184,11 @@ structure of the file.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.get_obs_session.html#Data_Reduction.get_obs_session" title="Data_Reduction.get_obs_session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_session</span></code></a>([project, dss, date, path])</p></td>
 <td><p>Provides project, station, year and DOY, asking as needed.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.get_obs_session_old.html#Data_Reduction.get_obs_session_old" title="Data_Reduction.get_obs_session_old"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_session_old</span></code></a>([project, dss, date])</p></td>
-<td><p>Asks user for parameters to locate observation session paths</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.get_smoothed_bandshape.html#Data_Reduction.get_smoothed_bandshape" title="Data_Reduction.get_smoothed_bandshape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_smoothed_bandshape</span></code></a>(spectrum[, degree, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.get_smoothed_bandshape.html#Data_Reduction.get_smoothed_bandshape" title="Data_Reduction.get_smoothed_bandshape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_smoothed_bandshape</span></code></a>(spectrum[, degree, …])</p></td>
 <td><p>Do a Gaussian smoothing of the spectrum and then fit a polynomial.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">griddata</span></code>(points, values, xi[, method, …])</p></td>
+<td><p>Interpolate unstructured D-dimensional data.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.reduce_spectrum_channels.html#Data_Reduction.reduce_spectrum_channels" title="Data_Reduction.reduce_spectrum_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reduce_spectrum_channels</span></code></a>(spectrum, refval, …)</p></td>
 <td><p>Reduce the number of channels in the spectrum.</p></td>
@@ -207,7 +207,10 @@ structure of the file.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" title="Data_Reduction.Observation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observation</span></code></a>([parent, name, dss, date, project])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Map.html#Data_Reduction.Map" title="Data_Reduction.Map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Map</span></code></a></p></td>
+<td><p>Class for all the data and methods associated with a raster scan map</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" title="Data_Reduction.Observation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observation</span></code></a>([parent, name, dss, date, project])</p></td>
 <td><p>superclass for a data structure and methods</p></td>
 </tr>
 </tbody>
@@ -215,9 +218,10 @@ structure of the file.</p>
 </div>
 <div class="section" id="class-inheritance-diagram">
 <h3>Class Inheritance Diagram<a class="headerlink" href="#class-inheritance-diagram" title="Permalink to this headline">¶</a></h3>
-<div class="graphviz"><img src="_images/inheritance-5b35762b3f311cab4828635785cb1dd0d7dff477.png" alt="Inheritance diagram of Data_Reduction.Observation" usemap="#inheritance1636147f5d" class="inheritance graphviz" /></div>
-<map id="inheritance1636147f5d" name="inheritance1636147f5d">
-<area shape="rect" id="node1" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" target="_top" title="superclass for a data structure and methods" alt="" coords="5,5,107,31"/>
+<div class="graphviz"><img src="_images/inheritance-927959368e2f8c522cf1be7dd305b4bd53bbf80c.png" alt="Inheritance diagram of Data_Reduction.Map, Data_Reduction.Observation" usemap="#inheritance8776b9fd13" class="inheritance graphviz" /></div>
+<map id="inheritance8776b9fd13" name="inheritance8776b9fd13">
+<area shape="rect" id="node1" href="api/Data_Reduction.Map.html#Data_Reduction.Map" target="_top" title="Class for all the data and methods associated with a raster scan map" alt="" coords="20,55,92,80"/>
+<area shape="rect" id="node2" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" target="_top" title="superclass for a data structure and methods" alt="" coords="5,5,107,31"/>
 </map></div>
 </div>
 <div class="section" id="module-Data_Reduction.DSN">
@@ -548,8 +552,8 @@ pol          str      {ch: ?}         polarization of the channel
 <tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.BoresightScan.html#Data_Reduction.Malargue.BoresightScan" title="Data_Reduction.Malargue.BoresightScan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BoresightScan</span></code></a>(parent, xpwr_cfg_id[, source, …])</p></td>
 <td><p>class for a single scan during a boresight</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.Map.html#Data_Reduction.Malargue.Map" title="Data_Reduction.Malargue.Map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Map</span></code></a>(parent[, name, source])</p></td>
-<td><p>Class for all the data and methods associated with a raster scan map</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.Map.html#Data_Reduction.Malargue.Map" title="Data_Reduction.Malargue.Map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Map</span></code></a>([parent, name, dss, date, project, …])</p></td>
+<td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.Observation.html#Data_Reduction.Malargue.Observation" title="Data_Reduction.Malargue.Observation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observation</span></code></a>([parent, name, dss, date, …])</p></td>
 <td><p>Class for any group of data for a single purpose.</p></td>
@@ -562,11 +566,11 @@ pol          str      {ch: ?}         polarization of the channel
 </div>
 <div class="section" id="id8">
 <h3>Class Inheritance Diagram<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
-<div class="graphviz"><img src="_images/inheritance-00ef22d32a0c5fd9f5b1cdd7b9fb7872dc6b2f84.png" alt="Inheritance diagram of Data_Reduction.Malargue.BoresightScan, Data_Reduction.Malargue.Map, Data_Reduction.Malargue.Observation, Data_Reduction.Malargue.Session" usemap="#inheritanceb272fab77a" class="inheritance graphviz" /></div>
+<div class="graphviz"><img src="_images/inheritance-f9555698bf34369a809453fc2debdd34fafec7db.png" alt="Inheritance diagram of Data_Reduction.Malargue.BoresightScan, Data_Reduction.Malargue.Map, Data_Reduction.Malargue.Observation, Data_Reduction.Malargue.Session" usemap="#inheritanceb272fab77a" class="inheritance graphviz" /></div>
 <map id="inheritanceb272fab77a" name="inheritanceb272fab77a">
-<area shape="rect" id="node1" href="api/Data_Reduction.Malargue.BoresightScan.html#Data_Reduction.Malargue.BoresightScan" target="_top" title="class for a single scan during a boresight" alt="" coords="155,53,269,79"/>
+<area shape="rect" id="node1" href="api/Data_Reduction.Malargue.BoresightScan.html#Data_Reduction.Malargue.BoresightScan" target="_top" title="class for a single scan during a boresight" alt="" coords="155,41,269,67"/>
 <area shape="rect" id="node2" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" target="_top" title="superclass for a data structure and methods" alt="" coords="5,79,107,104"/>
-<area shape="rect" id="node3" href="api/Data_Reduction.Malargue.Map.html#Data_Reduction.Malargue.Map" target="_top" title="Class for all the data and methods associated with a raster scan map" alt="" coords="176,103,248,128"/>
+<area shape="rect" id="node3" href="api/Data_Reduction.Map.html#Data_Reduction.Map" target="_top" title="Class for all the data and methods associated with a raster scan map" alt="" coords="176,115,248,140"/>
 <area shape="rect" id="node4" href="api/Data_Reduction.Malargue.Session.html#Data_Reduction.Malargue.Session" target="_top" title="Class for an observing session on a given year and DOY" alt="" coords="20,5,92,31"/>
 </map></div>
 </div>

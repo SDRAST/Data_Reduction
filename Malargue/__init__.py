@@ -140,6 +140,7 @@ class Observation(DR.Observation):
       aliases (list of str): map text column names to data names
       props (dict of dicts): signal properties
     """
+    logger.debug("Observation.__init__: initializing...")
     if parent:
         loggername = parent.logger.name+".Observation"
     else:
@@ -161,13 +162,12 @@ class Observation(DR.Observation):
       numdata = len(data)
       self.logger.debug("__init__: %d samples", numdata)
       names = data.dtype.names
-      self.logger.info("__init__: column names = \n%s", names)
+      self.logger.info("__init__: column names = %s", names)
       metadata, signals = self.get_data_channels(data)
       self.make_channels(signals, props=props)
       self.make_data_struct(data, metadata, signals)
     else:
       self.logger.warning("__init__: must call method 'open_datafile()' next")
-
 
   def get_active_channels(self, filename):
     """
@@ -189,125 +189,23 @@ class Observation(DR.Observation):
                 self.channels.append(name)
         fd.close()
     return self.channels
-      
 
-class Map(Observation):
+class Map(Observation, DR.Map):
   """
-  Class for all the data and methods associated with a raster scan map
-  
-  ** Attributes**
-  
-  cfg : dict
-    raster configuration
-  cfg_id : int
-    entry in the raster configuration tableshape
-    
-  map_data : dict
-    data from log table; ``tsrc`` is dict keyed on channel
-    
-  logger : ``logging.Logger`` object
-  
-  name : str
-    map identifier
-
-  rss_cfg
-    receiver configuration
-  session
-    observing session to which this map belongs
   """
-  def __init__(self, parent, name=None, source="Sun"):
+  def __init__(self, parent=None, name=None, dss=84, date=None, 
+                     project="SolarPatrol", datafile=None, source="Sun",
+                     step=None):
     """
-    initialize a Map object
+    put Malargue-specific initialization here
     """
-    self.logger = logging.getLogger(parent.logger.name+".Map")
-    self.session = parent
-    if name:
-      self.name = name
-    else:
-      self.name = "map %d" % self.cfg_id
-    self.logger.debug("__init__: map for configuration %s is %s",
-                      self.session, self.name)
-    self.source = source
-         
-  def center_map(self, source="Sun", xdec_ofst=0., dec_ofst=0.):
-    """
-    Generates a map in coordinates relative to a source
-
-    @param body : source at map center
-    @type  body : ephem source instance
-
-    @return: (dxdecs,ddecs) in degrees
-    """
-    try:
-      list(self.data.keys())
-    except AttributeError:
-      self.maps_from_tlogs()
-    if 'MPL_datenum' in self.data:
-      pass
-    else:
-      # 'tlog' did not have good data
-      return None
-    if source.lower() == "sun":
-      src = ephem.Sun()
-    else:
-      pass
-    self.data['dec_offset'] = []
-    self.data['xdec_offset'] = []
-    for count in range(len(self.data['MPL_datenum'])):
-      dt = mpd.num2date(self.data['MPL_datenum'][count])
-      if source.lower() == "sun":
-        src.compute(dt)
-      else:
-        pass
-      ra_center = src.ra*12/math.pi    # hours
-      dec_center = src.dec*180/math.pi # degrees
-      decrad = src.dec
-      # right ascension increases to the left, cross-dec to the right
-      self.data['xdec_offset'].append(xdec_ofst - 
-                       (self.data['RA'][count] - ra_center)*15*math.cos(decrad) )
-      self.data['dec_offset'].append(  dec_ofst + 
-                        self.data['declination'][count] - dec_center)
-    return self.data['xdec_offset'], self.data['dec_offset']
-  
-  def regrid(self, width=1.0, height=1.0, step=None):
-    """
-    converts a map from observed coordinates to map coordinates
+    logger.debug("Map.__init__: initializing...")
+    Observation.__init__(self, parent=parent, name=name, dss=dss, date=date,
+                         project=project, datafile=datafile) # for now, step=step)
+    #DR.Map().__init__(self, parent=parent, name=name, dss=dss, date=date,
+    #                        project=project, source=source)  # for now, step=None)
+    self.get_offsets(source="Venus")
     
-    @param width : map width in deg
-    @type  width : float
-    
-    @param height : map height in deg
-    @type  height : float
-    
-    @param step : map step size in deg
-    @type  step : float
-    """
-    if step == None:
-      # use the original step size
-      step = self.cfg['step']
-    nx = int(round(width/step))
-    ny = int(round(height/step))
-    self.data['grid_x'] = NP.arange( -width/2,  width/2 + step, step/2)
-    self.data['grid_y'] = NP.arange(-height/2, height/2 + step, step/2)
-    self.data['grid_z'] = {}
-    for channel in self.channels:
-      cx = self.data['xdec_offset']
-      cy = self.data['dec_offset']
-      cz = self.data['VFC_counts'][channel]
-      xi = self.data['grid_x']
-      yi = self.data['grid_y']
-      try:
-        self.data['grid_z'][channel] = griddata(cx,cy,cz, xi, yi, interp='nn')
-      except ValueError as details:
-        self.logger.error("regrid: gridding failed: %s", str(details))
-        self.logger.debug("regrid: channel %d length of cx is %d", channel, len(cx))
-        self.logger.debug("regrid: channel %d length of cy is %d", channel, len(cy))
-        self.logger.debug("regrid: channel %d length of cz is %d", channel, len(cz))
-        continue
-    return self.data['grid_x'], self.data['grid_y'], \
-           self.data['grid_z']
-
-
 class BoresightScan(Observation):
   """
   class for a single scan during a boresight
@@ -618,7 +516,7 @@ class Session(object):
       if 'dec_offset' in self.maps[key].map_data:
         self.logger.debug("save_map_data: mapdata[%d] is centered", key)
       else:
-        self.maps[key].center_map()
+        self.maps[key].get_offsets()
         self.logger.debug("save_map_data: mapdata[%d] has been centered", key)
       if 'grid_x' in self.maps[key].map_data:
         self.logger.debug("save_map_data: mapdata[%d] is regridded", key)

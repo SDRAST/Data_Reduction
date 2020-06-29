@@ -73,68 +73,8 @@
 <h1>Map<a class="headerlink" href="#map" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="Data_Reduction.Malargue.Map">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.Malargue.</code><code class="sig-name descname">Map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">source</span><span class="o">=</span><span class="default_value">'Sun'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Map" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="Data_Reduction.Malargue.Observation.html#Data_Reduction.Malargue.Observation" title="Data_Reduction.Malargue.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.Malargue.Observation</span></code></a></p>
-<p>Class for all the data and methods associated with a raster scan map</p>
-<p>** Attributes**</p>
-<dl class="simple">
-<dt>cfg<span class="classifier">dict</span></dt><dd><p>raster configuration</p>
-</dd>
-<dt>cfg_id<span class="classifier">int</span></dt><dd><p>entry in the raster configuration tableshape</p>
-</dd>
-<dt>map_data<span class="classifier">dict</span></dt><dd><p>data from log table; <code class="docutils literal notranslate"><span class="pre">tsrc</span></code> is dict keyed on channel</p>
-</dd>
-</dl>
-<p>logger : <code class="docutils literal notranslate"><span class="pre">logging.Logger</span></code> object</p>
-<dl class="simple">
-<dt>name<span class="classifier">str</span></dt><dd><p>map identifier</p>
-</dd>
-<dt>rss_cfg</dt><dd><p>receiver configuration</p>
-</dd>
-<dt>session</dt><dd><p>observing session to which this map belongs</p>
-</dd>
-</dl>
-<p class="rubric">Methods Summary</p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Map.center_map" title="Data_Reduction.Malargue.Map.center_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">center_map</span></code></a>([source, xdec_ofst, dec_ofst])</p></td>
-<td><p>Generates a map in coordinates relative to a source</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Map.regrid" title="Data_Reduction.Malargue.Map.regrid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">regrid</span></code></a>([width, height, step])</p></td>
-<td><p>converts a map from observed coordinates to map coordinates</p></td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Methods Documentation</p>
-<dl class="py method">
-<dt id="Data_Reduction.Malargue.Map.center_map">
-<code class="sig-name descname">center_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">source</span><span class="o">=</span><span class="default_value">'Sun'</span></em>, <em class="sig-param"><span class="n">xdec_ofst</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">dec_ofst</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Map.center_map" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates a map in coordinates relative to a source</p>
-<p>:param body : source at map center
-:type  body : ephem source instance</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>(dxdecs,ddecs) in degrees</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.Malargue.Map.regrid">
-<code class="sig-name descname">regrid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">width</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">step</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Map.regrid" title="Permalink to this definition">¶</a></dt>
-<dd><p>converts a map from observed coordinates to map coordinates</p>
-<p>:param width : map width in deg
-:type  width : float</p>
-<p>:param height : map height in deg
-:type  height : float</p>
-<p>:param step : map step size in deg
-:type  step : float</p>
-</dd></dl>
-
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.Malargue.</code><code class="sig-name descname">Map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">84</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">'SolarPatrol'</span></em>, <em class="sig-param"><span class="n">datafile</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">source</span><span class="o">=</span><span class="default_value">'Sun'</span></em>, <em class="sig-param"><span class="n">step</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Data_Reduction.Malargue.Observation.html#Data_Reduction.Malargue.Observation" title="Data_Reduction.Malargue.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.Malargue.Observation</span></code></a>, <a class="reference internal" href="Data_Reduction.Map.html#Data_Reduction.Map" title="Data_Reduction.Map"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.Map</span></code></a></p>
 </dd></dl>
 
 </div>
