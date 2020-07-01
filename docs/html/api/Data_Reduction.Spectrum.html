@@ -1,0 +1,234 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Spectrum &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="backup_one_line" href="Data_Reduction.DSN.backup_one_line.html" />
+    <link rel="prev" title="Session" href="Data_Reduction.Session.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.backup_one_line.html" title="backup_one_line"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.Session.html" title="Session"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.Session.html"
+                        title="previous chapter">Session</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.backup_one_line.html"
+                        title="next chapter">backup_one_line</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.Spectrum.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="spectrum">
+<h1>Spectrum<a class="headerlink" href="#spectrum" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Data_Reduction.Spectrum">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">Spectrum</code><a class="headerlink" href="#Data_Reduction.Spectrum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Data_Reduction.Observation.html#Data_Reduction.Observation" title="Data_Reduction.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.Observation</span></code></a></p>
+<p>Class for spectra</p>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Spectrum.freq_to_chan" title="Data_Reduction.Spectrum.freq_to_chan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">freq_to_chan</span></code></a>(bandwidth, n_chans)</p></td>
+<td><p>Returns the channel number where a given frequency is to be found.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Spectrum.get_freq_array" title="Data_Reduction.Spectrum.get_freq_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_freq_array</span></code></a>(bandwidth, n_chans)</p></td>
+<td><p>Create an array of frequencies for the channels of a backend</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Spectrum.get_num_chans" title="Data_Reduction.Spectrum.get_num_chans"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_num_chans</span></code></a>(linefreq, bandwidth, max_vel_width)</p></td>
+<td><p>compute the base 2 number of output channels for the specified resolution</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Spectrum.get_smoothed_bandshape" title="Data_Reduction.Spectrum.get_smoothed_bandshape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_smoothed_bandshape</span></code></a>([degree, poly_order])</p></td>
+<td><p>Do a Gaussian smoothing of the spectrum and then fit a polynomial.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Spectrum.reduce_spectrum_channels" title="Data_Reduction.Spectrum.reduce_spectrum_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reduce_spectrum_channels</span></code></a>(refval, refpix, delta)</p></td>
+<td><p>Reduce the number of channels in the spectrum.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="Data_Reduction.Spectrum.freq_to_chan">
+<code class="sig-name descname">freq_to_chan</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandwidth</span></em>, <em class="sig-param"><span class="n">n_chans</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Spectrum.freq_to_chan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the channel number where a given frequency is to be found.</p>
+<p>:param frequency : frequency of channel in sane units as bandwidth.
+:type  frequency : float</p>
+<p>:param bandwidth : upper limit of spectrometer passband
+:type  bandwidth : float</p>
+<p>:param n_chans : number of channels in the spectrometer
+:type  n_chans : int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>channel number (int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.Spectrum.get_freq_array">
+<code class="sig-name descname">get_freq_array</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandwidth</span></em>, <em class="sig-param"><span class="n">n_chans</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Spectrum.get_freq_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an array of frequencies for the channels of a backend</p>
+<p>:param bandwidth : bandwidth
+:type  bandwidth : float</p>
+<p>:param n_chans : number of channels
+:type  n_chans : int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>frequency of each channel in same units as bandwidth</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.Spectrum.get_num_chans">
+<code class="sig-name descname">get_num_chans</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">linefreq</span></em>, <em class="sig-param"><span class="n">bandwidth</span></em>, <em class="sig-param"><span class="n">max_vel_width</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Spectrum.get_num_chans" title="Permalink to this definition">¶</a></dt>
+<dd><p>compute the base 2 number of output channels for the specified resolution</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.Spectrum.get_smoothed_bandshape">
+<code class="sig-name descname">get_smoothed_bandshape</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">degree</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">poly_order</span><span class="o">=</span><span class="default_value">15</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Spectrum.get_smoothed_bandshape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do a Gaussian smoothing of the spectrum and then fit a polynomial.
+Optionally, the raw and smoothed data and the fitted polynomial can be
+plotted.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">numpy.polyfit(x,</span> <span class="pre">y,</span> <span class="pre">deg,</span> <span class="pre">rcond=None,</span> <span class="pre">full=False,</span> <span class="pre">w=None,</span> <span class="pre">cov=False)</span></code>
+Least squares polynomial fit.
+Fit a polynomial:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">p</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="n">deg</span> <span class="o">+</span> <span class="o">...</span> <span class="o">+</span> <span class="n">p</span><span class="p">[</span><span class="n">deg</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>of degree deg to points (x, y).
+Returns a vector of coefficients p that minimises the squared error.</p>
+<p>:param spectrum : input data
+:type  spectrum : list of float</p>
+<p>:param degree : number of samples to smoothed (Gaussian FWHM)
+:type  degree : int</p>
+<p>:param poly_order : order of the polynomial
+:type  poly_order : int</p>
+<p>:param plot : plotting option
+:type  plot : boolean</p>
+<dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>(polynomial_coefficient, smoothed_spectrum)</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.Spectrum.reduce_spectrum_channels">
+<code class="sig-name descname">reduce_spectrum_channels</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">refval</span></em>, <em class="sig-param"><span class="n">refpix</span></em>, <em class="sig-param"><span class="n">delta</span></em>, <em class="sig-param"><span class="n">num_chan</span><span class="o">=</span><span class="default_value">1024</span></em>, <em class="sig-param"><span class="n">axis</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Spectrum.reduce_spectrum_channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reduce the number of channels in the spectrum.</p>
+<p>The default option is to reduce the spectrum to a specified number of
+channels with a default of 1024. The input spectrum is presumed to have
+2**N channels so that num_chan/num_chan_in is an integer.</p>
+<p>If ‘spectrum’ is an N-D array, then the spectrum axis is given by ‘axis’
+which defaults to 0.</p>
+<p>‘delta’ is negative for lower sideband or reversed double sideband spectra.</p>
+<p>:param spectrum : spectrum values
+:type  spectrum : list or nparray</p>
+<p>:param refval : X-axis value at the reference pixel of ‘spectrum’
+:type  refval : float</p>
+<p>:param refpix : reference pixel for ‘spectrum’
+:type  refpix : int</p>
+<p>:param delta : interval between pixels on the X-axis
+:type  delta : float</p>
+<p>:param num_chan : optional number of channels to be returned (default: 2^10)
+:type  num_chan : int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>numpy.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.backup_one_line.html" title="backup_one_line"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.Session.html" title="Session"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

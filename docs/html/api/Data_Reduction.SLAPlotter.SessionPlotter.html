@@ -1,0 +1,197 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>SessionPlotter &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="TidTipFinder" href="Data_Reduction.TAMS_tipping.TidTipFinder.html" />
+    <link rel="prev" title="Spectrum" href="Data_Reduction.SLATool.Spectrum.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.TAMS_tipping.TidTipFinder.html" title="TidTipFinder"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.SLATool.Spectrum.html" title="Spectrum"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.SLATool.Spectrum.html"
+                        title="previous chapter">Spectrum</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.TAMS_tipping.TidTipFinder.html"
+                        title="next chapter">TidTipFinder</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.SLAPlotter.SessionPlotter.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="sessionplotter">
+<h1>SessionPlotter<a class="headerlink" href="#sessionplotter" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Data_Reduction.SLAPlotter.SessionPlotter">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.SLAPlotter.</code><code class="sig-name descname">SessionPlotter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">year</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">DOY</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLAPlotter.SessionPlotter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Data_Reduction.SLATool.SessionAnalyzer.html#Data_Reduction.SLATool.SessionAnalyzer" title="Data_Reduction.SLATool.SessionAnalyzer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.SLATool.SessionAnalyzer</span></code></a></p>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.SLAPlotter.SessionPlotter.plot_bmsw_diff" title="Data_Reduction.SLAPlotter.SessionPlotter.plot_bmsw_diff"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_bmsw_diff</span></code></a>([figtitle, savefig])</p></td>
+<td><p>Plot the difference between the two beams for each pol</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.SLAPlotter.SessionPlotter.plot_elev_and_Tsys" title="Data_Reduction.SLAPlotter.SessionPlotter.plot_elev_and_Tsys"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_elev_and_Tsys</span></code></a>([figtitle, weather_data, …])</p></td>
+<td><p>Plots Tsys vs time and vs elevation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.SLAPlotter.SessionPlotter.plot_passband" title="Data_Reduction.SLAPlotter.SessionPlotter.plot_passband"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_passband</span></code></a>([figtitle])</p></td>
+<td><p>Plots the passbands as dynamic spectra for the whole session.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.SLAPlotter.SessionPlotter.plot_possw_diff" title="Data_Reduction.SLAPlotter.SessionPlotter.plot_possw_diff"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_possw_diff</span></code></a>([figtitle, savefig])</p></td>
+<td><p>Plots the difference between a SIG=True scan and the next SIG=False scan.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.SLAPlotter.SessionPlotter.plot_weather" title="Data_Reduction.SLAPlotter.SessionPlotter.plot_weather"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_weather</span></code></a>([figtitle, weather_data, …])</p></td>
+<td><p>Plots temperature, humidity and pressure from get_good_weather_data()</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.SLAPlotter.SessionPlotter.plot_wind" title="Data_Reduction.SLAPlotter.SessionPlotter.plot_wind"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_wind</span></code></a>([figtitle, weather_data, …])</p></td>
+<td><p>Plots wind velocity and direction</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="Data_Reduction.SLAPlotter.SessionPlotter.plot_bmsw_diff">
+<code class="sig-name descname">plot_bmsw_diff</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">figtitle</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">savefig</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLAPlotter.SessionPlotter.plot_bmsw_diff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the difference between the two beams for each pol</p>
+<p>This is an indicator of receiver gain stability.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.SLAPlotter.SessionPlotter.plot_elev_and_Tsys">
+<code class="sig-name descname">plot_elev_and_Tsys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">figtitle</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">weather_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">examiner_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">savepath</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLAPlotter.SessionPlotter.plot_elev_and_Tsys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots Tsys vs time and vs elevation.</p>
+<p>The data asociated with each key of ‘weather_data’ is a dict with numpy
+array for (SIG state) True and for False.    The ‘TSYS’ array has four
+axes representing:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">time</span> <span class="n">index</span>   <span class="o">-</span> <span class="mi">0</span><span class="o">-</span><span class="n">based</span> <span class="n">sequence</span> <span class="ow">in</span> <span class="n">order</span> <span class="n">of</span> <span class="n">matplotlib</span> <span class="n">datenum</span>
+<span class="n">subchannel</span>   <span class="o">-</span> <span class="n">CYCLE</span> <span class="n">value</span>
+<span class="n">beam</span>         <span class="o">-</span> <span class="mi">1</span><span class="o">-</span><span class="n">based</span> <span class="n">number</span> <span class="n">sequence</span>
+<span class="n">IF</span>           <span class="o">-</span> <span class="mi">1</span><span class="o">-</span><span class="n">based</span> <span class="n">number</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">usually</span> <span class="n">representing</span> <span class="n">pol</span>
+</pre></div>
+</div>
+<p>The other keys have only a time axis.</p>
+<p>:param figtitle : figure title
+:type  figtitle : str</p>
+<p>:param weather_data : consolidated environmental data
+:type  weather_data : dict</p>
+<p>:param examiner_keys : keys of files from this date to be included
+:type  examiner_keys : list of int</p>
+<p>:param savepath : path to directory to save figure
+:type  savepath : str</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.SLAPlotter.SessionPlotter.plot_passband">
+<code class="sig-name descname">plot_passband</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">figtitle</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLAPlotter.SessionPlotter.plot_passband" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots the passbands as dynamic spectra for the whole session.</p>
+<p>This plots the passbands for each SINGLE DISH table in the session.
+Generally, there is only one.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.SLAPlotter.SessionPlotter.plot_possw_diff">
+<code class="sig-name descname">plot_possw_diff</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">figtitle</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">savefig</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLAPlotter.SessionPlotter.plot_possw_diff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots the difference between a SIG=True scan and the next SIG=False scan.</p>
+<p>This eliminates receiver systematics.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.SLAPlotter.SessionPlotter.plot_weather">
+<code class="sig-name descname">plot_weather</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">figtitle</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">weather_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">examiner_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">savepath</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLAPlotter.SessionPlotter.plot_weather" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots temperature, humidity and pressure from get_good_weather_data()</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.SLAPlotter.SessionPlotter.plot_wind">
+<code class="sig-name descname">plot_wind</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">figtitle</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">weather_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">examiner_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">savepath</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLAPlotter.SessionPlotter.plot_wind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots wind velocity and direction</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.TAMS_tipping.TidTipFinder.html" title="TidTipFinder"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.SLATool.Spectrum.html" title="Spectrum"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

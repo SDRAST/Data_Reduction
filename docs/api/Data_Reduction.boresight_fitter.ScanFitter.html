@@ -15,7 +15,8 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="save_scan_data" href="Data_Reduction.FITS.save_scan_data.html" /> 
+    <link rel="next" title="ammonia_data" href="Data_Reduction.hyperfine_fit.ammonia_data.html" />
+    <link rel="prev" title="Session" href="Data_Reduction.Malargue.Session.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -27,7 +28,10 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.FITS.save_scan_data.html" title="save_scan_data"
+          <a href="Data_Reduction.hyperfine_fit.ammonia_data.html" title="ammonia_data"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.Malargue.Session.html" title="Session"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
@@ -35,8 +39,11 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="Data_Reduction.FITS.save_scan_data.html"
-                        title="previous chapter">save_scan_data</a></p>
+  <p class="topless"><a href="Data_Reduction.Malargue.Session.html"
+                        title="previous chapter">Session</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.hyperfine_fit.ammonia_data.html"
+                        title="next chapter">ammonia_data</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -69,18 +76,18 @@
 <em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.boresight_fitter.</code><code class="sig-name descname">ScanFitter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">scan</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.boresight_fitter.ScanFitter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Create an object to fit a scan in one direction to a baseline and a Gaussian</p>
-<dl class="simple">
-<dt>Public attributes::</dt><dd><p>atten         - (float) receiver channel attenuation for this can
-baseline_pars - (nparray) polynomial parameters for baseline
-calibrator    - (Astronomy.Ephem.calibrator) calibrator source
-data          - (nparray) VFC count
-ddecs         - (nparray) declination offsets
-direction     - (str) scan axis
-dxdecs        - (nparray) cross-declination offsets
-logger        - (logging.Logger)
-pars          - (nparray) Gaussian parameters</p>
-</dd>
-</dl>
+<p>Public attributes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">atten</span>         <span class="o">-</span> <span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="n">receiver</span> <span class="n">channel</span> <span class="n">attenuation</span> <span class="k">for</span> <span class="n">this</span> <span class="n">can</span>
+<span class="n">baseline_pars</span> <span class="o">-</span> <span class="p">(</span><span class="n">nparray</span><span class="p">)</span> <span class="n">polynomial</span> <span class="n">parameters</span> <span class="k">for</span> <span class="n">baseline</span>
+<span class="n">calibrator</span>    <span class="o">-</span> <span class="p">(</span><span class="n">Astronomy</span><span class="o">.</span><span class="n">Ephem</span><span class="o">.</span><span class="n">calibrator</span><span class="p">)</span> <span class="n">calibrator</span> <span class="n">source</span>
+<span class="n">data</span>          <span class="o">-</span> <span class="p">(</span><span class="n">nparray</span><span class="p">)</span> <span class="n">VFC</span> <span class="n">count</span>
+<span class="n">ddecs</span>         <span class="o">-</span> <span class="p">(</span><span class="n">nparray</span><span class="p">)</span> <span class="n">declination</span> <span class="n">offsets</span>
+<span class="n">direction</span>     <span class="o">-</span> <span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="n">scan</span> <span class="n">axis</span>
+<span class="n">dxdecs</span>        <span class="o">-</span> <span class="p">(</span><span class="n">nparray</span><span class="p">)</span> <span class="n">cross</span><span class="o">-</span><span class="n">declination</span> <span class="n">offsets</span>
+<span class="n">logger</span>        <span class="o">-</span> <span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="p">)</span>
+<span class="n">pars</span>          <span class="o">-</span> <span class="p">(</span><span class="n">nparray</span><span class="p">)</span> <span class="n">Gaussian</span> <span class="n">parameters</span>
+</pre></div>
+</div>
 <p class="rubric">Methods Summary</p>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -131,7 +138,10 @@ baseline includes data[-5:]</p>
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.FITS.save_scan_data.html" title="save_scan_data"
+          <a href="Data_Reduction.hyperfine_fit.ammonia_data.html" title="ammonia_data"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.Malargue.Session.html" title="Session"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>

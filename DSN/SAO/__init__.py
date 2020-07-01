@@ -3,15 +3,9 @@ module for reducing SAO spectrometer data
 """
 import dill as cPickle
 import logging
+import numpy as NP
+import os.path
 import re
-
-from numpy import array, ndarray, zeros
-from os.path import basename, exists
-
-from DatesTimes import logger as dtl
-dtl.setLevel(logging.WARNING)
-from Data_Reduction import get_obs_dirs, get_obs_session, select_data_files
-from support import mkdir_if_needed, nearest_index
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +27,8 @@ class Data(object):
     """
     self.logger = logging.getLogger(logger.name+".Data")
     if type(x) == list:
-      self.x = array(x)
-    elif type(x) == ndarray:
+      self.x = NP.array(x)
+    elif type(x) == NP.ndarray:
       self.x = x
     else:
       self.logger.error("__init__: type %s is not valid for X", type(x))
@@ -45,7 +39,7 @@ class Data(object):
         self.logger.error("__init__: pols keys must be [0,1]")
     elif type(y) == list:
       if type(y[0]) == list:
-        self.y = array(y)
+        self.y = NP.array(y)
       else:
         self.logger.error("__init__: %s is not a dict of valid Y-values")
     self.frame = None
@@ -521,9 +515,9 @@ class SAOhdf5:
         else:
           items = line.strip().split()
           if items[0].lower() == "band":
-            self.meta["band"] = array(items[1].split(','), dtype=int)
+            self.meta["band"] = NP.array(items[1].split(','), dtype=int)
           elif items[0].lower() == "ifmode":
-            self.meta["IFmode"] = array(items[1].split(','))
+            self.meta["IFmode"] = NP.array(items[1].split(','))
           elif items[0].lower() == "source":
             self.meta["source"] = items[1]
           elif items[0].lower() == "opacity":
@@ -746,7 +740,7 @@ class SAOexaminer(object):
     self.logger.debug("get_datasets: for %s at %s on %s", project, dss, date)
     dirs = self.get_obs_dirs(project=project, dss=dss, date=date)
     self.logger.debug("get_datasets: dirs are %s", dirs)
-    self.datafiles = select_data_files(self.datapath)
+    self.datafiles = self.select_data_files(self.datapath)
     if self.datafiles:
       self.logger.debug("get_datasets: pickle files found")
       for datafile in self.datafiles:
@@ -770,14 +764,74 @@ class SAOexaminer(object):
       self.logger.error("get_datasets: getting HDF5 files")
       return self.load_HDF5_files(project=project, dss=dss, date=date)
 
+  def select_data_files(self, datapath, name_pattern="", load_hdf=False):
+    """
+    Provide the user with menu to select data files.
+  
+    Finding the right data store is complicated as there are many kinds of data
+    files::
+  
+    * If datapath is ...RA_data/HDF5/... then the files could be .h5 (Ashish) or .hdf5 (Dean).
+    * If datapath is ...RA_data/FITS/... then the extent is .fits.
+    * If datapath is ...project_data/... then the extent is .pkl
+    * If datapath is ...projects/...     then the extent is probably .csv or .dat.
+  
+    @param datapath : path to top of the tree where the DSS subdirectories are
+    @type  datapath : str
+  
+    @param name_pattern : pattern for selecting file names, e.g. source
+    @type  name_pattern : str
+  
+    @param load_hdf : use RA_data/HDF5 directory if True
+    @type  load_hdf : bool
+  
+    @return: list of str
+    """
+    # Get the data files to be processed
+    self.logger.debug("select_data_files: looking in %s", datapath)
+    if name_pattern:
+      name,extent = os.path.splitext(name_pattern)
+      if extent.isalpha(): # a proper extent with no wildcards
+        # take name pattern as is
+        pass
+      else:
+        # only one * at front and back of pattern
+        name_pattern = "*"+name_pattern.rstrip('*')+"*"
+    else:
+      # no pattern specified.  All files.
+      name_pattern = "*"
+    self.logger.debug("select_data_files: for pattern %s", name_pattern)
+    if re.search('HDF5', datapath):
+      load_hdf = True
+    elif re.search('project_data', datapath):
+      load_hdf = False
+      datafiles = support.text.select_files(datapath+name_pattern+"[0-9].pkl")
+    elif re.search('FITS', datapath):
+      datafiles = support.text.select_files(datapath+name_pattern+".fits")
+    if load_hdf:
+      full = datapath+name_pattern+".h*5"
+    else:
+      full = datapath+name_pattern
+    self.logger.debug("select_data_files: from: %s", full)
+    datafiles = support.text.select_files(full)
+
+    self.logger.debug("select_data_files: found %s", datafiles)
+    if datafiles == []:
+      self.logger.error("select_data_files: None found. Is the data directory mounted?")
+      raise RuntimeError('No data files found.')  
+    if type(datafiles) == str:
+      datafiles = [datafiles]
+    self.logger.info("select_data_files: to be processed: %s", datafiles)
+    return datafiles
+
   def load_HDF5_files(self, project=None, dss=None, date=None):
     """
     """
     try:
-      self.datafiles = select_data_files(self.rawdatapath, load_hdf=True)
+      self.datafiles = self.select_data_files(self.rawdatapath, load_hdf=True)
     except AttributeError:
       self.get_obs_dirs(project=project, dss=dss, date=date)
-      self.datafiles = select_data_files(self.rawdatapath, load_hdf=True)
+      self.datafiles = self.select_data_files(self.rawdatapath, load_hdf=True)
     if self.datafiles:
       for datafile in self.datafiles:
         self.logger.info("load_HDF5_files: processing %s", datafile)

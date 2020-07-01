@@ -24,15 +24,14 @@ Getting the ammonia hyperfine structure from the JPL catalog (v4)
 and calculating A_ul gives the wrong relative intensities.
 10**logint gives the right ratios.
 """
-from Math import gaussian
-from numpy import array, linspace, vectorize, zeros
-Gaussian = vectorize(gaussian)
+import numpy as NP
+import pylab
+import scipy.optimize as opt
+import scipy.stats.distributions as dists
 
-from pylab import draw, ion, title, plot, xlabel, ylabel
-# This overrides the matplotlib.mlab function norm()
-from scipy.stats.distributions import norm
-from scipy.optimize import leastsq
-#import time
+import Math
+
+Gaussian = NP.vectorize(Math.gaussian)
 
 import Physics.Radiation.Lines.Molec as M
 
@@ -56,7 +55,7 @@ def hpf_model(x, amp, x_0, w):
     y-values for the model
   """
   global s, df
-  result = zeros(len(x))
+  result = NP.zeros(len(x))
   for i in range(len(df)):
     result += amp*s[i]*Gaussian(x, x_0+df[i], w)
   return result
@@ -97,8 +96,8 @@ def noise_data(SNR,width,span):
     noisy y-values.
   """
   global nsamps
-  x = linspace(-span/2,span/2,nsamps)
-  noisy_data = hpf_model(x, SNR/s[0], 0, width) + norm.rvs(size=nsamps)
+  x = NP.linspace(-span/2,span/2,nsamps)
+  noisy_data = hpf_model(x, SNR/s[0], 0, width) + dists.norm.rvs(size=nsamps)
   return x, noisy_data
 
 def ammonia_data(ju,ku,jl,kl):
@@ -151,7 +150,7 @@ def fit_data(x,data,model,parameter_guess):
   @return: tuple
     output from scipy.optimize.leastsq
   """
-  result, msg = leastsq(error_func,
+  result, msg = opt.leastsq(error_func,
                       x0 = parameter_guess,
                       args=(x,data,model))
   print(msg)
@@ -180,7 +179,7 @@ def test():
   """
   global nsamps
   width  = 0.1 # MHz
-  ion()
+  pylab.ion()
   o = input("Simulation (s) or real data (d)? ")
   if o.lower()[0] == 's':
     # make a set of noisy data samples
@@ -190,7 +189,7 @@ def test():
     x, y = noise_data(SNR,width,10)
     parameter_guess = [1,0,width]
   else:
-    x = array([-1.84357808, -1.83374336, -1.82390864, -1.81407392, -1.8042392 ,
+    x = NP.array([-1.84357808, -1.83374336, -1.82390864, -1.81407392, -1.8042392 ,
        -1.79440448, -1.78456976, -1.77473504, -1.76490032, -1.7550656 ,
        -1.74523088, -1.73539616, -1.72556144, -1.71572672, -1.70589201,
        -1.69605729, -1.68622257, -1.67638785, -1.66655313, -1.65671841,
@@ -242,7 +241,7 @@ def test():
         0.56592822,  0.57576294,  0.58559766,  0.59543238,  0.6052671 ,
         0.61510182,  0.62493654,  0.63477126,  0.64460598,  0.6544407 ,
         0.66427542])
-    y = array([1.55753875e-02,   9.20142978e-03,  -4.12695818e-02,
+    y = NP.array([1.55753875e-02,   9.20142978e-03,  -4.12695818e-02,
         -2.41837688e-02,  -5.67525066e-02,  -1.33656085e-01,
         -3.92932482e-02,  -9.93828475e-02,  -6.49584830e-02,
         -1.87308770e-02,  -8.49718973e-02,  -5.02231643e-02,
@@ -329,17 +328,17 @@ def test():
         -1.40918205e-02,  -5.67496903e-02,   1.55445077e-02,
         -1.82226207e-02])
     parameter_guess = [.3,-0.6,width]
-  plot(x,y)
-  draw()  #  time.sleep(0.1)
+  pylab.plot(x,y)
+  pylab.draw()  #  time.sleep(0.1)
   line = int(input("Main lines (1) or all lines (-1)? "))
   set_model(line)
 
   result = fit_data(x,y,hpf_model,parameter_guess)
   best_fit = hpf_model(x,*result) # model y-values
-  plot(x,best_fit)
-  title(name)
-  xlabel("Relative frequency (MHz)")
-  ylabel("Amplitude (r.m.s = 1)")
+  pylab.plot(x,best_fit)
+  pylab.title(name)
+  pylab.xlabel("Relative frequency (MHz)")
+  pylab.ylabel("Amplitude (r.m.s = 1)")
 
   print("Amplitude: %6.3f" % (result[0]*s[0]))
   print("Position:  %6.3f" % result[1])

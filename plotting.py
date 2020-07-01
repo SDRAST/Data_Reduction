@@ -1,5 +1,5 @@
 import Data_Reduction as DR
-from pylab import *
+import pylab as PL
             
 class MapPlotter(DR.Map):
   """
@@ -24,12 +24,12 @@ class MapPlotter(DR.Map):
     compute 'RA' and 'dec' and then 'center_map' can generate relative offsets.
     """
     if 'xdec_offset' in self.data and 'dec_offset' in self.data:
-      plot(self.data['xdec_offset', self.data['dec_offset'], '-')
-      plot(self.data['xdec_offset', self.data['dec_offset'], '.')
-      xlabel("Cross-declination")
-      ylabel("Declination")
-      title(title_str)
-      grid()
+      PL.plot(self.data['xdec_offset'], self.data['dec_offset'], '-')
+      PL.plot(self.data['xdec_offset'], self.data['dec_offset'], '.')
+      PL.xlabel("Cross-declination")
+      PL.ylabel("Declination")
+      PL.title(title_str)
+      PL.grid()
     else:
       self.logger.warning("use self.get_offsets()")      
 
@@ -38,16 +38,16 @@ class MapPlotter(DR.Map):
     Plot elevation vs azimuth
     """
     if 'az' in self.data and 'el' in self.data:
-      plot(self.data['az'], self.data['el'], '-')
-      plot(self.data['az'], self.data['el'], '.')
-      xlabel("Azimuth")
-      ylabel("Elevation")
-      title(title_str)
-      grid()
+      PL.plot(self.data['az'], self.data['el'], '-')
+      PL.plot(self.data['az'], self.data['el'], '.')
+      PL.xlabel("Azimuth")
+      PL.ylabel("Elevation")
+      PL.title(title_str)
+      PL.grid()
     else:
       self.logger.warning("use self.azel_from_radec()")
       
-  def plot_ra_dec(ras,decs,title_str, J2000=False, title_str=None):
+  def plot_ra_dec(J2000=False, title_str=None):
     """
     Plot declination vs right ascension
     """
@@ -61,18 +61,17 @@ class MapPlotter(DR.Map):
     else:
       if 'ra' in self.data and 'dec' in self.data:
         ras,decs = self.data['ra'],self.data['dec']
-        title_str = "Apparent Celestial")
+        title_str = "Apparent Celestial"
       else:
         self.logger.warning("use self.radec_from_azel() or self.radec_from_radec2000()")
         return
-    plot(ras,decs,'-')
-    plot(ras,decs,'.')
-    xlabel("Right Ascension")
-    ylabel("Declination")
-    title(title_str)
-    grid()
+    PL.plot(ras,decs,'-')
+    PL.plot(ras,decs,'.')
+    PL.xlabel("Right Ascension")
+    PL.ylabel("Declination")
+    PL.title(title_str)
+    PL.grid()
 
-    
   def contours(self, channel, width=1.0, height=1.0, contours=None):
     """
     make contour maps; this calls 'regrid'
@@ -81,17 +80,17 @@ class MapPlotter(DR.Map):
       pass
     else:
       x,y,z = self.regrid(width=width, height=height)
-    fig, ax = subplots(nrows=1, ncols=1)
+    fig, ax = PL.subplots(nrows=1, ncols=1)
     if contours:
-      contour( x, y, z[channel], contours, linewidths=0.5, colors='k')
-      contourf(x, y, z[channel], contours, cmap=plt.cm.jet)
+      PL.contour( x, y, z[channel], contours, linewidths=0.5, colors='k')
+      PL.contourf(x, y, z[channel], contours, cmap=PL.cm.jet)
     else:
-      contourf(x, y, z[channel], cmap=plt.cm.jet)
-    grid()
+      contourf(x, y, z[channel], cmap=PL.cm.jet)
+    PL.grid()
     ax.set_aspect('equal')
     ax.set_xlim(-width/2., width/2.)
     ax.set_ylim(-height/2., height/2.)
-    ax.set_xlabel("Cross-declination offset")
+    ax.set_PL.xlabel("Cross-declination offset")
     ax.set_ylabel("Declination offset")
     ax.set_title(self.name+" at " + str(self.rss_cfg[channel]['sky_freq']) + 
                  " MHz " + self.rss_cfg[channel]['pol'][0].upper())
@@ -104,4 +103,3 @@ class MapPlotter(DR.Map):
     hh = timestruct.tm_hour
     mm = timestruct.tm_min
     fig.suptitle("%4d/%03d %02d:%02d UT" % (yr,dy,hh,mm))
-

@@ -1,0 +1,7 @@
+<map id="inheritance0611b83347" name="inheritance0611b83347">
+<area shape="rect" id="node1" href="api/Data_Reduction.GriddingMixin.html#Data_Reduction.GriddingMixin" target="_top" title="Class for all the data and methods associated with a raster scan map" alt="" coords="5,55,117,80"/>
+<area shape="rect" id="node2" href="api/Data_Reduction.Map.html#Data_Reduction.Map" target="_top" title="Map class without special features for GAVRT and Malargue" alt="" coords="171,55,243,80"/>
+<area shape="rect" id="node3" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" target="_top" title="superclass for a data structure and methods" alt="" coords="11,104,112,129"/>
+<area shape="rect" id="node5" href="api/Data_Reduction.Spectrum.html#Data_Reduction.Spectrum" target="_top" title="Class for spectra" alt="" coords="165,104,249,129"/>
+<area shape="rect" id="node4" href="api/Data_Reduction.Session.html#Data_Reduction.Session" target="_top" title="Base class for an observing session on a given year and DOY" alt="" coords="25,5,97,31"/>
+</map>

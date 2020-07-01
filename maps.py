@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
-from pylab import *
+"""
+Obsolete module replaced by ``plotting`` and the ``MapPlotter`` class.
+"""
+import Astronomy.solar as solar
+import math
+import pylab as PL
 import ephem
-from Astronomy.solar import ra_dec_to_xy
+# from Astronomy.solar import ra_dec_to_xy
 
-radian = 180./pi
+radian = 180./math.pi
 
 def center_data(date_nums, ras, decs, body, site):
   """
@@ -33,11 +38,11 @@ def center_data(date_nums, ras, decs, body, site):
   for count in range(len(date_nums)):
     dt = num2date(date_nums[count])
     body.compute(dt)
-    ra_center = body.ra*12/pi    # hours
-    dec_center = body.dec*180/pi # degrees
+    ra_center = body.ra*12/math.pi    # hours
+    dec_center = body.dec*180/math.pi # degrees
     decrad = body.dec
     # right ascension increases to the left, cross-dec to the right
-    dxdecs.append(-(ras[count] - ra_center)*15*cos(decrad))
+    dxdecs.append(-(ras[count] - ra_center)*15*math.cos(decrad))
     ddecs.append(decs[count] - dec_center)
   return dxdecs,ddecs
 
@@ -45,34 +50,34 @@ def plot_ra_dec(ras,decs,title_str):
   """
   Plot declination vs right ascension
   """
-  plot(ras,decs,'-')
-  plot(ras,decs,'.')
-  xlabel("Right Ascension")
-  ylabel("Declination")
-  title(title_str)
-  grid()
+  PL.plot(ras,decs,'-')
+  PL.plot(ras,decs,'.')
+  PL.xlabel("Right Ascension")
+  PL.ylabel("Declination")
+  PL.title(title_str)
+  PL.grid()
 
 def plot_xdec_dec(xdecs,decs,title_str):
   """
   plot declination vs cross-declination
   """
-  plot(xdecs,decs,'-')
-  plot(xdecs,decs,'.')
-  xlabel("Cross-declination")
-  ylabel("Declination")
-  title(title_str)
-  grid()
+  PL.plot(xdecs,decs,'-')
+  PL.plot(xdecs,decs,'.')
+  PL.xlabel("Cross-declination")
+  PL.ylabel("Declination")
+  PL.title(title_str)
+  PL.grid()
 
 def plot_azel(azs,els,title_str):
   """
   Plot elevation vs azimuth
   """
-  plot(azs,els,'-')
-  plot(azs,els,'.')
-  xlabel("Azimuth")
-  ylabel("Elevation")
-  title(title_str)
-  grid()
+  PL.plot(azs,els,'-')
+  PL.plot(azs,els,'.')
+  PL.xlabel("Azimuth")
+  PL.ylabel("Elevation")
+  PL.title(title_str)
+  PL.grid()
 
 def show_body_orientation(body, meantime, map_params, solar_data):
   """
@@ -91,18 +96,18 @@ def show_body_orientation(body, meantime, map_params, solar_data):
     for dra in arange(-1., 1.+0.1, 0.1):
       ra = obj_ra + dra
       dec = obj_dec + ddec
-      xy = ra_dec_to_xy(ra, dec, -solar_data["polar angle"],
+      xy = solar.ra_dec_to_xy(ra, dec, -solar_data["polar angle"],
                         obj_ra, obj_dec)
       x.append(xy[0])
       y.append(xy[1])
-      plot(x,y,"y:")
-      plot(-array(y),array(x),"y:")
+      PL.plot(x,y,"y:")
+      PL.plot(-array(y),array(x),"y:")
   # draw the circle
   x = []
   y = []
   for theta in linspace(0,360/radian,180):
-    x.append(solar_data["semidiameter"]*cos(theta)/60.)
-    y.append(solar_data["semidiameter"]*sin(theta)/60.)
-  plot(x,y,"y-")
+    x.append(solar_data["semidiameter"]*math.cos(theta)/60.)
+    y.append(solar_data["semidiameter"]*math.sin(theta)/60.)
+  PL.plot(x,y,"y-")
   return
 

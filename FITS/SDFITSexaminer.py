@@ -47,13 +47,7 @@ import re
 import sys
 import time
 
-from astropy.coordinates import FK4, FK5, SkyCoord
-from copy import copy
-#from matplotlib.dates import date2num
- 
-from scipy import interpolate
-from scipy.optimize import curve_fit
-from scipy.stats import linregress
+from copy import copy 
 
 # Third party packages
 from novas import compat as novas
@@ -61,28 +55,13 @@ from novas.compat import eph_manager
 
 logger = logging.getLogger(__name__)
 
+import Astronomy as A
+import Astronomy.redshift as Ar
+import Data_Reduction.tipping as tipping
+import DatesTimes as DT
+import support
+import support.dicts
 import support.lists
-
-from Astronomy import c, v_sun
-from Astronomy.DSN_coordinates import DSS
-from Astronomy.redshift import doppler_radio, doppler_optical, doppler_relat
-from Data_Reduction.FITS.DSNFITS import get_indices
-from Data_Reduction.tipping import airmass, fit_tipcurve_data
-from DatesTimes import ISOtime2datetime, UnixTime_to_datetime
-from Data_Reduction import get_freq_array
-from DatesTimes import MJD
-# I don't think these classes are needed 2020/06/06
-#try:
-#  from MonitorControl.Configurations.CDSCC.FO_patching import DistributionAssembly
-#  from MonitorControl.FrontEnds.K_band import K_4ch
-#  K_4ch = None
-#except ImportError:
-#  logger.warning("SDFITSexaminer cannot handle DSS-43 K-band: no configuration")
-#from MonitorControl.FrontEnds.DSN import DSN_fe
-from Radio_Astronomy import rms_noise
-from support import clobber, mkdir_if_needed, nearest_index
-from support.dicts import make_key_if_needed
-
 
 jd_start, jd_end, number = eph_manager.ephem_open()
 
@@ -244,7 +223,7 @@ class DSNFITSexaminer(object):
       self.parent = parent
       # add some attributes for convenience
       try:
-        d = UnixTime_to_datetime(self.get_first_good_value('UNIXtime')).timetuple()
+        d = DT.UnixTime_to_datetime(self.get_first_good_value('UNIXtime')).timetuple()
       except KeyError:
         # old deprecated format
         date_obs = self.parent.hdulist[1].get_first_good_value('DATE-OBS')
@@ -261,7 +240,7 @@ class DSNFITSexaminer(object):
             d = unixtime_at_midnight + time_obs
           except ValueError:
             # ISOtime
-            d = ISOtime2datetime(date_obs).timetuple()
+            d = DT.ISOtime2datetime(date_obs).timetuple()
       # what is the data column called?
       if 'SPECTRUM' in self.data.columns.names:
         self.dataname = 'SPECTRUM'
@@ -583,17 +562,17 @@ class DSNFITSexaminer(object):
       elif frame == "DELF-OBS": # frequency relative to the reference pixel
         return rel_freqs
       elif frame == "RADI-OBS": # velocity relative to the reference pixel
-        return doppler_radio(rel_freqs, f_ref)
+        return Ar.doppler_radio(rel_freqs, f_ref)
       elif frame == "OPTI-OBS": # same but with optical (wavelength) equation
-        return doppler_optical(rel_freqs, f_ref)
+        return Ar.doppler_optical(rel_freqs, f_ref)
       elif frame == "RELA-OBS": # same but with full relativity 
-        return doppler_relat(rel_freqs, f_ref)
+        return Ar.doppler_relat(rel_freqs, f_ref)
       elif frame == "RADI-LSR": # velocity w.r.t. LSR
-        return doppler_radio(rel_freqs, f_ref) - v_frame
+        return Ar.doppler_radio(rel_freqs, f_ref) - v_frame
       elif frame == "OPTI-LSR": # same but with optical equation
-        return doppler_optical(rel_freqs, f_ref) - v_frame
+        return Ar.doppler_optical(rel_freqs, f_ref) - v_frame
       elif frame == "RELA-LSR": # same but with full 
-        return doppler_relat(rel_freqs, f_ref) - v_frame
+        return Ar.doppler_relat(rel_freqs, f_ref) - v_frame
   
     def compute_X_axis(self, row, frame='RADI-OBS', ref_freq=None,
                        vspline=None, obstime=None, num_chans=None):
@@ -641,7 +620,7 @@ class DSNFITSexaminer(object):
         vobj = None
       elif frame == "FREQ-LSR":
         vobj = self.V_LSR(row) # km/s
-        C = c/1000 # km/s
+        C = A.c/1000 # km/s
         delf = -self.V_LSR(row)*f_ref/C
         #self.logger.debug(" compute_X_axis: freq offset = %f", delf)
         x = self.rel_freq_units(frame="FREQ-OBS", ref_freq=f_ref,
@@ -721,10 +700,10 @@ class DSNFITSexaminer(object):
     
       DSS43 = novas.make_observer_on_surface(self.header['SITELAT'], longdeg,
                                              self.header['SITEELEV'], 0, 0)
-      dt = UnixTime_to_datetime(unixtime)
+      dt = DT.UnixTime_to_datetime(unixtime)
       #self.logger.debug("V_LSR: computing for %s", dt.ctime())
       jd = novas.julian_date(dt.year,dt.month,dt.day,dt.hour+dt.minute/60.)
-      mjd = MJD(dt.year,dt.month,dt.day)
+      mjd = DT.MJD(dt.year,dt.month,dt.day)
       earth = novas.make_object(0, 3, 'Earth', None)
       urthpos,urthvel = novas.ephemeris((jd,0), earth, origin=0)
       (obspos,obsvel) = novas.geo_posvel(jd,0,DSS43,0)
@@ -736,7 +715,7 @@ class DSNFITSexaminer(object):
       #self.logger.debug("V_LSR: source velocity = %s", srcvel)
       V = novas.rad_vel(source, srcpos, srcvel, totvel,0,0,0)
       #self.logger.debug("V_LSR: velocity of LSR = %.2f km/s", V)
-      return V+v_sun(mjd, position.ra.hour, position.dec.deg)
+      return V+A.v_sun(mjd, position.ra.hour, position.dec.deg)
         
     def make_directory(self, dest=sys.stdout):
       """
@@ -1350,7 +1329,7 @@ class DSNFITSexaminer(object):
       This should probably be a DistributionAssembly method
       """
       da = DistributionAssembly()
-      d = UnixTime_to_datetime(self.get_first_value('UNIXtime',0)).timetuple()
+      d = DT.UnixTime_to_datetime(self.get_first_value('UNIXtime',0)).timetuple()
       da.get_sheet_by_date("%4d/%03d" % (d.tm_year, d.tm_yday))
       pms = da.get_signals('Power Meter')
       pm_keys = list(pms.keys())
@@ -1429,11 +1408,11 @@ class DSNFITSexaminer(object):
       # extract the designated range
       x1,x2 = xlimits
       if x[0] < x[-1]:
-        ch1 = nearest_index(x, x1)
-        ch2 = nearest_index(x, x2)
+        ch1 = support.nearest_index(x, x1)
+        ch2 = support.nearest_index(x, x2)
       else:
-        ch1 = nearest_index(x, x2)
-        ch2 = nearest_index(x, x1)
+        ch1 = support.nearest_index(x, x2)
+        ch2 = support.nearest_index(x, x1)
       if type(data) == numpy.ndarray:
         spectra = data
       else:
@@ -1723,7 +1702,7 @@ class DSNFITSexaminer(object):
           else:
             pols = self.props['num IFs']
           for pol in pols:
-            self.data[self.dataname][row][pol,0,0] = clobber(
+            self.data[self.dataname][row][pol,0,0] = support.clobber(
                              self.data[self.dataname][row][pol,0,0], tone_channel)
 
     def get_rows(self, keyword, value):
@@ -1890,11 +1869,11 @@ class DSNFITSexaminer(object):
       for sig in [True, False]:
         for cycle in self.cycle_keys: # this loops over subchannels
           cycle_idx = self.cycle_keys.index(cycle)
-          make_key_if_needed(good_data['TSYS'][sig], cycle_idx, value={})
+          support.dicts.make_key_if_needed(good_data['TSYS'][sig], cycle_idx, value={})
           for beam_idx in range(self.props["num beams"]):
-            make_key_if_needed(good_data['TSYS'][sig][cycle_idx], beam_idx, value={})
+            support.dicts.make_key_if_needed(good_data['TSYS'][sig][cycle_idx], beam_idx, value={})
             for pol_idx in range(self.props["num IFs"]):
-              make_key_if_needed(good_data['TSYS'][sig][cycle_idx][beam_idx], pol_idx, value=[])
+              support.dicts.make_key_if_needed(good_data['TSYS'][sig][cycle_idx][beam_idx], pol_idx, value=[])
       self.logger.debug("get_good_wx_data: expanded TSYS dict is %s",
                         good_data['TSYS'])
       # process all scans
@@ -1995,11 +1974,11 @@ class TidTipAnalyzer():
       tsys = self.data['TSYS'][rows]
       if method == "linear":
         Trx[IF], sigTrx[IF], Tsys_per_am, sigTsys_per_am = \
-                    fit_tipcurve_data(elev, tsys, Tatm=250, method="linear")
+                tipping.fit_tipcurve_data(elev, tsys, Tatm=250, method="linear")
         tau[IF] = Tsys_per_am/Tatmos
         sigtau[IF] = sigTsys_per_am/Tatmos
       elif method == "quadratic":
         Trx[IF], sigTrx[IF], tau[IF], sigtau[IF], Tatm[IF], sigTatm[IF] = \
-                    fit_tipcurve_data(elev, tsys, Tatm=250, method="quadratic")
+             tipping.fit_tipcurve_data(elev, tsys, Tatm=250, method="quadratic")
     return Trx, sigTrx, tau, sigtau, Tatm, sigTatm
 

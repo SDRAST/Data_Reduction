@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>TidTipFinder &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="airmass" href="Data_Reduction.tipping.airmass.html" />
+    <link rel="prev" title="SessionPlotter" href="Data_Reduction.SLAPlotter.SessionPlotter.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.tipping.airmass.html" title="airmass"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.SLAPlotter.SessionPlotter.html" title="SessionPlotter"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.SLAPlotter.SessionPlotter.html"
+                        title="previous chapter">SessionPlotter</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.tipping.airmass.html"
+                        title="next chapter">airmass</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.TAMS_tipping.TidTipFinder.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="tidtipfinder">
+<h1>TidTipFinder<a class="headerlink" href="#tidtipfinder" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Data_Reduction.TAMS_tipping.TidTipFinder">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.TAMS_tipping.</code><code class="sig-name descname">TidTipFinder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">43</span></em>, <em class="sig-param"><span class="n">remote</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.TAMS_tipping.TidTipFinder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="simple">
+<dt>Attributes::</dt><dd><p>am
+directory
+files
+logger
+tsys</p>
+</dd>
+</dl>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.TAMS_tipping.TidTipFinder.get_session_files" title="Data_Reduction.TAMS_tipping.TidTipFinder.get_session_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_session_files</span></code></a>(date)</p></td>
+<td><p>Get the files for the specified data</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.TAMS_tipping.TidTipFinder.get_tipping_data" title="Data_Reduction.TAMS_tipping.TidTipFinder.get_tipping_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_tipping_data</span></code></a>(filename)</p></td>
+<td><p>Gets tipping data from a file made with observatoryCtrl</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.TAMS_tipping.TidTipFinder.plot_elevations" title="Data_Reduction.TAMS_tipping.TidTipFinder.plot_elevations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_elevations</span></code></a>(index[, tipfiles])</p></td>
+<td><p>Plots tipping curve data from a specified file</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.TAMS_tipping.TidTipFinder.sort_by_time" title="Data_Reduction.TAMS_tipping.TidTipFinder.sort_by_time"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sort_by_time</span></code></a>([name_template, subdir])</p></td>
+<td><p>Returns a time-ordered dict of tipping files with UNIX times as keys</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="Data_Reduction.TAMS_tipping.TidTipFinder.get_session_files">
+<code class="sig-name descname">get_session_files</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.TAMS_tipping.TidTipFinder.get_session_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the files for the specified data</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.TAMS_tipping.TidTipFinder.get_tipping_data">
+<code class="sig-name descname">get_tipping_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.TAMS_tipping.TidTipFinder.get_tipping_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets tipping data from a file made with observatoryCtrl</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.TAMS_tipping.TidTipFinder.plot_elevations">
+<code class="sig-name descname">plot_elevations</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span></em>, <em class="sig-param"><span class="n">tipfiles</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.TAMS_tipping.TidTipFinder.plot_elevations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots tipping curve data from a specified file</p>
+<p>:param tipfiles : dict keyed on filename with file times
+:type  tipfiles : dict</p>
+<p>:param index : file in tipfiles to be plotted
+:type  index : int</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.TAMS_tipping.TidTipFinder.sort_by_time">
+<code class="sig-name descname">sort_by_time</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name_template</span><span class="o">=</span><span class="default_value">'tipping_data'</span></em>, <em class="sig-param"><span class="n">subdir</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.TAMS_tipping.TidTipFinder.sort_by_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a time-ordered dict of tipping files with UNIX times as keys</p>
+<p>:param directory : where the files are
+:type  directory : str</p>
+<p>:param name_template : part of name common to all files
+:type  name_template : str</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dict keyed on filenames</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.tipping.airmass.html" title="airmass"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.SLAPlotter.SessionPlotter.html" title="SessionPlotter"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

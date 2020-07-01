@@ -9,14 +9,13 @@ just test with 'socket.gethostname' and do a remote mount if the response is
 not 'crux'.
 """
 import calendar
+import collections
 import glob
 import logging
 import numpy
 import os
+import pylab as PL
 import time
-
-from collections import OrderedDict
-from pylab import *
 
 from DatesTimes import calendar_date
 from support import nearest_index
@@ -89,7 +88,7 @@ class TidTipFinder(object):
       filedict[unixtime] = name
     keys = list(filedict.keys())
     keys.sort()
-    ordered = OrderedDict()
+    ordered = collections.OrderedDict()
     for key in keys:
       ordered[key] = filedict[key]
     return ordered
@@ -149,15 +148,15 @@ class TidTipFinder(object):
     else:
       filename =  self.datefiles[index]
     e,t = self.get_tipping_data(filename)
-    figure()
+    PL.figure()
     for chan in range(4):
-      plot(e,t[:,chan], IFcolors[chan]+'-')
-      plot(e,t[:,chan], IFcolors[chan]+'.', label="IF"+str(chan+1))
-    xlabel("Elevation")
-    ylabel("System Temperature")
-    grid()
-    legend(numpoints=1)
+      PL.plot(e,t[:,chan], IFcolors[chan]+'-')
+      PL.plot(e,t[:,chan], IFcolors[chan]+'.', label="IF"+str(chan+1))
+    PL.xlabel("Elevation")
+    PL.ylabel("System Temperature")
+    PL.grid()
+    PL.legend(numpoints=1)
     unixtime = float(os.path.basename(filename)[12:-4])
-    title(time.ctime(unixtime))
-    show()
+    PL.title(time.ctime(unixtime))
+    PL.show()
 

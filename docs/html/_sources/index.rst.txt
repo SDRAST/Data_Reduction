@@ -18,28 +18,17 @@ name used, *e.g.* `argmax()`.
 
 .. automodapi:: Data_Reduction
 .. automodapi:: Data_Reduction.DSN
-Data_Reduction.DSN.GAVRT
-------------------------
-cannot be handled by ``automodapi`` right now.  Needs fixing.
 .. automodapi:: Data_Reduction.DSN.SAO
 .. automodapi:: Data_Reduction.FITS
-.. Data_Reduction.GAVRT
-.. ------------------------
-.. cannot be handled by ``automodapi`` right now.  Needs fixing.
+.. automodapi:: Data_Reduction.GAVRT
 .. automodapi:: Data_Reduction.Malargue
 .. automodapi:: Data_Reduction.boresight_fitter
 .. automodapi:: Data_Reduction.hyperfine_fit
-Data_Reduction.maps
--------------------
-cannot be handled by ``automodapi`` right now.  Needs fixing.
+.. automodapi:: Data_Reduction.maps
+.. automodapi:: Data_Reduction.plotting
 .. automodapi:: Data_Reduction.SLATool
-Data_Reduction.SLAPlotter
--------------------------
-cannot be handled by ``automodapi`` right now.  Needs fixing.
-
-Data_Reduction.TAMS_tipping
----------------------------
-cannot be handled by ``automodapi`` right now.  Needs fixing.
+.. automodapi:: Data_Reduction.SLAPlotter
+.. automodapi:: Data_Reduction.TAMS_tipping
 .. automodapi:: Data_Reduction.tipping
 
 

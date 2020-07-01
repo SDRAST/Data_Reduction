@@ -5,20 +5,19 @@ Plotting component of an environment for analyzing spectral line from multiple
 observatories. Manages various data reduction programs.
 """
 import logging
+import matplotlib.dates as MPLdate
+import matplotlib.font_manager as MPLfont
+import matplotlib.ticker as MPLtic
+import os.path
+import pylab as PL
 
-from matplotlib.dates import DateFormatter
-from matplotlib.font_manager import FontProperties
-from matplotlib.ticker import FormatStrFormatter
-from os.path import basename, dirname, splitext
-from pylab import *
-
-from Data_Reduction.FITS.SDFITSplotter import make_legend_labels, DSNFITSplotter
-from Data_Reduction.SLATool import SessionAnalyzer
-from Data_Reduction.tipping import airmass
+import Data_Reduction.FITS.SDFITSplotter as FITSpl
+import Data_Reduction.SLATool as SLA
+import Data_Reduction.tipping as DRtip
 
 logger = logging.getLogger(__name__)
 
-fontP = FontProperties()
+fontP = MPLfont.FontProperties()
 fontP.set_size('x-small')
 
 brown = '#630000'
@@ -26,22 +25,22 @@ teal = '#0084a5'
 colors = ["b", "g", "r", "c", "m", "y", brown, teal]
 sigref = {False: "r", True:"s"}
 
-class SessionPlotter(SessionAnalyzer):
+class SessionPlotter(SLA.SessionAnalyzer):
   """
   """
   def __init__(self, project=None, dss=None, year=None, DOY=None):
     """
     """
-    SessionAnalyzer.__init__(self, project=project, dss=dss,
+    SLA.SessionAnalyzer.__init__(self, project=project, dss=dss,
                                    year=year, DOY=DOY)
-    self.logger = logging.getLogger(logger.name+".SessionAnalyzer")
+    self.logger = logging.getLogger(logger.name+".SessionPlotter")
     self.logger.info("__init__: getting FITS examiners for DSS%2d on %4d/%03d",
                      dss, year, DOY)
     if self.examiners:
       for ekey in list(self.examiners.keys()):
         self.examiners[ekey].plotter = {}
         for tkey in list(self.examiners[ekey].tables.keys()):
-          self.examiners[ekey].plotter[tkey] = DSNFITSplotter.Plotter(self,
+          self.examiners[ekey].plotter[tkey] = FITSpl.DSNFITSplotter.Plotter(self,
                                              self.examiners[ekey].tables[tkey])
     else:
       self.logger.warning("__init__: no FITS examiners created")
@@ -54,10 +53,12 @@ class SessionPlotter(SessionAnalyzer):
     The data asociated with each key of 'weather_data' is a dict with numpy
     array for (SIG state) True and for False.    The 'TSYS' array has four
     axes representing::
+    
       time index   - 0-based sequence in order of matplotlib datenum 
       subchannel   - CYCLE value
       beam         - 1-based number sequence
       IF           - 1-based number sequence, usually representing pol
+      
     The other keys have only a time axis.
     
     @param figtitle : figure title
@@ -83,7 +84,7 @@ class SessionPlotter(SessionAnalyzer):
       self.logger.debug("plot_elev_and_Tsys: using all data for this date")
       weather_data = self.get_good_weather_data()
       
-    fig1, ax = subplots(nrows=1, ncols=2, squeeze=True)
+    fig1, ax = PL.subplots(nrows=1, ncols=2, squeeze=True)
     if figtitle:
       fig1.suptitle(figtitle)
     else:
@@ -92,7 +93,7 @@ class SessionPlotter(SessionAnalyzer):
     ax2 = ax[0].twinx()
     
     if 'ELEVATIO' in weather_data or 'TSYS' in weather_data:
-      ax[0].xaxis.set_major_formatter( DateFormatter('%H:%M') )
+      ax[0].xaxis.set_major_formatter( MPLdate.DateFormatter('%H:%M') )
     if 'TSYS' in weather_data:
       nrows, num_cy, num_bm, num_pl = weather_data['TSYS'][True].shape
     states = list(weather_data['TSYS'].keys())
@@ -109,7 +110,7 @@ class SessionPlotter(SessionAnalyzer):
         for subch_idx in range(num_cy):  # subchannels first
           for beam in range(num_bm): # beams second
             for pol in range(num_pl): #pols third
-              label = make_legend_labels(sckeys=list(range(num_cy)),
+              label = FITSpl.make_legend_labels(sckeys=list(range(num_cy)),
                                          bmkeys=list(range(num_bm)),
                                          plkeys=list(range(num_pl)),
                                          sckey=subch_idx,
@@ -128,7 +129,7 @@ class SessionPlotter(SessionAnalyzer):
         for subch in range(num_cy):
           for beam in range(num_bm):
             for pol in range(num_pl):
-              label = make_legend_labels(sckeys=list(range(num_cy)),
+              label = FITSpl.make_legend_labels(sckeys=list(range(num_cy)),
                                          bmkeys=list(range(num_bm)),
                                          plkeys=list(range(num_pl)),
                                          sckey=subch,
@@ -137,7 +138,7 @@ class SessionPlotter(SessionAnalyzer):
               color_index = num_st*((subch*num_bm + beam)*num_pl + pol) \
                             + 1-int(sig)
               tsys_len = len(weather_data['TSYS'][sig][:,subch_idx,beam,pol])
-              am = airmass(weather_data['ELEVATIO'][sig])[:tsys_len]
+              am = DRtip.airmass(weather_data['ELEVATIO'][sig])[:tsys_len]
               ax[1].plot(am,  weather_data['TSYS'][sig][:,subch,beam,pol],
                          '.', color=colors[color_index],
                          label=label+sigref[sig])
@@ -196,7 +197,7 @@ class SessionPlotter(SessionAnalyzer):
     else:
       self.logger.debug("plot_elev_and_Tsys: using all data for this date")
       weather_data = self.get_good_weather_data()
-    fig2, wax = subplots(nrows=3, ncols=1, squeeze=True)
+    fig2, wax = PL.subplots(nrows=3, ncols=1, squeeze=True)
     if figtitle:
       fig2.suptitle(figtitle)
     else:
@@ -215,7 +216,7 @@ class SessionPlotter(SessionAnalyzer):
     if 'HUMIDITY' in weather_data:
       wax[2].plot_date(mpltime, weather_data['HUMIDITY'][True],"-k")
     if 'TAMBIENT' in weather_data or 'PRESSURE' in weather_data:
-      wax[2].xaxis.set_major_formatter( DateFormatter('%H:%M') )
+      wax[2].xaxis.set_major_formatter( MPLdate.DateFormatter('%H:%M') )
     if ('TAMBIENT' in weather_data) == False:
       wax[0].text(0.5,0.5,'bad ambient temperature data',
                 horizontalalignment='center',
@@ -224,7 +225,7 @@ class SessionPlotter(SessionAnalyzer):
     wax[0].set_ylabel("Temp (C)")
     wax[0].grid(True)
     if 'PRESSURE' in weather_data:
-      wax[1].yaxis.set_major_formatter( FormatStrFormatter('%6.2f') )
+      wax[1].yaxis.set_major_formatter( MPLtic.FormatStrFormatter('%6.2f') )
     else:
       wax[1].text(0.5,0.5,'bad pressure data',
                 horizontalalignment='center',
@@ -233,7 +234,7 @@ class SessionPlotter(SessionAnalyzer):
     wax[1].grid(True)
     wax[1].set_ylabel("Pres (mb)")
     if 'PRESSURE' in weather_data:
-      wax[1].yaxis.set_major_formatter( FormatStrFormatter('%6.2f') )
+      wax[1].yaxis.set_major_formatter( MPLtic.FormatStrFormatter('%6.2f') )
     if ('HUMIDITY' in weather_data) == False:
       wax[2].text(0.5,0.5,'bad humidity data',
                 horizontalalignment='center',
@@ -262,7 +263,7 @@ class SessionPlotter(SessionAnalyzer):
     else:
       self.logger.debug("plot_elev_and_Tsys: using all data for this date")
       weather_data = self.get_good_weather_data()
-    fig3, wax3 = subplots(nrows=2, ncols=1, squeeze=True)
+    fig3, wax3 = PL.subplots(nrows=2, ncols=1, squeeze=True)
     if figtitle:
       fig3.suptitle(figtitle)
     else:
@@ -283,7 +284,7 @@ class SessionPlotter(SessionAnalyzer):
     # right axes: wind direction
     if 'WINDDIRE' in weather_data:
       wax3[1].plot_date(mpltime, weather_data['WINDDIRE'][True],"-k")
-      wax3[1].xaxis.set_major_formatter( DateFormatter('%H:%M') )
+      wax3[1].xaxis.set_major_formatter( MPLdate.DateFormatter('%H:%M') )
       wax3[1].set_ylabel("Direction")
       wax3[1].grid(True)
     else:
@@ -304,7 +305,7 @@ class SessionPlotter(SessionAnalyzer):
     Generally, there is only one.
     """
     for dfindex in self.examiner_keys:
-      session_name = splitext(basename(self.examiners[dfindex].file))[0]
+      session_name = os.path.splitext(os.path.basename(self.examiners[dfindex].file))[0]
       savefile = self.datapath + session_name   
       for tablekey in list(self.examiners[dfindex].tables.keys()):
         table = self.examiners[dfindex].tables[tablekey]
@@ -392,7 +393,7 @@ class SessionPlotter(SessionAnalyzer):
         if figtitle:
           pass
         else:
-          figtitle = basename(self.examiners[0].file)[4:-5]
+          figtitle = os.path.basename(self.examiners[0].file)[4:-5]
         # for beam-1 minus beam-2 differences
         # THIS DOES NOT YET HANDLE OBSMODE CHANGES
         if table.data[0]['OBSMODE'] == 'LINEPBSW':
@@ -407,7 +408,7 @@ class SessionPlotter(SessionAnalyzer):
             for beam in range(0,table.props["num beams"],2):
               # beams taken by pairs
               for pol in range(table.props["num IFs"]):
-                label = make_legend_labels(sckeys=list(range(num_cycles)),
+                label = FITSpl.make_legend_labels(sckeys=list(range(num_cycles)),
                                            plkeys=list(range(num_pols)),
                                            sckey=subch,
                                            plkey=pol)                           
@@ -428,7 +429,7 @@ class SessionPlotter(SessionAnalyzer):
           last_col = len(ax)-1
           lines, labels = ax[last_col].get_legend_handles_labels()
           fig.legend(lines, labels, loc="upper right", ncol=2, prop = fontP)
-          datasetID = splitext(basename(examiner.file))[0]+"-"+str(tablekey)
+          datasetID = os.path.splitext(os.path.basename(examiner.file))[0]+"-"+str(tablekey)
           fig.savefig(self.datapath+datasetID+"_beam_diff.png")
           show()
         else:
@@ -444,7 +445,7 @@ class SessionPlotter(SessionAnalyzer):
     This eliminates receiver systematics.
     """
     for dfindex in self.examiner_keys:
-      session_name = splitext(basename(self.examiners[dfindex].file))[0]
+      session_name = os.path.splitext(os.path.basename(self.examiners[dfindex].file))[0]
       savefile = self.datapath + session_name
       self.logger.debug("plot_possw_diff: saving as %s", savefile)
       for tablekey in list(self.examiners[dfindex].tables.keys()):

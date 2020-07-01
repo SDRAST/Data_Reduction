@@ -14,9 +14,7 @@
     <script src="../_static/doctools.js"></script>
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="reduce_spectrum_channels" href="Data_Reduction.reduce_spectrum_channels.html" />
-    <link rel="prev" title="get_obs_session" href="Data_Reduction.get_obs_session.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -27,23 +25,11 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.reduce_spectrum_channels.html" title="reduce_spectrum_channels"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.get_obs_session.html" title="get_obs_session"
-             accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="Data_Reduction.get_obs_session.html"
-                        title="previous chapter">get_obs_session</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="Data_Reduction.reduce_spectrum_channels.html"
-                        title="next chapter">reduce_spectrum_channels</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -71,38 +57,6 @@
             
   <div class="section" id="get-smoothed-bandshape">
 <h1>get_smoothed_bandshape<a class="headerlink" href="#get-smoothed-bandshape" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="Data_Reduction.get_smoothed_bandshape">
-<code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">get_smoothed_bandshape</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">spectrum</span></em>, <em class="sig-param"><span class="n">degree</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">poly_order</span><span class="o">=</span><span class="default_value">15</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.get_smoothed_bandshape" title="Permalink to this definition">¶</a></dt>
-<dd><p>Do a Gaussian smoothing of the spectrum and then fit a polynomial.
-Optionally, the raw and smoothed data and the fitted polynomial can be
-plotted.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><code class="docutils literal notranslate"><span class="pre">numpy.polyfit(x,</span> <span class="pre">y,</span> <span class="pre">deg,</span> <span class="pre">rcond=None,</span> <span class="pre">full=False,</span> <span class="pre">w=None,</span> <span class="pre">cov=False)</span></code>
-Least squares polynomial fit.
-Fit a polynomial:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">p</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="n">deg</span> <span class="o">+</span> <span class="o">...</span> <span class="o">+</span> <span class="n">p</span><span class="p">[</span><span class="n">deg</span><span class="p">]</span>
-</pre></div>
-</div>
-<p>of degree deg to points (x, y).
-Returns a vector of coefficients p that minimises the squared error.</p>
-<p>:param spectrum : input data
-:type  spectrum : list of float</p>
-<p>:param degree : number of samples to smoothed (Gaussian FWHM)
-:type  degree : int</p>
-<p>:param poly_order : order of the polynomial
-:type  poly_order : int</p>
-<p>:param plot : plotting option
-:type  plot : boolean</p>
-<dl class="field-list simple">
-<dt class="field-odd">return</dt>
-<dd class="field-odd"><p>(polynomial_coefficient, smoothed_spectrum)</p>
-</dd>
-</dl>
-</div>
-</dd></dl>
-
 </div>
 
 
@@ -120,12 +74,6 @@ Returns a vector of coefficients p that minimises the squared error.</p>
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.reduce_spectrum_channels.html" title="reduce_spectrum_channels"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.get_obs_session.html" title="get_obs_session"
-             >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
     </div>

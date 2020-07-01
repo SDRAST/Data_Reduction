@@ -39,21 +39,17 @@ Possible symbols::
 """
 
 import logging
+import matplotlib as MPL
+import matplotlib.font_manager as MPLfont
 import numpy
+import os.path
+import pylab as PL
 import re
 
-from matplotlib import rcParams
-from matplotlib.dates import DateFormatter, epoch2num
-from matplotlib.font_manager import FontProperties
-from os.path import basename
-from pylab import *
-
-from Data_Reduction import trim_extremes
-from Data_Reduction.FITS.SDFITSexaminer import DSNFITSexaminer, TidTipAnalyzer
-from Data_Reduction.tipping import airmass
-from DatesTimes import UnixTime_to_MPL
-from support.graphics import get_screen_resolution
-from support.text import clean_TeX
+import Data_Reduction.tipping as DRtip
+import Data_Reduction.FITS.SDFITSexaminer as FITSexam
+import support
+import support.graphics as GR
 
 logger = logging.getLogger(__name__)
 plotcolors = ['b','g','r','m','c']
@@ -63,12 +59,12 @@ plotsymbols = ['o','v','^','<','>',
                '1','2','3','4','*',
                '+',"x","d","|","_"]
 
-fontP = FontProperties()
+fontP = MPLfont.FontProperties()
 fontP.set_size('xx-small')      
 
-seconds_formatter = DateFormatter("%H:%M:%S")
+seconds_formatter = MPL.dates.DateFormatter("%H:%M:%S")
 
-class DSNFITSplotter(DSNFITSexaminer):
+class DSNFITSplotter(FITSexam.DSNFITSexaminer):
   """
   """
   def __init__(self, parent=None, FITSfile=None, hdulist=None):
@@ -80,7 +76,7 @@ class DSNFITSplotter(DSNFITSexaminer):
     """
     mylogger = logging.getLogger(logger.name+".DSNFITSplotter")
     mylogger.debug("__init__: initializing superclass")
-    DSNFITSexaminer.__init__(self, parent=parent, FITSfile=FITSfile,
+    FITSexam.DSNFITSexaminer.__init__(self, parent=parent, FITSfile=FITSfile,
                              hdulist=hdulist)
     self.logger = mylogger
     self.plotter = {}
@@ -90,7 +86,7 @@ class DSNFITSplotter(DSNFITSexaminer):
       self.plotter[key] = self.Plotter(self, table)
     self.logger.debug("__init__: completed")
   
-  class Plotter(DSNFITSexaminer.Table):
+  class Plotter(FITSexam.DSNFITSexaminer.Table):
     """
     """
     def __init__(self, parent, table):
@@ -113,7 +109,7 @@ class DSNFITSplotter(DSNFITSexaminer):
       @type  naxes : int
       """
       # get maximum number of rows and columns
-      screensize = get_screen_resolution()
+      screensize = GR.get_screen_resolution()
       widthIN, heightIN  = screensize['width']/100., screensize['height']/100.
       freewidth, freeheight = 0.95*widthIN, 0.95*heightIN
       self.logger.debug("figure_rows_and_columns: width available = %f in",
@@ -171,7 +167,7 @@ class DSNFITSplotter(DSNFITSexaminer):
       @type  sharey : bool
       """
       width, height = size
-      fig, ax = subplots(nrows=nrows, ncols=ncols, sharey=sharey)
+      fig, ax = PL.subplots(nrows=nrows, ncols=ncols, sharey=sharey)
       self.logger.debug("init_multiplot: %d rows, %d columns, size: %s",
                         nrows, ncols, size)
       # could also be fig.set_size_inches(size, forward=True)
@@ -332,7 +328,7 @@ class DSNFITSplotter(DSNFITSexaminer):
       if figtitle:
         pass
       else:
-        figtitle = basename(self.parent.file)[4:-5].replace('_',' ')
+        figtitle = os.path.basename(self.parent.file)[4:-5].replace('_',' ')
       fig, ax = self.init_multiplot(figtitle+"  Spectrogram",
                                        nrows=1, ncols=ncols)
       # display the data
@@ -455,7 +451,6 @@ class DSNFITSplotter(DSNFITSexaminer):
                                                trimmed=True)[1:]
                   self.logger.debug("show_all_spectra: indices: %s", indices)
                   color = plotcolors[beam_idx*npols+pol_idx % 5]
-                  #trimmed = trim_extremes(spec[indices])
                   trimmed = spec[indices]
                   label = self.make_legend_labels(sckey=cycle_idx,
                                                   bmkey=beam_idx,
@@ -526,7 +521,7 @@ class DSNFITSplotter(DSNFITSexaminer):
             symbol = plotsymbols[rec % 20]
             for pol in range(npols):
               color = plotcolors[pol % 5]
-              trimmed = trim_extremes(spec[rec, pol])
+              trimmed = support.trim_extremes(spec[rec, pol])
               ax[row][col].plot(trimmed, color+',',
                           label="rec"+str(rec)+" P"+str(pol+1))
           ax[row][col].grid(True)
@@ -564,9 +559,9 @@ class DSNFITSplotter(DSNFITSexaminer):
       if figtitle:
         pass
       else:
-        first = basename(self.parent.file).index('_')+1
+        first = os.path.basename(self.parent.file).index('_')+1
         figtitle = "DSS-"+str(self.dss) +" "+ \
-                                           basename(self.parent.file)[first:-5]
+                                    os.path.basename(self.parent.file)[first:-5]
       fig, ax = self.init_multiplot(figtitle+" (Sig-Ref)/Ref",
                                        nrows=1, ncols=ncols)
       # data source
@@ -755,7 +750,7 @@ class DSNFITSplotter(DSNFITSexaminer):
           for pol in range(self.props['num IFs']):
             for sig in [True, False]:
               tm = good_wx_data['UNIXtime'][sig]
-              plottimes = epoch2num(tm)
+              plottimes = MPL.dates.epoch2num(tm)
               tsys = good_wx_data['TSYS'][sig][:,cycle_idx,beam,pol]
               el = good_wx_data['ELEVATIO'][sig]
               label = self.make_legend_labels(bmkey=beam, plkey=pol)
@@ -821,7 +816,7 @@ class DSNFITSplotter(DSNFITSexaminer):
     
     """
     
-    if type(spectrum) == DSNFITSexaminer.Table.Data:
+    if type(spectrum) == FITSexam.DSNFITSexaminer.Table.Data:
       # this is a window into the original spectrum
       x = spectrum.x
       y = spectrum.y
@@ -883,7 +878,7 @@ class DSNFITSplotter(DSNFITSexaminer):
     ylabel(r"Antenna Temperature (K)")
     grid()
     legend()
-    titlestr = clean_TeX(str(ds0.year)+"/"+str(ds0.doy))
+    titlestr = support.text.clean_TeX(str(ds0.year)+"/"+str(ds0.doy))
     title(titlestr)
     show()
     self.logger.info("plot_spectrum: pol0, pol1, avg: %s", rms)
@@ -891,14 +886,14 @@ class DSNFITSplotter(DSNFITSexaminer):
 
 #------------------- class for plotting TIPPING CURVE extension data ----------
 
-class TidTipPlotter(TidTipAnalyzer):
+class TidTipPlotter(FITSexam.TidTipAnalyzer):
   """
   class for plotting data from the TIPPING CURVE extensions
   """
   def __init__(self, extension):
     """
     """
-    TidTipAnalyzer.__init__(self, extension)
+    FITSexam.TidTipAnalyzer.__init__(self, extension)
 
   def plot_data():
     """
@@ -908,7 +903,7 @@ class TidTipPlotter(TidTipAnalyzer):
       PM = IF+1
       rows = where(self.data['CYCLE'] == PM)
       tsys = self.data['TSYS'][rows]
-      am = airmass(self.data['ELEVATIO'][rows])
+      am = DRtip.airmass(self.data['ELEVATIO'][rows])
       plot(am, tsys, plotcolors[IF]+'-')
       plot(am, tsys, plotcolors[IF]+'.', label="IF%d" % PM)
       # add fit to legend

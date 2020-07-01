@@ -77,37 +77,30 @@
 <dd><p>Format a report of the observing parameters</p>
 <p>This reports parameters such as those found in a RAVI or VSR data file,
 such as those in a STATS file header.</p>
-<dl class="simple">
-<dt>:param year<span class="classifier">int</span></dt><dd><p>Year the file was made</p>
-</dd>
-<dt>:param doy<span class="classifier">int</span></dt><dd><p>Day of year that the file was made</p>
-</dd>
-<dt>:param start_sec<span class="classifier">int</span></dt><dd><p>Seconds since midnight for the record</p>
-</dd>
-<dt>:param freq<span class="classifier">float</span></dt><dd><p>Frequency in MHz</p>
-</dd>
-<dt>:param spc<span class="classifier">int</span></dt><dd><p>Number identifying the signal processing center where the VSR resides</p>
-</dd>
-</dl>
+<p>:param year : Year the file was made
+:type  year : int</p>
+<p>:param doy : Day of year that the file was made
+:type  doy : int</p>
+<p>:param start_sec : Seconds since midnight for the record
+:type  start_sec : int</p>
+<p>:param freq : Frequency in MHz
+:type  freq : float</p>
+<p>:param spc : Number identifying the SPC where the VSR resides
+:type  spc : int</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>vsr</strong> – int
-Number identifying the VSR</p></li>
-<li><p><strong>nchan</strong> – int
-Number of channels recorded</p></li>
+<li><p><strong>vsr</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Number identifying the VSR</p></li>
+<li><p><strong>nchan</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Number of channels recorded</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="simple">
-<dt>:param bw<span class="classifier">float</span></dt><dd><p>Recording bandwidth</p>
-</dd>
-<dt>:param bps<span class="classifier">int</span></dt><dd><p>Bits per sample</p>
-</dd>
-<dt>:param nsamps<span class="classifier">int</span></dt><dd><p>Number of samples per second, which is not the inverse of the bandwidth
-if the data have been averaged.</p>
-</dd>
-</dl>
+<p>:param bw : Recording bandwidth
+:type  bw : float</p>
+<p>:param bps : Bits per sample
+:type  bps : int</p>
+<p>:param nsamps : Samp/s (not the inverse of the bandwidth if data were averaged.
+:type  nsamps : int</p>
 </dd></dl>
 
 </div>

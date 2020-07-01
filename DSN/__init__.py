@@ -9,7 +9,7 @@ and manage data files. The module also initializes path names relative
 to a root directory whose default is::
 
   root_dir = "/usr/local/projects/PESD/"
-  
+
 The observations are kept in subdirectories with names like YYYY-MM-DD in::
 
   obs_dir  = root_dir + "observations/"
@@ -31,24 +31,15 @@ STATS_binary_record_size = 76
 root_dir = "/usr/local/projects/PESD/"
 obs_dir  = root_dir + "observations/"
 
-import socket
-from subprocess import Popen, PIPE
-import re
-
-"""
-"""
 import logging
 import os
 import re
 import shutil
+import socket
 import struct
+import subprocess
 import sys
-
-
-from glob    import glob
-from numpy   import append, array, dtype, empty, zeros
-from os.path import basename, exists
-from time    import asctime,ctime,gmtime,localtime,sleep,strptime
+import time
 
 import DatesTimes as DT
 
@@ -64,9 +55,9 @@ def send_ssh_command(local_cmd,remote_cmd):
     What is to be executed on the remote host, like 'date'
   """
   # proc_in,proc_out,proc_err = os.popen3(local_cmd+' '+remote_cmd)
-  p = Popen(local_cmd+' '+remote_cmd,
+  p = subprocess.Popen(local_cmd+' '+remote_cmd,
             shell=True,
-            stdin=PIPE, stdout=PIPE, stderr=PIPE)
+          stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   (proc_in,
    proc_out,
    proc_err) = (p.stdin, p.stdout, p.stderr)
@@ -132,10 +123,10 @@ def check_vsr():
       timedata = ' '.join(items[5:8])
       name = items[8]
       if re.search(":",items[7]):
-        timestr = ctime().split()[-1]+' '+ timedata
-        timecode[name] = strptime(timestr,"%Y %b %d %H:%M")
+        timestr = time.ctime().split()[-1]+' '+ timedata
+        timecode[name] = time.strptime(timestr,"%Y %b %d %H:%M")
       else:
-        timecode[name] = strptime(timedata,"%b %d %Y")
+        timecode[name] = time.strptime(timedata,"%b %d %Y")
   fd = os.popen('/usr/local/projects/PESD/bin/venus-vsr-ssh bls_ls')
   response = fd.readlines()
   print(response)
@@ -229,27 +220,35 @@ def header_report(year,doy,start_sec,freq,spc,vsr,nchan,bw,bps,nsamps):
   This reports parameters such as those found in a RAVI or VSR data file,
   such as those in a STATS file header.
 
-  @param year : int
-    Year the file was made
-  @param doy : int
-    Day of year that the file was made
-  @param start_sec : int
-    Seconds since midnight for the record
-  @param freq : float
-    Frequency in MHz
-  @param spc : int
-    Number identifying the signal processing center where the VSR resides
-  @param vsr: int
-    Number identifying the VSR
-  @param nchan: int
-    Number of channels recorded
-  @param bw : float
-    Recording bandwidth
-  @param bps : int
-    Bits per sample
-  @param nsamps : int
-    Number of samples per second, which is not the inverse of the bandwidth
-    if the data have been averaged.
+  @param year : Year the file was made
+  @type  year : int
+    
+  @param doy : Day of year that the file was made
+  @type  doy : int
+    
+  @param start_sec : Seconds since midnight for the record
+  @type  start_sec : int
+    
+  @param freq : Frequency in MHz
+  @type  freq : float
+    
+  @param spc : Number identifying the SPC where the VSR resides
+  @type  spc : int
+    
+  @param vsr: Number identifying the VSR
+  @type  vsr: int
+    
+  @param nchan: Number of channels recorded
+  @type  nchan: int
+    
+  @param bw : Recording bandwidth
+  @type  bw : float
+    
+  @param bps : Bits per sample
+  @type  bps : int
+    
+  @param nsamps : Samp/s (not the inverse of the bandwidth if data were averaged.
+  @type  nsamps : int
   """
   report = []
   report.append('send_host   = '+os.popen('hostname').readline().strip())
@@ -276,17 +275,23 @@ def get_obs_date(filename):
   =====
   
   A raw VSR UNIX file has the form::
+  
     vsr1X.CCC.YY-DDD-HHMM.raw
+    
   where X = a|b, CCC = 1w1 | 2w1 (and possibly 1N1 or 2N1) and the rest are
   the date info. The 1 in front of the X could be 2 or 3 but not at DSS-13.
 
   A signal statistics file has the form::
+  
     STATS_NP1000_vsr1X.CCC.YY-DDD-HHMM
+    
   encoded as above. It may also have the suffix -qlook and -bin, and HHMM
   may be 'mars' for some older files.
 
   FFT file names are::
+  
     FFT_vsr1X.CCC.YY-DDD-HHMM.raw_DDD-HH:MM:SS_HH:MM:SS
+    
   where the part after 'raw' gives the start and end of the data segment
   processed. The HHMM may be 'mars' for some older files, in which case the
   file name form is FFT_vsr1X.CCC.YY-DDD-mars_097-04:19:45_04:20:00

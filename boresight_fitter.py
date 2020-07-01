@@ -4,26 +4,23 @@ DSS-28 dependencies.
 """
 
 import logging
-from math import log10, pi
-from matplotlib.dates import date2num
 import numpy as NP
-from scipy import polyfit, polyval
+import scipy
 
-from Data_Reduction.maps import center_data
-from DatesTimes import UnixTime_to_MPL
-from Math.least_squares import fit_gaussian, gaussian_error_function, st_dev
-from Radio_Astronomy import HPBW
-from support import nearest_index
-from Astronomy.Ephem import calibrator, DSS, EphemException
+import Astronomy.Ephem as Aeph
+import Data_Reduction.maps as DRm
+import Math.least_squares as Mlsq
+import support
 
 logger = logging.getLogger(__name__)
-dss28 = DSS(28)
+dss28 = Aeph.DSS(28)
 
 class ScanFitter(object):
   """
   Create an object to fit a scan in one direction to a baseline and a Gaussian
   
   Public attributes::
+  
     atten         - (float) receiver channel attenuation for this can
     baseline_pars - (nparray) polynomial parameters for baseline
     calibrator    - (Astronomy.Ephem.calibrator) calibrator source
@@ -33,6 +30,7 @@ class ScanFitter(object):
     dxdecs        - (nparray) cross-declination offsets
     logger        - (logging.Logger)
     pars          - (nparray) Gaussian parameters
+    
   """
 
   def __init__(self, scan):
@@ -40,6 +38,7 @@ class ScanFitter(object):
     Initiate a scan fitter
     
     This takes a 'scan' object with these attributes::
+    
       axis
       datenums
       conv_cfg
@@ -48,14 +47,15 @@ class ScanFitter(object):
       ras
       source
       tsys
+      
     """
     self.logger = logging.getLogger(logger.name+".ScanFitter")
     # the following returns an ephem planet or quasar
-    self.calibrator = calibrator(scan.source)
+    self.calibrator = Aeph.calibrator(scan.source)
     self.axis = scan.axis
     self.freq = scan.freq
     self.tsys = scan.tsys
-    self.dxdecs,self.ddecs = center_data(scan.date_nums,
+    self.dxdecs,self.ddecs = DRm.center_data(scan.date_nums,
                                          scan.ras, scan.decs,
                                          self.calibrator,
                                          dss28)
@@ -96,21 +96,21 @@ class ScanFitter(object):
       if lower_limit < x[5]: # lower baseline segment
         lower_baseline = [0,5]
       else:
-        lower_baseline = [0, nearest_index(x, lower_limit)]
+        lower_baseline = [0, support.nearest_index(x, lower_limit)]
       if upper_limit > x[-5]: # upper baseline segment
         upper_baseline = [-6,-1]
       else:
-        upper_baseline = [nearest_index(x, upper_limit), -1]
+        upper_baseline = [support.nearest_index(x, upper_limit), -1]
     else:
       # scans go from high sample to low sample
       if upper_limit > x[5]:
         upper_baseline = [0,5]
       else:
-        upper_baseline = [0, nearest_index(x,upper_limit)]
+        upper_baseline = [0, support.nearest_index(x,upper_limit)]
       if upper_limit < x[-5]:
         upper_baseline = [-6,-1]
       else:
-        upper_baseline = [nearest_index(x,lower_limit), 0]
+        upper_baseline = [support.nearest_index(x,lower_limit), 0]
     self.logger.debug("fit_gaussian: lower baseline: %s", lower_baseline)
     self.logger.debug("fit_gaussian: upper baseline: %s", upper_baseline)
     # define the baseline data
@@ -119,25 +119,25 @@ class ScanFitter(object):
     ydata = NP.append(self.tsys[lower_baseline[0]:lower_baseline[1]],
                       self.tsys[upper_baseline[0]:upper_baseline[1]]).astype(float)
     #   Fit baseline
-    self.baseline_pars = polyfit(xdata,ydata,1)
+    self.baseline_pars = scipy.polyfit(xdata,ydata,1)
     self.logger.debug("fit_gaussian: baseline parameters: %s", self.baseline_pars)
     #   Fit the beam
     zdata = NP.array(self.tsys).astype(float)
     self.logger.debug("fit_gaussian: zdata: %s", zdata)
-    height = zdata[beam_index] - polyval(self.baseline_pars, x[beam_index])
+    height = zdata[beam_index] - scipy.polyval(self.baseline_pars, x[beam_index])
     self.logger.debug("fit_gaussian: height: %s", height)
-    sigma = st_dev(beamwidth)
+    sigma = Mlsq.st_dev(beamwidth)
     initial_guess = [height, beam_center, sigma]
     # in this case we only fit out to one beamwidth
     if x[0] < x[-1]:
-      xfit =  x[nearest_index(x,beam_center-beamwidth):nearest_index(x,beam_center+beamwidth)]
-      y = zdata[nearest_index(x,beam_center-beamwidth):nearest_index(x,beam_center+beamwidth)]
+      xfit =  x[support.nearest_index(x,beam_center-beamwidth):support.nearest_index(x,beam_center+beamwidth)]
+      y = zdata[support.nearest_index(x,beam_center-beamwidth):support.nearest_index(x,beam_center+beamwidth)]
     else:
-      xfit =  x[nearest_index(x,beam_center+beamwidth):nearest_index(x,beam_center-beamwidth)]
-      y = zdata[nearest_index(x,beam_center+beamwidth):nearest_index(x,beam_center-beamwidth)]
-    self.pars, err = fit_gaussian(gaussian_error_function,
+      xfit =  x[support.nearest_index(x,beam_center+beamwidth):support.nearest_index(x,beam_center-beamwidth)]
+      y = zdata[support.nearest_index(x,beam_center+beamwidth):support.nearest_index(x,beam_center-beamwidth)]
+    self.pars, err = Mlsq.fit_gaussian(Mlsq.gaussian_error_function,
                             initial_guess,
                             xfit,
-                            y-polyval(self.baseline_pars,xfit))
+                            y-scipy.polyval(self.baseline_pars,xfit))
     return self.baseline_pars, self.pars, err
     

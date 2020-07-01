@@ -14,9 +14,7 @@
     <script src="../_static/doctools.js"></script>
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Map" href="Data_Reduction.Map.html" />
-    <link rel="prev" title="reduce_spectrum_channels" href="Data_Reduction.reduce_spectrum_channels.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -27,23 +25,11 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.Map.html" title="Map"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.reduce_spectrum_channels.html" title="reduce_spectrum_channels"
-             accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="Data_Reduction.reduce_spectrum_channels.html"
-                        title="previous chapter">reduce_spectrum_channels</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="Data_Reduction.Map.html"
-                        title="next chapter">Map</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -71,37 +57,6 @@
             
   <div class="section" id="select-data-files">
 <h1>select_data_files<a class="headerlink" href="#select-data-files" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="Data_Reduction.select_data_files">
-<code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">select_data_files</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">datapath</span></em>, <em class="sig-param"><span class="n">name_pattern</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">load_hdf</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.select_data_files" title="Permalink to this definition">¶</a></dt>
-<dd><p>Provide the user with menu to select data files.</p>
-<p>Finding the right data store is complicated. As originally coded:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>* If the input files are ``.h5`` the ``load_hdf=True`` and the directory area is
-  RA_data/HDF5/.
-* If the input files are .pkl (obsolete) then load_hdf=False and the
-  directory area is project_data/&lt;project&gt;/.
-</pre></div>
-</div>
-<p>Now we need to add the possibility of getting datafiles from RA_data/FITS/.
-Now the location of the data are implicit in <code class="docutils literal notranslate"><span class="pre">datapath</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span> <span class="n">If</span> <span class="n">datapath</span> <span class="ow">is</span> <span class="o">...</span><span class="n">RA_data</span><span class="o">/</span><span class="n">HDF5</span><span class="o">/...</span> <span class="n">then</span> <span class="n">the</span> <span class="n">files</span> <span class="n">could</span> <span class="n">be</span> <span class="o">.</span><span class="n">h5</span> <span class="p">(</span><span class="n">Ashish</span><span class="p">)</span> <span class="ow">or</span> <span class="o">.</span><span class="n">hdf5</span> <span class="p">(</span><span class="n">Dean</span><span class="p">)</span><span class="o">.</span>
-<span class="o">*</span> <span class="n">If</span> <span class="n">datapath</span> <span class="ow">is</span> <span class="o">...</span><span class="n">RA_data</span><span class="o">/</span><span class="n">FITS</span><span class="o">/...</span> <span class="n">then</span> <span class="n">the</span> <span class="n">extent</span> <span class="ow">is</span> <span class="o">.</span><span class="n">fits</span><span class="o">.</span>
-<span class="o">*</span> <span class="n">If</span> <span class="n">datapath</span> <span class="ow">is</span> <span class="o">...</span><span class="n">project_data</span><span class="o">...</span> <span class="n">then</span> <span class="n">the</span> <span class="n">extent</span> <span class="ow">is</span> <span class="o">.</span><span class="n">pkl</span>
-</pre></div>
-</div>
-<p>:param datapath : path to top of the tree where the DSS subdirectories are
-:type  datapath : str</p>
-<p>:param name_pattern : pattern for selecting file names, e.g. source
-:type  name_pattern : str</p>
-<p>:param load_hdf : use RA_data/HDF5 directory if True
-:type  load_hdf : bool</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>list of str</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 
@@ -119,12 +74,6 @@ Now the location of the data are implicit in <code class="docutils literal notra
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.Map.html" title="Map"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.reduce_spectrum_channels.html" title="reduce_spectrum_channels"
-             >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
     </div>

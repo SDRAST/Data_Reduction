@@ -40,7 +40,6 @@ import os
 import re
 import readline
 import scipy.fftpack
-from scipy.interpolate import griddata
 
 import Astronomy as A
 import Astronomy.Ephem as AE
@@ -685,11 +684,14 @@ class GriddingMixin(object):
       self.logger.debug("regrid: %d values", len(values))
       xi, yi = NP.meshgrid(self.data['grid_x'], self.data['grid_y'])
       try:
-        self.data['grid_z'] = griddata(points, values, (xi, yi), method='nearest')
+        self.data['grid_z'] = scipy.interpolate.griddata(points, values,
+                                                     (xi, yi), method='nearest')
       except ValueError as details:
         self.logger.error("regrid: gridding failed: %s", str(details))
-        self.logger.debug("regrid: channel %s length of points is %d", chnl, len(points))
-        self.logger.debug("regrid: channel %s length of values is %d", chnl, len(values))
+        self.logger.debug("regrid: channel %s length of points is %d",
+                                                              chnl, len(points))
+        self.logger.debug("regrid: channel %s length of values is %d", chnl,
+                                                                    len(values))
         continue
     return self.data['grid_x'], self.data['grid_y'], self.data['grid_z']
 
@@ -1047,7 +1049,7 @@ def get_obs_dirs(project, station, year, DOY, datafmt=None):
     rawdatapath = ""
   return projdatapath, projworkpath, rawdatapath
 
-# ----------------- old stuff to be discarded eventually ---------------
+# --------- old stuff to be discarded still needed for now ---------------
 
 def get_obs_session(project=None, dss=None, date=None, path='proj'):
   """

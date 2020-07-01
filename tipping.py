@@ -12,8 +12,7 @@ Older files (like 2014) have only one reading and it may be dBm instead of Tsys
 import logging
 import math
 import numpy
-
-from scipy.optimize import curve_fit
+import scipy.optimize
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
@@ -29,10 +28,12 @@ class AtmosAnalyzer(object):
   'TSYS', 'HUMIDITY', 'PRESSURE', 'ELEVATIO', 'WINDSPEE'.  The data asociated
   with each key is a dict with numpy array for (SIG state) True and for False.
   The 'TSYS' array has four axes representing::
+  
         time index   - 0-based sequence in order of matplotlib datenum 
         subchannel   - CYCLE value
         beam         - 1-based number sequence
         IF           - 1-based number sequence, usually representing pol
+        
   The other keys have only a time axis.
   """
   def __init__(self, datacube):
@@ -244,7 +245,8 @@ def fit_tipcurve_data(elev, Tsys, Tatm=250, method="linear"):
                         + popt[1]**2*sigP2**2/sigP1**2)/tau**2)
     return Trx, sigTrx, tau, sigtau, Tatm, sigTatm
   else:
-    popt, pcov = curve_fit(lin_transf_eqn, am, Tsys, p0 = [est_t0, est_tau])
+    popt, pcov = scipy.optimize.curve_fit(lin_transf_eqn, am, Tsys,
+                                                         p0 = [est_t0, est_tau])
     logger.debug("fit_tipcurve_data: popt = %s", popt)
     logger.debug("fit_tipcurve_data: pcov = %s", pcov)
     Trx = popt[0]

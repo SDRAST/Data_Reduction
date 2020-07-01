@@ -10,16 +10,14 @@ import glob
 import logging
 import numpy
 import os
+import os.path
 import time
 
-from os.path import basename, dirname, splitext
+import Data_Reduction as DR
+import Data_Reduction.FITS.SDFITSexaminer as FITSex
+import Data_Reduction.tipping as DRtip
+import Radio_Astronomy
 
-from Astronomy.DSN_coordinates import DSN_complex_of
-from Data_Reduction import get_obs_dirs, get_obs_session
-from Data_Reduction.FITS.DSNFITS import FITSfile
-from Data_Reduction.FITS.SDFITSexaminer import DSNFITSexaminer
-from Data_Reduction.tipping import airmass, fit_tipcurve_data
-from Radio_Astronomy import rms_noise
 polnames = ["L", "R"]
 
 logger = logging.getLogger(__name__)
@@ -84,10 +82,10 @@ class SessionAnalyzer(object):
       date = "%4d/%03d" % (year, DOY)
     else:
       date = None
-    self.project, self.DSS, self.year, self.DOY = get_obs_session(dss=dss,
+    self.project, self.DSS, self.year, self.DOY = DR.get_obs_session(dss=dss,
                                                     project=project, date=date)
     self.projectdatapath, self.projworkpath, self.datapath = \
-      get_obs_dirs(self.project, self.DSS, self.year, self.DOY, datafmt="FITS")
+      DR.get_obs_dirs(self.project, self.DSS, self.year, self.DOY, datafmt="FITS")
     # get the datafiles to be processed     
     datafiles = glob.glob(self.datapath+"*.fits")
     if datafiles:
@@ -109,8 +107,8 @@ class SessionAnalyzer(object):
     dfindex = 0
     examiners = {}
     for datafile in datafiles:
-      self.logger.info("open_datafiles:opening %s", basename(datafile))
-      examiners[dfindex] = DSNFITSexaminer(parent=self, FITSfile=datafile)
+      self.logger.info("open_datafiles:opening %s", os.path.basename(datafile))
+      examiners[dfindex] = FITSex.DSNFITSexaminer(parent=self, FITSfile=datafile)
       for table_key in list(examiners[dfindex].tables.keys()):
         examiners[dfindex].tables[table_key].report_table()
       dfindex += 1
@@ -133,8 +131,8 @@ class SessionAnalyzer(object):
     sttm = time.gmtime(first_ex.tables[0].get_first_good_value('UNIXtime'))
     figtitle = "%4d/%02d/%02d (%03d)" % (sttm.tm_year, sttm.tm_mon,
                                          sttm.tm_mday, sttm.tm_yday)
-    savename = "_".join(splitext(basename(first_ex.file))[0].split('-')[:2])
-    savepath = dirname(first_ex.file)+"/"+savename
+    savename = "_".join(os.path.splitext(os.path.basename(first_ex.file))[0].split('-')[:2])
+    savepath = os.path.dirname(first_ex.file)+"/"+savename
     return figtitle, savepath
 
   def get_sources(self):
@@ -160,10 +158,12 @@ class SessionAnalyzer(object):
     'HUMIDITY', 'PRESSURE', 'ELEVATIO', 'WINDSPEE'.  The data asociated with
     each key is a dict with numpy array for (SIG state) True and for False.
     The 'TSYS' array has four axes representing::
+    
       time index   - 0-based sequence in order of matplotlib datenum 
       subchannel   - CYCLE value
       beam         - 1-based number sequence
       IF           - 1-based number sequence, usually representing pol
+      
     The other keys have only a time axis.
     """
     good_data = {}
@@ -276,7 +276,7 @@ class SessionAnalyzer(object):
             Tsys = weather_data['TSYS'][sig][:,subch,beam,pol]
             Trx[sig,subch,beam,pol], sigTrx[sig,subch,beam,pol], \
             tau[sig,subch,beam,pol], sigtau[sig,subch,beam,pol] \
-            = fit_tipcurve_data(el, Tsys, Tatm=Tatm, linear=linear)
+            = DRtip.fit_tipcurve_data(el, Tsys, Tatm=Tatm, linear=linear)
     return Trx, sigTrx, tau, sigtau
   
   def Tsys_scaling(self, weather_data=None, examiner_keys=None, Tatm=250):
@@ -343,7 +343,7 @@ class SessionAnalyzer(object):
     sum_intgr = {0:0, 1:0}
     for exkey in list(self.examiners.keys()):
       ex = self.examiners[exkey]
-      print(("FITS file", basename(ex.file)))
+      print(("FITS file", os.path.basename(ex.file)))
       for tbkey in list(ex.tables.keys()):
         tb = ex.tables[tbkey]
         table_source = tb.sources[0] # for TAMS datasets
@@ -354,7 +354,7 @@ class SessionAnalyzer(object):
           print ("DOY  time  Pol  Tsys   int.   meas'd  expect  ratio")
           print ("--- -----  --- -----  ------  ------  ------  -----")
           for polkey in range(2):
-            exp_rms = rms_noise(Tsys[polkey], 1020e6/32768., intgr[polkey])
+            exp_rms = Radio_Astronomy.rms_noise(Tsys[polkey], 1020e6/32768., intgr[polkey])
             ratio = rms[polkey]/exp_rms
             print(rowfmt % (tb.DOY, tb.timestr, polkey+1, Tsys[polkey], 
                             intgr[polkey], rms[polkey], exp_rms, ratio))

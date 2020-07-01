@@ -16,7 +16,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Observation" href="Data_Reduction.Observation.html" />
-    <link rel="prev" title="select_data_files" href="Data_Reduction.select_data_files.html" /> 
+    <link rel="prev" title="GriddingMixin" href="Data_Reduction.GriddingMixin.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -31,7 +31,7 @@
           <a href="Data_Reduction.Observation.html" title="Observation"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.select_data_files.html" title="select_data_files"
+          <a href="Data_Reduction.GriddingMixin.html" title="GriddingMixin"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
@@ -39,8 +39,8 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="Data_Reduction.select_data_files.html"
-                        title="previous chapter">select_data_files</a></p>
+  <p class="topless"><a href="Data_Reduction.GriddingMixin.html"
+                        title="previous chapter">GriddingMixin</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="Data_Reduction.Observation.html"
                         title="next chapter">Observation</a></p>
@@ -73,21 +73,9 @@
 <h1>Map<a class="headerlink" href="#map" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="Data_Reduction.Map">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">Map</code><a class="headerlink" href="#Data_Reduction.Map" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>Class for all the data and methods associated with a raster scan map</p>
-<p>It is expected that the parent class is a subclass of <code class="docutils literal notranslate"><span class="pre">Observation</span></code> already
-by virtue of it being a superclass of subclass which inherits these methods.</p>
-<dl class="simple">
-<dt>Attrs:</dt><dd><p>cfg (dict):
-data (numpy array):      from <code class="docutils literal notranslate"><span class="pre">Observation</span></code>
-logger (logging.Logger): replaces <code class="docutils literal notranslate"><span class="pre">Observation</span></code> logger
-name (str):              replaces <code class="docutils literal notranslate"><span class="pre">Observation</span></code> name
-session (Session):
-source (str):
-step (float):            map step size</p>
-</dd>
-</dl>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">Map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Data_Reduction.Observation.html#Data_Reduction.Observation" title="Data_Reduction.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.Observation</span></code></a>, <a class="reference internal" href="Data_Reduction.GriddingMixin.html#Data_Reduction.GriddingMixin" title="Data_Reduction.GriddingMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.GriddingMixin</span></code></a></p>
+<p>Map class without special features for GAVRT and Malargue</p>
 <p class="rubric">Methods Summary</p>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -105,6 +93,9 @@ step (float):            map step size</p>
 <dt id="Data_Reduction.Map.regrid">
 <code class="sig-name descname">regrid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">width</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">step</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Map.regrid" title="Permalink to this definition">¶</a></dt>
 <dd><p>converts a map from observed coordinates to map coordinates</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">step</span></code> is not given then the step size will be the average step size
+in X and the average step in Y.  In this case, the effect is to make a
+regular grid if the original positions were not exact, i.e., pointing error.</p>
 <p>:param width : map width in deg
 :type  width : float</p>
 <p>:param height : map height in deg
@@ -136,7 +127,7 @@ step (float):            map step size</p>
           <a href="Data_Reduction.Observation.html" title="Observation"
              >next</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.select_data_files.html" title="select_data_files"
+          <a href="Data_Reduction.GriddingMixin.html" title="GriddingMixin"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>

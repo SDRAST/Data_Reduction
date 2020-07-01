@@ -48,7 +48,6 @@
 <li><a class="reference internal" href="#id1">Functions</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#data-reduction-dsn-gavrt">Data_Reduction.DSN.GAVRT</a></li>
 <li><a class="reference internal" href="#module-Data_Reduction.DSN.SAO">Data_Reduction.DSN.SAO Package</a><ul>
 <li><a class="reference internal" href="#id2">Functions</a></li>
 <li><a class="reference internal" href="#id3">Classes</a></li>
@@ -59,34 +58,56 @@
 <li><a class="reference internal" href="#id5">Functions</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#module-Data_Reduction.Malargue">Data_Reduction.Malargue Package</a><ul>
+<li><a class="reference internal" href="#module-Data_Reduction.GAVRT">Data_Reduction.GAVRT Package</a><ul>
 <li><a class="reference internal" href="#id6">Functions</a></li>
 <li><a class="reference internal" href="#id7">Classes</a></li>
 <li><a class="reference internal" href="#id8">Class Inheritance Diagram</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#module-Data_Reduction.Malargue">Data_Reduction.Malargue Package</a><ul>
+<li><a class="reference internal" href="#id9">Functions</a></li>
+<li><a class="reference internal" href="#id10">Classes</a></li>
+<li><a class="reference internal" href="#id11">Class Inheritance Diagram</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-Data_Reduction.boresight_fitter">Data_Reduction.boresight_fitter Module</a><ul>
-<li><a class="reference internal" href="#id9">Classes</a></li>
-<li><a class="reference internal" href="#id10">Class Inheritance Diagram</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-Data_Reduction.hyperfine_fit">Data_Reduction.hyperfine_fit Module</a><ul>
-<li><a class="reference internal" href="#problem">Problem</a></li>
-<li><a class="reference internal" href="#id11">Functions</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#data-reduction-maps">Data_Reduction.maps</a></li>
-<li><a class="reference internal" href="#module-Data_Reduction.SLATool">Data_Reduction.SLATool Module</a><ul>
 <li><a class="reference internal" href="#id12">Classes</a></li>
 <li><a class="reference internal" href="#id13">Class Inheritance Diagram</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#data-reduction-slaplotter">Data_Reduction.SLAPlotter</a></li>
-<li><a class="reference internal" href="#data-reduction-tams-tipping">Data_Reduction.TAMS_tipping</a></li>
-<li><a class="reference internal" href="#module-Data_Reduction.tipping">Data_Reduction.tipping Module</a><ul>
+<li><a class="reference internal" href="#module-Data_Reduction.hyperfine_fit">Data_Reduction.hyperfine_fit Module</a><ul>
+<li><a class="reference internal" href="#problem">Problem</a></li>
 <li><a class="reference internal" href="#id14">Functions</a></li>
-<li><a class="reference internal" href="#id15">Classes</a></li>
-<li><a class="reference internal" href="#id16">Class Inheritance Diagram</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-Data_Reduction.maps">Data_Reduction.maps Module</a><ul>
+<li><a class="reference internal" href="#id15">Functions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-Data_Reduction.plotting">Data_Reduction.plotting Module</a><ul>
+<li><a class="reference internal" href="#id16">Classes</a></li>
+<li><a class="reference internal" href="#id17">Class Inheritance Diagram</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-Data_Reduction.SLATool">Data_Reduction.SLATool Module</a><ul>
+<li><a class="reference internal" href="#id18">Classes</a></li>
+<li><a class="reference internal" href="#id19">Class Inheritance Diagram</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-Data_Reduction.SLAPlotter">Data_Reduction.SLAPlotter Module</a><ul>
+<li><a class="reference internal" href="#id20">Classes</a></li>
+<li><a class="reference internal" href="#id21">Class Inheritance Diagram</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-Data_Reduction.TAMS_tipping">Data_Reduction.TAMS_tipping Module</a><ul>
+<li><a class="reference internal" href="#id22">Classes</a></li>
+<li><a class="reference internal" href="#id23">Class Inheritance Diagram</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-Data_Reduction.tipping">Data_Reduction.tipping Module</a><ul>
+<li><a class="reference internal" href="#id24">Functions</a></li>
+<li><a class="reference internal" href="#id25">Classes</a></li>
+<li><a class="reference internal" href="#id26">Class Inheritance Diagram</a></li>
 </ul>
 </li>
 </ul>
@@ -169,32 +190,11 @@ structure of the file.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.examine_text_data_file.html#Data_Reduction.examine_text_data_file" title="Data_Reduction.examine_text_data_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">examine_text_data_file</span></code></a>(filename)</p></td>
 <td><p>Examine a file to guide <code class="docutils literal notranslate"><span class="pre">genfromtxt()</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.freq_to_chan.html#Data_Reduction.freq_to_chan" title="Data_Reduction.freq_to_chan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">freq_to_chan</span></code></a>(frequency, bandwidth, n_chans)</p></td>
-<td><p>Returns the channel number where a given frequency is to be found.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.get_freq_array.html#Data_Reduction.get_freq_array" title="Data_Reduction.get_freq_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_freq_array</span></code></a>(bandwidth, n_chans)</p></td>
-<td><p>Create an array of frequencies for the channels of a backend</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.get_num_chans.html#Data_Reduction.get_num_chans" title="Data_Reduction.get_num_chans"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_num_chans</span></code></a>(linefreq, bandwidth, max_vel_width)</p></td>
-<td><p>compute the base 2 number of output channels for the specified resolution</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.get_obs_dirs.html#Data_Reduction.get_obs_dirs" title="Data_Reduction.get_obs_dirs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_dirs</span></code></a>(project, station, year, DOY[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.get_obs_dirs.html#Data_Reduction.get_obs_dirs" title="Data_Reduction.get_obs_dirs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_dirs</span></code></a>(project, station, year, DOY[, …])</p></td>
 <td><p>Returns the directories where data and working files are kept</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.get_obs_session.html#Data_Reduction.get_obs_session" title="Data_Reduction.get_obs_session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_session</span></code></a>([project, dss, date, path])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.get_obs_session.html#Data_Reduction.get_obs_session" title="Data_Reduction.get_obs_session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_session</span></code></a>([project, dss, date, path])</p></td>
 <td><p>Provides project, station, year and DOY, asking as needed.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.get_smoothed_bandshape.html#Data_Reduction.get_smoothed_bandshape" title="Data_Reduction.get_smoothed_bandshape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_smoothed_bandshape</span></code></a>(spectrum[, degree, …])</p></td>
-<td><p>Do a Gaussian smoothing of the spectrum and then fit a polynomial.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">griddata</span></code>(points, values, xi[, method, …])</p></td>
-<td><p>Interpolate unstructured D-dimensional data.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.reduce_spectrum_channels.html#Data_Reduction.reduce_spectrum_channels" title="Data_Reduction.reduce_spectrum_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reduce_spectrum_channels</span></code></a>(spectrum, refval, …)</p></td>
-<td><p>Reduce the number of channels in the spectrum.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.select_data_files.html#Data_Reduction.select_data_files" title="Data_Reduction.select_data_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_data_files</span></code></a>(datapath[, name_pattern, …])</p></td>
-<td><p>Provide the user with menu to select data files.</p></td>
 </tr>
 </tbody>
 </table>
@@ -207,21 +207,33 @@ structure of the file.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Map.html#Data_Reduction.Map" title="Data_Reduction.Map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Map</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.GriddingMixin.html#Data_Reduction.GriddingMixin" title="Data_Reduction.GriddingMixin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GriddingMixin</span></code></a></p></td>
 <td><p>Class for all the data and methods associated with a raster scan map</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" title="Data_Reduction.Observation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observation</span></code></a>([parent, name, dss, date, project])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Map.html#Data_Reduction.Map" title="Data_Reduction.Map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Map</span></code></a>([parent, name, dss, date, project])</p></td>
+<td><p>Map class without special features for GAVRT and Malargue</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" title="Data_Reduction.Observation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observation</span></code></a>([parent, name, dss, date, project])</p></td>
 <td><p>superclass for a data structure and methods</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Session.html#Data_Reduction.Session" title="Data_Reduction.Session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Session</span></code></a>([parent, year, doy, project])</p></td>
+<td><p>Base class for an observing session on a given year and DOY</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Spectrum.html#Data_Reduction.Spectrum" title="Data_Reduction.Spectrum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Spectrum</span></code></a>()</p></td>
+<td><p>Class for spectra</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="class-inheritance-diagram">
 <h3>Class Inheritance Diagram<a class="headerlink" href="#class-inheritance-diagram" title="Permalink to this headline">¶</a></h3>
-<div class="graphviz"><img src="_images/inheritance-927959368e2f8c522cf1be7dd305b4bd53bbf80c.png" alt="Inheritance diagram of Data_Reduction.Map, Data_Reduction.Observation" usemap="#inheritance8776b9fd13" class="inheritance graphviz" /></div>
-<map id="inheritance8776b9fd13" name="inheritance8776b9fd13">
-<area shape="rect" id="node1" href="api/Data_Reduction.Map.html#Data_Reduction.Map" target="_top" title="Class for all the data and methods associated with a raster scan map" alt="" coords="20,55,92,80"/>
-<area shape="rect" id="node2" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" target="_top" title="superclass for a data structure and methods" alt="" coords="5,5,107,31"/>
+<div class="graphviz"><img src="_images/inheritance-a687129ec0ae114eccca150c3479869a78403697.png" alt="Inheritance diagram of Data_Reduction.GriddingMixin, Data_Reduction.Map, Data_Reduction.Observation, Data_Reduction.Session, Data_Reduction.Spectrum" usemap="#inheritance0611b83347" class="inheritance graphviz" /></div>
+<map id="inheritance0611b83347" name="inheritance0611b83347">
+<area shape="rect" id="node1" href="api/Data_Reduction.GriddingMixin.html#Data_Reduction.GriddingMixin" target="_top" title="Class for all the data and methods associated with a raster scan map" alt="" coords="5,55,117,80"/>
+<area shape="rect" id="node2" href="api/Data_Reduction.Map.html#Data_Reduction.Map" target="_top" title="Map class without special features for GAVRT and Malargue" alt="" coords="171,55,243,80"/>
+<area shape="rect" id="node3" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" target="_top" title="superclass for a data structure and methods" alt="" coords="11,104,112,129"/>
+<area shape="rect" id="node5" href="api/Data_Reduction.Spectrum.html#Data_Reduction.Spectrum" target="_top" title="Class for spectra" alt="" coords="165,104,249,129"/>
+<area shape="rect" id="node4" href="api/Data_Reduction.Session.html#Data_Reduction.Session" target="_top" title="Base class for an observing session on a given year and DOY" alt="" coords="25,5,97,31"/>
 </map></div>
 </div>
 <div class="section" id="module-Data_Reduction.DSN">
@@ -253,20 +265,8 @@ will be created when ‘make_scripts’ is run.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">append</span></code>(arr, values[, axis])</p></td>
-<td><p>Append values to the end of an array.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">array</span></code>(object[, dtype, copy, order, subok, ndmin])</p></td>
-<td><p>Create an array.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">asctime</span></code>([tuple])</p></td>
-<td><p>Convert a time tuple to a string, e.g.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.backup_one_line.html#Data_Reduction.DSN.backup_one_line" title="Data_Reduction.DSN.backup_one_line"><code class="xref py py-obj docutils literal notranslate"><span class="pre">backup_one_line</span></code></a>(fd)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.backup_one_line.html#Data_Reduction.DSN.backup_one_line" title="Data_Reduction.DSN.backup_one_line"><code class="xref py py-obj docutils literal notranslate"><span class="pre">backup_one_line</span></code></a>(fd)</p></td>
 <td><p>Moves the file pointer to right after the previous newline.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">basename</span></code>(p)</p></td>
-<td><p>Returns the final component of a pathname</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.check_vsr.html#Data_Reduction.DSN.check_vsr" title="Data_Reduction.DSN.check_vsr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_vsr</span></code></a>()</p></td>
 <td><p>Check the usage of the VSR BLS disk area.</p></td>
@@ -274,35 +274,17 @@ will be created when ‘make_scripts’ is run.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.clear_vsr.html#Data_Reduction.DSN.clear_vsr" title="Data_Reduction.DSN.clear_vsr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clear_vsr</span></code></a>(year, DOY)</p></td>
 <td><p>Delete the data files on venus-vsr1 for a given date.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ctime</span></code>(seconds)</p></td>
-<td><p>Convert a time in seconds since the Epoch to a string in local time.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">empty</span></code>(shape[, dtype, order])</p></td>
-<td><p>Return a new array of given shape and type, without initializing entries.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">exists</span></code>(path)</p></td>
-<td><p>Test whether a path exists.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.get_binary_record.html#Data_Reduction.DSN.get_binary_record" title="Data_Reduction.DSN.get_binary_record"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_binary_record</span></code></a>(fd, file_header_size, …)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.get_binary_record.html#Data_Reduction.DSN.get_binary_record" title="Data_Reduction.DSN.get_binary_record"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_binary_record</span></code></a>(fd, file_header_size, …)</p></td>
 <td><p>Get the binary record at the specified index.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.get_last_line.html#Data_Reduction.DSN.get_last_line" title="Data_Reduction.DSN.get_last_line"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_last_line</span></code></a>(fd)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.get_last_line.html#Data_Reduction.DSN.get_last_line" title="Data_Reduction.DSN.get_last_line"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_last_line</span></code></a>(fd)</p></td>
 <td><p>Gets the last line in an ASCII file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.get_obs_date.html#Data_Reduction.DSN.get_obs_date" title="Data_Reduction.DSN.get_obs_date"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_date</span></code></a>(filename)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.get_obs_date.html#Data_Reduction.DSN.get_obs_date" title="Data_Reduction.DSN.get_obs_date"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_date</span></code></a>(filename)</p></td>
 <td><p>Parse a filename for the date of observation.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">glob</span></code>(pathname, *[, recursive])</p></td>
-<td><p>Return a list of paths matching a pathname pattern.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">gmtime</span></code>([seconds])</p></td>
-<td><p>tm_sec, tm_wday, tm_yday, tm_isdst)</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.header_report.html#Data_Reduction.DSN.header_report" title="Data_Reduction.DSN.header_report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">header_report</span></code></a>(year, doy, start_sec, freq, …)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.header_report.html#Data_Reduction.DSN.header_report" title="Data_Reduction.DSN.header_report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">header_report</span></code></a>(year, doy, start_sec, freq, …)</p></td>
 <td><p>Format a report of the observing parameters</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">localtime</span></code>([seconds])</p></td>
-<td><p>tm_sec,tm_wday,tm_yday,tm_isdst)</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.path_to_remote.html#Data_Reduction.DSN.path_to_remote" title="Data_Reduction.DSN.path_to_remote"><code class="xref py py-obj docutils literal notranslate"><span class="pre">path_to_remote</span></code></a>(workstation, local_path)</p></td>
 <td><p></p></td>
@@ -322,25 +304,12 @@ will be created when ‘make_scripts’ is run.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.set_file_pointer.html#Data_Reduction.DSN.set_file_pointer" title="Data_Reduction.DSN.set_file_pointer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_file_pointer</span></code></a>(fd, new_pos)</p></td>
 <td><p>Position the file pointer in a binary file.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleep</span></code>(seconds)</p></td>
-<td><p>Delay execution for a given number of seconds.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">strptime</span></code>(string, format)</p></td>
-<td><p>Parse a string to a time tuple according to a format specification.</p></td>
-</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.verify_ssh_mount.html#Data_Reduction.DSN.verify_ssh_mount" title="Data_Reduction.DSN.verify_ssh_mount"><code class="xref py py-obj docutils literal notranslate"><span class="pre">verify_ssh_mount</span></code></a>(server)</p></td>
 <td><p>Verify that a server is mounted.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">zeros</span></code>(shape[, dtype, order])</p></td>
-<td><p>Return a new array of given shape and type, filled with zeros.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-</div>
-<div class="section" id="data-reduction-dsn-gavrt">
-<h2>Data_Reduction.DSN.GAVRT<a class="headerlink" href="#data-reduction-dsn-gavrt" title="Permalink to this headline">¶</a></h2>
-<p>cannot be handled by <code class="docutils literal notranslate"><span class="pre">automodapi</span></code> right now.  Needs fixing.</p>
 </div>
 <div class="section" id="module-Data_Reduction.DSN.SAO">
 <span id="data-reduction-dsn-sao-package"></span><h2>Data_Reduction.DSN.SAO Package<a class="headerlink" href="#module-Data_Reduction.DSN.SAO" title="Permalink to this headline">¶</a></h2>
@@ -353,35 +322,8 @@ will be created when ‘make_scripts’ is run.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">array</span></code>(object[, dtype, copy, order, subok, ndmin])</p></td>
-<td><p>Create an array.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">basename</span></code>(p)</p></td>
-<td><p>Returns the final component of a pathname</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">exists</span></code>(path)</p></td>
-<td><p>Test whether a path exists.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_dirs</span></code>(project, station, year, DOY[, …])</p></td>
-<td><p>Returns the directories where data and working files are kept</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_session</span></code>([project, dss, date, path])</p></td>
-<td><p>Provides project, station, year and DOY, asking as needed.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mkdir_if_needed</span></code>(path)</p></td>
-<td><p>python3 only</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nearest_index</span></code>(np_array, value)</p></td>
-<td><p>Return the index of the element of the array with the nearest value</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.SAO.parse_filename.html#Data_Reduction.DSN.SAO.parse_filename" title="Data_Reduction.DSN.SAO.parse_filename"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_filename</span></code></a>(fname)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.SAO.parse_filename.html#Data_Reduction.DSN.SAO.parse_filename" title="Data_Reduction.DSN.SAO.parse_filename"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_filename</span></code></a>(fname)</p></td>
 <td><p>Parse an SAO .hf5 filename for date and source</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_data_files</span></code>(datapath[, name_pattern, …])</p></td>
-<td><p>Provide the user with menu to select data files.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">zeros</span></code>(shape[, dtype, order])</p></td>
-<td><p>Return a new array of given shape and type, filled with zeros.</p></td>
 </tr>
 </tbody>
 </table>
@@ -402,9 +344,6 @@ will be created when ‘make_scripts’ is run.</p>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.SAO.SAOhdf5.html#Data_Reduction.DSN.SAO.SAOhdf5" title="Data_Reduction.DSN.SAO.SAOhdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SAOhdf5</span></code></a>(filename[, clobber_0, clobber_center])</p></td>
 <td><p>Container for data in SAOspec HDF5 data files</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></p></td>
-<td><p>ndarray(shape, dtype=float, buffer=None, offset=0,</p></td>
 </tr>
 </tbody>
 </table>
@@ -476,6 +415,55 @@ creating a simple 1-table file is this:</p>
 </table>
 </div>
 </div>
+<div class="section" id="module-Data_Reduction.GAVRT">
+<span id="data-reduction-gavrt-package"></span><h2>Data_Reduction.GAVRT Package<a class="headerlink" href="#module-Data_Reduction.GAVRT" title="Permalink to this headline">¶</a></h2>
+<p>Functions for reducing Solar Patrol data</p>
+<p>A lot of modules under this need fixing up because of change from package
+Observatory to MonitorControl and algorithmic to object-oriented programming.</p>
+<div class="section" id="id6">
+<h3>Functions<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.GAVRT.DSS28_beamwidth.html#Data_Reduction.GAVRT.DSS28_beamwidth" title="Data_Reduction.GAVRT.DSS28_beamwidth"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DSS28_beamwidth</span></code></a>(freq)</p></td>
+<td><p>Estimate DSS-28 beamwidth until we have something better.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.GAVRT.extract_data.html#Data_Reduction.GAVRT.extract_data" title="Data_Reduction.GAVRT.extract_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_data</span></code></a>(datatype, wb, start, stop, …)</p></td>
+<td><p>Extract map from the data files and create/fill a metadata worksheet</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.GAVRT.get_session_t_files.html#Data_Reduction.GAVRT.get_session_t_files" title="Data_Reduction.GAVRT.get_session_t_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_session_t_files</span></code></a>(project_path, date_info)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.GAVRT.zenith_gain.html#Data_Reduction.GAVRT.zenith_gain" title="Data_Reduction.GAVRT.zenith_gain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zenith_gain</span></code></a>(freq)</p></td>
+<td><p>Antenna response vs frequency for DSS-28</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id7">
+<h3>Classes<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.GAVRT.Observation.html#Data_Reduction.GAVRT.Observation" title="Data_Reduction.GAVRT.Observation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observation</span></code></a>([name, dss, date, project])</p></td>
+<td><p>DSS-28 observations from before the <code class="docutils literal notranslate"><span class="pre">tlog</span></code> database table became available.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id8">
+<h3>Class Inheritance Diagram<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<div class="graphviz"><img src="_images/inheritance-cbaf645392d5e84d39e071ab6cb833c001c1f4f4.png" alt="Inheritance diagram of Data_Reduction.GAVRT.Observation" usemap="#inheritanceee6cd9ca7f" class="inheritance graphviz" /></div>
+<map id="inheritanceee6cd9ca7f" name="inheritanceee6cd9ca7f">
+<area shape="rect" id="node1" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" target="_top" title="superclass for a data structure and methods" alt="" coords="5,29,107,55"/>
+</map></div>
+</div>
 <div class="section" id="module-Data_Reduction.Malargue">
 <span id="data-reduction-malargue-package"></span><h2>Data_Reduction.Malargue Package<a class="headerlink" href="#module-Data_Reduction.Malargue" title="Permalink to this headline">¶</a></h2>
 <p>Classes for reducing observations</p>
@@ -524,8 +512,8 @@ pol          str      {ch: ?}         polarization of the channel
   time series.
 </pre></div>
 </div>
-<div class="section" id="id6">
-<h3>Functions<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id9">
+<h3>Functions<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -541,8 +529,8 @@ pol          str      {ch: ?}         polarization of the channel
 </tbody>
 </table>
 </div>
-<div class="section" id="id7">
-<h3>Classes<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id10">
+<h3>Classes<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -564,42 +552,37 @@ pol          str      {ch: ?}         polarization of the channel
 </tbody>
 </table>
 </div>
-<div class="section" id="id8">
-<h3>Class Inheritance Diagram<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
-<div class="graphviz"><img src="_images/inheritance-f9555698bf34369a809453fc2debdd34fafec7db.png" alt="Inheritance diagram of Data_Reduction.Malargue.BoresightScan, Data_Reduction.Malargue.Map, Data_Reduction.Malargue.Observation, Data_Reduction.Malargue.Session" usemap="#inheritanceb272fab77a" class="inheritance graphviz" /></div>
+<div class="section" id="id11">
+<h3>Class Inheritance Diagram<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<div class="graphviz"><img src="_images/inheritance-63b9d4be246d182f855bdf556df0216d9770be90.png" alt="Inheritance diagram of Data_Reduction.Malargue.BoresightScan, Data_Reduction.Malargue.Map, Data_Reduction.Malargue.Observation, Data_Reduction.Malargue.Session" usemap="#inheritanceb272fab77a" class="inheritance graphviz" /></div>
 <map id="inheritanceb272fab77a" name="inheritanceb272fab77a">
-<area shape="rect" id="node1" href="api/Data_Reduction.Malargue.BoresightScan.html#Data_Reduction.Malargue.BoresightScan" target="_top" title="class for a single scan during a boresight" alt="" coords="155,41,269,67"/>
-<area shape="rect" id="node2" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" target="_top" title="superclass for a data structure and methods" alt="" coords="5,79,107,104"/>
-<area shape="rect" id="node3" href="api/Data_Reduction.Map.html#Data_Reduction.Map" target="_top" title="Class for all the data and methods associated with a raster scan map" alt="" coords="176,115,248,140"/>
-<area shape="rect" id="node4" href="api/Data_Reduction.Malargue.Session.html#Data_Reduction.Malargue.Session" target="_top" title="Class for an observing session on a given year and DOY" alt="" coords="20,5,92,31"/>
+<area shape="rect" id="node1" href="api/Data_Reduction.Malargue.BoresightScan.html#Data_Reduction.Malargue.BoresightScan" target="_top" title="class for a single scan during a boresight" alt="" coords="165,31,280,56"/>
+<area shape="rect" id="node2" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" target="_top" title="superclass for a data structure and methods" alt="" coords="11,79,112,104"/>
+<area shape="rect" id="node4" href="api/Data_Reduction.Map.html#Data_Reduction.Map" target="_top" title="Map class without special features for GAVRT and Malargue" alt="" coords="187,104,259,129"/>
+<area shape="rect" id="node3" href="api/Data_Reduction.GriddingMixin.html#Data_Reduction.GriddingMixin" target="_top" title="Class for all the data and methods associated with a raster scan map" alt="" coords="5,128,117,153"/>
+<area shape="rect" id="node5" href="api/Data_Reduction.Malargue.Session.html#Data_Reduction.Malargue.Session" target="_top" title="Class for an observing session on a given year and DOY" alt="" coords="25,5,97,31"/>
 </map></div>
 </div>
 <div class="section" id="module-Data_Reduction.boresight_fitter">
 <span id="data-reduction-boresight-fitter-module"></span><h2>Data_Reduction.boresight_fitter Module<a class="headerlink" href="#module-Data_Reduction.boresight_fitter" title="Permalink to this headline">¶</a></h2>
 <p>This is supposed to be a general purpose boresight fitter but it has too many
 DSS-28 dependencies.</p>
-<div class="section" id="id9">
-<h3>Classes<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id12">
+<h3>Classes<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DSS</span></code>(number)</p></td>
-<td><p>Observer class for DSN stations based on xephem Observer</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">EphemException</span></code>([value, details])</p></td>
-<td><p>Exception class for Ephem module</p></td>
-</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.boresight_fitter.ScanFitter.html#Data_Reduction.boresight_fitter.ScanFitter" title="Data_Reduction.boresight_fitter.ScanFitter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ScanFitter</span></code></a>(scan)</p></td>
 <td><p>Create an object to fit a scan in one direction to a baseline and a Gaussian</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<div class="section" id="id10">
-<h3>Class Inheritance Diagram<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id13">
+<h3>Class Inheritance Diagram<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
 <div class="graphviz"><img src="_images/inheritance-a9af11d6dd818bc9a02a6d5790b5dd5af2fd86e6.png" alt="Inheritance diagram of Data_Reduction.boresight_fitter.ScanFitter" usemap="#inheritance8cfe299333" class="inheritance graphviz" /></div>
 <map id="inheritance8cfe299333" name="inheritance8cfe299333">
 <area shape="rect" id="node1" href="api/Data_Reduction.boresight_fitter.ScanFitter.html#Data_Reduction.boresight_fitter.ScanFitter" target="_top" title="Create an object to fit a scan in one direction to a baseline and a Gaussian" alt="" coords="5,5,92,31"/>
@@ -630,8 +613,8 @@ x(in MHz) and y:</p>
 and calculating A_ul gives the wrong relative intensities.
 10**logint gives the right ratios.</p>
 </div>
-<div class="section" id="id11">
-<h3>Functions<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id14">
+<h3>Functions<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -641,84 +624,97 @@ and calculating A_ul gives the wrong relative intensities.
 <tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.hyperfine_fit.ammonia_data.html#Data_Reduction.hyperfine_fit.ammonia_data" title="Data_Reduction.hyperfine_fit.ammonia_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ammonia_data</span></code></a>(ju, ku, jl, kl)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">array</span></code>(object[, dtype, copy, order, subok, ndmin])</p></td>
-<td><p>Create an array.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">draw</span></code>()</p></td>
-<td><p>Redraw the current figure.</p></td>
-</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.hyperfine_fit.error_func.html#Data_Reduction.hyperfine_fit.error_func" title="Data_Reduction.hyperfine_fit.error_func"><code class="xref py py-obj docutils literal notranslate"><span class="pre">error_func</span></code></a>(guess, x, data, data_model)</p></td>
 <td><p>:param guess : parameter list.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.hyperfine_fit.fit_data.html#Data_Reduction.hyperfine_fit.fit_data" title="Data_Reduction.hyperfine_fit.fit_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_data</span></code></a>(x, data, model, parameter_guess)</p></td>
 <td><p>fit noisy data to the model</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">gaussian</span></code>(x, mean, stdev)</p></td>
-<td><p>Un-normalized gaussian</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.hyperfine_fit.hpf_model.html#Data_Reduction.hyperfine_fit.hpf_model" title="Data_Reduction.hyperfine_fit.hpf_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hpf_model</span></code></a>(x, amp, x_0, w)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.hyperfine_fit.hpf_model.html#Data_Reduction.hyperfine_fit.hpf_model" title="Data_Reduction.hyperfine_fit.hpf_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hpf_model</span></code></a>(x, amp, x_0, w)</p></td>
 <td><p>Builds multicomponent Gaussian profile</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ion</span></code>()</p></td>
-<td><p>Turn the interactive mode on.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">leastsq</span></code>(func, x0[, args, Dfun, full_output, …])</p></td>
-<td><p>Minimize the sum of squares of a set of equations.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">linspace</span></code>(start, stop[, num, endpoint, …])</p></td>
-<td><p>Return evenly spaced numbers over a specified interval.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.hyperfine_fit.noise_data.html#Data_Reduction.hyperfine_fit.noise_data" title="Data_Reduction.hyperfine_fit.noise_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">noise_data</span></code></a>(SNR, width, span)</p></td>
 <td><p>Create noisy data samples</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>(*args[, scalex, scaley, data])</p></td>
-<td><p>Plot y versus x as lines and/or markers.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.hyperfine_fit.set_model.html#Data_Reduction.hyperfine_fit.set_model" title="Data_Reduction.hyperfine_fit.set_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_model</span></code></a>(line)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.hyperfine_fit.set_model.html#Data_Reduction.hyperfine_fit.set_model" title="Data_Reduction.hyperfine_fit.set_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_model</span></code></a>(line)</p></td>
 <td><p>Make the model parameters global</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.hyperfine_fit.test.html#Data_Reduction.hyperfine_fit.test" title="Data_Reduction.hyperfine_fit.test"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.hyperfine_fit.test.html#Data_Reduction.hyperfine_fit.test" title="Data_Reduction.hyperfine_fit.test"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test</span></code></a>()</p></td>
 <td><p>Test with simulated and real data.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">title</span></code>(label[, fontdict, loc, pad])</p></td>
-<td><p>Set a title for the axes.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">xlabel</span></code>(xlabel[, fontdict, labelpad])</p></td>
-<td><p>Set the label for the x-axis.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ylabel</span></code>(ylabel[, fontdict, labelpad])</p></td>
-<td><p>Set the label for the y-axis.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">zeros</span></code>(shape[, dtype, order])</p></td>
-<td><p>Return a new array of given shape and type, filled with zeros.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
-<div class="section" id="data-reduction-maps">
-<h2>Data_Reduction.maps<a class="headerlink" href="#data-reduction-maps" title="Permalink to this headline">¶</a></h2>
-<p>cannot be handled by <code class="docutils literal notranslate"><span class="pre">automodapi</span></code> right now.  Needs fixing.</p>
-</div>
-<div class="section" id="module-Data_Reduction.SLATool">
-<span id="data-reduction-slatool-module"></span><h2>Data_Reduction.SLATool Module<a class="headerlink" href="#module-Data_Reduction.SLATool" title="Permalink to this headline">¶</a></h2>
-<p>Spectral Line Analysis Tool</p>
-<p>Environment for analyzing spectral line from multiple observatories. Manages
-various data reduction programs</p>
-<div class="section" id="id12">
-<h3>Classes<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="module-Data_Reduction.maps">
+<span id="data-reduction-maps-module"></span><h2>Data_Reduction.maps Module<a class="headerlink" href="#module-Data_Reduction.maps" title="Permalink to this headline">¶</a></h2>
+<p>Obsolete module replaced by <code class="docutils literal notranslate"><span class="pre">plotting</span></code> and the <code class="docutils literal notranslate"><span class="pre">MapPlotter</span></code> class.</p>
+<div class="section" id="id15">
+<h3>Functions<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DSNFITSexaminer</span></code>([parent, FITSfile, hdulist, …])</p></td>
-<td><p>Class for examining SAOdataset objects</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.maps.center_data.html#Data_Reduction.maps.center_data" title="Data_Reduction.maps.center_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">center_data</span></code></a>(date_nums, ras, decs, body, site)</p></td>
+<td><p>Generates a map in relative coordinates relative to a source</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">FITSfile</span></code>(tel)</p></td>
-<td><p>A FITS file object having primary header and binary table extensions.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.maps.plot_azel.html#Data_Reduction.maps.plot_azel" title="Data_Reduction.maps.plot_azel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_azel</span></code></a>(azs, els, title_str)</p></td>
+<td><p>Plot elevation vs azimuth</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.maps.plot_ra_dec.html#Data_Reduction.maps.plot_ra_dec" title="Data_Reduction.maps.plot_ra_dec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_ra_dec</span></code></a>(ras, decs, title_str)</p></td>
+<td><p>Plot declination vs right ascension</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.maps.plot_xdec_dec.html#Data_Reduction.maps.plot_xdec_dec" title="Data_Reduction.maps.plot_xdec_dec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_xdec_dec</span></code></a>(xdecs, decs, title_str)</p></td>
+<td><p>plot declination vs cross-declination</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.maps.show_body_orientation.html#Data_Reduction.maps.show_body_orientation" title="Data_Reduction.maps.show_body_orientation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">show_body_orientation</span></code></a>(body, meantime, …)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="module-Data_Reduction.plotting">
+<span id="data-reduction-plotting-module"></span><h2>Data_Reduction.plotting Module<a class="headerlink" href="#module-Data_Reduction.plotting" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id16">
+<h3>Classes<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.plotting.MapPlotter.html#Data_Reduction.plotting.MapPlotter" title="Data_Reduction.plotting.MapPlotter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MapPlotter</span></code></a>(parent, raster_cfg_id[, name])</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id17">
+<h3>Class Inheritance Diagram<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<div class="graphviz"><img src="_images/inheritance-371aedf2002cc5eba835cf1206645b7958615650.png" alt="Inheritance diagram of Data_Reduction.plotting.MapPlotter" usemap="#inheritance6c4234036c" class="inheritance graphviz" /></div>
+<map id="inheritance6c4234036c" name="inheritance6c4234036c">
+<area shape="rect" id="node1" href="api/Data_Reduction.GriddingMixin.html#Data_Reduction.GriddingMixin" target="_top" title="Class for all the data and methods associated with a raster scan map" alt="" coords="5,5,117,31"/>
+<area shape="rect" id="node2" href="api/Data_Reduction.Map.html#Data_Reduction.Map" target="_top" title="Map class without special features for GAVRT and Malargue" alt="" coords="165,31,237,56"/>
+<area shape="rect" id="node4" href="api/Data_Reduction.plotting.MapPlotter.html#Data_Reduction.plotting.MapPlotter" target="_top" title="MapPlotter" alt="" coords="285,31,377,56"/>
+<area shape="rect" id="node3" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" target="_top" title="superclass for a data structure and methods" alt="" coords="11,55,112,80"/>
+</map></div>
+</div>
+<div class="section" id="module-Data_Reduction.SLATool">
+<span id="data-reduction-slatool-module"></span><h2>Data_Reduction.SLATool Module<a class="headerlink" href="#module-Data_Reduction.SLATool" title="Permalink to this headline">¶</a></h2>
+<p>Spectral Line Analysis Tool</p>
+<p>Environment for analyzing spectral line from multiple observatories. Manages
+various data reduction programs</p>
+<div class="section" id="id18">
+<h3>Classes<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.SLATool.SessionAnalyzer.html#Data_Reduction.SLATool.SessionAnalyzer" title="Data_Reduction.SLATool.SessionAnalyzer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SessionAnalyzer</span></code></a>([project, dss, year, DOY])</p></td>
 <td><p>Tool for reducing multiple data reduction sessions</p></td>
 </tr>
@@ -728,21 +724,68 @@ various data reduction programs</p>
 </tbody>
 </table>
 </div>
-<div class="section" id="id13">
-<h3>Class Inheritance Diagram<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id19">
+<h3>Class Inheritance Diagram<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
 <div class="graphviz"><img src="_images/inheritance-668144a133acb5c973cc50586c4e8e09b975feaf.png" alt="Inheritance diagram of Data_Reduction.SLATool.SessionAnalyzer, Data_Reduction.SLATool.Spectrum" usemap="#inheritance680f3c5242" class="inheritance graphviz" /></div>
 <map id="inheritance680f3c5242" name="inheritance680f3c5242">
 <area shape="rect" id="node1" href="api/Data_Reduction.SLATool.SessionAnalyzer.html#Data_Reduction.SLATool.SessionAnalyzer" target="_top" title="Tool for reducing multiple data reduction sessions" alt="" coords="5,55,135,80"/>
 <area shape="rect" id="node2" href="api/Data_Reduction.SLATool.Spectrum.html#Data_Reduction.SLATool.Spectrum" target="_top" title="Generic container for a spectrum and its metadata" alt="" coords="28,5,112,31"/>
 </map></div>
 </div>
-<div class="section" id="data-reduction-slaplotter">
-<h2>Data_Reduction.SLAPlotter<a class="headerlink" href="#data-reduction-slaplotter" title="Permalink to this headline">¶</a></h2>
-<p>cannot be handled by <code class="docutils literal notranslate"><span class="pre">automodapi</span></code> right now.  Needs fixing.</p>
+<div class="section" id="module-Data_Reduction.SLAPlotter">
+<span id="data-reduction-slaplotter-module"></span><h2>Data_Reduction.SLAPlotter Module<a class="headerlink" href="#module-Data_Reduction.SLAPlotter" title="Permalink to this headline">¶</a></h2>
+<p>Session plotting methods</p>
+<p>Plotting component of an environment for analyzing spectral line from multiple
+observatories. Manages various data reduction programs.</p>
+<div class="section" id="id20">
+<h3>Classes<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.SLAPlotter.SessionPlotter.html#Data_Reduction.SLAPlotter.SessionPlotter" title="Data_Reduction.SLAPlotter.SessionPlotter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SessionPlotter</span></code></a>([project, dss, year, DOY])</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
 </div>
-<div class="section" id="data-reduction-tams-tipping">
-<h2>Data_Reduction.TAMS_tipping<a class="headerlink" href="#data-reduction-tams-tipping" title="Permalink to this headline">¶</a></h2>
-<p>cannot be handled by <code class="docutils literal notranslate"><span class="pre">automodapi</span></code> right now.  Needs fixing.</p>
+<div class="section" id="id21">
+<h3>Class Inheritance Diagram<a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
+<div class="graphviz"><img src="_images/inheritance-10b2ac863181d420283f2933a460916f8c7f7ce6.png" alt="Inheritance diagram of Data_Reduction.SLAPlotter.SessionPlotter" usemap="#inheritance118f1d29bb" class="inheritance graphviz" /></div>
+<map id="inheritance118f1d29bb" name="inheritance118f1d29bb">
+<area shape="rect" id="node1" href="api/Data_Reduction.SLATool.SessionAnalyzer.html#Data_Reduction.SLATool.SessionAnalyzer" target="_top" title="Tool for reducing multiple data reduction sessions" alt="" coords="5,5,135,31"/>
+<area shape="rect" id="node2" href="api/Data_Reduction.SLAPlotter.SessionPlotter.html#Data_Reduction.SLAPlotter.SessionPlotter" target="_top" title="SessionPlotter" alt="" coords="183,5,297,31"/>
+</map></div>
+</div>
+<div class="section" id="module-Data_Reduction.TAMS_tipping">
+<span id="data-reduction-tams-tipping-module"></span><h2>Data_Reduction.TAMS_tipping Module<a class="headerlink" href="#module-Data_Reduction.TAMS_tipping" title="Permalink to this headline">¶</a></h2>
+<p>Finds Tidbinbilla tipping curve files</p>
+<p class="rubric">Notes</p>
+<p>Instead of ‘TidTipFinder’ having an initialization argument ‘remote’, one could
+just test with ‘socket.gethostname’ and do a remote mount if the response is
+not ‘crux’.</p>
+<div class="section" id="id22">
+<h3>Classes<a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.TAMS_tipping.TidTipFinder.html#Data_Reduction.TAMS_tipping.TidTipFinder" title="Data_Reduction.TAMS_tipping.TidTipFinder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TidTipFinder</span></code></a>([dss, remote, date])</p></td>
+<td><p>Attributes.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id23">
+<h3>Class Inheritance Diagram<a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
+<div class="graphviz"><img src="_images/inheritance-dfd84f02b8f2d2d2860f7cebd9657ee81ec64bc4.png" alt="Inheritance diagram of Data_Reduction.TAMS_tipping.TidTipFinder" usemap="#inheritance92a48f46e7" class="inheritance graphviz" /></div>
+<map id="inheritance92a48f46e7" name="inheritance92a48f46e7">
+<area shape="rect" id="node1" href="api/Data_Reduction.TAMS_tipping.TidTipFinder.html#Data_Reduction.TAMS_tipping.TidTipFinder" target="_top" title="Attributes::" alt="" coords="5,5,107,31"/>
+</map></div>
 </div>
 <div class="section" id="module-Data_Reduction.tipping">
 <span id="data-reduction-tipping-module"></span><h2>Data_Reduction.tipping Module<a class="headerlink" href="#module-Data_Reduction.tipping" title="Permalink to this headline">¶</a></h2>
@@ -751,8 +794,8 @@ various data reduction programs</p>
 <p>A tipping array consists of two 1-D arrays, the first containing the elevation
 in degrees and the second the system temperature for each of the four channels.</p>
 <p>Older files (like 2014) have only one reading and it may be dBm instead of Tsys</p>
-<div class="section" id="id14">
-<h3>Functions<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id24">
+<h3>Functions<a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -762,17 +805,14 @@ in degrees and the second the system temperature for each of the four channels.<
 <tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.tipping.airmass.html#Data_Reduction.tipping.airmass" title="Data_Reduction.tipping.airmass"><code class="xref py py-obj docutils literal notranslate"><span class="pre">airmass</span></code></a>(elev)</p></td>
 <td><p>:param elev : elevation above the horizon in degrees :type  elev : float</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">curve_fit</span></code>(f, xdata, ydata[, p0, sigma, …])</p></td>
-<td><p>Use non-linear least squares to fit a function, f, to data.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.tipping.fit_tipcurve_data.html#Data_Reduction.tipping.fit_tipcurve_data" title="Data_Reduction.tipping.fit_tipcurve_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_tipcurve_data</span></code></a>(elev, Tsys[, Tatm, method])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.tipping.fit_tipcurve_data.html#Data_Reduction.tipping.fit_tipcurve_data" title="Data_Reduction.tipping.fit_tipcurve_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_tipcurve_data</span></code></a>(elev, Tsys[, Tatm, method])</p></td>
 <td><p>fits system temperatures to airmass</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<div class="section" id="id15">
-<h3>Classes<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id25">
+<h3>Classes<a class="headerlink" href="#id25" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -785,8 +825,8 @@ in degrees and the second the system temperature for each of the four channels.<
 </tbody>
 </table>
 </div>
-<div class="section" id="id16">
-<h3>Class Inheritance Diagram<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id26">
+<h3>Class Inheritance Diagram<a class="headerlink" href="#id26" title="Permalink to this headline">¶</a></h3>
 <div class="graphviz"><img src="_images/inheritance-d46dc893fcccbc7b69eb767aaab236855bc6a38a.png" alt="Inheritance diagram of Data_Reduction.tipping.AtmosAnalyzer" usemap="#inheritancea3017527ce" class="inheritance graphviz" /></div>
 <map id="inheritancea3017527ce" name="inheritancea3017527ce">
 <area shape="rect" id="node1" href="api/Data_Reduction.tipping.AtmosAnalyzer.html#Data_Reduction.tipping.AtmosAnalyzer" target="_top" title="Analyzer for environmental data contained in a weather data cube" alt="" coords="5,5,127,31"/>
