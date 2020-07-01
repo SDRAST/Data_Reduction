@@ -45,41 +45,14 @@ from scipy.interpolate import griddata
 import Astronomy as A
 import Astronomy.Ephem as AE
 import DatesTimes as DT
-from local_dirs import fits_dir, hdf5_dir, projects_dir, wvsr_dir
+import local_dirs
+import Math.clusters as VQ # vector quantization
 import support
 
 # enable raw_input Tab completion
 readline.parse_and_bind("tab: complete")
 
 logger = logging.getLogger(__name__) # module logger
-
-def examine_text_data_file(filename):
-  """
-  Examine a file to guide ``genfromtxt()``
-  
-  Things to look for::
-  
-    * Is there a header line with column names? If not, use argument ``names``.
-    * Is the number of names equal to the number of columns? If not::
-      - use argument ``names`` and ``skip_header=1``, or
-      - use argument ``delimiter`` with a list of column widths 
-        and ``skip_header=1``.
-  """
-  print(examine_text_data_file.__doc__)
-  fd = open(filename, "r")
-  lines = fd.readlines()
-  fd.close()
-  topline = lines[0].strip().split()
-  print("          1         2         3         4         5         6         7")
-  print("01234567890123456789012345678901234567890123456789012345678901234567890123456789")
-  print(lines[0].strip())
-  print(lines[1].strip())
-  print(" ...")
-  print(lines[-1].strip())
-  data = NP.genfromtxt(filename, dtype=None, names=None, skip_header=1, encoding=None)
-  print("%d datatypes:" % len(data.dtype.fields))
-  for item in data.dtype.fields:
-    print(item, data.dtype.fields[item])
   
 class Observation(object):
   """
@@ -235,7 +208,7 @@ class Observation(object):
     Returns:
       ndarray: 
     """
-    data = NP.genfromtxt(filename, 
+    data = NP.genfromtxt(self.sessionpath+filename, 
                          delimiter=delimiter,
                          dtype=None,
                          names=names,
@@ -300,9 +273,6 @@ class Observation(object):
                                         IFtype=props['IFtype'][ch])
       else:
         self.channel[ch] = self.Channel(self, ch)
-      if props:
-        for prop in props:
-          self.channel[ch][prop] = props[prop]
 
   def make_data_struct(self, data, metadata, signals):
     """
@@ -641,12 +611,15 @@ class Observation(object):
       support.PropertiedClass.__init__(self)
       self.parent = parent
       self.logger = logging.getLogger(self.parent.name+".Channel")
+      self.logger.debug("__init__: created %s", self.logger.name)
+      self.logger.debug("__init__: parent is %s", self.parent)
       self.name = name
       self.data['freq'] = freq
       self.data['bw'] = bw
-      self.data['pol'] = pol 
+      self.data['pol'] = pol
+      self.data['power'] = self.parent.data[name]
 
-class Map(object):
+class GriddingMixin(object):
   """
   Class for all the data and methods associated with a raster scan map
   
@@ -662,10 +635,28 @@ class Map(object):
     source (str):
     step (float):            map step size
     
-  """  
+  """ 
+  def get_grid_stepsize(self):
+    """ 
+    Determine the stepsize of gridded data
+    """
+    # get the absolute value of coordinate intervals
+    dxdecs = abs(self.data['xdec_offset'][1:]-self.data['xdec_offset'][:-1])
+    ddecs  = abs(self.data['dec_offset'][1:] -self.data['dec_offset'][:-1])
+    # form array of X,Y pairs
+    coords =  NP.array(list(zip(dxdecs,ddecs)))
+    # expect two clusters (default)
+    cluster_pos = VQ.find_clusters(coords).round(4) # tenths of mdeg
+    # return the non-zero intervals
+    return cluster_pos[0].max(), cluster_pos[1].max()
+    
   def regrid(self, width=1.0, height=1.0, step=None):
     """
     converts a map from observed coordinates to map coordinates
+    
+    If ``step`` is not given then the step size will be the average step size
+    in X and the average step in Y.  In this case, the effect is to make a
+    regular grid if the original positions were not exact, i.e., pointing error.
     
     @param width : map width in deg
     @type  width : float
@@ -677,36 +668,386 @@ class Map(object):
     @type  step : (float, float)
     """
     if step == None:
-      # use the original step size
-      self.xstep = abs(self.data['xdec_offset'][1:]
-                      -self.data['xdec_offset'][:-1]).mean().round(6)
-      self.ystep = abs(self.data['dec_offset'][1:]
-                      -self.data['dec_offset'][:-1]).mean().round(6)
+      # use the original stepsize
+      self.xstep, self.ystep = self.get_grid_stepsize()
     else:
       self.xstep, self.ystep = step
-    nx = int(round(width/self.xstep))
-    ny = int(round(height/self.ystep))
-    self.data['grid_x'] = NP.arange( -width/2,  width/2 + self.xstep, self.xstep/2)
-    self.data['grid_y'] = NP.arange(-height/2, height/2 + self.ystep, self.ystep/2)
+    self.data['grid_x'] = NP.arange( -width/2,  width/2 + self.xstep/2, self.xstep/2)
+    self.data['grid_y'] = NP.arange(-height/2, height/2 + self.ystep/2, self.ystep/2)
+    self.logger.debug("regrid: grid shape is %dx%d", len(self.data['grid_x']),
+                                                     len(self.data['grid_y']))
     self.data['grid_z'] = {}
     for chnl in self.channel:
-      cx = self.data['xdec_offset']
-      cy = self.data['dec_offset']
-      cz = self.data[chnl]
-      xi = self.data['grid_x']
-      yi = self.data['grid_y']
+      self.logger.debug("regrid: processing %s", chnl)
+      points = list(zip(self.data['xdec_offset'],self.data['dec_offset']))
+      self.logger.debug("regrid: %d positions", len(points))
+      values = self.data[chnl]
+      self.logger.debug("regrid: %d values", len(values))
+      xi, yi = NP.meshgrid(self.data['grid_x'], self.data['grid_y'])
       try:
-        self.data['grid_z'] = griddata(cx,cy,cz, xi, yi, method='nearest')
+        self.data['grid_z'] = griddata(points, values, (xi, yi), method='nearest')
       except ValueError as details:
         self.logger.error("regrid: gridding failed: %s", str(details))
-        self.logger.debug("regrid: channel %d length of cx is %d", chnl, len(cx))
-        self.logger.debug("regrid: channel %d length of cy is %d", chnl, len(cy))
-        self.logger.debug("regrid: channel %d length of cz is %d", chnl, len(cz))
+        self.logger.debug("regrid: channel %s length of points is %d", chnl, len(points))
+        self.logger.debug("regrid: channel %s length of values is %d", chnl, len(values))
         continue
-    return self.data['grid_x'], self.data['grid_y'], \
-           self.data['grid_z']
+    return self.data['grid_x'], self.data['grid_y'], self.data['grid_z']
+
+class Map(Observation, GriddingMixin):
+  """
+  Map class without special features for GAVRT and Malargue
+  """
+  def __init__(self, parent=None, name=None, dss=None, date=None, project=None):
+    """
+    """
+    Observation.__init__(self, parent=parent, name=name, dss=dss, date=date,
+                               project=project)
+
+class Session(object):
+  """
+  Base class for an observing session on a given year and DOY
+  
+  Public Attributes::
+    doy (int)               - day of year for session
+    logger (logging.Logger) - logging.Logger object
+    parent (object)         - a data reduction session (mult. observ. sessions)
+    project (str)           - 
+    session_dir (str)       - path to results from this session
+    year (int)              - year for session
+  
+  
+  """
+  def __init__(self, parent=None, year=None, doy=None, project=None):
+    """
+    initialize data reduction for one observing session
+    
+    All arguments are required
+    """
+    if parent:
+      self.logger = logging.getLogger(parent.logger.name+".Session")
+    else:
+      self.logger = logging.getLogger(logger.name+".Session")
+    if year and doy and project:
+      self.year = year
+      self.doy = doy
+      self.project = project
+    else:
+      self.logger.error("__init__: missing year or DOY or project")
+      raise Exception("Where and when were the data taken?")
+
+  def get_session_dir(self, dss=None, path=None):
+    """
+    find or make the sessions directory
+    
+    Either `dss` or `path` must be given.
+    
+    Args:
+      dss (int)  - station number
+      path (str) - explicit path to files
+    """
+    if dss:
+      obs_dir = local_dirs.projects_dir+self.project+"/Observations/dss"+str(dss)+"/"
+      self.session_dir = obs_dir + "%4d" % self.year +"/"+ "%03d" % self.doy +"/"
+    elif path:
+      self.session_dir = path
+    else:
+      self.logger.error("get_session_dir: no path or dss specified")
+      raise Exception("Where are the files?")
+    if not os.path.exists(self.session_dir):
+      os.makedirs(self.session_dir, mode=0o775)
+
+  def select_data_files(self, datapath, name_pattern="", load_hdf=False):
+    """
+    Provide the user with menu to select data files.
+  
+    Finding the right data store is complicated as there are many kinds of data
+    files::
+  
+    * If datapath is ...RA_data/HDF5/... then the files could be .h5 (Ashish) or .hdf5 (Dean).
+    * If datapath is ...RA_data/FITS/... then the extent is .fits.
+    * If datapath is ...project_data/... then the extent is .pkl
+    * If datapath is ...projects/...     then the extent is probably .csv or .dat.
+  
+    @param datapath : path to top of the tree where the DSS subdirectories are
+    @type  datapath : str
+  
+    @param name_pattern : pattern for selecting file names, e.g. source
+    @type  name_pattern : str
+  
+    @param load_hdf : use RA_data/HDF5 directory if True
+    @type  load_hdf : bool
+  
+    @return: list of str
+    """
+    # Get the data files to be processed
+    self.logger.debug("select_data_files: looking in %s", datapath)
+    if name_pattern:
+      name,extent = os.path.splitext(name_pattern)
+      if extent.isalpha(): # a proper extent with no wildcards
+        # take name pattern as is
+        pass
+      else:
+        # only one * at front and back of pattern
+        name_pattern = "*"+name_pattern.rstrip('*')+"*"
+    else:
+      # no pattern specified.  All files.
+      name_pattern = "*"
+    self.logger.debug("select_data_files: for pattern %s", name_pattern)
+    if re.search('HDF5', datapath):
+      load_hdf = True
+    elif re.search('project_data', datapath):
+      load_hdf = False
+      datafiles = support.text.select_files(datapath+name_pattern+"[0-9].pkl")
+    elif re.search('FITS', datapath):
+      datafiles = support.text.select_files(datapath+name_pattern+".fits")
+    if load_hdf:
+      full = datapath+name_pattern+".h*5"
+    else:
+      full = datapath+name_pattern
+    self.logger.debug("select_data_files: from: %s", full)
+    datafiles = support.text.select_files(full)
+
+    self.logger.debug("select_data_files: found %s", datafiles)
+    if datafiles == []:
+      self.logger.error("select_data_files: None found. Is the data directory mounted?")
+      raise RuntimeError('No data files found.')  
+    if type(datafiles) == str:
+      datafiles = [datafiles]
+    self.logger.info("select_data_files: to be processed: %s", datafiles)
+    return datafiles
+
+class Spectrum(Observation):
+  """
+  Class for spectra
+  """
+  def __init__(self):
+    """
+    needs a spectrum attribute
+    """
+    self.logger = logging.getLogger(logger.name+".Spectrum")
+    
+  def get_num_chans(self, linefreq, bandwidth, max_vel_width):
+    """
+    compute the base 2 number of output channels for the specified resolution
+    """
+    kmpspMHz = 300000./linefreq
+    BW_kmps = bandwidth*kmpspMHz
+    est_num_chan_out = BW_kmps/max_vel_width
+    self.logger.debug("get_num_chans: estimated num chans out = %d",
+                      est_num_chan_out)
+    return 2**int(math.ceil(math.log(est_num_chan_out,2)))
+    
+  def reduce_spectrum_channels(self, refval, refpix, delta,
+                             num_chan=1024, axis=0):
+    """
+    Reduce the number of channels in the spectrum.
+  
+    The default option is to reduce the spectrum to a specified number of
+    channels with a default of 1024. The input spectrum is presumed to have
+    2**N channels so that num_chan/num_chan_in is an integer.
+  
+    If 'spectrum' is an N-D array, then the spectrum axis is given by 'axis'
+    which defaults to 0.
+  
+    'delta' is negative for lower sideband or reversed double sideband spectra.
+    
+    @param spectrum : spectrum values
+    @type  spectrum : list or nparray
+  
+    @param refval : X-axis value at the reference pixel of 'spectrum'
+    @type  refval : float
+  
+    @param refpix : reference pixel for 'spectrum'
+    @type  refpix : int
+  
+    @param delta : interval between pixels on the X-axis
+    @type  delta : float
+  
+    @param num_chan : optional number of channels to be returned (default: 2^10)
+    @type  num_chan : int
+  
+    @return: numpy.array
+    """
+    if math.log(num_chan,2) % 1:
+      raise RuntimeError("num_chan = %d is not a power of 2", num_chan)
+    if type(self.spectrum) == NP.ndarray:
+      num_chans_in = self.spectrum.shape[axis]
+    else:
+      num_chans_in = len(self.spectrum)
+    if math.log(num_chans_in,2) % 1:
+      raise RuntimeError("input spectrum length = %d is not a power of 2",
+                                                                  num_chans_in)
+    self.logger.debug("reduce_spectrum_channels: %d channels in", num_chans_in)
+  
+    num_chan_avg = num_chans_in/num_chan
+    newrefpix = refpix/num_chan_avg
+    self.logger.debug("reduce_spectrum_channels: refpix from %d to %d",
+               refpix, newrefpix)
+
+    newdelta = delta*num_chan_avg
+    self.logger.debug("reduce_spectrum_channels: delta from %.3f to %.3f",
+               delta, newdelta)
+    newrefval = refval + delta*(num_chan_avg/2 - 1)
+    self.logger.debug("reduce_spectrum_channels: refval from %.3f to %.3f",
+               refval, newrefval)
+    self.logger.debug("reduce_spectrum_channels: averaging %d channels", num_chan_avg)
+  
+    specout = NP.array([spectrum[index*num_chan_avg:(index+1)*num_chan_avg].mean()
+                                                 for index in range(num_chan)])
+    self.logger.debug("reduce_spectrum_channels: %d channels out", num_chan)
+    return specout, newrefval, newrefpix, newdelta
+
+  def get_freq_array(self, bandwidth, n_chans):
+    """
+    Create an array of frequencies for the channels of a backend
+
+    @param bandwidth : bandwidth
+    @type  bandwidth : float
+
+    @param n_chans : number of channels
+    @type  n_chans : int
+
+    @return: frequency of each channel in same units as bandwidth
+    """
+    return NP.arange(n_chans)*float(bandwidth)/n_chans
+
+  def freq_to_chan(frequency,bandwidth,n_chans):
+    """
+    Returns the channel number where a given frequency is to be found.
+
+    @param frequency : frequency of channel in sane units as bandwidth.
+    @type  frequency : float
+
+    @param bandwidth : upper limit of spectrometer passband
+    @type  bandwidth : float
+
+    @param n_chans : number of channels in the spectrometer
+    @type  n_chans : int
+
+    @return: channel number (int)
+    """
+    if frequency < 0:
+      frequency = bandwidth + frequency
+    if frequency > bandwidth:
+      raise RuntimeError("that frequency is too high.")
+    return round(float(frequency)/bandwidth*n_chans) % n_chans
+
+  def get_smoothed_bandshape(self, degree = None, poly_order=15):
+    """
+    Do a Gaussian smoothing of the spectrum and then fit a polynomial.
+    Optionally, the raw and smoothed data and the fitted polynomial can be
+    plotted.
+
+    Note
+    ====
+    ``numpy.polyfit(x, y, deg, rcond=None, full=False, w=None, cov=False)``
+    Least squares polynomial fit.
+    Fit a polynomial::
+  
+      p(x) = p[0] * x**deg + ... + p[deg]
+  
+    of degree deg to points (x, y).
+    Returns a vector of coefficients p that minimises the squared error.
+
+    @param spectrum : input data
+    @type  spectrum : list of float
+
+    @param degree : number of samples to smoothed (Gaussian FWHM)
+    @type  degree : int
+
+    @param poly_order : order of the polynomial
+    @type  poly_order : int
+
+    @param plot : plotting option
+    @type  plot : boolean
+
+    @return: (polynomial_coefficient, smoothed_spectrum)
+    """
+    if degree == None:
+      degree = len(self.spectrum)/100
+    # normalize the spectrum so max is 1 and convert to dB.
+    max_lev = NP.max(self.spectrum)
+    norm_spec = NP.array(self.spectrum)/float(max_lev)
+    norm_spec_db = 10*NP.log10(norm_spec)
+    # do a Gaussian smoothing
+    norm_spec_db_smoothed = smoothListGaussian(norm_spec_db, degree=degree)
+    # deal with the edges by making them equal to the smoothed end points
+    norm_spec_db_smoothed_resized = NP.ones(len(self.spectrum))
+    # left end
+    norm_spec_db_smoothed_resized[0:degree] = norm_spec_db_smoothed[0]
+    # middle
+    norm_spec_db_smoothed_resized[degree:degree+len(norm_spec_db_smoothed)] = \
+      norm_spec_db_smoothed
+    # right end
+    norm_spec_db_smoothed_resized[degree+len(norm_spec_db_smoothed):] = \
+      norm_spec_db_smoothed[-1]
+    return poly, norm_spec_db_smoothed_resized
 
 # ------------------------ module functions -------------------------------
+
+def examine_text_data_file(filename):
+  """
+  Examine a file to guide ``genfromtxt()``
+  
+  Things to look for::
+  
+    * Is there a header line with column names? If not, use argument ``names``.
+    * Is the number of names equal to the number of columns? If not::
+      - use argument ``names`` and ``skip_header=1``, or
+      - use argument ``delimiter`` with a list of column widths 
+        and ``skip_header=1``.
+  """
+  print(examine_text_data_file.__doc__)
+  fd = open(filename, "r")
+  lines = fd.readlines()
+  fd.close()
+  topline = lines[0].strip().split()
+  print("          1         2         3         4         5         6         7")
+  print("01234567890123456789012345678901234567890123456789012345678901234567890123456789")
+  print(lines[0].strip())
+  print(lines[1].strip())
+  print(" ...")
+  print(lines[-1].strip())
+  data = NP.genfromtxt(filename, dtype=None, names=None, skip_header=1, encoding=None)
+  print("%d datatypes:" % len(data.dtype.fields))
+  for item in data.dtype.fields:
+    print(item, data.dtype.fields[item])
+
+def get_obs_dirs(project, station, year, DOY, datafmt=None):
+  """
+  Returns the directories where data and working files are kept
+  
+  @param project : project code string, e.g., RRL
+  @type  project : str
+  
+  @param station : DSN station number
+  @type  station : int
+  
+  @param year : year of observation
+  @type  year : int
+  
+  @param DOY : day of year of observations
+  @type  DOY : int
+  
+  @param datafmt : raw data format
+  @type  datafmt : str
+  """
+  logger.debug("get_obs_dirs: type %s for %s, DSS%d, %4d/%03d",
+               datafmt, project, station, year, DOY)
+  obspath = "dss%2d/%4d/%03d/" %  (station,year,DOY)
+  if project:
+    projdatapath = "/usr/local/project_data/"+project+"/"+obspath
+    projworkpath = "/usr/local/projects/"+project+"/Observations/"+obspath
+  else:
+    projdatapath = ""
+    projworkpath = ""
+  if datafmt:
+    rawdatapath = "/usr/local/RA_data/"+datafmt+"/"+obspath
+  else:
+    rawdatapath = ""
+  return projdatapath, projworkpath, rawdatapath
+
+# ----------------- old stuff to be discarded eventually ---------------
 
 def get_obs_session(project=None, dss=None, date=None, path='proj'):
   """
@@ -753,7 +1094,7 @@ def get_obs_session(project=None, dss=None, date=None, path='proj'):
     """
     this needs to be completed and tested on crab14 or an auto host
     """
-    session = get_directory(wvsr_dir)
+    session = get_directory(local_dirs.wvsr_dir)
     return session
     
   cwd = os.getcwd()
@@ -761,9 +1102,9 @@ def get_obs_session(project=None, dss=None, date=None, path='proj'):
   if project:
     pass
   else:
-    os.chdir(projects_dir)
-    project = get_directory(projects_dir)
-  projectpath = projects_dir+project
+    os.chdir(local_dirs.projects_dir)
+    project = get_directory(local_dirs.projects_dir)
+  projectpath = local_dirs.projects_dir+project
   # get the station
   if path[:4].lower() == 'wvsr':
     # special call
@@ -771,9 +1112,9 @@ def get_obs_session(project=None, dss=None, date=None, path='proj'):
   if path[:4].lower() == 'proj':
     os.chdir(projectpath+"/Observations/")
   elif path[:4].lower() == 'hdf5':
-    os.chdir(hdf5_dir)
+    os.chdir(local_dirs.hdf5_dir)
   elif path[:4].lower() == 'fits':
-    os.chdir(fits_dir)
+    os.chdir(local_dirs.fits_dir)
   
   # get the station
   if dss:
@@ -795,268 +1136,3 @@ def get_obs_session(project=None, dss=None, date=None, path='proj'):
   os.chdir(cwd)
   return project, dss, year, DOY  
 
-def get_obs_dirs(project, station, year, DOY, datafmt=None):
-  """
-  Returns the directories where data and working files are kept
-  
-  @param project : project code string, e.g., RRL
-  @type  project : str
-  
-  @param station : DSN station number
-  @type  station : int
-  
-  @param year : year of observation
-  @type  year : int
-  
-  @param DOY : day of year of observations
-  @type  DOY : int
-  
-  @param datafmt : raw data format
-  @type  datafmt : str
-  """
-  logger.debug("get_obs_dirs: type %s for %s, DSS%d, %4d/%03d",
-               datafmt, project, station, year, DOY)
-  obspath = "dss%2d/%4d/%03d/" %  (station,year,DOY)
-  if project:
-    projdatapath = "/usr/local/project_data/"+project+"/"+obspath
-    projworkpath = "/usr/local/projects/"+project+"/Observations/"+obspath
-  else:
-    projdatapath = ""
-    projworkpath = ""
-  if datafmt:
-    rawdatapath = "/usr/local/RA_data/"+datafmt+"/"+obspath
-  else:
-    rawdatapath = ""
-  return projdatapath, projworkpath, rawdatapath
-
-def select_data_files(datapath, name_pattern="", load_hdf=False):
-  """
-  Provide the user with menu to select data files.
-  
-  Finding the right data store is complicated. As originally coded::
-  
-    * If the input files are ``.h5`` the ``load_hdf=True`` and the directory area is
-      RA_data/HDF5/.
-    * If the input files are .pkl (obsolete) then load_hdf=False and the
-      directory area is project_data/<project>/.
-      
-  Now we need to add the possibility of getting datafiles from RA_data/FITS/.
-  Now the location of the data are implicit in ``datapath``::
-  
-    * If datapath is ...RA_data/HDF5/... then the files could be .h5 (Ashish) or .hdf5 (Dean).
-    * If datapath is ...RA_data/FITS/... then the extent is .fits.
-    * If datapath is ...project_data... then the extent is .pkl
-  
-  @param datapath : path to top of the tree where the DSS subdirectories are
-  @type  datapath : str
-  
-  @param name_pattern : pattern for selecting file names, e.g. source
-  @type  name_pattern : str
-  
-  @param load_hdf : use RA_data/HDF5 directory if True
-  @type  load_hdf : bool
-  
-  @return: list of str
-  """
-  # Get the data files to be processed
-  logger.debug("select_data_files: looking in %s", datapath)
-  if name_pattern:
-    name,extent = os.path.splitext(name_pattern)
-    if extent.isalpha(): # a proper extent with no wildcards
-      # take name pattern as is
-      pass
-    else:
-      # only one * at front and back of pattern
-      name_pattern = "*"+name_pattern.rstrip('*')+"*"
-  else:
-    # no pattern specified.  All files.
-    name_pattern = "*"
-  logger.debug("select_data_files: for pattern %s", name_pattern)
-  if re.search('HDF5', datapath):
-    load_hdf = True
-  elif re.search('project_data', datapath):
-    load_hdf = False
-    datafiles = support.text.select_files(datapath+name_pattern+"[0-9].pkl")
-  elif re.search('FITS', datapath):
-    datafiles = support.text.select_files(datapath+name_pattern+".fits")
-  if load_hdf:
-    full = datapath+name_pattern+".h*5"
-  else:
-    full = datapath+name_pattern
-  logger.debug("select_data_files: from: %s", full)
-  datafiles = support.text.select_files(full)
-
-  logger.debug("select_data_files: found %s", datafiles)
-  if datafiles == []:
-    logger.error("select_data_files: None found. Is the data directory mounted?")
-    raise RuntimeError('No data files found.')  
-  if type(datafiles) == str:
-    datafiles = [datafiles]
-  logger.info("select_data_files: to be processed: %s", datafiles)
-  return datafiles
-
-def get_num_chans(linefreq, bandwidth, max_vel_width):
-  """
-  compute the base 2 number of output channels for the specified resolution
-  """
-  kmpspMHz = 300000./linefreq
-  BW_kmps = bandwidth*kmpspMHz
-  est_num_chan_out = BW_kmps/max_vel_width
-  logger.debug("get_num_chans: estimated num chans out = %d",
-               est_num_chan_out)
-  return 2**int(math.ceil(math.log(est_num_chan_out,2)))
-    
-def reduce_spectrum_channels(spectrum, refval, refpix, delta,
-                             num_chan=1024, axis=0):
-  """
-  Reduce the number of channels in the spectrum.
-  
-  The default option is to reduce the spectrum to a specified number of
-  channels with a default of 1024. The input spectrum is presumed to have
-  2**N channels so that num_chan/num_chan_in is an integer.
-  
-  If 'spectrum' is an N-D array, then the spectrum axis is given by 'axis'
-  which defaults to 0.
-  
-  'delta' is negative for lower sideband or reversed double sideband spectra.
-    
-  @param spectrum : spectrum values
-  @type  spectrum : list or nparray
-  
-  @param refval : X-axis value at the reference pixel of 'spectrum'
-  @type  refval : float
-  
-  @param refpix : reference pixel for 'spectrum'
-  @type  refpix : int
-  
-  @param delta : interval between pixels on the X-axis
-  @type  delta : float
-  
-  @param num_chan : optional number of channels to be returned (default: 2^10)
-  @type  num_chan : int
-  
-  @return: numpy.array
-  """
-  if math.log(num_chan,2) % 1:
-    raise RuntimeError("num_chan = %d is not a power of 2", num_chan)
-  if type(spectrum) == NP.ndarray:
-    num_chans_in = spectrum.shape[axis]
-  else:
-    num_chans_in = len(spectrum)
-  if math.log(num_chans_in,2) % 1:
-    raise RuntimeError("input spectrum length = %d is not a power of 2",
-                                                                  num_chans_in)
-  logger.debug("reduce_spectrum_channels: %d channels in", num_chans_in)
-  
-  num_chan_avg = num_chans_in/num_chan
-  newrefpix = refpix/num_chan_avg
-  logger.debug("reduce_spectrum_channels: refpix from %d to %d",
-               refpix, newrefpix)
-
-  newdelta = delta*num_chan_avg
-  logger.debug("reduce_spectrum_channels: delta from %.3f to %.3f",
-               delta, newdelta)
-  newrefval = refval + delta*(num_chan_avg/2 - 1)
-  logger.debug("reduce_spectrum_channels: refval from %.3f to %.3f",
-               refval, newrefval)
-  logger.debug("reduce_spectrum_channels: averaging %d channels", num_chan_avg)
-  
-  specout = NP.array([spectrum[index*num_chan_avg:(index+1)*num_chan_avg].mean()
-                                                 for index in range(num_chan)])
-  logger.debug("reduce_spectrum_channels: %d channels out", num_chan)
-  return specout, newrefval, newrefpix, newdelta
-
-def get_freq_array(bandwidth, n_chans):
-  """
-  Create an array of frequencies for the channels of a backend
-
-  @param bandwidth : bandwidth
-  @type  bandwidth : float
-
-  @param n_chans : number of channels
-  @type  n_chans : int
-
-  @return: frequency of each channel in same units as bandwidth
-  """
-  return NP.arange(n_chans)*float(bandwidth)/n_chans
-
-def freq_to_chan(frequency,bandwidth,n_chans):
-  """
-  Returns the channel number where a given frequency is to be found.
-
-  @param frequency : frequency of channel in sane units as bandwidth.
-  @type  frequency : float
-
-  @param bandwidth : upper limit of spectrometer passband
-  @type  bandwidth : float
-
-  @param n_chans : number of channels in the spectrometer
-  @type  n_chans : int
-
-  @return: channel number (int)
-  """
-  if frequency < 0:
-    frequency = bandwidth + frequency
-  if frequency > bandwidth:
-    raise RuntimeError("that frequency is too high.")
-  return round(float(frequency)/bandwidth*n_chans) % n_chans
-
-def get_smoothed_bandshape(spectrum, degree = None, poly_order=15):
-  """
-  Do a Gaussian smoothing of the spectrum and then fit a polynomial.
-  Optionally, the raw and smoothed data and the fitted polynomial can be
-  plotted.
-
-  Note
-  ====
-  ``numpy.polyfit(x, y, deg, rcond=None, full=False, w=None, cov=False)``
-  Least squares polynomial fit.
-  Fit a polynomial::
-  
-     p(x) = p[0] * x**deg + ... + p[deg]
-  
-  of degree deg to points (x, y).
-  Returns a vector of coefficients p that minimises the squared error.
-
-  @param spectrum : input data
-  @type  spectrum : list of float
-
-  @param degree : number of samples to smoothed (Gaussian FWHM)
-  @type  degree : int
-
-  @param poly_order : order of the polynomial
-  @type  poly_order : int
-
-  @param plot : plotting option
-  @type  plot : boolean
-
-  @return: (polynomial_coefficient, smoothed_spectrum)
-  """
-  if degree == None:
-    degree = len(spectrum)/100
-  # normalize the spectrum so max is 1 and convert to dB.
-  max_lev = NP.max(spectrum)
-  norm_spec = NP.array(spectrum)/float(max_lev)
-  norm_spec_db = 10*NP.log10(norm_spec)
-  # optionally plot normalized spectrum
-  if plot:
-    pylab.plot(norm_spec_db)
-  # do a Gaussian smoothing
-  norm_spec_db_smoothed = smoothListGaussian(norm_spec_db, degree=degree)
-  # deal with the edges by making them equal to the smoothed end points
-  norm_spec_db_smoothed_resized = NP.ones(len(spectrum))
-  # left end
-  norm_spec_db_smoothed_resized[0:degree] = norm_spec_db_smoothed[0]
-  # middle
-  norm_spec_db_smoothed_resized[degree:degree+len(norm_spec_db_smoothed)] = \
-      norm_spec_db_smoothed
-  # right end
-  norm_spec_db_smoothed_resized[degree+len(norm_spec_db_smoothed):] = \
-      norm_spec_db_smoothed[-1]
-  if plot:
-    pylab.plot(norm_spec_db_smoothed_resized)
-    poly = NP.polyfit(list(range(len(norm_spec_db_smoothed))),
-                         norm_spec_db_smoothed,poly_order)
-    pylab.plot(NP.polyval(poly, list(range(len(norm_spec_db_smoothed)))))
-    pylab.show()
-  return poly, norm_spec_db_smoothed_resized

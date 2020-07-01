@@ -62,8 +62,6 @@ import stat
 import sys
 import time
 
-# from matplotlib.mlab import griddata  NEED NEW GRIDDING 
-
 import Astronomy as A
 import Astronomy.Ephem as Aeph
 import Data_Reduction as DR
@@ -156,16 +154,16 @@ class Observation(DR.Observation):
     # get the data
     self.datafile = datafile
     if datafile:
-      data = self.open_datafile(self.sessionpath+datafile, delimiter=delimiter, 
-                                names=names, 
-                                skip_header=skip_header)
+      data = self.open_datafile(datafile, delimiter=delimiter, 
+                                     names=names, 
+                                     skip_header=skip_header)
       numdata = len(data)
       self.logger.debug("__init__: %d samples", numdata)
       names = data.dtype.names
       self.logger.info("__init__: column names = %s", names)
       metadata, signals = self.get_data_channels(data)
+      self.make_data_struct(data, metadata, signals) # this makes self.data
       self.make_channels(signals, props=props)
-      self.make_data_struct(data, metadata, signals)
     else:
       self.logger.warning("__init__: must call method 'open_datafile()' next")
 
@@ -173,8 +171,8 @@ class Observation(DR.Observation):
     """
     Returns IDs of channels which took data during this observation
     
-    This will be the names of the power columns. For now we'll allow one or
-    more of "XL", "XR", "KaL", "KaR", or "power"
+    This is intended to be Malargue-specific in that the allowed signal names
+    are predefined. 
     """
     allowed = ["XL", "XR", "KaL", "KaR", "power"]
     try:
@@ -195,15 +193,14 @@ class Map(Observation, DR.Map):
   """
   def __init__(self, parent=None, name=None, dss=84, date=None, 
                      project="SolarPatrol", datafile=None, source="Sun",
-                     step=None):
+                     step=None, props=None):
     """
     put Malargue-specific initialization here
     """
     logger.debug("Map.__init__: initializing...")
     Observation.__init__(self, parent=parent, name=name, dss=dss, date=date,
-                         project=project, datafile=datafile) # for now, step=step)
-    #DR.Map().__init__(self, parent=parent, name=name, dss=dss, date=date,
-    #                        project=project, source=source)  # for now, step=None)
+                         project=project, datafile=datafile, step=step,
+                         props=props)
     self.get_offsets(source="Venus")
     
 class BoresightScan(Observation):
