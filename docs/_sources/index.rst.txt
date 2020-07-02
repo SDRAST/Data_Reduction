@@ -11,10 +11,8 @@ For an overview of SDRAST and the current status please visit https://sdrast.git
 Note
 ====
 These packages are in a very preliminary state and need lots of work.  Some code
-is obsolete or buggy from not having been maintained a long time.  Some modules
-cannot be processed by `automodapi` right now.  Functions should not be imported
-from other modules; rather the modules should be imported and the extended function
-name used, *e.g.* `argmax()`.
+is obsolete or buggy from not having been used and therefore not maintained a 
+long time.
 
 .. automodapi:: Data_Reduction
 .. automodapi:: Data_Reduction.DSN

@@ -39,6 +39,7 @@ import numpy as NP
 import os
 import re
 import readline
+import scipy.interpolate
 import scipy.fftpack
 
 import Astronomy as A
@@ -147,10 +148,12 @@ class Observation(object):
               
   def __init__(self, parent=None, name=None, dss=None, date=None, project=None):
     """
-    Initialize the base Observation class.
+    Create a base Observation object.
     
-    This is not meant to be initialized by itself.  The subclass determines how
-    data are read in.
+    This is not meant to be initialized by itself.  A subclass generally
+    determines how data are read in.  However, method ``initialize()``
+    provides a basic data read capability using ``numpy.genfromtxt()``
+    and creates the object's data structure.
     
     Args:
       parent (Session):   session to which thos ibservation belongs
@@ -161,11 +164,7 @@ class Observation(object):
     """
     logger.debug("Observation.__init__: initializing...")
     self.session = parent
-    if name:
-      self.name = name
-    else:
-      self.name = "DSS"+str(dss)+"obs"
-    self.logger = logging.getLogger(logger.name+".Observation")
+    # observatory must be specified
     if dss:
       self.obs = AE.DSS(dss)
       self.longitude = self.obs.long
@@ -173,6 +172,19 @@ class Observation(object):
     else:
       self.logger.error("__init__: requires observatory location")
       raise Exception("Where were the data taken?")
+    # give the object a name
+    if name:
+      self.name = name
+    else:
+      self.name = "DSS"+str(dss)+"obs"
+    self.logger = logging.getLogger(logger.name+".Observation")
+    # the observation was part of some project
+    if project:
+      self.project = project
+    else:
+      self.logger.error("__init__: requires a project")
+      raise Exception("Where are the session's working files?")
+    # the observation was done on some date
     if date:
       y,d = date.split('/')
       self.year = int(y); self.DOY = int(d)
@@ -183,14 +195,39 @@ class Observation(object):
     else:
       self.logger.error("__init__: requires a date")
       raise Exception("When were the date taken?")
-    if project:
-      self.project = project
-    else:
-      self.logger.error("__init__: requires a project")
-      raise Exception("Where are the session's working files?")
     # accomodate subclass arguments
     self.aliases = {}
-      
+    self.logger.warning("__init__: initialize() must now be called")
+  
+  def initialize(self, filename, delimiter=" ", names=True, skip_header=0,
+                       source=None):
+    """
+    Get the data and make a data structure for the observations.
+    
+    This is not included by default in ``__init__()`` to keep it simple for
+    subclasses.
+    
+    Args:
+      filename (str):     name only, required; the path is provided
+      delimiter (str):    what separates the columns
+      names (bool):       the first line has column names
+      skip_header (int) : number of rows to skip
+    """
+    # get the data
+    data = self.open_datafile(filename, delimiter=delimiter, names=names,
+                              skip_header=skip_header)
+    # get the signal columns and names
+    metadata, signals = self.get_data_channels(data)
+    # create the data structure
+    self.make_data_struct(data, metadata, signals)
+    # compute the offsets from the source center for each data point
+    if source:
+      self.get_offsets(source=source)
+    else:
+      self.logger.warning("initialize: no source specified; no offsets")
+    # create Channel objects for the signal properties
+    self.make_channels(signals)
+    
   def open_datafile(self, filename, delimiter=" ", names=True, skip_header=0):
     """
     Opens and reads a data file
@@ -684,7 +721,7 @@ class GriddingMixin(object):
       self.logger.debug("regrid: %d values", len(values))
       xi, yi = NP.meshgrid(self.data['grid_x'], self.data['grid_y'])
       try:
-        self.data['grid_z'] = scipy.interpolate.griddata(points, values,
+        self.data['grid_z'][chnl] = scipy.interpolate.griddata(points, values,
                                                      (xi, yi), method='nearest')
       except ValueError as details:
         self.logger.error("regrid: gridding failed: %s", str(details))
@@ -698,9 +735,19 @@ class GriddingMixin(object):
 class Map(Observation, GriddingMixin):
   """
   Map class without special features for GAVRT and Malargue
+  
+  Most of the methods are mixed in to avoid conflicting with subclasses
   """
   def __init__(self, parent=None, name=None, dss=None, date=None, project=None):
     """
+    Create a Map object
+    
+    Args:
+      parent (Session): an observing session to which this belongs
+      name (str):       an identifier, like a scan number
+      dss (int):        station where the data were taken
+      date (str):       date of observation as "YEAR/DOY"
+      project (str):    project for which this observation was made
     """
     Observation.__init__(self, parent=parent, name=name, dss=dss, date=date,
                                project=project)

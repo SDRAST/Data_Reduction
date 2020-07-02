@@ -16,7 +16,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="SessionAnalyzer" href="Data_Reduction.SLATool.SessionAnalyzer.html" />
-    <link rel="prev" title="test" href="Data_Reduction.hyperfine_fit.test.html" /> 
+    <link rel="prev" title="show_body_orientation" href="Data_Reduction.maps.show_body_orientation.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -31,7 +31,7 @@
           <a href="Data_Reduction.SLATool.SessionAnalyzer.html" title="SessionAnalyzer"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.hyperfine_fit.test.html" title="test"
+          <a href="Data_Reduction.maps.show_body_orientation.html" title="show_body_orientation"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
@@ -39,8 +39,8 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="Data_Reduction.hyperfine_fit.test.html"
-                        title="previous chapter">test</a></p>
+  <p class="topless"><a href="Data_Reduction.maps.show_body_orientation.html"
+                        title="previous chapter">show_body_orientation</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="Data_Reduction.SLATool.SessionAnalyzer.html"
                         title="next chapter">SessionAnalyzer</a></p>
@@ -73,7 +73,7 @@
 <h1>MapPlotter<a class="headerlink" href="#mapplotter" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="Data_Reduction.plotting.MapPlotter">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.plotting.</code><code class="sig-name descname">MapPlotter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="n">raster_cfg_id</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.plotting.MapPlotter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.plotting.</code><code class="sig-name descname">MapPlotter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.plotting.MapPlotter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="Data_Reduction.Map.html#Data_Reduction.Map" title="Data_Reduction.Map"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.Map</span></code></a></p>
 <p class="rubric">Methods Summary</p>
 <table class="longtable docutils align-default">
@@ -82,13 +82,13 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.plotting.MapPlotter.contours" title="Data_Reduction.plotting.MapPlotter.contours"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contours</span></code></a>(channel[, width, height, contours])</p></td>
-<td><p>make contour maps; this calls ‘regrid’</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.plotting.MapPlotter.contours" title="Data_Reduction.plotting.MapPlotter.contours"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contours</span></code></a>(chnl[, width, height, contours])</p></td>
+<td><p>Make contour maps; this calls ‘regrid’ if necessary</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.plotting.MapPlotter.plot_azel" title="Data_Reduction.plotting.MapPlotter.plot_azel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_azel</span></code></a>([title_str])</p></td>
 <td><p>Plot elevation vs azimuth</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.plotting.MapPlotter.plot_ra_dec" title="Data_Reduction.plotting.MapPlotter.plot_ra_dec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_ra_dec</span></code></a>([title_str])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.plotting.MapPlotter.plot_ra_dec" title="Data_Reduction.plotting.MapPlotter.plot_ra_dec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_ra_dec</span></code></a>([J2000, title_str])</p></td>
 <td><p>Plot declination vs right ascension</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.plotting.MapPlotter.plot_xdec_dec" title="Data_Reduction.plotting.MapPlotter.plot_xdec_dec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_xdec_dec</span></code></a>([title_str])</p></td>
@@ -99,8 +99,18 @@
 <p class="rubric">Methods Documentation</p>
 <dl class="py method">
 <dt id="Data_Reduction.plotting.MapPlotter.contours">
-<code class="sig-name descname">contours</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">channel</span></em>, <em class="sig-param"><span class="n">width</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">contours</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.plotting.MapPlotter.contours" title="Permalink to this definition">¶</a></dt>
-<dd><p>make contour maps; this calls ‘regrid’</p>
+<code class="sig-name descname">contours</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">chnl</span></em>, <em class="sig-param"><span class="n">width</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">contours</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.plotting.MapPlotter.contours" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make contour maps; this calls ‘regrid’ if necessary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>chnl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – required signal channel name</p></li>
+<li><p><strong>width</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – optional, defaults to data cross-dec range</p></li>
+<li><p><strong>height</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – optional, defaults to data dec range</p></li>
+<li><p><strong>contours</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em> or </em><em>list of int</em>) – number of contours or contour levels</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -111,7 +121,7 @@
 
 <dl class="py method">
 <dt id="Data_Reduction.plotting.MapPlotter.plot_ra_dec">
-<code class="sig-name descname">plot_ra_dec</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">title_str</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.plotting.MapPlotter.plot_ra_dec" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plot_ra_dec</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">J2000</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">title_str</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.plotting.MapPlotter.plot_ra_dec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot declination vs right ascension</p>
 </dd></dl>
 
@@ -150,7 +160,7 @@ compute ‘RA’ and ‘dec’ and then ‘center_map’ can generate relative o
           <a href="Data_Reduction.SLATool.SessionAnalyzer.html" title="SessionAnalyzer"
              >next</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.hyperfine_fit.test.html" title="test"
+          <a href="Data_Reduction.maps.show_body_orientation.html" title="show_body_orientation"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>

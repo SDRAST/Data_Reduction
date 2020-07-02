@@ -150,10 +150,8 @@
 <div class="section" id="note">
 <h1>Note<a class="headerlink" href="#note" title="Permalink to this headline">¶</a></h1>
 <p>These packages are in a very preliminary state and need lots of work.  Some code
-is obsolete or buggy from not having been maintained a long time.  Some modules
-cannot be processed by <cite>automodapi</cite> right now.  Functions should not be imported
-from other modules; rather the modules should be imported and the extended function
-name used, <em>e.g.</em> <cite>argmax()</cite>.</p>
+is obsolete or buggy from not having been used and therefore not maintained a
+long time.</p>
 <div class="section" id="module-Data_Reduction">
 <span id="data-reduction-package"></span><h2>Data_Reduction Package<a class="headerlink" href="#module-Data_Reduction" title="Permalink to this headline">¶</a></h2>
 <p>Modules to support data reduction in Python.</p>
@@ -678,6 +676,7 @@ and calculating A_ul gives the wrong relative intensities.
 </div>
 <div class="section" id="module-Data_Reduction.plotting">
 <span id="data-reduction-plotting-module"></span><h2>Data_Reduction.plotting Module<a class="headerlink" href="#module-Data_Reduction.plotting" title="Permalink to this headline">¶</a></h2>
+<p>Provides subclasses with plotting capability for the base classes</p>
 <div class="section" id="id16">
 <h3>Classes<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
@@ -686,7 +685,7 @@ and calculating A_ul gives the wrong relative intensities.
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.plotting.MapPlotter.html#Data_Reduction.plotting.MapPlotter" title="Data_Reduction.plotting.MapPlotter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MapPlotter</span></code></a>(parent, raster_cfg_id[, name])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.plotting.MapPlotter.html#Data_Reduction.plotting.MapPlotter" title="Data_Reduction.plotting.MapPlotter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MapPlotter</span></code></a>([parent, name, dss, date, project])</p></td>
 <td><p></p></td>
 </tr>
 </tbody>
