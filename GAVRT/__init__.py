@@ -1,340 +1,758 @@
 # -*- coding: utf-8 -*-
 """
-Functions for reducing Solar Patrol data
+Classes for using MySQL tables
 
-A lot of modules under this need fixing up because of change from package 
-Observatory to MonitorControl and algorithmic to object-oriented programming.
+This module defines the classes BaseDB and MysqlException.  It can be used as
+is if you give it all the connection parameters.  It does not have defaults.
+It mainly serves as a super class for subclasses which are specific to certain
+servers, databases and users.
 """
-import datetime
-import glob
-import numpy
-import os.path
-# numpy has a function 'copy'.  Override it.
-import copy
-import matplotlib.dates
 import logging
-
-import Astronomy
-import support
-import Data_Reduction as DR
-import DatesTimes as DT
-#from Data_Reduction.GAVRT.solar import create_metadata_sheet
+import MySQLdb
+import numpy as np
+import os
+import pickle
 
 logger = logging.getLogger(__name__)
 
-class Observation(DR.Observation):
-  """
-  DSS-28 observations from before the ``tlog`` database table became available.
-  """
-  def __init__(self, name=None, dss=28, date=None, project='SolarPatrol'):
-    """
-    initialize observation from t-files
-  
-    @param date : required YYYY/DDD
-    @type  date : str
-  
-    @param dss : optional station number; default 28
-    @type  dss : int
-    
-    @param channel_names : optional subset of channels to be processed
-    @type  channel_names : list of str
-    """
-    self.logger = logging.getLogger(logger.name+".Observation")
-    DR.Observation.__init__(self, name=date, date=date, dss=dss, 
-                            project=project)
-    
-    #self.obs =Astronomy.Ephem.DSS(dss)
-    #y,d = date.split('/')
-    #self.year = int(y); self.DOY = int(d)
-    #projdatapath, self.sessionpath, rawdatapath = \
-    #                          DR.get_obs_dirs(project, dss, self.year, self.DOY,
-    #                                          datafmt=None)
-  
-  def extended_init(self, channels_names=None):
-    datapath = self.sessionpath+'t'+str(self.year)[-2:]+("%03d" % self.DOY)
-    if channel_names:
-      pass
-    else:
-      channel_names = self.get_channel_names(datapath)
-    channel_names.sort()
-    self.logger.debug("processing channels %s", channel_names)
-    # this has created Channel objects which we now want to treat as
-    # superclasses for the Channel class defined here
-    for key in list(self.channel.keys()):
-        del(self.channel[key])
-        self.channel[key] = self.Channel(self, key)
-    self.get_obs_times(datapath)
-    self.logger.info("loading data from files; this takes a while")
-    self.data = {'counts': {}}
-    for key in list(self.channel.keys()):
-        self.channeldata = self.channel[key].load_tfile_data(datapath, dss=dss,
-                                              start=self.start,  stop=self.end)
-        if 'unixtime' in self.data:
-          # then the basic data have read in from the first channel
-          pass
-        else:
-          self.data['unixtime'] = self.channeldata[0]['Epoch']
-          self.data['az'] = self.channeldata[0]['Az']
-          self.data['el'] = self.channeldata[0]['El']
-          self.data['diode'] = self.channeldata[0]['Diode']
-          self.data['integr'] = self.channeldata[0]['Int']
-        self.data['counts'][key] = self.channeldata[0]['Tsys']
-        # del(self.channeldata)  
- 
-    
-  def get_channel_names(self, datapath):
-    """
-    """
-    self.logger.debug("get_channel_names: for %s", datapath)
-    names = glob.glob(datapath+".*")
-    self.logger.debug("get_channel_names: from %s", names)
-    channel_names = []
-    for name in names:
-      channel_names.append("%02d" % int(os.path.splitext(name)[1][1:]))
-    return channel_names
-  
-  def get_obs_times(self, datapath):
-    """
-    returns: (datetime.datetime, datetime.datetime)
-    """
-    # first get start and stop times
-    starts = []; ends = []
-    for channel in list(self.channel.keys()):
-      filename = datapath+"."+str(int(channel))
-      self.logger.debug("get_channel times: from %s", filename)
-      fd = open(filename,'r')
-      lines = fd.readlines()
-      fd.close()
-      starts.append(float(lines[1].split()[3]))
-      ends.append(float(lines[-1].split()[3]))
-    start = DT.UnixTime_to_datetime(numpy.array(starts).max())
-    end   = DT.UnixTime_to_datetime(numpy.array(ends).min())
-    self.start = start.replace(tzinfo=datetime.timezone.utc)
-    self.end   = end.replace(tzinfo=datetime.timezone.utc)
 
-  class Channel(DR.Observation.Channel):
+reserved = ['ADD', 'ALL', 'ALTER', 'ANALYZE', 'AND', 'AS', 'ASC',
+            'ASENSITIVE', 'BEFORE', 'BETWEEN', 'BIGINT', 'BINARY',
+            'BLOB', 'BOTH', 'BY', 'CALL', 'CASCADE', 'CASE', 'CHANGE',
+            'CHAR', 'CHARACTER', 'CHECK', 'COLLATE', 'COLUMN',
+            'CONDITION', 'CONSTRAINT', 'CONTINUE', 'CONVERT', 'CREATE',
+            'CROSS', 'CURRENT_DATE', 'CURRENT_TIME', 'CURRENT_TIMESTAMP',
+            'CURRENT_USER', 'CURSOR', 'DATABASE', 'DATABASES', 'DAY_HOUR',
+            'DAY_MICROSECOND', 'DAY_MINUTE', 'DAY_SECOND', 'DEC',
+            'DECIMAL', 'DECLARE', 'DEFAULT', 'DELAYED', 'DELETE', 'DESC',
+            'DESCRIBE', 'DETERMINISTIC', 'DISTINCT','DISTINCTROW', 'DIV',
+            'DOUBLE', 'DROP', 'DUAL', 'EACH', 'ELSE', 'ELSEIF', 'ENCLOSED',
+            'ESCAPED', 'EXISTS', 'EXIT', 'EXPLAIN', 'FALSE', 'FETCH',
+            'FLOAT', 'FLOAT4', 'FLOAT8', 'FOR', 'FORCE', 'FOREIGN',
+            'FROM', 'FULLTEXT', 'GRANT', 'GROUP', 'HAVING', 'HIGH_PRIORITY',
+            'HOUR_MICROSECOND', 'HOUR_MINUTE', 'HOUR_SECOND', 'IF',
+            'IGNORE', 'IN', 'INDEX', 'INFILE', 'INNER', 'INOUT',
+            'INSENSITIVE', 'INSERT', 'INT', 'INT1', 'INT2', 'INT3', 'INT4',
+            'INT8', 'INTEGER', 'INTERVAL', 'INTO', 'IS', 'ITERATE', 'JOIN',
+            'KEY', 'KEYS', 'KILL', 'LEADING', 'LEAVE', 'LEFT', 'LIKE',
+            'LIMIT', 'LINES', 'LOAD', 'LOCALTIME', 'LOCALTIMESTAMP',
+            'LOCK', 'LONG', 'LONGBLOB', 'LONGTEXT', 'LOOP', 'LOW_PRIORITY',
+            'MATCH', 'MEDIUMBLOB', 'MEDIUMINT', 'MEDIUMTEXT', 'MIDDLEINT',
+            'MINUTE_MICROSECOND', 'MINUTE_SECOND', 'MOD', 'MODIFIES',
+            'NATURAL', 'NOT', 'NO_WRITE_TO_BINLOG', 'NULL', 'NUMERIC', 'ON',
+            'OPTIMIZE', 'OPTION', 'OPTIONALLY', 'OR', 'ORDER', 'OUT',
+            'OUTER', 'OUTFILE', 'PRECISION', 'PRIMARY', 'PROCEDURE',
+            'PURGE', 'READ', 'READS', 'REAL', 'REFERENCES', 'REGEXP',
+            'RELEASE', 'RENAME', 'REPEAT', 'REPLACE', 'REQUIRE', 'RESTRICT',
+            'RETURN', 'REVOKE', 'RIGHT', 'RLIKE', 'SCHEMA', 'SCHEMAS',
+            'SECOND_MICROSECOND', 'SELECT', 'SENSITIVE', 'SEPARATOR',
+            'SET', 'SHOW', 'SMALLINT', 'SONAME', 'SPATIAL', 'SPECIFIC',
+            'SQL', 'SQLEXCEPTION', 'SQLSTATE', 'SQLWARNING',
+            'SQL_BIG_RESULT', 'SQL_CALC_FOUND_ROWS', 'SQL_SMALL_RESULT',
+            'SSL', 'STARTING', 'STRAIGHT_JOIN', 'TABLE', 'TERMINATED',
+            'THEN', 'TINYBLOB', 'TINYINT', 'TINYTEXT', 'TO', 'TRAILING',
+            'TRIGGER', 'TRUE', 'UNDO', 'UNION', 'UNIQUE', 'UNLOCK',
+            'UNSIGNED', 'UPDATE', 'USAGE', 'USE', 'USING', 'UTC_DATE',
+            'UTC_TIME', 'UTC_TIMESTAMP', 'VALUES', 'VARBINARY', 'VARCHAR',
+            'VARCHARACTER', 'VARYING', 'WHEN', 'WHERE', 'WHILE', 'WITH',
+            'WRITE', 'XOR', 'YEAR_MONTH', 'ZEROFILL']
+
+############################## Classes #############################
+
+class MysqlException(Exception):
+  """
+  Handles exceptions in local module Mysql
+  """
+  def __init__(self,message,*args):
+    self.message = message
+    self.args = args
+  def __str__(self):
+    return (self.message % self.args)
+
+class BaseDB():
+  """
+  This is a database superclass.
+  
+  Public attributes::
+    db -   the database connection object
+    c  -   the database cursor
+    host - database host
+    port - port used to connect to the database
+    pw -   user's password
+    user - authorized db user
+  Methods::
+    connect - returns a connection to a database.
+    check_db - reconnects to the database if a connection has been lost
+    cursor   - 
+  """
+  def __init__(self, host=None, user=None , pw=None, name=None, port=3306):
     """
-    A GAVRT DSS-28 receiver channel if the signal for one freq, pol, and IFtype
+    Initializes a BaseDB instance by connecting to the database
+    
+    This defaults to the GAVRT DSS-28 EAC database on 'kracken'.  However, use
+    of sub-class DSS28db is recommended to avoid writing acciden
+    
+    @param host : the IP address as a string, or fully qualified host name
+    @type  host : str
+    
+    @param user : a valid user on the mysql server at host
+    
+    @param pw : user's password or "" if not required
+    
+    @param db : database name (string)
+    
+    Generates a cursor object BaseDB.c.
     """
-    def __init__(self, parent, name, freq=None, bw=None, pol=None):
-      """
-      """
-      DR.Observation.Channel.__init__(self, parent, name,
-                                      freq=freq, bw=bw, pol=pol)
+    self.logger = logging.getLogger(logger.name+".BaseDB")
+    if name and host and user and pw:
+      self.name= name
+      self.host = host
+      self.port = port
+      self.user = user
+      self.pw = pw
+      self.connect()
+    else:
+      self.logger.error("__init__: host, user, pw and DB name required")
+      raise MysqlException("Missing arguments host=%s, user=%s, name=%s or missing pw?",
+                           host, user, name)
+
+  def connect(self):
+    """
+    Make a connection to the database. Creates a cursor object.
+    
+    Automatically invoked when an instance is created; can be called
+    again if the connection is closed but the database object persists.
+    """
+    self.db = MySQLdb.connect(host = self.host,
+                              port=self.port,
+                              user=self.user,
+                              passwd=self.pw,
+                              db=self.name,
+                              compress=True)
+    self.c = self.db.cursor()
+
+  def close(self):
+    """
+    Close a connection
+    """
+    self.c.close()
+    
+  def checkDB(self):
+    """
+    Reconnects to the database if the connection has been lost.
+    """
+    try:
+      self.db.commit()
+    except:
+      self.connect()
+    self.db.commit()
+
+  def cursor(self):
+    """
+    Creates a database cursor object; same as BaseDB.c but this
+    is better because it handles disconnected a database
+    """
+    self.checkDB()
+    return self.db.cursor()
+
+  def send_query(self,query):
+    """
+    Send a MySQL query
+
+    @param crsr : cursor object for a database
+
+    @param query : MySQL query
+    @type  query : str
+
+    @return: str with query response
+    """
+    query += ";"
+    self.c.execute(query)
+    response = self.c.fetchall()
+    return response
+
+  def commit(self):
+    """
+    Commits the most recent database transaction
+    """
+    return self.db.commit()
         
-    def load_tfile_data(self, path, start=None, stop=None, dss=28):
-      """
-      Load data from a GAVRT t-file
+  def insertRecord(self, table, rec):
+    """
+    Inserts a record into the database; handles a disconnected database
 
-      @param filename : name of data file (t.YYDDD.C)
-      @type  filename : str
+    @param table : table name
+    @type  table : str
 
-      @param start : optional start time, default: beginning of file
-      @type  start : datetime
+    @param rec : a dictionary with column names as keys.
 
-      @param stop : optional stop time, default: end of file
-      @type  stop : datetime
+    @return: record ID (int)
+    """
+    self.checkDB()
+    return insert_record(self.db, table, rec)
 
-      @return: (indexed numpy data array,
-                column labels for data array,
-                list of date numbers, one for each row,
-                list of right ascensions (hrs), one for each row,
-                list of declinations (degs),
-                list of Tsys counts (kHz))
-      """
-      filename = path+"."+str(int(self.name))
-      datafile = open(filename,"r")
-      labels = datafile.readline().strip().split()
-      logger.debug("load_tfile_data: labels: %s", labels)
-      datafile.close()
-      labels.insert(0,'DOY')
-      labels.insert(0,'Year')
-      logger.debug("load_tfile_data: new labels: %s", labels)
+  def getLastId(self,table):
+    """
+    ID of the last record
     
-      # colums are: Year DOY UTC Epoch Chan Tsys Int Az El Diode Level CryoTemp
-      #              i4   i4  S8   f8    S2  f4   f4 f4 f4   i4    f4    f4
-      data = numpy.loadtxt(filename,skiprows=1,
-                     dtype = {'names': tuple(labels),
-                              'formats': ('i4','i4','S8','f8',
-                                     'S2','f4','f4','f4','f4','i4','f4', 'f4')})
-      date_nums = []
-      ras = []
-      decs = []
-      azs = []
-      elevs = []
-      tsys = []
-      for index in range(len(data)):
-        time = data[index]['Epoch']
-        dt = datetime.datetime.utcfromtimestamp(time).replace(
-                                                   tzinfo=datetime.timezone.utc)
-        if ((start and stop) and (start <= dt and dt <= stop)) \
-            or start == None or stop == None:
-          time_tuple = (dt.year,
-                        DT.day_of_year(dt.year,dt.month,dt.day)
-                        + (  dt.hour
-                           + dt.minute/60.
-                           + dt.second/3600.
-                           + dt.microsecond/3600./1e6)/24.)
-          azimuth = data[index]['Az']
-          elevation = data[index]['El']
-          ra,dec = Astronomy.AzEl_to_RaDec(azimuth,
-                                           elevation,
-                                           self.parent.latitude,
-                                           self.parent.longitude,
-                                           time_tuple)
-          date_nums.append(matplotlib.dates.date2num(dt))
-          ras.append(ra)
-          decs.append(dec)
-          azs.append(float(azimuth))     # because openpyxl doesn't like
-          elevs.append(float(elevation)) # <type 'numpy.float32'>
-          tsys.append(data[index]['Tsys'])
-      return data, labels, date_nums, ras, decs, azs, elevs, tsys
-   
-def zenith_gain(freq):
-  """
-  Antenna response vs frequency for DSS-28
+    @param table : the name of the table
+    @type  table : str
 
-  @param freq : frequency in MHz
-  @type  freq : float
+    @return: ID (int)
+    """
+    self.checkDB()
+    return get_last_id(self.db,table)
+  
+  def getLastRecord(self,table):
+    """
+    Returns the last record as a dictionary
+    
+    @param table : name of the table (string)
 
-  @return: float
-  """
-  parfile = open(project_path
-                 + "DSS-28_technical/efficiency_vs_freq_pars.pkl","r")
-  pars = cPickle.load(parfile)
-  parfile.close()
-  effic = {}
-  avg_effic = 0
-  for key in list(pars.keys()):
-    effic[key] = pars[key](freq)/100.
-    avg_effic += effic[key]
-  # right now I don't know what Pol A and Pol B are
-  avg_effic /= len(list(pars.keys()))
-  return avg_effic
+    @return: dict
+    """
+    self.checkDB()
+    self.c.execute("SELECT * FROM " + table + " ORDER BY ID DESC LIMIT 1;")
+    res = self.c.fetchone()
+    # This returns the column names
+    descr = [x[0] for x in self.c.description]
+    # This returns the row as a dictionary
+    return dict(list(zip(descr,res)))
+  
+  def getRecordById(self,table,rec_id):
+    """
+    Get the record with the given ID
+    
+    @param table : table name
+    @type  table : str
+    
+    @param id : row ID
+    @type  id : int
 
-def DSS28_beamwidth(freq):
-  """
-  Estimate DSS-28 beamwidth until we have something better.
-
-  Consistent with {14: 0.045, 8.45: 0.064, 6: 0.0873, 3.1: 0.1725}
-  @param freq : GHz
-  @type  freq : float
-
-  @return: beamwidth in deg (float)
-  """
-  return 0.54/freq
-
-def get_session_t_files(project_path, date_info):
-  """
-  """
-  session_path = project_path+"Observations/dss28/%4d/%03d/" % (date_info[1],date_info[4])
-  logger.debug("get_session_t_files: session path is %s", session_path)
-  wb_name = "%4d-%03d.xlsx" % (date_info[1],date_info[4])
-  logger.debug("get_session_t_files: workbook name is %s", wb_name)
-  wb_file = session_path+"/"+wb_name
-  logger.debug("get_session_t_files: filename is %s", wb_file)
-  f1 = glob.glob(session_path+"/t12*.?") # for chans 2, 4, 6, 8
-  f1.sort()
-  f2 = glob.glob(session_path+"/t12*.??") # for chans 10, 12, 14, 16
-  f2.sort()
-  files = f1+f2
-  logger.debug("get_session_t_files: found files %s", files)
-  return files
-
-def extract_data(datatype, wb, start, stop, meta_column, files):
-  """
-  Extract map from the data files and create/fill a metadata worksheet
-
-  First the first t-file is loaded to get the start and stop time.  These are
-  used to create the meta-data sheet name.  If the sheet exists it is loaded,
-  else it is created.  Creation begins with the copying the session meta-data
-  sheet.  The 'create_metadata_sheet' adds additional empty columns.  Then for
-  each row the appropriate t-file is read and the meta-data are obtained.
-
-  @param wb : observation spreadsheet
-  @type  wb : workbook instance
-
-  @param start : datetime of first data point
-  @type  start : mpl datenum
-
-  @param stop : datetime of last data point
-  @type  stop : mpl datenum
-
-  @return: metadata worksheet instance
-  """
-  # Get metadata from first data file
-  data, labels, date_nums, ras, decs, azs, elevs, tsys = \
-    load_tfile_data(files[0])
-  # get the index for the start time and the end time
-  start_hr  = num2date(start).hour
-  start_min = num2date(start).minute
-  stop_hr   = num2date(stop).hour
-  stop_min  = num2date(stop).minute
-  startstr = "%02d%02d" % (start_hr,start_min)
-  stopstr  = "%02d%02d" % (stop_hr, stop_min)
-  if datatype == None:
-    sheetname = "Other-"
-  elif datatype.lower() == 'map':
-    sheetname = "Map-"
-  elif datatype.lower() == 'time-series':
-    sheetname = "Plot-"
-  elif datatype == 'boresight':
-    sheetname = "Bore-"
-  sheetname += startstr+"-"+stopstr
-  logger.debug("Looking for sheet %s", sheetname)
-  metadata_sheet = wb.get_sheet_by_name(sheetname)
-  if metadata_sheet == None:
-    # Doesn't exist, make it.
-    logger.debug("Attempting to create worksheet %s", sheetname)
+    @return: dict
+    """
+    self.checkDB()
+    self.c.execute("SELECT * FROM " + table + " WHERE ID = %s;",(rec_id,))
+    res = self.c.fetchone()
+    descr = [x[0] for x in self.c.description]
+    return dict(list(zip(descr,res)))
+    
+  def get(self,*args):
+    """
+    Executes a query of the database
+    
+    @param args : query to be executed
+    
+    @return: record (dict)
+    """
+    self.checkDB()
+    self.c.execute(*args)
+    result = np.array(self.c.fetchall())
+    return result
+    
+  def get_as_dict(self, *args, **kwargs):
+    """
+    Executes a query of the database and returns the result as a dict
+  
+    At present, only keyword {'asfloat': True} is recognized and is the default
+    if not given.  It will convert to float any values for which it is possible.
+  
+    If the query returns multiple rows, each value associated with a keyword will
+    be a list. If nothing was found, an empty dictionary is returned.
+    
+    @param db : database connection object
+    
+    @param args: query to be executed
+    
+    @param kwargs : a dictionary with keyword arguments.
+    
+    @eturn: the record as a dictionary.
+    """
     try:
-      metasheet = wb.get_sheet_by_name('Metadata')
-    except Exception as details:
-      logger.error("Could not get spreadsheet metadata", exc_info=True)
-      return None
-    try:
-      wb.add_sheet(copy.deepcopy(metasheet))
-    except Exception as details:
-      logger.error("Could not copy metadata sheet", exc_info=True)
-      return None
+      asfloat = kwargs['asfloat']
+    except:
+      asfloat = True
+    res = self.get(*args)
+    # an empty result will have a shape of (1,)
+    if len(res.shape) > 1:
+      descr = [x[0] for x in self.c.description]
+      if asfloat:
+        rd = {}
+        for x in range(res.shape[1]):
+          try:
+            r = res[:,x].astype('float')
+          except:
+            r = res[:,x]
+          rd[descr[x]] = r
+      else:
+        rd = dict([(descr[x],res[:,x]) for x in range(res.shape[1])])
     else:
-      logger.debug("New sheets: %s", str(wb.get_sheet_names()))
-      metadata_sheet = wb.get_sheet_by_name('Metadata')
-      logger.debug("Active sheet: %s", metadata_sheet.title)
-      metadata_sheet.title = sheetname
-      logger.debug("Active sheet was renamed to %s", metadata_sheet.title)
+      rd = {}
+    return rd
+        
+  def updateValues(self, vald, table):
+    """
+    Add row with updated values
+    
+    Add a new row to table with same values as previous row,
+    except for keys in vald, which are updated with provided
+    values.  This is useful for keeping logs.
 
-    #logger.debug("Creating worksheet %s named %s",
-    #               metadata_sheet,sheetname)
-    #metadata_sheet = create_metadata_sheet(metadata_sheet,sheetname)
+    @param vald : updated values
+    @type  vald : dict
+
+    @param table : table name
+    @type  table : str
+    """
+    lastrec = self.getLastRecord(table)
+    lastrec.update(vald)
+    self.insertRecord(table, lastrec)
+
+  def get_public_tables(self):
+    """
+    List the table names in the database.
+
+    @return: tuple of tuples of str
+    """
+    try:
+      self.c.execute("""SHOW TABLES;""")
+      result = self.c.fetchall()
+    except MySQLdb.Error as e:
+      self.logger.error(
+                  "get_public_tables: MySQLdb error: Cannot connect to server")
+      self.logger.error("get_public_tables: error code:",e.args[0])
+      self.logger.error("get_public_tables: error message:",e.args[1])
+      result = None
+    return result
+
+  def get_columns(self, table):
+    """
+    Returns information about the columns of a table
+    """
+    self.c.execute("show columns from "+table+";")
+    return self.c.fetchall()
+  
+  def get_data_index(self):
+    """
+    """
+    tables = self.get_public_tables()
+    tableindex = {}
+    for table in tables:
+      tb = table[0]
+      tableindex[tb] = self.get_columns(tb)
+    return tableindex
+      
+    
+  def report_table(self,table,columns):
+    """
+    Reports on the columns in a table
+    
+    Response has keys: Extra, Default, Field, Key, Null, Type
+
+    @param table : table name
+    @type  table : str
+
+    @param columns : list of column names
+    @type  columns : list of str
+
+    @return: result of query
+    """
+    self.logger.info("report_table: showing name and type of columns for %s",
+                     table)
+    response = self.get("show columns from "+table+";")
+    self.logger.debug("report_table: response: %s", response)
+    report = []
+    for row in response:
+      name = row[0]
+      for column in columns:
+        if name == column:
+          report.append(row)
+    return report
+
+  def get_rows_by_date(self, table, columns, year, doy):
+    """
+    Gets data from a table
+
+    @param table : table name
+    @type  table : str
+
+    @param columns : list of columns to be selected
+    @type  columns : list of str
+
+    @type year : int
+
+    @param doy : day of year
+    @type  doy : int
+
+    @return: dict of numpy arrays keyed on column name
+    """
+    columnstr = str(columns).lstrip('[').rstrip(']').replace("'","")
+    try:
+      response = self.get_as_dict("select " + columnstr
+                        + " from "+table+" where year=%s and doy=%s",
+                        (year,doy))
+    except Mysql.MySQLdb.OperationalError as details:
+      print("MySQLdb OperationalError:",details)
+    else:
+      return response
+
+  def get_rows_by_time(self,table,columns,year,doy,utcs):
+    """
+    Queries a table for quantities in columns at designated times
+
+    This loops over a list of UTs.  For each, it takes the first row it finds 
+    matching the date and time.  So it has an effective resolution of one second.
+
+    @param table : table name
+    @type  table : str
+
+    @param columns : list of columns to be selected
+    @type  columns : list of str
+
+    @type year : int
+
+    @param doy : day of year
+    @type  doy : int
+
+    @param utcs : times to be selected; first occurrence is used
+    @type  utcs : list of unixtimes (seconds since the epoch)
+
+    @return: dict of numpy arrays keyed on column name
+    """
+    data = {}
+    for col in columns:
+      data[col] = []
+    columnstr = str(columns).lstrip('[').rstrip(']').replace("'","")
+    for utc in utcs:
+      fmt = "select "+columnstr+" from "+table+" where year=%s and doy=%s and utc=%s;"
+      result = self.get_as_dict(fmt,(year,doy,utc))
+      for col in columns:
+        data[col].append(result[col][0])
+    for col in columns:
+      data[col] = np.array(data[col])
+    return data
+
+############################ Global Functions ##########################
+
+def get_databases(host, user, pw):
+  """
+  Command line function to recall the database names on a host
+
+  @param host : host.domain or IP address
+  @type  host : str
+
+  @param user : user login name
+  @type  user : str
+
+  @param pw : password
+  @type  pw : str
+
+  @return: nested tuple of tuples of str
+  """
+  conn = open_db("",host, user, pw)
+  response = ask_db(conn,"""SHOW DATABASES;""")
+  conn.close()
+  return response
+
+def show_databases(host, user, passwd):
+  """
+  Prints report on all the databases
+
+  @param host : host name
+  @type  host : str
+
+  @param user : user name
+  @type  user : str
+
+  @param passwd : user's password
+  @type  passwd : str
+
+  @return: printed report all the tables in each database.
+  """
+  dbs = get_databases(host, user, passwd)
+  print(("Databases on %s" % host))
+  for db in dbs:
+    print("  ",db[0])
+  for line in dbs:
+    if line[0] != 'information_schema' and line[0] != 'mysql' and \
+      not re.search('wiki',line[0]):
+      print("Tables in",line[0])
+      db = open_db(line[0],host,user,passwd)
+      tbs = get_public_tables(db)
+      logging.debug(str(tbs))
+      for tb in tbs:
+        try:
+          reserved_index = reserved.index(tb[0].upper())
+          query = "SELECT COUNT(*) FROM `"+tb[0]+"`;"
+        except ValueError as details:
+          query = "SELECT COUNT(*) FROM "+tb[0]+";"
+        result = ask_db(db,query)
+        print("  ",tb[0],"has",result[0][0],"rows")
+      db.close()
+  logging.info("Disconnected from server on %s",host)
+
+def check_database(host, user, passwd, database):
+  """
+  Does the database exist on the host?
+
+  @param db : database to be opened
+  @type  db : str
+
+  @param host : name or IP address of database host
+  @type  host : str
+
+  @param user : an authorized database user
+  @type  user : str
+
+  @param passwd : user's password
+  @type  passwd : str
+
+  @return: True or False
+  """
+  logging.info("check_database: getting databases")
+  dbs = get_databases(host, user, passwd)
+  exists = False
+  for line in dbs:
+    if line[0] == database:
+      exists = True
+      break
+  logging.warning("check_database: Does %s ? %s",database,str(exists))
+  return exists
+
+def report_insert_error(error, msg):
+  """
+  Returns text string with cause of the insert error
+  """
+  if error == -3:
+    return "Lock timeout exceeded"
+  elif error == -2:
+    return "Duplicate entry:"+msg
+  elif error == -1:
+    return "method 'report_insert' error:"+msg
   else:
-    logger.debug("%s already exists",metadata_sheet.title)
-  for filename in files:
-    bname = os.path.basename(filename)
-    # find the row for this file or create it
-    row = support.excel.get_row_number(metadata_sheet,meta_column['File'],bname)
-    logger.debug("%s meta data will go into row %s", bname,row)
-    if row == None:
-      row = metadata_sheet.get_highest_row()
-      logger.debug("%s meta data are not yet in %s", bname,sheetname)
-      logger.debug("%s meta data will now go into row %d",bname,row)
-    # get data for this file
-    data, labels, date_nums, ras, decs, azs, elevs, tsys = \
-          load_tfile_data(filename)
-    start_index = support.nearest_index(date_nums,start)
-    stop_index = support.nearest_index(date_nums,stop)
-    if start_index == -1 or stop_index == -1:
-      wb.remove_sheet(metadata_sheet)
+    return "Unknown error:"+error+"; "+msg
+  
+def create_GAVRT_mysql_auth(host=None, user=None, pw=None):
+  """
+  Create a fairly private authentication file for GAVRT mysql db
+
+  The file goes into your home directory.  It will authenticate you
+  automatically.
+
+  @param host : database platform
+  @type  host : str
+
+  @param user : authorized user
+  @type  user : str
+
+  @param pw : password
+  @type  pw : str
+
+  @return: True if successful
+  """
+  homepath = os.environ['HOME']
+  host,user,pw = _validate_login(host, user, pw)
+  if host and user and pw:
+    GAVRTdb_login = (host,user,pw)
+    fd = open(os.environ['HOME']+"/.GAVRTlogin.p", "wb")
+    pickle.dump(GAVRTdb_login, fd)
+    os.fchmod(fd, int(stat.S_IREAD | stat.S_IWRITE))
+    fd.close()
+    return True
+  else:
+    logger("create_GAVRT_mysql_auth: failed")
+    return False
+
+def _validate_login(host=None, user=None, pw=None):
+  """
+  """
+  if host == None:
+    host = _host # "kraken.gavrt.org"
+  if user == None:
+    user = _user # "ops"
+  if pw == None:
+    pw = _pw     # 'v3H!cle'
+  return host, user, pw
+
+############### not yet converted to BaseDB methods
+
+def check_table(db_conn, table): ## convert to BaseDB method
+  """
+  Checks whether a table  exists.
+
+  @param db_conn : database
+  @type  db_conn : connection object
+
+  @param table : table name
+  @type  table : str
+
+  @return: True or False
+  """
+  q = ask_db(db_conn,"SHOW TABLES LIKE '"+table+"';")
+  if len(q) == 1:
+    return True
+  elif len(q) == 0:
+    return False
+  else:
+    print("check_table: did not understand response")
+    print(q)
+    return False
+    
+def update_record(db, table, fields, condition): # not allowed in DSS28db
+  """
+  Updates a record in 'table' of data base 'db'
+  
+  @param db : database connection object returned from a MySQLdb connect()
+  
+  @param table : name of the table in which the record will be updated
+  
+  @param fields : dictionary with column names and the values to be updated
+  
+  @param condition :  for the condition which selects the record(s)
+  @type  condition : (column name, value tuple)
+  
+  @return: unique ID of the record, message which is blank if successful.
+  """
+  keystr = ''
+  valstr = ''
+  values = []
+  try:
+    del fields['ID']
+  except:
+    pass
+  query = "UPDATE "+ table + " SET "
+  for k,v in list(fields.items()):
+    query += k + " = " + "%s" +", "
+    values.append(v)
+  query = query[:-2]    #strip final ,
+  query += " WHERE " + condition[0] + " = " + str(condition[1]) + ";"
+  try:
+    c = db.cursor()
+  except Exception as details:
+    logging.error("Could not get cursor")
+    return (-1,details)
+  try:
+    c.executemany(query,[tuple(values)])
+    # This should return ()
+    result = c.fetchall()
+  except Exception as details:
+    logging.error("insert_record: could not execute: "+query,tuple(values))
+    result = (-2,details)
+  logging.debug("update_record: "+result)
+  c.close()
+  db.commit()
+  return result
+  
+def create_table(database,name,keys):
+  """
+  Creates a table with the specified column names and types.
+  
+  Here's an example::
+    name = "customers"
+    keys = {'name':    'CHAR(20 NOT NULL'),
+            'job':     'VARCHAR(20)',
+            'sex':     "ENUM('M','F')",
+            'hobbies': "SET('chess','sailing','reading','knitting')",
+            'birth':   'DATE',
+            'balance': 'FLOAT'}
+    create_table(someDatabase,name,keys)
+    
+  When a column name conflicts with a MySQL reserved word, the name is
+  put in backward quotes.  This keeps the column name possibilities from
+  being too restricted, e.g., `dec`.
+
+  This exists from a time prior to when I started using 'tedia2sql'
+  to create tables and may still be useful in simple situations.
+  
+  @param database : the database for the new table
+  @param name :     the table name
+  @param keys :     a dictionary with the column names and formats.
+  """
+  tbname = name
+  key_types = keys
+  # get a cursor
+  cursor = database.cursor()
+  # assemble the CREATE string
+  create_string = 'CREATE TABLE '+tbname+' ('
+  for key in list(key_types.keys()):
+    try:
+      colname = sql.reserved(key)
+    except:
+      colname = '`'+key+'`'
+    create_string = create_string + ' '+colname+' '+key_types[key]+','
+  create_string = create_string.rstrip(',') + ');'
+  if diag:
+    print("create_table:",create_string)
+  try:
+    cursor.execute(create_string)
+    return tbname
+  except Exception as detail:
+    print("create_table: execution failed")
+    print(detail)
+    return None
+  
+def make_table(database,table_data):
+  """
+  Adds or populates a table in the specified database from a dictionary.
+
+  Makes a table from the dictionary 'table_data' with the keys::  
+    name - the name of the table, a simple string with no spaces
+    keys - a dictionary whose keys are the (lower-case) keys for the table
+           and whose values are the corresponding data types.
+    data - a list of dictionaries.  Each dictionary corresponds to
+           a row in the table. The keys correspond to the keys defined in
+           'keys'.
+           
+  This is useful when the table is created once and for all, or
+  completely replaced. Here's a small example::
+    {name: "customers",
+     keys: {'name':    'CHAR(20 NOT NULL'),
+            'job':     'VARCHAR(20)',
+            'sex':     "ENUM('M','F')",
+            'hobbies': "SET('chess','sailing','reading','knitting')",
+            'birth':   'DATE',
+            'balance': 'FLOAT'},
+    data: [{name: "Sam", job: "carpenter", birth: 1950-07-21, balance: 5.25},
+           {job: "nurse", name: "Sally", balance: 8.50, birth: 1960-3-15}]
+  """
+  tbname = table_data['name']
+  key_types = table_data['keys']
+  data = table_data['data']
+  if not sql.check_table(database,tbname):
+    if create_table(database,tbname,keys) == None:
       return None
-    else:
-      metadata_sheet.cell(row=row,
-                        column=meta_column['File']).value = bname
-      metadata_sheet.cell(row=row,
-                        column=meta_column["First"]).value = start_index
-      metadata_sheet.cell(row=row,
-                        column=meta_column["Last"] ).value = stop_index
-      metadata_sheet.cell(row=row,
-                        column=meta_column['Start']).value = num2date(start)
-      metadata_sheet.cell(row=row,
-                        column=meta_column['Stop'] ).value = num2date(stop)
-  set_column_dimensions(metadata_sheet)
-  return metadata_sheet
+  else:
+    if diag:
+      print("make_table:",tbname,"exists")
+    # get a cursor
+    cursor = database.cursor()
+  # Insert the data
+  for datum in data:
+    try:
+      sql.insert_record(database,tbname,datum)
+    except Exception as detail:
+      # row exists
+      print("make_table: Error for",datum)
+      print(detail)
+      errtype, value, traceback = sys.exc_info()
+      sys.excepthook(errtype,value,traceback)
+  return tbname
+
+def get_table_columns(db_conn,table):
+  """
+  Returns information about the columns in a table.
+  Inputs::
+    db_conn (connection object)
+    table   (string)
+  Outputs::
+    a sequence of sequences with column information.  Each column sequence
+    consisting of:
+      column name       (string)
+      column type       (string) such as 'tinyint(3) unsigned' or 'float'
+      contains nulls    (string) 'YES' or 'NO'
+      key               (string) is the column indexed?
+      default value              e.g. 'None'
+      extra information (string)
+  """
+  q = sql.ask_db(db_conn,"SHOW COLUMNS FROM "+table+";")
+  return q
