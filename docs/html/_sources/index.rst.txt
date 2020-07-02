@@ -14,16 +14,25 @@ These packages are in a very preliminary state and need lots of work.  Some code
 is obsolete or buggy from not having been used and therefore not maintained a 
 long time.
 
+Base Class Module
+=================
 .. automodapi:: Data_Reduction
+.. automodapi:: Data_Reduction.plotting
+
+Context Modules
+===============
 .. automodapi:: Data_Reduction.DSN
 .. automodapi:: Data_Reduction.DSN.SAO
 .. automodapi:: Data_Reduction.FITS
 .. automodapi:: Data_Reduction.GAVRT
 .. automodapi:: Data_Reduction.Malargue
+.. automodapi:: Data_Reduction.OldGAVRT
+
+Supporting Modules
+==================
 .. automodapi:: Data_Reduction.boresight_fitter
 .. automodapi:: Data_Reduction.hyperfine_fit
 .. automodapi:: Data_Reduction.maps
-.. automodapi:: Data_Reduction.plotting
 .. automodapi:: Data_Reduction.SLATool
 .. automodapi:: Data_Reduction.SLAPlotter
 .. automodapi:: Data_Reduction.TAMS_tipping

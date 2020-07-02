@@ -1,8 +1,13 @@
 Data Reduction
 ==============
 
-Classes and functions for astronomical data reduction
+This module provides the base classes and functions for radio astronomy data 
+reduction. Other modules provide subclasses for data acquired in specific
+contexts.
 
-Project `Link website <https://github.com/SDRAST/Data_Reduction/>`_.
+The base class does allow data to be read from a tabular text file and
+displayed.
 
-Source code `Link documentation <https://sdrast.github.io/Data_Reduction/>`_.
+Link to the project `website <https://github.com/SDRAST/Data_Reduction/>`_.
+
+Link to the source code `documentation <https://sdrast.github.io/Data_Reduction/>`_.
