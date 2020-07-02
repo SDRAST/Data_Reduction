@@ -1,5 +1,7 @@
-from matplotlib.pylab import date2num
-
+"""
+plot system temperatures
+"""
+import matplotlib.pylab
 
 def plot_tsys(fig, date_nums, tsys, label=None, picker=3):
   """
@@ -15,13 +17,13 @@ def plot_tsys(fig, date_nums, tsys, label=None, picker=3):
   @type  tsys : list of float
   """
   #plot_date(date_nums, tsys, '-')
-  plot_date(date_nums, tsys, '-', picker=picker)
+  matplotlib.pylab.plot_date(date_nums, tsys, '-', picker=picker)
   grid()
   text(1.05,0.5,label,
        horizontalalignment='left',
        verticalalignment='center',
        transform = gca().transAxes)
-  title = num2date(date_nums[0]).strftime("%Y %j")
+  title = matplotlib.pylab.num2date(date_nums[0]).strftime("%Y %j")
   fig.autofmt_xdate()
   return title
 

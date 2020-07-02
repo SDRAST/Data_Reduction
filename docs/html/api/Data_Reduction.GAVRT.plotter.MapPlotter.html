@@ -1,0 +1,154 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>MapPlotter &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="SessionPlotter" href="Data_Reduction.GAVRT.plotter.SessionPlotter.html" />
+    <link rel="prev" title="DBPlotter" href="Data_Reduction.GAVRT.plotter.DBPlotter.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.plotter.SessionPlotter.html" title="SessionPlotter"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.plotter.DBPlotter.html" title="DBPlotter"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.GAVRT.plotter.DBPlotter.html"
+                        title="previous chapter">DBPlotter</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.GAVRT.plotter.SessionPlotter.html"
+                        title="next chapter">SessionPlotter</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.GAVRT.plotter.MapPlotter.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="mapplotter">
+<h1>MapPlotter<a class="headerlink" href="#mapplotter" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Data_Reduction.GAVRT.plotter.MapPlotter">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.plotter.</code><code class="sig-name descname">MapPlotter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="n">raster_cfg_id</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.plotter.MapPlotter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Data_Reduction.GAVRT.dss28db.Map.html#Data_Reduction.GAVRT.dss28db.Map" title="Data_Reduction.GAVRT.dss28db.Map"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.GAVRT.dss28db.Map</span></code></a></p>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.plotter.MapPlotter.contours" title="Data_Reduction.GAVRT.plotter.MapPlotter.contours"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contours</span></code></a>(channel[, width, height, contours])</p></td>
+<td><p>make contour maps; this calls ‘regrid’</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.plotter.MapPlotter.plot_centered_offsets" title="Data_Reduction.GAVRT.plotter.MapPlotter.plot_centered_offsets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_centered_offsets</span></code></a>()</p></td>
+<td><p>shows relative positions computed from tlog az and el data</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.plotter.MapPlotter.plot_xdec_dec" title="Data_Reduction.GAVRT.plotter.MapPlotter.plot_xdec_dec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_xdec_dec</span></code></a>()</p></td>
+<td><p>plots the xdec and dec positions at which data were taken</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.plotter.MapPlotter.contours">
+<code class="sig-name descname">contours</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">channel</span></em>, <em class="sig-param"><span class="n">width</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">contours</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.plotter.MapPlotter.contours" title="Permalink to this definition">¶</a></dt>
+<dd><p>make contour maps; this calls ‘regrid’</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.plotter.MapPlotter.plot_centered_offsets">
+<code class="sig-name descname">plot_centered_offsets</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.plotter.MapPlotter.plot_centered_offsets" title="Permalink to this definition">¶</a></dt>
+<dd><p>shows relative positions computed from tlog az and el data</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.plotter.MapPlotter.plot_xdec_dec">
+<code class="sig-name descname">plot_xdec_dec</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.plotter.MapPlotter.plot_xdec_dec" title="Permalink to this definition">¶</a></dt>
+<dd><p>plots the xdec and dec positions at which data were taken</p>
+<p>These data come from table ‘raster’. These should agree with the grid
+points computed for the channel selected for the Z-plot realtime display.
+For the other channels, the data taken from table ‘tlogs’ may differ
+because of timing differences in the voltage-to-frequency converters.
+The table records ‘az’ and ‘el’ for each ‘chan’ which can be used to
+compute ‘RA’ and ‘dec’ and then ‘center_map’ can generate relative offsets.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.plotter.SessionPlotter.html" title="SessionPlotter"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.plotter.DBPlotter.html" title="DBPlotter"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Classes for using MySQL tables
+Classes for GAVRT data using MySQL tables
 
-This module defines the classes BaseDB and MysqlException.  It can be used as
-is if you give it all the connection parameters.  It does not have defaults.
-It mainly serves as a super class for subclasses which are specific to certain
-servers, databases and users.
+This module defines the classes BaseDB and MysqlException.  It also provides
+subclasses for reducing data stored in the DSS-28 database.
 """
 import logging
 import MySQLdb

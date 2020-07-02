@@ -25,8 +25,12 @@ Context Modules
 .. automodapi:: Data_Reduction.DSN.SAO
 .. automodapi:: Data_Reduction.FITS
 .. automodapi:: Data_Reduction.GAVRT
+.. automodapi:: Data_Reduction.GAVRT.dss28db
+.. automodapi:: Data_Reduction.GAVRT.plotter
 .. automodapi:: Data_Reduction.Malargue
 .. automodapi:: Data_Reduction.OldGAVRT
+.. automodapi:: Data_Reduction.OldGAVRT.plotting
+.. automodapi:: Data_Reduction.OldGAVRT.solar
 
 Supporting Modules
 ==================

@@ -1,0 +1,8 @@
+<map id="inheritance133892d137" name="inheritance133892d137">
+<area shape="rect" id="node1" href="api/Data_Reduction.GAVRT.BaseDB.html#Data_Reduction.GAVRT.BaseDB" target="_top" title="This is a database superclass." alt="" coords="19,128,93,153"/>
+<area shape="rect" id="node4" href="api/Data_Reduction.GAVRT.dss28db.DSS28db.html#Data_Reduction.GAVRT.dss28db.DSS28db" target="_top" title="subclass for the DSS&#45;28 EAC database" alt="" coords="172,128,252,153"/>
+<area shape="rect" id="node2" href="api/Data_Reduction.GAVRT.dss28db.BoresightScan.html#Data_Reduction.GAVRT.dss28db.BoresightScan" target="_top" title="class for a single scan during a boresight" alt="" coords="155,29,269,55"/>
+<area shape="rect" id="node3" href="api/Data_Reduction.GAVRT.dss28db.Observation.html#Data_Reduction.GAVRT.dss28db.Observation" target="_top" title="Class for any group of data for a single purpose." alt="" coords="5,55,107,80"/>
+<area shape="rect" id="node5" href="api/Data_Reduction.GAVRT.dss28db.Map.html#Data_Reduction.GAVRT.dss28db.Map" target="_top" title="Class for all the data and methods associated with a raster scan map" alt="" coords="176,79,248,104"/>
+<area shape="rect" id="node6" href="api/Data_Reduction.GAVRT.dss28db.Session.html#Data_Reduction.GAVRT.dss28db.Session" target="_top" title="Class for an observing session on a given year and DOY" alt="" coords="20,5,92,31"/>
+</map>

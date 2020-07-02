@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>DBPlotter &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="MapPlotter" href="Data_Reduction.GAVRT.plotter.MapPlotter.html" />
+    <link rel="prev" title="Session" href="Data_Reduction.GAVRT.dss28db.Session.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.plotter.MapPlotter.html" title="MapPlotter"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.dss28db.Session.html" title="Session"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.GAVRT.dss28db.Session.html"
+                        title="previous chapter">Session</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.GAVRT.plotter.MapPlotter.html"
+                        title="next chapter">MapPlotter</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.GAVRT.plotter.DBPlotter.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="dbplotter">
+<h1>DBPlotter<a class="headerlink" href="#dbplotter" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Data_Reduction.GAVRT.plotter.DBPlotter">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.plotter.</code><code class="sig-name descname">DBPlotter</code><a class="headerlink" href="#Data_Reduction.GAVRT.plotter.DBPlotter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Data_Reduction.GAVRT.dss28db.DSS28db.html#Data_Reduction.GAVRT.dss28db.DSS28db" title="Data_Reduction.GAVRT.dss28db.DSS28db"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.GAVRT.dss28db.DSS28db</span></code></a></p>
+<p>Database class with plotting capability.</p>
+<dl class="simple">
+<dt>Attributes::</dt><dd><p>logger - logging.Logger object</p>
+</dd>
+<dt>Attributes inherited from DSS28db</dt><dd><p>receiver - receivers which provide data
+sessions - dict of sessions obtained with ‘get_session’</p>
+</dd>
+</dl>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.plotter.DBPlotter.get_session_plotter" title="Data_Reduction.GAVRT.plotter.DBPlotter.get_session_plotter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_session_plotter</span></code></a>(year, doy)</p></td>
+<td><p>get IDs for an observing session</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.plotter.DBPlotter.get_session_plotter">
+<code class="sig-name descname">get_session_plotter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">year</span></em>, <em class="sig-param"><span class="n">doy</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.plotter.DBPlotter.get_session_plotter" title="Permalink to this definition">¶</a></dt>
+<dd><p>get IDs for an observing session</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.plotter.MapPlotter.html" title="MapPlotter"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.dss28db.Session.html" title="Session"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

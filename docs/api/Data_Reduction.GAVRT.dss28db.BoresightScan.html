@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>BoresightScan &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="DSS28db" href="Data_Reduction.GAVRT.dss28db.DSS28db.html" />
+    <link rel="prev" title="DSS28_beamwidth" href="Data_Reduction.GAVRT.dss28db.DSS28_beamwidth.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.dss28db.DSS28db.html" title="DSS28db"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.dss28db.DSS28_beamwidth.html" title="DSS28_beamwidth"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.GAVRT.dss28db.DSS28_beamwidth.html"
+                        title="previous chapter">DSS28_beamwidth</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.GAVRT.dss28db.DSS28db.html"
+                        title="next chapter">DSS28db</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.GAVRT.dss28db.BoresightScan.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="boresightscan">
+<h1>BoresightScan<a class="headerlink" href="#boresightscan" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Data_Reduction.GAVRT.dss28db.BoresightScan">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.dss28db.</code><code class="sig-name descname">BoresightScan</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="n">xpwr_cfg_id</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.dss28db.BoresightScan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Data_Reduction.GAVRT.dss28db.Observation.html#Data_Reduction.GAVRT.dss28db.Observation" title="Data_Reduction.GAVRT.dss28db.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.GAVRT.dss28db.Observation</span></code></a></p>
+<p>class for a single scan during a boresight</p>
+<dl class="simple">
+<dt>Attributes::</dt><dd><p>axis     - direction of the scan
+bs_data  - scan data (time, positions and Tsys) from ‘xpwr’ table
+cal_flux - flux of the calibrator source
+cal_src  - source used to set the flux scale
+chan     - channel used for the boresight by EAC program ‘xant’
+data     - scan data (time, positions and Tsys) from ‘tlog’ table
+diode    - state of the noise diode
+epoch    - UNIX time start of scan
+freq     - frequency xant used to fit ‘xpwr’ data, in MHz
+IFbw     - IF band width in MHz
+IFmode   - IF phasing
+logger   - logging.Logger object
+log_data - data from ‘tlog’ table
+name     - identifier string based on xpwr_cfg_id
+pol      - channel polarization
+session  - parent Session object
+source   - name of scanned source</p>
+</dd>
+</dl>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.dss28db.BoresightScan.fit_gaussian" title="Data_Reduction.GAVRT.dss28db.BoresightScan.fit_gaussian"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_gaussian</span></code></a>(channel[, beam_limit])</p></td>
+<td><p>Fit the scan to a Gaussian and a baseline</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.dss28db.BoresightScan.fit_gaussian">
+<code class="sig-name descname">fit_gaussian</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">channel</span></em>, <em class="sig-param"><span class="n">beam_limit</span><span class="o">=</span><span class="default_value">2.5</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.dss28db.BoresightScan.fit_gaussian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit the scan to a Gaussian and a baseline</p>
+<dl class="simple">
+<dt>Extract the appropriate data::</dt><dd><p>For raster scans, ‘xdec’ means that ‘xdec’ stays fixed while the
+antenna moves up and down; ‘dec’ means that ‘dec’ stays fixed while the
+left and right.</p>
+</dd>
+</dl>
+<p>The Gaussian is assumed to fit the inner five beamwidths of the data,
+though that limit can be adjusted.  The baseline is the rest of the data,
+although the lower baseline includes at least data[:5] and the upper
+baseline includes data[-5:]</p>
+<p>:param channel : channel whose data will be fit (required)
+:type  channel : int</p>
+<p>:param beam_limit : distance from the center included in Gaussian fit
+:type  beam_limit : float</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.dss28db.DSS28db.html" title="DSS28db"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.dss28db.DSS28_beamwidth.html" title="DSS28_beamwidth"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

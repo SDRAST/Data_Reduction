@@ -3,14 +3,12 @@ import sys
 from os.path import basename
 import datetime
 import logging
+import openpyxl
+import openpyxl.reader.excel as excel
 
-from openpyxl import load_workbook, Workbook
-from openpyxl.reader.excel import InvalidFileException
-
-from DatesTimes import calendar_date, day_of_year, julian_date
-from Astronomy.solar import calc_solar
-from DatesTimes import mpldate2doy
-from support.excel import *
+import DatesTimes as DT
+import Astronomy.solar as solar
+import support.excel
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +21,7 @@ def load_spreadsheet(filename, sheet='Metadata'):
   @return: workbook instance
   """
   try:
-    wb = load_workbook(filename)
+    wb = openpyxl.load_workbook(filename)
   except IOError as details:
     logger.error("load_spreadsheet: Loading spreadsheet failed with IO error.",exc_info=True)
     return None,None
@@ -31,7 +29,7 @@ def load_spreadsheet(filename, sheet='Metadata'):
     logger.error("load_spreadsheet: Loading spreadsheet failed with attribute error",
                    exc_info=True)
     return None,None
-  except InvalidFileException as details:
+  except excel.InvalidFileException as details:
     logger.error("load_spreadsheet: File "+filename+" does not exist.",exc_info=True)
     return None,None
   else:
@@ -74,18 +72,18 @@ def open_metadata_spreadsheet(filename,create_if_needed=True):
   @return: workbook instance
   """
   try:
-    wb = load_workbook(filename)
+    wb = openpyxl.load_workbook(filename)
   except IOError as details:
     logger.error("open_metadata_spreadsheet: loading failed with IO error: %s", str(details))
     raise IOError
   except AttributeError as details:
     logger.error("open_metadata_spreadsheet: loading failed with attribute error: %s", str(details))
     raise AttributeError
-  except InvalidFileException as details:
+  except excel.InvalidFileException as details:
     logger.warning("open_metadata_spreadsheet: file does not exist.")
     if create_if_needed:
       logger.info("open_metadata_spreadsheet: creating workbook.")
-      wb = Workbook()
+      wb = openpyxl.Workbook()
       logger.debug("open_metadata_spreadsheet: sheets: %s", wb.get_sheet_names())
       obs_ws = wb.get_active_sheet()
       create_metadata_sheet(obs_ws,"Metadata")
@@ -165,10 +163,10 @@ def get_meta_data(meta_ws, meta_column, files):
       meta_ws.cell(row=row, column=meta_column['Stop'] ).value
   mean_time = start[basename(files[0])] \
             + (stop[basename(files[0])]-start[basename(files[0])])/2
-  doy = day_of_year(mean_time.year, mean_time.month, mean_time.day)
-  jd = julian_date(mean_time.year,doy) + \
+  doy = DT.day_of_year(mean_time.year, mean_time.month, mean_time.day)
+  jd = DT.julian_date(mean_time.year,doy) + \
        (mean_time.hour + mean_time.minute/60.)/24.
-  solar_data = calc_solar(jd)
+  solar_data = solar.calc_solar(jd)
   # return freq,pol,IFmode,first,last,start,stop,mean_time,solar_data
   return freq,pol,first,last,start,stop,mean_time,solar_data
 

@@ -5,20 +5,21 @@ import logging
 import numpy
 import os
 import pickle
+import pylab as PL
 import time
 
-from pylab import *
+#from pylab import *
 
-from Data_Reduction.GAVRT.Mysql.dss28db import DSS28db, Map, Session
-from Data_Reduction.maps import plot_xdec_dec
-from DatesTimes import UnixTime_to_MPL
+import Data_Reduction.GAVRT.dss28db as DB
+import Data_Reduction.maps as DRm
+import DatesTimes as DT
 
 logger = logging.getLogger(__name__)
 
 _host,_user,_pw = pickle.load(open(os.environ['HOME']+"/.GAVRTlogin.p",
                                      "rb" ))
 
-class DBPlotter(DSS28db):
+class DBPlotter(DB.DSS28db):
   """
   Database class with plotting capability.
   
@@ -33,7 +34,7 @@ class DBPlotter(DSS28db):
     """
     """
     mylogger = logging.getLogger(logger.name+".DBPlotter")
-    DSS28db.__init__(self)
+    DB.DSS28db.__init__(self)
     self.logger = mylogger
  
   def get_session_plotter(self, year, doy):
@@ -42,11 +43,11 @@ class DBPlotter(DSS28db):
     """
     if (year in self.sessions) == False:
       self.sessions[year] = {}
-    self.sessions[year][doy] = SessionPlotter(self, year, doy)
+    self.sessions[year][doy] = DB.SessionPlotter(self, year, doy)
     return self.sessions[year][doy]
 
 
-class SessionPlotter(Session):
+class SessionPlotter(DB.Session):
   """
   Class to add plotting capability to a Session object
   
@@ -61,7 +62,7 @@ class SessionPlotter(Session):
     @type  parent : DSS28db object
     """
     mylogger = logging.getLogger(logger.name+".SessionPlotter")
-    Session.__init__(self, parent, year, doy, plotter=True)
+    DB.Session.__init__(self, parent, year, doy, plotter=True)
     self.logger = mylogger
     self.get_map_plotters()
       
@@ -109,7 +110,7 @@ class SessionPlotter(Session):
         else:
           self.logger.error("plot_centered_offsets: no valid tlog data")
           continue
-    fig, ax = subplots(nrows=4, ncols=5)
+    fig, ax = PL.subplots(nrows=4, ncols=5)
     fig.set_size_inches(32,30,forward=True)
     width = 0.8; height = 0.8
     for row in range(4):
@@ -126,7 +127,7 @@ class SessionPlotter(Session):
           continue
         self.maps[key].center_map()
         sca(ax[row][col])
-        plot_xdec_dec(self.maps[key].map_data['xdec_offset'],
+        DRm.plot_xdec_dec(self.maps[key].map_data['xdec_offset'],
                                    self.maps[key].map_data['dec_offset'],
                                    self.maps[key].name)
     fig.savefig("raw_positions.png")
@@ -174,7 +175,7 @@ class SessionPlotter(Session):
         fig, axis = subplots(nrows=1, ncols=num_chan)
         ax = [axis] # needs to be a list to be compatible
       else:
-        fig, ax = subplots(nrows=2, ncols=num_chan-4)
+        fig, ax = PL.subplots(nrows=2, ncols=num_chan-4)
       fig.set_size_inches(16,10,forward=True)
       width = 0.8; height = 0.8
       self.logger.debug("show_images: processing map %d", mapno)
@@ -219,7 +220,7 @@ class SessionPlotter(Session):
     else:
       keys = list(self.boresights.keys())
     keys.sort()
-    fig = figure()
+    fig = PL.figure()
     for key in keys:
       axis = self.boresights[key].axis
       src_name = self.boresights[key].source
@@ -236,7 +237,7 @@ class SessionPlotter(Session):
         for ch in channels:
           if self.boresights[key].logdata[ch]:
             UNIXtime = self.boresights[key].logdata[ch]['epoch'].astype(float)
-            mpltime = UnixTime_to_MPL(UNIXtime)
+            mpltime = DT.UnixTime_to_MPL(UNIXtime)
             Top      = self.boresights[key].logdata[ch]['top'].astype(float)
             Top = numpy.where(Top<=0, nan, Top)
             if numpy.all(numpy.isnan(Top)):
@@ -244,10 +245,10 @@ class SessionPlotter(Session):
               continue
             else:
               plot_date(mpltime, Top, '-', label=str(key)+'-'+str(ch)+'-'+axis)
-    title("Boresight Summary")
-    grid()
-    ylabel("Uncalibrated $T_{op}$")
-    legend(loc="best", fontsize="x-small")
+    PL.title("Boresight Summary")
+    PL.grid()
+    PL.ylabel("Uncalibrated $T_{op}$")
+    PL.legend(loc="best", fontsize="x-small")
     fig.autofmt_xdate()
     filename = "bs_summary"
     if bs_keys:
@@ -265,7 +266,7 @@ class SessionPlotter(Session):
     xlabel = {'dec': "Hour Angle", 'xdec': "Hour Angle"}
     for key in list(good_boresights.keys()):
       nchans = len(good_boresights[key])
-      fig, ax = subplots(nrows=2, ncols=nchans)
+      fig, ax = PL.subplots(nrows=2, ncols=nchans)
       width, height = tuple(fig.get_size_inches())
       fig.set_size_inches(width*nchans, 2*height, forward=True)
       axis = self.boresights[key].axis
@@ -308,7 +309,7 @@ class SessionPlotter(Session):
       
         
             
-class MapPlotter(Map):
+class MapPlotter(DB.Map):
   """
   """
   def __init__(self, parent, raster_cfg_id, name=None):
@@ -316,7 +317,7 @@ class MapPlotter(Map):
     initialize a GAVRT data plotter
     """
     mylogger = logging.getLogger(logger.name+".MapPlotter")
-    Map.__init__(self, parent, raster_cfg_id, name=name)
+    DB.Map.__init__(self, parent, raster_cfg_id, name=name)
     self.logger = mylogger
   
   def plot_xdec_dec(self):
@@ -331,14 +332,14 @@ class MapPlotter(Map):
     compute 'RA' and 'dec' and then 'center_map' can generate relative offsets.
     """
     UNIXtime, xdecs, decs, tsrc = self.get_raster_data()
-    plot_xdec_dec(self.raster_data['xdec'],
+    DRm.plot_xdec_dec(self.raster_data['xdec'],
                   self.raster_data['dec'], self.name)
   
   def plot_centered_offsets(self):
     """
     shows relative positions computed from tlog az and el data
     """
-    plot_xdec_dec(self.map_data['xdec_offset'], self.map_data['dec_offset'],
+    DRm.plot_xdec_dec(self.map_data['xdec_offset'], self.map_data['dec_offset'],
                   self.name)
     
   def contours(self, channel, width=1.0, height=1.0, contours=None):
@@ -346,12 +347,12 @@ class MapPlotter(Map):
     make contour maps; this calls 'regrid'
     """
     x,y,z = self.regrid(width=width, height=height)
-    fig, ax = subplots(nrows=1, ncols=1)
+    fig, ax = PL.subplots(nrows=1, ncols=1)
     if contours:
-      contour( x, y, z[channel], contours, linewidths=0.5, colors='k')
-      contourf(x, y, z[channel], contours, cmap=plt.cm.jet)
+      PL.contour( x, y, z[channel], contours, linewidths=0.5, colors='k')
+      PL.contourf(x, y, z[channel], contours, cmap=plt.cm.jet)
     else:
-      contourf(x, y, z[channel], cmap=plt.cm.jet)
+      PL.contourf(x, y, z[channel], cmap=plt.cm.jet)
     grid()
     ax.set_aspect('equal')
     ax.set_xlim(-width/2., width/2.)

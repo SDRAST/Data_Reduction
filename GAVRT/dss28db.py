@@ -116,37 +116,33 @@ import datetime
 import ephem
 import logging
 import MySQLdb
+import math
+import matplotlib.pylab as MPL
 import numpy as NP
 import os
+import scipy.interpolate as interp
 import stat
 import sys
 import time
 
-from math import cos, pi
-#from matplotlib.mlab import griddata
-from scipy.interpolate import griddata
-from matplotlib.pylab import date2num, num2date
-from numpy import arange, array, unique, where
-from time import gmtime, strftime
-
-from local_dirs import projects_dir
+import local_dirs
 import Astronomy as A
-from Astronomy.Ephem import calibrator, DSS, Quasar
-from Data_Reduction.GAVRT.Mysql import BaseDB, MysqlException
-from Math.least_squares import fit_gaussian, gaussian_error_function, st_dev
-from Radio_Astronomy import HPBW
-from support import nearest_index
+import Astronomy.Ephem as AE
+import Data_Reduction.GAVRT as GAVRT
+import Math.least_squares as Mlsq
+import Radio_Astronomy as RA
+import support
 
 logger = logging.getLogger(__name__)
 
 _host,_user,_pw = pickle.load(open(os.environ['HOME']+"/.GAVRTlogin.p", "rb" ))
-dss28        = DSS(28)
-longitude    = -dss28.long*180/pi
-latitude     = dss28.lat*180/pi
+dss28        = AE.DSS(28)
+longitude    = -dss28.long*180/math.pi
+latitude     = dss28.lat*180/math.pi
 f_max        = 16. # GHz
 wl_min       = f_max/300
 taper        = 12 # dB
-hpbw         = HPBW(taper, wl_min, 34)*180/pi # deg
+hpbw         = RA.HPBW(taper, wl_min, 34)*180/math.pi # deg
 default_step = hpbw/3.
 
 def DSS28_beamtaper(freq):
@@ -163,7 +159,7 @@ def DSS28_beamwidth(freq):
   """
   beamwidth in deg. with edge taper
   """
-  return HPBW(DSS28_beamtaper(freq), 0.3/float(freq), 34)*180/pi
+  return RA.HPBW(DSS28_beamtaper(freq), 0.3/float(freq), 34)*180/math.pi
 
 class Observation(object):
   """
@@ -289,7 +285,7 @@ class Observation(object):
                              time_tuple)
           self.data['RA'].append(ra)
           self.data['declination'].append(dec)
-          self.data['MPL_datenum'].append(date2num(dt))
+          self.data['MPL_datenum'].append(MPL.date2num(dt))
       # only the VFC counts differ between channels
       self.data['VFC_counts'][channel]  = data[:,3].astype(float)
       self.data['freq'][channel] = self.rss_cfg[channel]['sky_freq']
@@ -335,17 +331,17 @@ class Observation(object):
     self.data['dec_offset'] = []
     self.data['xdec_offset'] = []
     for count in range(len(self.data['MPL_datenum'])):
-      dt = num2date(self.data['MPL_datenum'][count])
-      if type(src) == Quasar:
+      dt = MPL.num2date(self.data['MPL_datenum'][count])
+      if type(src) == AE.Quasar:
         pass
       else:
         src.compute(dt)
-      ra_center = src.ra*12/pi    # hours
-      dec_center = src.dec*180/pi # degrees
+      ra_center = src.ra*12/math.pi    # hours
+      dec_center = src.dec*180/math.pi # degrees
       decrad = src.dec
       # right ascension increases to the left, cross-dec to the right
       self.data['xdec_offset'].append(xdec_ofst - 
-                       (self.data['RA'][count] - ra_center)*15*cos(decrad) )
+                       (self.data['RA'][count] - ra_center)*15*math.cos(decrad) )
       self.data['dec_offset'].append(  dec_ofst + 
                         self.data['declination'][count] - dec_center)
     return self.data['xdec_offset'], self.data['dec_offset']
@@ -514,17 +510,17 @@ class Map(Observation):
     self.data['dec_offset'] = []
     self.data['xdec_offset'] = []
     for count in range(len(self.data['MPL_datenum'])):
-      dt = num2date(self.data['MPL_datenum'][count])
+      dt = MPL.num2date(self.data['MPL_datenum'][count])
       if source.lower() == "sun":
         src.compute(dt)
       else:
         pass
-      ra_center = src.ra*12/pi    # hours
-      dec_center = src.dec*180/pi # degrees
+      ra_center = src.ra*12/math.pi    # hours
+      dec_center = src.dec*180/math.pi # degrees
       decrad = src.dec
       # right ascension increases to the left, cross-dec to the right
       self.data['xdec_offset'].append(xdec_ofst - 
-                       (self.data['RA'][count] - ra_center)*15*cos(decrad) )
+                       (self.data['RA'][count] - ra_center)*15*math.cos(decrad) )
       self.data['dec_offset'].append(  dec_ofst + 
                         self.data['declination'][count] - dec_center)
     return self.data['xdec_offset'], self.data['dec_offset']
@@ -557,7 +553,7 @@ class Map(Observation):
       xi = self.data['grid_x']
       yi = self.data['grid_y']
       try:
-        self.data['grid_z'][channel] = griddata(cx,cy,cz, xi, yi, method='nearest')
+        self.data['grid_z'][channel] = interp.griddata(cx,cy,cz, xi, yi, method='nearest')
       except ValueError as details:
         self.logger.error("regrid: gridding failed: %s", str(details))
         self.logger.debug("regrid: channel %d length of cx is %d", channel, len(cx))
@@ -621,7 +617,7 @@ class BoresightScan(Observation):
       # this is the source at the center of the scan
       self.source = self.session.db.get_source_names([source_id])['source'][0]
       self.logger.debug("__init__: central source is %s", self.source)
-      self.calibrator = calibrator(self.source)
+      self.calibrator = AE.calibrator(self.source)
       # this is the source whose flux is used for calibration
       cal_src_id = int(meta['cal_src_id'])
       self.cal_src = self.session.db.get_source_names([cal_src_id])['source'][0]
@@ -720,21 +716,21 @@ class BoresightScan(Observation):
       if lower_limit < x[5]: # source scan starts inside lower baseline segment
         lower_baseline = [0,5] # force 5 baseline points
       else:
-        lower_baseline = [0, nearest_index(x, lower_limit)]
+        lower_baseline = [0, support.nearest_index(x, lower_limit)]
       if upper_limit > x[-5]: # source scan starts inside upper baseline segment
         upper_baseline = [-6,-1] # force 5 baseline points
       else:
-        upper_baseline = [nearest_index(x, upper_limit), -1]
+        upper_baseline = [support.nearest_index(x, upper_limit), -1]
     else:
       # scans go from high sample to low sample
       if upper_limit > x[5]: 
-        upper_baseline = [0, nearest_index(x,upper_limit)]
+        upper_baseline = [0, support.nearest_index(x,upper_limit)]
       else:
         upper_baseline = [0,5]
       if lower_limit < x[-5]:
         lower_baseline = [-6,-1]
       else:
-        lower_baseline = [nearest_index(x,lower_limit), -1]
+        lower_baseline = [support.nearest_index(x,lower_limit), -1]
     self.logger.debug("fit_gaussian: lower baseline: %s", lower_baseline)
     self.logger.debug("fit_gaussian: upper baseline: %s", upper_baseline)
     # define the baseline data
@@ -750,16 +746,16 @@ class BoresightScan(Observation):
     self.logger.debug("fit_gaussian: zdata: %s", zdata)
     height = zdata[beam_index] - NP.polyval(self.baseline_pars, x[beam_index])
     self.logger.debug("fit_gaussian: height: %s", height)
-    sigma = st_dev(beamwidth)
+    sigma = Mlsq.st_dev(beamwidth)
     initial_guess = [height, beam_center, sigma]
     # in this case we only fit out to one beamwidth
     if x[0] < x[-1]:
-      xfit =  x[nearest_index(x,beam_center-beamwidth):nearest_index(x,beam_center+beamwidth)]
-      y = zdata[nearest_index(x,beam_center-beamwidth):nearest_index(x,beam_center+beamwidth)]
+      xfit =  x[support.nearest_index(x,beam_center-beamwidth):support.nearest_index(x,beam_center+beamwidth)]
+      y = zdata[support.nearest_index(x,beam_center-beamwidth):support.nearest_index(x,beam_center+beamwidth)]
     else:
-      xfit =  x[nearest_index(x,beam_center+beamwidth):nearest_index(x,beam_center-beamwidth)]
-      y = zdata[nearest_index(x,beam_center+beamwidth):nearest_index(x,beam_center-beamwidth)]
-    self.pars, err = fit_gaussian(gaussian_error_function,
+      xfit =  x[support.nearest_index(x,beam_center+beamwidth):support.nearest_index(x,beam_center-beamwidth)]
+      y = zdata[support.nearest_index(x,beam_center+beamwidth):support.nearest_index(x,beam_center-beamwidth)]
+    self.pars, err = Mlsq.fit_gaussian(Mlsq.gaussian_error_function,
                             initial_guess,
                             xfit,
                             y-NP.polyval(self.baseline_pars,xfit))
@@ -824,7 +820,7 @@ class Session(object):
     self.get_session_dir()
 
   def get_session_dir(self):
-      obs_dir = projects_dir+"SolarPatrol/Observations/dss28/"
+      obs_dir = local_dirs.projects_dir+"SolarPatrol/Observations/dss28/"
       self.session_dir = obs_dir + "%4d" % self.year +"/"+ "%03d" % self.doy +"/"
       if not os.path.exists(self.session_dir):
         os.makedirs(self.session_dir, mode=0o775)
@@ -857,7 +853,7 @@ class Session(object):
     if map_IDs == []:
       map_cfg_ids = self.get_map_IDs()
     else:
-      map_cfg_ids = array(map_IDs)
+      map_cfg_ids = NP.array(map_IDs)
     self.logger.debug("get_maps: map IDs: %s", map_cfg_ids)
     if map_cfg_ids.any():
       self.maps = {}
@@ -908,8 +904,8 @@ class Session(object):
         for chno in channels:
           print(" %3d %4s-%4s %2d %6.0f %4s %4.2f %4s %4.1d %16s" % (
             mapno,
-            strftime("%H%M", gmtime(self.maps[mapno].start)),
-            strftime("%H%M", gmtime(self.maps[mapno].end)),
+            time.strftime("%H%M", time.gmtime(self.maps[mapno].start)),
+            time.strftime("%H%M", time.gmtime(self.maps[mapno].end)),
             chno,
             self.maps[mapno].rss_cfg[chno]["sky_freq"],
             self.maps[mapno].rss_cfg[chno]['pol'][0],
@@ -1121,7 +1117,7 @@ class Session(object):
             el =       self.boresights[bs].bs_data['el'][0]  
             print("%6d %13s %2s %4s %6.0f %4s %4.0f %16s %6.2f %6s %5.1f %4.1f" % (
                             bs, 
-                            strftime("%Y/%j %H%M", gmtime(UNIXtime)),
+                            time.strftime("%Y/%j %H%M", time.gmtime(UNIXtime)),
                             ch, axis,
                             self.boresights[bs].freq,
                             self.boresights[bs].pol,
@@ -1133,7 +1129,7 @@ class Session(object):
     return True
 
 
-class DSS28db(BaseDB):
+class DSS28db(GAVRT.BaseDB):
   """
   subclass for the DSS-28 EAC database
   
@@ -1152,7 +1148,7 @@ class DSS28db(BaseDB):
     The defaults for BaseDB are for the DSS-28 EAC database
     """
     mylogger = logging.getLogger(logger.name+".DSS28db")
-    BaseDB.__init__(self, host=host, user=user, pw=pw, name=name, port=port)
+    GAVRT.BaseDB.__init__(self, host=host, user=user, pw=pw, name=name, port=port)
     self.logger = mylogger
     self.sessions = {}
 

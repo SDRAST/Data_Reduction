@@ -14,9 +14,7 @@
     <script src="../_static/doctools.js"></script>
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="get_session_t_files" href="Data_Reduction.GAVRT.get_session_t_files.html" />
-    <link rel="prev" title="DSS28_beamwidth" href="Data_Reduction.GAVRT.DSS28_beamwidth.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -27,23 +25,11 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.GAVRT.get_session_t_files.html" title="get_session_t_files"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.GAVRT.DSS28_beamwidth.html" title="DSS28_beamwidth"
-             accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="Data_Reduction.GAVRT.DSS28_beamwidth.html"
-                        title="previous chapter">DSS28_beamwidth</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="Data_Reduction.GAVRT.get_session_t_files.html"
-                        title="next chapter">get_session_t_files</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -71,28 +57,6 @@
             
   <div class="section" id="extract-data">
 <h1>extract_data<a class="headerlink" href="#extract-data" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="Data_Reduction.GAVRT.extract_data">
-<code class="sig-prename descclassname">Data_Reduction.GAVRT.</code><code class="sig-name descname">extract_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">datatype</span></em>, <em class="sig-param"><span class="n">wb</span></em>, <em class="sig-param"><span class="n">start</span></em>, <em class="sig-param"><span class="n">stop</span></em>, <em class="sig-param"><span class="n">meta_column</span></em>, <em class="sig-param"><span class="n">files</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.extract_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extract map from the data files and create/fill a metadata worksheet</p>
-<p>First the first t-file is loaded to get the start and stop time.  These are
-used to create the meta-data sheet name.  If the sheet exists it is loaded,
-else it is created.  Creation begins with the copying the session meta-data
-sheet.  The ‘create_metadata_sheet’ adds additional empty columns.  Then for
-each row the appropriate t-file is read and the meta-data are obtained.</p>
-<p>:param wb : observation spreadsheet
-:type  wb : workbook instance</p>
-<p>:param start : datetime of first data point
-:type  start : mpl datenum</p>
-<p>:param stop : datetime of last data point
-:type  stop : mpl datenum</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>metadata worksheet instance</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 
@@ -110,12 +74,6 @@ each row the appropriate t-file is read and the meta-data are obtained.</p>
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.GAVRT.get_session_t_files.html" title="get_session_t_files"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.GAVRT.DSS28_beamwidth.html" title="DSS28_beamwidth"
-             >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
     </div>

@@ -14,9 +14,7 @@
     <script src="../_static/doctools.js"></script>
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="parse_filename" href="Data_Reduction.DSN.SAO.parse_filename.html" />
-    <link rel="prev" title="zenith_gain" href="Data_Reduction.GAVRT.zenith_gain.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -27,23 +25,11 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.DSN.SAO.parse_filename.html" title="parse_filename"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.GAVRT.zenith_gain.html" title="zenith_gain"
-             accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="Data_Reduction.GAVRT.zenith_gain.html"
-                        title="previous chapter">zenith_gain</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="Data_Reduction.DSN.SAO.parse_filename.html"
-                        title="next chapter">parse_filename</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -71,48 +57,6 @@
             
   <div class="section" id="observation">
 <h1>Observation<a class="headerlink" href="#observation" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
-<dt id="Data_Reduction.GAVRT.Observation">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">28</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">'SolarPatrol'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Observation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="Data_Reduction.Observation.html#Data_Reduction.Observation" title="Data_Reduction.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.Observation</span></code></a></p>
-<p>DSS-28 observations from before the <code class="docutils literal notranslate"><span class="pre">tlog</span></code> database table became available.</p>
-<p class="rubric">Methods Summary</p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.Observation.extended_init" title="Data_Reduction.GAVRT.Observation.extended_init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extended_init</span></code></a>([channels_names])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.Observation.get_channel_names" title="Data_Reduction.GAVRT.Observation.get_channel_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_channel_names</span></code></a>(datapath)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.Observation.get_obs_times" title="Data_Reduction.GAVRT.Observation.get_obs_times"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_times</span></code></a>(datapath)</p></td>
-<td><p>returns: (datetime.datetime, datetime.datetime)</p></td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Methods Documentation</p>
-<dl class="py method">
-<dt id="Data_Reduction.GAVRT.Observation.extended_init">
-<code class="sig-name descname">extended_init</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">channels_names</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Observation.extended_init" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.GAVRT.Observation.get_channel_names">
-<code class="sig-name descname">get_channel_names</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">datapath</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Observation.get_channel_names" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.GAVRT.Observation.get_obs_times">
-<code class="sig-name descname">get_obs_times</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">datapath</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Observation.get_obs_times" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns: (datetime.datetime, datetime.datetime)</p>
-</dd></dl>
-
-</dd></dl>
-
 </div>
 
 
@@ -130,12 +74,6 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.DSN.SAO.parse_filename.html" title="parse_filename"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.GAVRT.zenith_gain.html" title="zenith_gain"
-             >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
     </div>

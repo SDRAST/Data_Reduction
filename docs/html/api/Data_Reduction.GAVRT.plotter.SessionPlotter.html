@@ -1,0 +1,174 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>SessionPlotter &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="DSS84_beamtaper" href="Data_Reduction.Malargue.DSS84_beamtaper.html" />
+    <link rel="prev" title="MapPlotter" href="Data_Reduction.GAVRT.plotter.MapPlotter.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.Malargue.DSS84_beamtaper.html" title="DSS84_beamtaper"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.plotter.MapPlotter.html" title="MapPlotter"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.GAVRT.plotter.MapPlotter.html"
+                        title="previous chapter">MapPlotter</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.Malargue.DSS84_beamtaper.html"
+                        title="next chapter">DSS84_beamtaper</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.GAVRT.plotter.SessionPlotter.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="sessionplotter">
+<h1>SessionPlotter<a class="headerlink" href="#sessionplotter" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Data_Reduction.GAVRT.plotter.SessionPlotter">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.plotter.</code><code class="sig-name descname">SessionPlotter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="n">year</span></em>, <em class="sig-param"><span class="n">doy</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.plotter.SessionPlotter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Data_Reduction.GAVRT.dss28db.Session.html#Data_Reduction.GAVRT.dss28db.Session" title="Data_Reduction.GAVRT.dss28db.Session"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.GAVRT.dss28db.Session</span></code></a></p>
+<p>Class to add plotting capability to a Session object</p>
+<p>This instantiates MapPlotter objects which are a subclass of Map. This means
+that the Session initialization should not get the maps.</p>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.plotter.SessionPlotter.get_map_plotters" title="Data_Reduction.GAVRT.plotter.SessionPlotter.get_map_plotters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_map_plotters</span></code></a>()</p></td>
+<td><p>Returns the raster configuration IDs for the specified date</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.plotter.SessionPlotter.plot_centered_offsets" title="Data_Reduction.GAVRT.plotter.SessionPlotter.plot_centered_offsets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_centered_offsets</span></code></a>([mapkeys])</p></td>
+<td><p>show the positions at which data samples were taken</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.plotter.SessionPlotter.show_boresights" title="Data_Reduction.GAVRT.plotter.SessionPlotter.show_boresights"><code class="xref py py-obj docutils literal notranslate"><span class="pre">show_boresights</span></code></a>([bs_keys, channel])</p></td>
+<td><p>shows boresight data as a function time.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.plotter.SessionPlotter.show_good_boresights" title="Data_Reduction.GAVRT.plotter.SessionPlotter.show_good_boresights"><code class="xref py py-obj docutils literal notranslate"><span class="pre">show_good_boresights</span></code></a>()</p></td>
+<td><p>From boresight 33940 I concluded that ‘data’ has one extra sample at the beginning compared to ‘logdata’.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.plotter.SessionPlotter.show_images" title="Data_Reduction.GAVRT.plotter.SessionPlotter.show_images"><code class="xref py py-obj docutils literal notranslate"><span class="pre">show_images</span></code></a>([mapkeys])</p></td>
+<td><p>show the images for the designated maps</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.plotter.SessionPlotter.get_map_plotters">
+<code class="sig-name descname">get_map_plotters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.plotter.SessionPlotter.get_map_plotters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the raster configuration IDs for the specified date</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.plotter.SessionPlotter.plot_centered_offsets">
+<code class="sig-name descname">plot_centered_offsets</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mapkeys</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.plotter.SessionPlotter.plot_centered_offsets" title="Permalink to this definition">¶</a></dt>
+<dd><p>show the positions at which data samples were taken</p>
+<p>:param mapkeys : numbers of the maps (default: all)
+:type  mapkeys : list of int</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.plotter.SessionPlotter.show_boresights">
+<code class="sig-name descname">show_boresights</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bs_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">channel</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.plotter.SessionPlotter.show_boresights" title="Permalink to this definition">¶</a></dt>
+<dd><p>shows boresight data as a function time.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.plotter.SessionPlotter.show_good_boresights">
+<code class="sig-name descname">show_good_boresights</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.plotter.SessionPlotter.show_good_boresights" title="Permalink to this definition">¶</a></dt>
+<dd><p>From boresight 33940 I concluded that ‘data’ has one extra sample at the
+beginning compared to ‘logdata’.  This needs to be done more carefully.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.plotter.SessionPlotter.show_images">
+<code class="sig-name descname">show_images</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mapkeys</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.plotter.SessionPlotter.show_images" title="Permalink to this definition">¶</a></dt>
+<dd><p>show the images for the designated maps</p>
+<p>:param mapkeys : numbers of the maps (default: all)
+:type  mapkeys : list of int</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.Malargue.DSS84_beamtaper.html" title="DSS84_beamtaper"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.plotter.MapPlotter.html" title="MapPlotter"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>
