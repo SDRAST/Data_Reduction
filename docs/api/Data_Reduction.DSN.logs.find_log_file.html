@@ -1,0 +1,162 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>find_log_file &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="find_minical_logs" href="Data_Reduction.DSN.logs.find_minical_logs.html" />
+    <link rel="prev" title="find_EAC_macro_log" href="Data_Reduction.DSN.logs.find_EAC_macro_log.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.logs.find_minical_logs.html" title="find_minical_logs"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.logs.find_EAC_macro_log.html" title="find_EAC_macro_log"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.logs.find_EAC_macro_log.html"
+                        title="previous chapter">find_EAC_macro_log</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.logs.find_minical_logs.html"
+                        title="next chapter">find_minical_logs</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.DSN.logs.find_log_file.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="find-log-file">
+<h1>find_log_file<a class="headerlink" href="#find-log-file" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="Data_Reduction.DSN.logs.find_log_file">
+<code class="sig-prename descclassname">Data_Reduction.DSN.logs.</code><code class="sig-name descname">find_log_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">logdir</span></em>, <em class="sig-param"><span class="n">prefix</span></em>, <em class="sig-param"><span class="n">year</span></em>, <em class="sig-param"><span class="n">midfix</span></em>, <em class="sig-param"><span class="n">doy</span></em>, <em class="sig-param"><span class="n">suffix</span></em>, <em class="sig-param"><span class="n">max_look_back</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.logs.find_log_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find a generic log file.</p>
+<p class="rubric">Notes</p>
+<p>Tries the current date and then work
+backwards as much as ‘max_look_back’ days until one is found.
+The pseudo-code for this is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">initialize</span> <span class="n">output</span> <span class="nb">list</span> <span class="n">to</span> <span class="n">empty</span>
+<span class="n">count</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># look bad only max_look_back days</span>
+<span class="k">while</span> <span class="n">output</span> <span class="nb">list</span> <span class="ow">is</span> <span class="n">empty</span>
+  <span class="n">form</span> <span class="n">name</span> <span class="n">pattern</span>
+  <span class="k">if</span> <span class="n">name</span> <span class="n">pattern</span> <span class="n">has</span> <span class="o">*</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">glob</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">empty</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">result</span>
+    <span class="k">elif</span> <span class="n">max_look_back</span> <span class="n">exceeded</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">empty</span> <span class="n">result</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">try</span> <span class="n">an</span> <span class="n">earlier</span> <span class="n">date</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="k">while</span> <span class="n">log</span> <span class="n">name</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="n">see</span> <span class="k">if</span> <span class="n">file</span> <span class="n">exists</span>
+      <span class="k">if</span> <span class="n">yes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">log</span> <span class="n">name</span> <span class="k">as</span> <span class="n">a</span> <span class="nb">list</span>
+      <span class="k">elif</span> <span class="n">max_look_back</span> <span class="n">exceeded</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">empty</span> <span class="nb">list</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span> <span class="n">an</span> <span class="n">earlier</span> <span class="n">date</span>
+<span class="k">return</span> <span class="n">output</span> <span class="nb">list</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>:param logdir<span class="classifier">string</span></dt><dd><p>Full path to the directory with the log(s)</p>
+</dd>
+<dt>:param prefix<span class="classifier">string</span></dt><dd><p>Whatever precides the date, such as ‘PESD-pm-‘. Could include ‘*’</p>
+</dd>
+<dt>:param year<span class="classifier">int</span></dt><dd><p>Four digit year</p>
+</dd>
+<dt>:param midfix<span class="classifier">string</span></dt><dd><p>What, if anything, that goes between the year andd the day of year.
+Could be ‘’.</p>
+</dd>
+<dt>:param doy<span class="classifier">int</span></dt><dd><p>Day of year, no leading zero(s)</p>
+</dd>
+<dt>:param suffix<span class="classifier">string</span></dt><dd><p>The rest of the pattern.  Could include ‘*’.</p>
+</dd>
+<dt>:param max_look_back<span class="classifier">int</span></dt><dd><p>Number of days before the specified DOY to look for the file</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>list
+File names of the latest file fitting the pattern</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.logs.find_minical_logs.html" title="find_minical_logs"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.logs.find_EAC_macro_log.html" title="find_EAC_macro_log"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

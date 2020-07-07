@@ -10,12 +10,16 @@ Observation
 
    .. autosummary::
 
-      ~Observation.extended_init
-      ~Observation.get_channel_names
-      ~Observation.get_obs_times
+      ~Observation.get_channel_attenuation
+      ~Observation.get_conv_config
+      ~Observation.get_data_channels
+      ~Observation.get_data_from_tlogs
+      ~Observation.make_channels
 
    .. rubric:: Methods Documentation
 
-   .. automethod:: extended_init
-   .. automethod:: get_channel_names
-   .. automethod:: get_obs_times
+   .. automethod:: get_channel_attenuation
+   .. automethod:: get_conv_config
+   .. automethod:: get_data_channels
+   .. automethod:: get_data_from_tlogs
+   .. automethod:: make_channels

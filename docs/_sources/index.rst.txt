@@ -22,10 +22,16 @@ Base Class Module
 Context Modules
 ===============
 .. automodapi:: Data_Reduction.DSN
+.. automodapi:: Data_Reduction.DSN.database
+.. automodapi:: Data_Reduction.DSN.logs
+.. automodapi:: Data_Reduction.DSN.STATS
 .. automodapi:: Data_Reduction.DSN.SAO
+.. automodapi:: Data_Reduction.DSN.Tid_ASCII_data
+.. automodapi:: Data_Reduction.DSN.Tid_data
+.. automodapi:: Data_Reduction.DSN.tipping
 .. automodapi:: Data_Reduction.FITS
 .. automodapi:: Data_Reduction.GAVRT
-.. automodapi:: Data_Reduction.GAVRT.dss28db
+.. automodapi:: Data_Reduction.GAVRT.mysql
 .. automodapi:: Data_Reduction.GAVRT.plotter
 .. automodapi:: Data_Reduction.Malargue
 .. automodapi:: Data_Reduction.OldGAVRT

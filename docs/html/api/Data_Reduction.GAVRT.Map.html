@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Map &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Observation" href="Data_Reduction.GAVRT.Observation.html" />
+    <link rel="prev" title="DSS28db" href="Data_Reduction.GAVRT.DSS28db.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.Observation.html" title="Observation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.DSS28db.html" title="DSS28db"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.GAVRT.DSS28db.html"
+                        title="previous chapter">DSS28db</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.GAVRT.Observation.html"
+                        title="next chapter">Observation</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.GAVRT.Map.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="map">
+<h1>Map<a class="headerlink" href="#map" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Data_Reduction.GAVRT.Map">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.</code><code class="sig-name descname">Map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="n">raster_cfg_id</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Data_Reduction.GAVRT.Observation.html#Data_Reduction.GAVRT.Observation" title="Data_Reduction.GAVRT.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.GAVRT.Observation</span></code></a></p>
+<p>Class for all the data and methods associated with a raster scan map</p>
+<dl class="simple">
+<dt>Public attributes::</dt><dd><p>cfg         - raster configuration
+cfg_id      - entry in the raster configuration tableshape
+channels    - list of channels which took tlog data
+map_data    - dict of data from tlog table; ‘tsrc’ is dict keyed on channel
+logger      - logging.Logger object
+name        - map identifier
+raster_data - data from the raster table
+regrid      - computes map data onto a rectangular grid
+rss_cfg     - receiver configuration
+session     - observing session to which this map belongs
+start       - UNIX time at start of map
+end         - UNIX time at end of map</p>
+</dd>
+<dt>Public methods::</dt><dd><p>get_map_config      - returns a dict with the raster map configuration
+get_raster_data     - gets the data for a raster scan map used for Zplot
+get_raster_keys     - returns rasters associated with a given configuration</p>
+</dd>
+</dl>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.Map.get_map_config" title="Data_Reduction.GAVRT.Map.get_map_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_map_config</span></code></a>()</p></td>
+<td><p>returns a dict with the raster map configuration</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.Map.get_raster_data" title="Data_Reduction.GAVRT.Map.get_raster_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_raster_data</span></code></a>()</p></td>
+<td><p>gets the data for a raster scan map extracted for Zplot</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.Map.get_raster_keys" title="Data_Reduction.GAVRT.Map.get_raster_keys"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_raster_keys</span></code></a>()</p></td>
+<td><p>Returns the rasters associated with a given configuration</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.Map.get_map_config">
+<code class="sig-name descname">get_map_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Map.get_map_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a dict with the raster map configuration</p>
+<p>This is the map generated for display during the observing session.  The
+observer selects a channel.  Other channel data are recorded in the t-logs
+for the channels enabled.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">9</span><span class="p">]:</span> <span class="n">map56</span><span class="o">.</span><span class="n">get_map_config</span><span class="p">()</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">9</span><span class="p">]:</span>
+<span class="p">{</span><span class="s1">&#39;chan&#39;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span>
+ <span class="s1">&#39;doy&#39;</span><span class="p">:</span> <span class="mf">233.0</span><span class="p">,</span>
+ <span class="s1">&#39;epoch&#39;</span><span class="p">:</span> <span class="mf">1503329279.0</span><span class="p">,</span>
+ <span class="s1">&#39;freq&#39;</span><span class="p">:</span> <span class="mf">8000.0</span><span class="p">,</span>
+ <span class="s1">&#39;raster_cfg_id&#39;</span><span class="p">:</span> <span class="mf">56.0</span><span class="p">,</span>
+ <span class="s1">&#39;rate&#39;</span><span class="p">:</span> <span class="mf">0.035000000000000003</span><span class="p">,</span>
+ <span class="s1">&#39;rss_cfg_id&#39;</span><span class="p">:</span> <span class="mf">109708.0</span><span class="p">,</span>
+ <span class="s1">&#39;source_id&#39;</span><span class="p">:</span> <span class="mf">66.0</span><span class="p">,</span>
+ <span class="s1">&#39;step&#39;</span><span class="p">:</span> <span class="mf">0.035000000000000003</span><span class="p">,</span>
+ <span class="s1">&#39;utc&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">55679</span><span class="p">),</span>
+ <span class="s1">&#39;year&#39;</span><span class="p">:</span> <span class="mf">2017.0</span><span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.Map.get_raster_data">
+<code class="sig-name descname">get_raster_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Map.get_raster_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets the data for a raster scan map extracted for Zplot</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.Map.get_raster_keys">
+<code class="sig-name descname">get_raster_keys</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Map.get_raster_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the rasters associated with a given configuration</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.Observation.html" title="Observation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.DSS28db.html" title="DSS28db"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

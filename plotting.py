@@ -9,24 +9,25 @@ logger = logging.getLogger("__self__")
 
 import Data_Reduction as DR
 import pylab as PL
-            
-class MapPlotter(DR.Map):
+      
+class MapPlotter(object):
   """
   """
-  def __init__(self, parent=None, name=None, dss=None, date=None, project=None):
+  def __init__(self, mapobj):
     """
     initialize a base Map plotter
+    
     Args:
-      parent (Session): optional, an observing session to which this belongs
-      name (str):       an identifier, like a scan number; default if not given
-      dss (int):        required; station where the data were taken
-      date (str):       required; date of observation as "YEAR/DOY"
-      project (str):    required; project for which this observation was made
+      mapobj (Map): map to be plotted
     """
-    mylogger = logging.getLogger(logger.name+".MapPlotter")
-    DR.Map.__init__(self, parent, name=name, dss=dss, date=date, project=project)
-    self.logger = mylogger
-
+    self.logger = logging.getLogger(logger.name+".MapPlotter")
+    self.map = mapobj 
+    self.data = self.map.data
+    self.channel = self.map.channel
+    self.name = self.map.name
+    self.start = self.map.start
+    self.end = self.map.end
+  
   def plot_xdec_dec(self, title_str="Offsets"):
     """
     plots the xdec and dec positions at which data were taken
@@ -48,8 +49,8 @@ class MapPlotter(DR.Map):
       PL.grid()
       PL.show()
     else:
-      self.logger.warning("use self.get_offsets()")      
-
+      self.logger.warning("use self.map.get_offsets()")      
+  
   def plot_azel(self, title_str="Horizontal Positions"):
     """
     Plot elevation vs azimuth
@@ -64,7 +65,7 @@ class MapPlotter(DR.Map):
       PL.grid()
       PL.show()
     else:
-      self.logger.warning("use self.azel_from_radec()")
+      self.logger.warning("use self.map.azel_from_radec()")
       
   def plot_ra_dec(self,J2000=False, title_str=None):
     """
@@ -82,7 +83,7 @@ class MapPlotter(DR.Map):
         ras,decs = self.data['ra'],self.data['dec']
         title_str = "Apparent Celestial"
       else:
-        self.logger.warning("use self.radec_from_azel() or self.radec_from_radec2000()")
+        self.logger.warning("use self.map.radec_from_azel() or self.map.radec_from_radec2000()")
         return
     PL.figure()
     PL.plot(ras,decs,'-')
@@ -111,7 +112,7 @@ class MapPlotter(DR.Map):
     if 'grid_x' in self.data and 'grid_z' in self.data and  'grid_z' in self.data:
       x,y,z = self.data['grid_x'], self.data['grid_y'], self.data['grid_z']
     else:
-      x,y,z = self.regrid(width=width, height=height)
+      x,y,z = self.map.regrid(width=width, height=height)
     fig, ax = PL.subplots(nrows=1, ncols=1)
     if contours:
       PL.contour( x, y, z[chnl], contours, linewidths=0.5, colors='k')
@@ -131,8 +132,6 @@ class MapPlotter(DR.Map):
       title += "  "+ self.channel[chnl]['pol'][0].upper()
     ax.set_title(title)
     PL.colorbar(shrink=0.6) # draw colorbar
-    #hh = self.cfg['utc'].seconds/3600
-    #mm = (self.cfg['utc'].seconds-3600*hh)/60
     timestruct = time.gmtime(self.start)
     yr = timestruct.tm_year
     dy = timestruct.tm_yday
@@ -140,3 +139,4 @@ class MapPlotter(DR.Map):
     mm = timestruct.tm_min
     fig.suptitle("%4d/%03d %02d:%02d UT" % (yr,dy,hh,mm))
     fig.show()
+

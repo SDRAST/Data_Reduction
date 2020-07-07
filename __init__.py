@@ -72,10 +72,12 @@ class Observation(object):
     obs          - (AE.DSS) observatory
     session      - (Session) set of observations
     session_path - (str) directory for session files
+    start        - (float) UNIX time at the beginning
   
   **Reserved Column Names**
   
-  These column names are recognized.
+  These column names are recognized.  They are also the keys for attribute
+  ``data``.
   
   These quantities must be present in some form::
   
@@ -83,15 +85,38 @@ class Observation(object):
     chan_name  (str)   channel name
     integr     (float) integration (exposure) in sec
     azel       (float,float) azimuth and elevation in decimal deg
+    power      (float) power level if only a single channel
+
+  Optional::
+  
+    diode      (float) 0 or power in K (integers OK)
+    level      (float) (unidentified -- in ``tlog`` table)
+    cryotemp   (float) cryostat temp in K
+    windspeed  (float) km/hr
+    winddir    (float) deg
+    ambtemp    (float) deg C
+    pressure   (float) mbar
+  
+  Columns to be computed::
+  
+    mpldatenum (float) matplotlib ``datenum``
+  
+  Alternative for ``power``::
+  
+    tsys       (float) system temperature (calibrated power)
+    top        (float) alternative for ``tsys`` (used in DSN)
+    vfc_counts (int)   VFC counts (rate times ``integr``)
     
+  Any column with a name which is not a reserved name is assumed to be 
+  power-like data from the channel with that name, unless that name is in a
+  list provided to the argument ``ignore`` in the method ``get_data_channels``
+  of the class ``DataGetterMixin``.
+      
   Alternative for ``unixtime``::
   
     year       (int) year of observation 
     doy        (int) day of year
-    utc        (str) HH:MM:SS
-  
-  Alternative for ``unixtime``::
-  
+    utc        (str) HH:MM:SS  
     timestr    (str) something like 2020/06/14/14:22:21.00
   
   Alternative for ``chan_name``::
@@ -114,23 +139,8 @@ class Observation(object):
     dec1950    (float) mean declination in decimal deg at epoch
     ra2000     (float) mean right ascension in decimal hours at epoch
     dec2000    (float) mean declination in decimal deg at epoch
-    
-  Optional::
   
-    tsys       (float) power level if only a single channel
-    top        (float) alternative for ``tsys``
-    diode      (float) 0 or power in K (integers OK)
-    level      (float) (unidentified -- in ``tlog`` table)
-    cryotemp   (float) cryostat temp in K
-    windspeed  (float) km/hr
-    winddir    (float) deg
-    ambtemp    (float) deg C
-    pressure   (float) mbar
-  
-  Columns to be computed::
-  
-    mpldatenum (float) matplotlib ``datenum``
-  
+
   Notes
   =====
   * The ``data`` structure is a dict.
@@ -145,8 +155,11 @@ class Observation(object):
               'timestr','chan','tsys','top','diode','level','cryotemp',
               'windspeed','winddir','ambtemp','pressure',
               'ra','dec','ra1950','dec1950','ra2000','dec2000']
-              
-  def __init__(self, parent=None, name=None, dss=None, date=None, project=None):
+  power_keys = ['tsys', 'top', 'vfc_counts', 'power']
+  
+  def __init__(self, parent=None, name=None, dss=None,
+                     date=None, start=None, end=None,
+                     project=None):
     """
     Create a base Observation object.
     
@@ -156,19 +169,20 @@ class Observation(object):
     and creates the object's data structure.
     
     Args:
-      parent (Session):   session to which thos ibservation belongs
+      parent (Session):   session to which this observation belongs
       name (str):         an identifier; default is station ID + "obs"
       dss (int):          station number
       date (str):         "YEAR/DOY"
       project (str):      directory under /usr/local/projects
     """
-    logger.debug("Observation.__init__: initializing...")
+    self.logger = logging.getLogger(logger.name+".Observation")
+    self.logger.debug("Observation.__init__: initializing...")
     self.session = parent
     # observatory must be specified
     if dss:
       self.obs = AE.DSS(dss)
-      self.longitude = self.obs.long
-      self.latitude = self.obs.lat
+      self.longitude = self.obs.long*180/math.pi # deg
+      self.latitude = self.obs.lat*180/math.pi   # deg
     else:
       self.logger.error("__init__: requires observatory location")
       raise Exception("Where were the data taken?")
@@ -195,10 +209,125 @@ class Observation(object):
     else:
       self.logger.error("__init__: requires a date")
       raise Exception("When were the date taken?")
+    if start and end:
+      self.start = start
+      self.end = end
+    else:
+      self.logger.error("__init__: no 'start' and/or 'end' attributes")
+      raise Exception("'start' and 'end' can be arguments or subclass attrs")
     # accomodate subclass arguments
     self.aliases = {}
-    self.logger.warning("__init__: initialize() must now be called")
+    # what I really want to do here is see if this was called by a subclass,
+    # in which case I do not try to get the channel info until this
+    # initialization has finished.
+    #
+    #if hasattr(self, "get_data_channels"):
+    #  channels = self, get_data_channels()
+    #  self.make_channels(channels)
+    #else:
+    #  self.logger.info("__init__: initialize() may now be called")
+      
+  def splitkey(self, longlat):
+    """
+    Checks for presence of coordinates in pairs or singles
+    
+    @param longlat : "azel", or "radec", or "radecEPOC"
+    @type  longlat : str
+    """
+    longitude = longlat[:2] # 'az' or 'ra'
+    if len(longlat) > 5: # has epoch
+        epoch = longlat[-4:]
+        longitude += epoch
+        latitude = longlat[2:-4]+epoch
+    else: # date of observation
+        latitude = longlat[2:]
+        epoch = None
+    return longitude, latitude, epoch
   
+  def check_for(self, data, longlat):
+    """
+    Checks for separate coordinates and splits if coord pairs
+    
+    Args:
+      data (dict):    attribute ``data``
+      longlat (str): "azel", or "radec", or "radecEPOC"
+    """
+    longitude, latitude, epoch = self.splitkey(longlat)
+    if longitude in data.dtype.names and \
+       latitude  in data.dtype.names:
+      self.logger.debug("check_for: data has %s and %s", longitude, latitude)
+      self.data[longitude] = data[longitude]
+      self.data[latitude]  = data[latitude]
+      return True
+    elif longlat in data.dtype.names:
+      self.logger.debug("check_for: data has %s", longlat)
+      self.data[longitude],self.data[latitude] = map(None, *data[longlat])
+      self.logger.debug("check_for: added %s and %s to data",
+                        longitude, latitude)
+      return True
+    else:
+      # coords need to be computed from other coords
+      
+      return False
+    
+  def unpack_to_complex(self, rawdata):
+    """
+    Converts a sequence of alternating real/imag samples to complex
+
+    @param rawdata : alternating real and imaginary bytes
+    @type  rawdata : numpy array of signed int8
+
+    @return: numpy array of complex
+    """
+    datalen = len(rawdata)
+    real = rawdata[0:datalen:2]
+    imag = rawdata[1:datalen:2]
+    data = real + 1j*imag
+    return data
+
+  def sideband_separate(self, data):
+    """
+    Converts a complex spectrum array and returns two reals with USB and LSB
+
+    This applies a Hilbert transform to the complex data.
+    """
+    usb = (data.real + scipy.fftpack.hilbert(data).imag)
+    lsb = (scipy.fftpack.hilbert(data).real + data.imag)
+    return lsb,usb
+  
+  class Channel(support.PropertiedClass):
+    """
+    Class for a signal path
+    """
+    def __init__(self, parent, name, freq=None, bw=None, pol=None, IFtype=None,
+                       atten=None):
+      """
+      Notes
+      =====
+      The properties can be accessed as if the class were a dict.
+      
+      Arguments
+      =========
+      freq:float or int: center frequency in MHz
+      bw:float or int:   bandwidth in MHz
+      pol:str:           polarization code
+      """
+      support.PropertiedClass.__init__(self)
+      self.parent = parent
+      self.logger = logging.getLogger(self.parent.name+".Channel")
+      self.logger.debug("__init__: created %s", self.logger.name)
+      self.logger.debug("__init__: parent is %s", self.parent)
+      self.name = name
+      self.data['freq'] = freq
+      self.data['bw'] = bw
+      self.data['pol'] = pol
+      self.data['ifmode'] = IFtype
+      self.data['atten'] = atten
+      
+class DataGetterMixin(object):
+  """
+  Class for getting data from a CSV file.
+  """
   def initialize(self, filename, delimiter=" ", names=True, skip_header=0,
                        source=None):
     """
@@ -288,27 +417,6 @@ class Observation(object):
     self.logger.debug("get_data_channels: signals: %s", signals)
     self.logger.debug("get_data_channels: metadata: %s", metadata)
     return metadata, signals  
-      
-  def make_channels(self, signals, props=None):
-    """
-    Assign properties to the channels.  
-    
-    The prop keys are "freq", "pol", and "IFtype".
-    
-    Args:
-      props (dict of dicts): signal channel properties.
-    """
-    self.channel = {}
-    for ch in signals:
-      chindex = signals.index(ch)
-      if props:
-        self.channel[ch] = self.Channel(self, ch, 
-                                        freq=props['freq'][ch],
-                                        bw=props['bw'][ch],
-                                        pol=props['pol'][ch],
-                                        IFtype=props['IFtype'][ch])
-      else:
-        self.channel[ch] = self.Channel(self, ch)
 
   def make_data_struct(self, data, metadata, signals):
     """
@@ -356,23 +464,28 @@ class Observation(object):
     self.data = {}
     self.numdata = len(data)
     self.logger.debug("make_data_struct: using aliases: %s", self.aliases)
-    # get columns that are better computed once instead of as needed
+    # get columns that are not metadata; each has power for a channel
     for signal in signals:
       self.logger.debug("make_data_struct: for signal: %s", signal)
       if signal in self.aliases.items():
-        self.data[signal] = data[next(key for key, value in self.aliases.items()
+        # get the key in 'data' which matches 'value' in 'aliases'
+        power = data[next(key for key, value in self.aliases.items()
                                                        if value == signal)][idx]
       else:
-        self.data[signal] = data[signal]
+        power = data[signal]
+      self.data['power'][signal] = power
+    # get UNIX time
     if 'unixtime' in metadata:
       if 'unixtime' in data.dtype.names:
         self.data['unixtime'] = data['unixtime']
       else:
+        # look up the equivalent of UNIX time in the data table
         self.data['unixtime'] = data[next(key 
                                           for key, value in self.aliases.items()
                                           if value == 'unixtime')]
-      self.data['datetime'] = []
-      self.data['date_num'] = []
+      # compute other convenient forms of time
+      self.data['datetime'] = [] # Python datetime.date
+      self.data['date_num'] = [] # matplotlib.dates date number
       for idx in list(range(self.numdata)):
         if 'unixtime' in data.dtype.names:
           tm = data['unixtime'][idx]
@@ -382,6 +495,12 @@ class Observation(object):
         dt = datetime.datetime.utcfromtimestamp(tm)
         self.data['datetime'].append(dt)
         self.data['date_num'].append(MPLd.date2num(dt))
+      self.start = self.data['unixtime'][0]
+      self.end = self.data['unixtime'][-1]
+    else:
+      # figure out how to process the time data columns
+      pass
+    # compute alternate coordinates
     if self.check_for(data, 'azel'):
       # azel exists; compute radec if needed; then radec2000 if needed
       if self.check_for(data, 'radec'):
@@ -411,48 +530,121 @@ class Observation(object):
     self.start = self.data['unixtime'].min()
     self.end   = self.data['unixtime'].max()
       
-  def splitkey(self, longlat):
+  def make_channels(self, signals, props=None):
     """
-    Checks for presence of coordinates in pairs or singles
+    Assign properties to the channels.  
     
-    @param longlat : "azel", or "radec", or "radecEPOC"
-    @type  longlat : str
-    """
-    longitude = longlat[:2] # 'az' or 'ra'
-    if len(longlat) > 5: # has epoch
-        epoch = longlat[-4:]
-        longitude += epoch
-        latitude = longlat[2:-4]+epoch
-    else: # date of observation
-        latitude = longlat[2:]
-        epoch = None
-    return longitude, latitude, epoch
-  
-  def check_for(self, data, longlat):
-    """
-    Checks for separate coordinates and splits if coord pairs
+    The prop keys are "freq", "pol", and "IFtype".
     
     Args:
-      data (dict):    attribute ``data``
-      longlat (str): "azel", or "radec", or "radecEPOC"
+      props (dict of dicts): signal channel properties.
     """
-    longitude, latitude, epoch = self.splitkey(longlat)
-    if longitude in data.dtype.names and \
-       latitude  in data.dtype.names:
-      self.logger.debug("check_for: data has %s and %s", longitude, latitude)
-      self.data[longitude] = data[longitude]
-      self.data[latitude]  = data[latitude]
-      return True
-    elif longlat in data.dtype.names:
-      self.logger.debug("check_for: data has %s", longlat)
-      self.data[longitude],self.data[latitude] = map(None, *data[longlat])
-      self.logger.debug("check_for: added %s and %s to data",
-                        longitude, latitude)
-      return True
+    self.channel = {}
+    for ch in signals:
+      chindex = signals.index(ch)
+      if props:
+        self.channel[ch] = self.Channel(self, ch, 
+                                        freq  =props[ch]['freq'],
+                                        bw    =props[ch]['bw'],
+                                        pol   =props[ch]['pol'],
+                                        IFtype=props[ch]['IFtype'],
+                                        atten =props[ch]['atten'])
+      else:
+        self.channel[ch] = self.Channel(self, ch)  
+
+
+class GriddingMixin(object):
+  """
+  Class for all the data and methods associated with a raster scan map
+  
+  It is expected that the parent class is a subclass of ``Observation`` already
+  by virtue of it being a superclass of subclass which inherits these methods.
+  
+  Attrs:
+    cfg (dict): 
+    data (numpy array):      from ``Observation``
+    logger (logging.Logger): replaces ``Observation`` logger
+    name (str):              replaces ``Observation`` name
+    session (Session):
+    source (str):
+    step (float):            map step size
+    
+  """ 
+  def get_grid_stepsize(self):
+    """ 
+    Determine the stepsize of gridded data
+    """
+    # get the absolute value of coordinate intervals
+    dxdecs = abs(self.data['xdec_offset'][1:]-self.data['xdec_offset'][:-1])
+    ddecs  = abs(self.data['dec_offset'][1:] -self.data['dec_offset'][:-1])
+    # form array of X,Y pairs
+    coords =  NP.array(list(zip(dxdecs,ddecs)))
+    # expect two clusters (default)
+    cluster_pos = VQ.find_clusters(coords).round(4) # tenths of mdeg
+    # return the non-zero intervals
+    return cluster_pos[0].max(), cluster_pos[1].max()
+    
+  def regrid(self, width=1.0, height=1.0, step=None, power_key=None):
+    """
+    converts a map from observed coordinates to map coordinates
+    
+    If ``step`` is not given then the step size will be the average step size
+    in X and the average step in Y.  In this case, the effect is to make a
+    regular grid if the original positions were not exact, i.e., pointing error.
+    
+    @param width : map width in deg
+    @type  width : float
+    
+    @param height : map height in deg
+    @type  height : float
+    
+    @param step : map step size in X and Y in deg
+    @type  step : (float, float)
+    """
+    # what is the power-like quantity?
+    if power_key:
+      pass
     else:
-      # coords need to be computed from other coords
-      
-      return False
+      # take the first that matches
+      for key in Observation.power_keys:
+        if key in self.data:
+          power_key = key
+          self.logger.info("regrid: using '%s'", power_key)
+          break
+        else:
+          continue
+    if power_key:
+      pass
+    else:
+      self.logger.error("regrid: no power data key found")
+      return None
+    if step == None:
+      # use the original stepsize
+      self.xstep, self.ystep = self.get_grid_stepsize()
+    else:
+      self.xstep, self.ystep = step
+    self.data['grid_x'] = NP.arange( -width/2,  width/2 + self.xstep/2, self.xstep/2)
+    self.data['grid_y'] = NP.arange(-height/2, height/2 + self.ystep/2, self.ystep/2)
+    self.logger.debug("regrid: grid shape is %dx%d", len(self.data['grid_x']),
+                                                     len(self.data['grid_y']))
+    self.data['grid_z'] = {}
+    for chnl in self.channel:
+      self.logger.debug("regrid: processing %s", chnl)
+      points = list(zip(self.data['xdec_offset'],self.data['dec_offset']))
+      self.logger.debug("regrid: %d positions", len(points))
+      values = self.data[power_key][chnl]
+      self.logger.debug("regrid: %d values", len(values))
+      xi, yi = NP.meshgrid(self.data['grid_x'], self.data['grid_y'])
+      try:
+        self.data['grid_z'][chnl] = scipy.interpolate.griddata(points, values,
+                                                     (xi, yi), method='nearest')
+      except ValueError as details:
+        self.logger.error("regrid: gridding failed: %s", str(details))
+        self.logger.debug("regrid: channel %s length of points is %d",
+                                                              chnl, len(points))
+        self.logger.debug("regrid: channel %s length of values is %d", chnl,
+                                                                    len(values))
+        continue
   
   def radec_from_azel(self):
     """
@@ -462,7 +654,8 @@ class Observation(object):
     for idx in list(range(self.numdata)):
       # setup
       dt = self.data['datetime'][idx]
-      time_tuple = (dt.year,
+      # format time as (YEAR, DOY.fff)
+      time_tuple = (dt.year, 
                     DT.day_of_year(dt.year,dt.month,dt.day)
                       + (  dt.hour
                          + dt.minute/60.
@@ -472,13 +665,14 @@ class Observation(object):
       elevation = self.data['el'][idx]
       # compute
       ra,dec = A.AzEl_to_RaDec(azimuth, elevation,
-                               self.latitude, self.longitude,
+                               self.latitude, 
+                               -self.longitude,
                                time_tuple)
       RA.append(ra)
       decs.append(dec)
       RAdecs.append((RA,decs))
     self.data['ra'] = RA
-    self.data['dec'] = dec
+    self.data['dec'] = decs
     self.data['radec'] = RAdecs
   
   def radec2000_from_radec(self):
@@ -573,19 +767,15 @@ class Observation(object):
     
     @return: (dxdecs,ddecs) in degrees
     """
-    if 'date_num' in self.data:
-      pass
-    else:
-      self.logger.debug("get_offsets: this does not look like a good dataset")
-      raise Exception("check the datafile")
     if source.lower() == "sun":
       src = AE.ephem.Sun()
     else:
       src = AE.calibrator(source)
     self.data['dec_offset'] = []
     self.data['xdec_offset'] = []
-    for count in range(len(self.data['date_num'])):
-      dt = MPLd.num2date(self.data['date_num'][count])
+    for count in range(len(self.data['unixtime'])):
+      dt = datetime.datetime.utcfromtimestamp(
+                                     self.data['unixtime'][count])
       if type(src) == AE.Quasar:
         pass
       else:
@@ -595,142 +785,12 @@ class Observation(object):
       decrad = src.dec
       # right ascension increases to the left, cross-dec to the right
       self.data['xdec_offset'].append(xdec_ofst - 
-                       (self.data['ra'][count] - ra_center)*15*math.cos(decrad) )
+                      (self.data['ra'][count]  - ra_center)*15*math.cos(decrad) )
       self.data['dec_offset'].append(  dec_ofst + 
-                        self.data['dec'][count] - dec_center)
+                       self.data['dec'][count] - dec_center)
     # change list to NP.array
     self.data['xdec_offset'] = NP.array(self.data['xdec_offset'])
     self.data['dec_offset'] = NP.array(self.data['dec_offset'])
-    return self.data['xdec_offset'], self.data['dec_offset']
-    
-  def unpack_to_complex(self, rawdata):
-    """
-    Converts a sequence of alternating real/imag samples to complex
-
-    @param rawdata : alternating real and imaginary bytes
-    @type  rawdata : numpy array of signed int8
-
-    @return: numpy array of complex
-    """
-    datalen = len(rawdata)
-    real = rawdata[0:datalen:2]
-    imag = rawdata[1:datalen:2]
-    data = real + 1j*imag
-    return data
-
-  def sideband_separate(self, data):
-    """
-    Converts a complex spectrum array and returns two reals with USB and LSB
-
-    This applies a Hilbert transform to the complex data.
-    """
-    usb = (data.real + scipy.fftpack.hilbert(data).imag)
-    lsb = (scipy.fftpack.hilbert(data).real + data.imag)
-    return lsb,usb
-  
-  class Channel(support.PropertiedClass):
-    """
-    Class for a signal path
-    """
-    def __init__(self, parent, name, freq=None, bw=None, pol=None, IFtype=None):
-      """
-      Notes
-      =====
-      The properties can be accessed as if the class were a dict.
-      
-      Arguments
-      =========
-      freq:float or int: center frequency in MHz
-      bw:float or int:   bandwidth in MHz
-      pol:str:           polarization code
-      """
-      support.PropertiedClass.__init__(self)
-      self.parent = parent
-      self.logger = logging.getLogger(self.parent.name+".Channel")
-      self.logger.debug("__init__: created %s", self.logger.name)
-      self.logger.debug("__init__: parent is %s", self.parent)
-      self.name = name
-      self.data['freq'] = freq
-      self.data['bw'] = bw
-      self.data['pol'] = pol
-      self.data['power'] = self.parent.data[name]
-
-class GriddingMixin(object):
-  """
-  Class for all the data and methods associated with a raster scan map
-  
-  It is expected that the parent class is a subclass of ``Observation`` already
-  by virtue of it being a superclass of subclass which inherits these methods.
-  
-  Attrs:
-    cfg (dict): 
-    data (numpy array):      from ``Observation``
-    logger (logging.Logger): replaces ``Observation`` logger
-    name (str):              replaces ``Observation`` name
-    session (Session):
-    source (str):
-    step (float):            map step size
-    
-  """ 
-  def get_grid_stepsize(self):
-    """ 
-    Determine the stepsize of gridded data
-    """
-    # get the absolute value of coordinate intervals
-    dxdecs = abs(self.data['xdec_offset'][1:]-self.data['xdec_offset'][:-1])
-    ddecs  = abs(self.data['dec_offset'][1:] -self.data['dec_offset'][:-1])
-    # form array of X,Y pairs
-    coords =  NP.array(list(zip(dxdecs,ddecs)))
-    # expect two clusters (default)
-    cluster_pos = VQ.find_clusters(coords).round(4) # tenths of mdeg
-    # return the non-zero intervals
-    return cluster_pos[0].max(), cluster_pos[1].max()
-    
-  def regrid(self, width=1.0, height=1.0, step=None):
-    """
-    converts a map from observed coordinates to map coordinates
-    
-    If ``step`` is not given then the step size will be the average step size
-    in X and the average step in Y.  In this case, the effect is to make a
-    regular grid if the original positions were not exact, i.e., pointing error.
-    
-    @param width : map width in deg
-    @type  width : float
-    
-    @param height : map height in deg
-    @type  height : float
-    
-    @param step : map step size in X and Y in deg
-    @type  step : (float, float)
-    """
-    if step == None:
-      # use the original stepsize
-      self.xstep, self.ystep = self.get_grid_stepsize()
-    else:
-      self.xstep, self.ystep = step
-    self.data['grid_x'] = NP.arange( -width/2,  width/2 + self.xstep/2, self.xstep/2)
-    self.data['grid_y'] = NP.arange(-height/2, height/2 + self.ystep/2, self.ystep/2)
-    self.logger.debug("regrid: grid shape is %dx%d", len(self.data['grid_x']),
-                                                     len(self.data['grid_y']))
-    self.data['grid_z'] = {}
-    for chnl in self.channel:
-      self.logger.debug("regrid: processing %s", chnl)
-      points = list(zip(self.data['xdec_offset'],self.data['dec_offset']))
-      self.logger.debug("regrid: %d positions", len(points))
-      values = self.data[chnl]
-      self.logger.debug("regrid: %d values", len(values))
-      xi, yi = NP.meshgrid(self.data['grid_x'], self.data['grid_y'])
-      try:
-        self.data['grid_z'][chnl] = scipy.interpolate.griddata(points, values,
-                                                     (xi, yi), method='nearest')
-      except ValueError as details:
-        self.logger.error("regrid: gridding failed: %s", str(details))
-        self.logger.debug("regrid: channel %s length of points is %d",
-                                                              chnl, len(points))
-        self.logger.debug("regrid: channel %s length of values is %d", chnl,
-                                                                    len(values))
-        continue
-    return self.data['grid_x'], self.data['grid_y'], self.data['grid_z']
 
 class Map(Observation, GriddingMixin):
   """
@@ -780,6 +840,7 @@ class Session(object):
       self.year = year
       self.doy = doy
       self.project = project
+      self.name = "'%s %4d/%03d'" % (project, year, doy)
     else:
       self.logger.error("__init__: missing year or DOY or project")
       raise Exception("Where and when were the data taken?")

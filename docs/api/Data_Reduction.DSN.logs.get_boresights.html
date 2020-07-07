@@ -1,0 +1,154 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>get_boresights &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="get_cals" href="Data_Reduction.DSN.logs.get_cals.html" />
+    <link rel="prev" title="get_VSR_logs" href="Data_Reduction.DSN.logs.get_VSR_logs.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.logs.get_cals.html" title="get_cals"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.logs.get_VSR_logs.html" title="get_VSR_logs"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.logs.get_VSR_logs.html"
+                        title="previous chapter">get_VSR_logs</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.logs.get_cals.html"
+                        title="next chapter">get_cals</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.DSN.logs.get_boresights.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="get-boresights">
+<h1>get_boresights<a class="headerlink" href="#get-boresights" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="Data_Reduction.DSN.logs.get_boresights">
+<code class="sig-prename descclassname">Data_Reduction.DSN.logs.</code><code class="sig-name descname">get_boresights</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bore_files</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.logs.get_boresights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract data from five-point boresight files.</p>
+<p>:param bore_files : Full paths to the boresight files.
+:type  bore_files : list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(dict) The keys are::
+- X_BW:       measured beamwidth in cross-elevation or cross-declination
+- DOY:        day of year
+- UTC:        coordinated universal time
+- SOURCE:     source name
+- HA:         hour angle
+- DEC:        declination
+- AZ:         azimuth
+- EL:         elevation
+- AX/HXPOS:   azimuth/hour angle map position
+- EL/DEPOS:   elevation/declination map position
+- FREQ:       frequency
+- POL:        polarization
+- ELOFF:      elevation offset
+- XELOFF:     cross-elevation offset
+- DECOFF:     declination offset
+- XDECOFF:    cross-declination offset
+- XPOS:       subreflector X position
+- YPOS:       subreflector Y position
+- ZPOS:       subreflector Z position
+- YOFF:       subreflector Y offset
+- ZOFF:       subreflector Z offset
+- BASE+:      baseline in the scan + direction, e.g.: bore_data[‘fivept.pri’][‘BASE+’] = [‘40.7885’]
+- BL+:        bore_data[‘fivept.pri’][‘BL+’] = [‘40.5802’]
+- BL-:        bore_data[‘fivept.pri’][‘BL-‘] = [‘40.6755’]
+- BASE-:      baseline in the scan - direction, e.g.: bore_data[‘fivept.pri’][‘BASE-‘] = [‘40.6401’]
+- DELTA+:     bore_data[‘fivept.pri’][‘DELTA+’]   = [‘0.0304588’,   0.124607’]
+- DELTA(0):   bore_data[‘fivept.pri’][‘DELTA(0)’] = [‘0.0985753’,   0.0985793’]
+- DELTA-:     bore_data[‘fivept.pri’][‘DELTA-‘]   = [‘0.0359992’,   0.0969167’]
+- RMS:        bore_data[‘fivept.pri’][‘RMS’] = [‘0.0000’,’0.0000’]
+- ERR:        bore_data[‘fivept.pri’][‘ERR’] = [‘0.0000’]
+- POS:        bore_data[‘fivept.pri’][‘POS’] = [‘0.0000’]
+- X_ERR:      bore_data[‘fivept.pri’][‘X_ERR’] = [‘0.0000’]
+- NUMPTS:     bore_data[‘fivept.pri’][‘NUMPTS’] = [‘0’, ‘0’]
+- BW:         bore_data[‘fivept.pri’][‘BW’] = [‘0.0000’]
+- ON(1):      bore_data[‘fivept.pri’][‘ON(1)’] = [‘0’, ‘0’]
+- ON(2):      bore_data[‘fivept.pri’][‘ON(2)’] = [‘0’, ‘0’]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.logs.get_cals.html" title="get_cals"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.logs.get_VSR_logs.html" title="get_VSR_logs"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

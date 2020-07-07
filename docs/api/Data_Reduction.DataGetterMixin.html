@@ -1,0 +1,251 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>DataGetterMixin &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="GriddingMixin" href="Data_Reduction.GriddingMixin.html" />
+    <link rel="prev" title="get_obs_session" href="Data_Reduction.get_obs_session.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GriddingMixin.html" title="GriddingMixin"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.get_obs_session.html" title="get_obs_session"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.get_obs_session.html"
+                        title="previous chapter">get_obs_session</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.GriddingMixin.html"
+                        title="next chapter">GriddingMixin</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.DataGetterMixin.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="datagettermixin">
+<h1>DataGetterMixin<a class="headerlink" href="#datagettermixin" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Data_Reduction.DataGetterMixin">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">DataGetterMixin</code><a class="headerlink" href="#Data_Reduction.DataGetterMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class for getting data from a CSV file.</p>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.DataGetterMixin.get_data_channels" title="Data_Reduction.DataGetterMixin.get_data_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data_channels</span></code></a>(data[, ignore])</p></td>
+<td><p>Gets or sets the names of the signal columns</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.DataGetterMixin.initialize" title="Data_Reduction.DataGetterMixin.initialize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initialize</span></code></a>(filename[, delimiter, names, …])</p></td>
+<td><p>Get the data and make a data structure for the observations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.DataGetterMixin.make_channels" title="Data_Reduction.DataGetterMixin.make_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_channels</span></code></a>(signals[, props])</p></td>
+<td><p>Assign properties to the channels.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.DataGetterMixin.make_data_struct" title="Data_Reduction.DataGetterMixin.make_data_struct"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_data_struct</span></code></a>(data, metadata, signals)</p></td>
+<td><p>Takes a text table with headers and converts it into a numpy <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.DataGetterMixin.open_datafile" title="Data_Reduction.DataGetterMixin.open_datafile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">open_datafile</span></code></a>(filename[, delimiter, names, …])</p></td>
+<td><p>Opens and reads a data file</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="Data_Reduction.DataGetterMixin.get_data_channels">
+<code class="sig-name descname">get_data_channels</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">ignore</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DataGetterMixin.get_data_channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets or sets the names of the signal columns</p>
+<p>Column names are separated into metadata and signals. Names in
+<code class="docutils literal notranslate"><span class="pre">ignore</span></code> re ignored. Names in <code class="docutils literal notranslate"><span class="pre">aliases</span></code> are replaced.
+:param data: data read from text file
+:type data: ndarray
+:param ignore: columns to ignore; default None
+:type ignore: list of str</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>metadata, signals</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>(list of str, list of str)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.DataGetterMixin.initialize">
+<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="o">=</span><span class="default_value">' '</span></em>, <em class="sig-param"><span class="n">names</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">skip_header</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">source</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DataGetterMixin.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the data and make a data structure for the observations.</p>
+<p>This is not included by default in <code class="docutils literal notranslate"><span class="pre">__init__()</span></code> to keep it simple for
+subclasses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – name only, required; the path is provided</p></li>
+<li><p><strong>delimiter</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – what separates the columns</p></li>
+<li><p><strong>names</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – the first line has column names</p></li>
+<li><p><strong>skip_header</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – number of rows to skip</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.DataGetterMixin.make_channels">
+<code class="sig-name descname">make_channels</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">signals</span></em>, <em class="sig-param"><span class="n">props</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DataGetterMixin.make_channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign properties to the channels.</p>
+<p>The prop keys are “freq”, “pol”, and “IFtype”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>props</strong> (<em>dict of dicts</em>) – signal channel properties.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.DataGetterMixin.make_data_struct">
+<code class="sig-name descname">make_data_struct</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">metadata</span></em>, <em class="sig-param"><span class="n">signals</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DataGetterMixin.make_data_struct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a text table with headers and converts it into a numpy <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>.</p>
+<p>That means that a column can be extracted using <cite>data[label]</cite>.</p>
+<p>Ideally, there must be a header word for each column and the separator must
+not be  ambiguous, for example, a space if the column headers also include
+spaces.  However, the <code class="docutils literal notranslate"><span class="pre">numpy</span></code> function <code class="docutils literal notranslate"><span class="pre">genfromtxt()</span></code> is very flexible.
+Here is an example of reading DSS-28 text files from solar observations in
+2012, 9 columns but 7 header words, when database access was not yet
+practical:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="kn">from</span> <span class="nn">Data_Reduction</span> <span class="kn">import</span> <span class="n">Observation</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="kn">from</span> <span class="nn">Astronomy.DSN_coordinates</span> <span class="kn">import</span> <span class="n">DSS</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">4</span><span class="p">]:</span> <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">6</span><span class="p">]:</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">Observation</span><span class="p">(</span><span class="n">dss</span><span class="o">=</span><span class="mi">28</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">names</span></code> string was just copied by hand from the first line in the
+file. It could also be done with <code class="docutils literal notranslate"><span class="pre">file.readline()</span></code>.</p>
+<p>However, the subclass <code class="docutils literal notranslate"><span class="pre">GAVRT.Observation</span></code> will read all the t-files in a
+directory and instead of <code class="docutils literal notranslate"><span class="pre">Tsys</span></code> has <code class="docutils literal notranslate"><span class="pre">counts</span></code> which is itself a dict with
+an item for each receiver channel.</p>
+<p>By default, columns with unknown names are assumed to be power from the
+channel whose name is the column name. Columns that have unknown names
+(i.e. not in ‘reserved’) must have their names in ‘ignore’.</p>
+<p>:param filename : name of the data file
+:type  filename : str</p>
+<p>:param delimiter : column separator
+:type  delimiter : str</p>
+<p>:param aliases : alternative names for keywords
+:type  aliases : dict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>column headers (str), data array(str)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.DataGetterMixin.open_datafile">
+<code class="sig-name descname">open_datafile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="o">=</span><span class="default_value">' '</span></em>, <em class="sig-param"><span class="n">names</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">skip_header</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DataGetterMixin.open_datafile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Opens and reads a data file</p>
+<p>This is used by <code class="docutils literal notranslate"><span class="pre">Malargue</span></code> (one data files) and <code class="docutils literal notranslate"><span class="pre">GAVRT</span></code> (one data file
+for each signal).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – text data file name</p></li>
+<li><p><strong>delimiter</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – separator between columns (default: whitespace)</p></li>
+<li><p><strong>names</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – file row has column names (default: True)</p></li>
+<li><p><strong>skip_header</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – number of rows to skip at beginning of file</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GriddingMixin.html" title="GriddingMixin"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.get_obs_session.html" title="get_obs_session"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

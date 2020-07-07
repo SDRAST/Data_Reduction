@@ -4,10 +4,10 @@ Handles old Tidbinbilla data files
 
 NEEDS MAJOR UPDATES FROM MODULE Observatory TO MonitorControl
 """
+import time
+
 import Astronomy as A
-from time import strftime
 import Physics as P
-#import Observatory as O
 import Data_Reduction.FITS.SDFITS as SDF
 
 diag = False
@@ -98,8 +98,8 @@ class Tid_scan():
   Notes
   =====
 
-  Receiver configurations
-  -----------------------
+  *Receiver configurations*
+  
   1. A K-band maser was installed in 1981. It had one linear
      polarization. The receiver was based on a phase-lock Gunn of an OVRO
      down-converting to S-band design. The back-end was a 256 channel
@@ -111,8 +111,8 @@ class Tid_scan():
   3. Around 1995 an 18-26 GHz HEMT was installed.  Also, at some point,
      SpectraData was replaced with the DAVOS spectrometer.
 
-  Frequency calculations
-  ----------------------
+  *Frequency calculations*
+  
   1. RESTFREQ is the frequency of interest, usually a line frequency,
      in the rest frame of the source, in Hz
 
@@ -124,8 +124,8 @@ class Tid_scan():
      this feature of interest should appear, calculated as an offset
      from the receiver frequency.  We expect exp_freq = obs_freq.
 
-  Source name encoding
-  --------------------
+  *Source name encoding*
+  
   In 1989, the convention was to put the source name on the first
   line of the scan block, after the scan number.
 
@@ -135,9 +135,11 @@ class Tid_scan():
   1991/174-194,1992/144-1145 zero-filled again.
 
   1992/165 source name encoding started but it was wrong, mostly::
+  
     ['11 09 45.', '11 09 45.', '17 42 29.3', '17 42 29.3',....
      '17 42 29.3', 'G1.6 meth peak', 'G1.6 meth peak', 'G1.6 meth peak',
      '17 42 29.3',.... '17 42 29.3', '1', '1', '1']
+     
   That was sorted out on 1992/236.
 
   1995/066 the source name encoding in numbers[37:49] was erroneously
@@ -182,7 +184,7 @@ class Tid_scan():
     hh = int(ut)
     mm = int((ut-hh)*60)
     ss = ((ut-hh)*60-mm)*60
-    self.header['DATE-OBS'] = strftime('%Y-%m-%dT%H:%M:%S',
+    self.header['DATE-OBS'] = time.strftime('%Y-%m-%dT%H:%M:%S',
                                        (yr,month,day,hh,mm,ss,0,0,0))
     self.header['ra'] = float(numbers[5])        # decimal hours
     self.header['dec'] = float(numbers[6])       # decimal degrees

@@ -1,0 +1,258 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>DSS28db &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Map" href="Data_Reduction.GAVRT.Map.html" />
+    <link rel="prev" title="BoresightScan" href="Data_Reduction.GAVRT.BoresightScan.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.Map.html" title="Map"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.BoresightScan.html" title="BoresightScan"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.GAVRT.BoresightScan.html"
+                        title="previous chapter">BoresightScan</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.GAVRT.Map.html"
+                        title="next chapter">Map</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.GAVRT.DSS28db.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="dss28db">
+<h1>DSS28db<a class="headerlink" href="#dss28db" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Data_Reduction.GAVRT.DSS28db">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.</code><code class="sig-name descname">DSS28db</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">host</span><span class="o">=</span><span class="default_value">'kraken.gavrt.org'</span></em>, <em class="sig-param"><span class="n">user</span><span class="o">=</span><span class="default_value">'ops'</span></em>, <em class="sig-param"><span class="n">pw</span><span class="o">=</span><span class="default_value">'v3H!cle'</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">'dss28_eac'</span></em>, <em class="sig-param"><span class="n">port</span><span class="o">=</span><span class="default_value">3306</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Data_Reduction.GAVRT.mysql.BaseDB.html#Data_Reduction.GAVRT.mysql.BaseDB" title="Data_Reduction.GAVRT.mysql.BaseDB"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.GAVRT.mysql.BaseDB</span></code></a></p>
+<p>subclass for the DSS-28 EAC database</p>
+<p>provides methods for handling tables</p>
+<dl class="simple">
+<dt>Attributes::</dt><dd><p>logger   - logging.Logger object
+receiver - receivers which provide data
+sessions - dict of sessions obtained with ‘get_session’</p>
+</dd>
+</dl>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.DSS28db.extract_boresight_data" title="Data_Reduction.GAVRT.DSS28db.extract_boresight_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_boresight_data</span></code></a>(year, doy)</p></td>
+<td><p>Get the metadata for the boresights on the designated day.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.DSS28db.get_Tsys" title="Data_Reduction.GAVRT.DSS28db.get_Tsys"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_Tsys</span></code></a>(chan, start, stop)</p></td>
+<td><p>Get system temperatures from tlog</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.DSS28db.get_receiver_data" title="Data_Reduction.GAVRT.DSS28db.get_receiver_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_receiver_data</span></code></a>(year, doy, time, columns)</p></td>
+<td><p>Get the receiver state at a given time</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.DSS28db.get_session" title="Data_Reduction.GAVRT.DSS28db.get_session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_session</span></code></a>(year, doy)</p></td>
+<td><p>get IDs for an observing session</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.DSS28db.get_source_names" title="Data_Reduction.GAVRT.DSS28db.get_source_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_source_names</span></code></a>(source_IDs)</p></td>
+<td><p>Get the source information from gavrt_sources.source</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.DSS28db.insertRecord" title="Data_Reduction.GAVRT.DSS28db.insertRecord"><code class="xref py py-obj docutils literal notranslate"><span class="pre">insertRecord</span></code></a>(table, rec)</p></td>
+<td><p>not allowed for subclass</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.DSS28db.updateValues" title="Data_Reduction.GAVRT.DSS28db.updateValues"><code class="xref py py-obj docutils literal notranslate"><span class="pre">updateValues</span></code></a>(vald, table)</p></td>
+<td><p>not allowed for subclass</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.DSS28db.extract_boresight_data">
+<code class="sig-name descname">extract_boresight_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">year</span></em>, <em class="sig-param"><span class="n">doy</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.extract_boresight_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the metadata for the boresights on the designated day.</p>
+<p>The boresights are extracted from table ‘xscan’.  Missing ‘el’ data are
+obtained from table ‘xpwr’.  The source, scan axis and channel are obtained
+from table ‘xpwr_cfg’.  The receiver data are obtained from table ‘rss_cfg’.</p>
+<p>Returns a dictionary like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;utc&#39;</span><span class="p">:</span>        <span class="nb">list</span> <span class="n">of</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">,</span>
+ <span class="s1">&#39;epoch&#39;</span><span class="p">:</span>      <span class="nb">list</span> <span class="n">of</span> <span class="nb">float</span><span class="p">,</span>
+ <span class="s1">&#39;az&#39;</span><span class="p">:</span>         <span class="nb">list</span> <span class="n">of</span> <span class="nb">float</span><span class="p">,</span>
+ <span class="s1">&#39;el&#39;</span><span class="p">:</span>         <span class="nb">list</span> <span class="n">of</span> <span class="n">value</span><span class="p">,</span>
+ <span class="s1">&#39;chan&#39;</span><span class="p">:</span>       <span class="nb">list</span> <span class="n">of</span> <span class="nb">int</span><span class="p">,</span>
+ <span class="s1">&#39;tsrc&#39;</span><span class="p">:</span>       <span class="nb">list</span> <span class="n">of</span> <span class="nb">float</span><span class="p">,</span>
+ <span class="s1">&#39;axis&#39;</span><span class="p">:</span>       <span class="nb">list</span> <span class="n">of</span> <span class="nb">str</span><span class="p">,</span>
+ <span class="s1">&#39;source&#39;</span><span class="p">:</span>     <span class="nb">list</span> <span class="n">of</span> <span class="nb">str</span><span class="p">,</span>
+ <span class="s1">&#39;xpwr_cfg_id: list of int&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;xscan_id&#39;</span><span class="p">:</span>   <span class="nb">list</span> <span class="n">of</span> <span class="nb">int</span><span class="p">,</span>
+ <span class="s1">&#39;source_id&#39;</span><span class="p">:</span>  <span class="nb">list</span> <span class="n">of</span> <span class="nb">int</span><span class="p">,</span>
+ <span class="s1">&#39;rx&#39;</span><span class="p">:</span>         <span class="nb">list</span> <span class="n">of</span> <span class="nb">dict</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>An ‘rx’ dict looks like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span> <span class="mi">2</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;if_bw&#39;</span><span class="p">:</span>    <span class="nb">float</span><span class="p">,</span>
+      <span class="s1">&#39;if_mode&#39;</span><span class="p">:</span>  <span class="nb">str</span><span class="p">,</span>
+      <span class="s1">&#39;pol&#39;</span><span class="p">:</span>      <span class="nb">str</span><span class="p">,</span>
+      <span class="s1">&#39;sky_freq&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+      <span class="s1">&#39;utc&#39;</span><span class="p">:</span>      <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">},</span>
+  <span class="mi">4</span><span class="p">:</span> <span class="p">{</span> <span class="o">...</span> <span class="p">},</span>
+ <span class="o">....</span>
+ <span class="mi">16</span><span class="p">:</span> <span class="p">{</span> <span class="o">...</span> <span class="p">}}</span>
+</pre></div>
+</div>
+<p>:param year : year of observation
+:type  year : int</p>
+<p>:param doy : day of year
+:type  doy : int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.DSS28db.get_Tsys">
+<code class="sig-name descname">get_Tsys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">chan</span></em>, <em class="sig-param"><span class="n">start</span></em>, <em class="sig-param"><span class="n">stop</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.get_Tsys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get system temperatures from tlog</p>
+<p>:param start : UNIXtime at start of selection
+:type  start : float</p>
+<p>:param stop : UNIXtime at end of selection
+:type  stop :float</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.DSS28db.get_receiver_data">
+<code class="sig-name descname">get_receiver_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">year</span></em>, <em class="sig-param"><span class="n">doy</span></em>, <em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">columns</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.get_receiver_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the receiver state at a given time</p>
+<p>This creates a dictionary keyed with channel number and returns a dictionary
+of the receiver configuration, keyed with specified in the columns, that was
+in effect at the given time.</p>
+<p class="rubric">Notes</p>
+<p>The challenge here is to get the latest configuration data for each channel
+at or prior to the specified time.  That channel may have been configured on
+the same day or a prior day. The method we’ll use is to find the ID of last
+configuration change and assume that the IDs are sequential in date/time.</p>
+<p>:param db : database
+:type  db : Mysql.BaseDB instance</p>
+<p>:param year : year of observation
+:type  year : int</p>
+<p>:param doy : day of year
+:type  doy : int</p>
+<p>:param time : UTC for the requested receiver state
+:type  time : datetime.timedelta</p>
+<p>:param columns : data items to be returned
+:type  columns : list of str</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.DSS28db.get_session">
+<code class="sig-name descname">get_session</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">year</span></em>, <em class="sig-param"><span class="n">doy</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.get_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>get IDs for an observing session</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.DSS28db.get_source_names">
+<code class="sig-name descname">get_source_names</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">source_IDs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.get_source_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the source information from gavrt_sources.source</p>
+<p>Returns a dict with source names for the source IDs provided</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.DSS28db.insertRecord">
+<code class="sig-name descname">insertRecord</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">table</span></em>, <em class="sig-param"><span class="n">rec</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.insertRecord" title="Permalink to this definition">¶</a></dt>
+<dd><p>not allowed for subclass</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.DSS28db.updateValues">
+<code class="sig-name descname">updateValues</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vald</span></em>, <em class="sig-param"><span class="n">table</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.updateValues" title="Permalink to this definition">¶</a></dt>
+<dd><p>not allowed for subclass</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.Map.html" title="Map"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.BoresightScan.html" title="BoresightScan"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

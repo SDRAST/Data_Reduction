@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
-from os.path import basename
+import os.path
 import datetime
 import logging
 import openpyxl
@@ -144,7 +144,7 @@ def get_meta_data(meta_ws, meta_column, files):
   logger.debug("get_meta_data: from worksheet %s", meta_ws)
   logger.debug("get_meta_data: for files %s", files)
   for filename in files:
-    bname = basename(filename)
+    bname = os.path.basename(filename)
     row = get_row_number(meta_ws, meta_column['File'], bname)
     logger.debug("get_meta_data: %s metadata are in row %d", bname, row)
     freq[bname]   = \
@@ -161,8 +161,8 @@ def get_meta_data(meta_ws, meta_column, files):
       meta_ws.cell(row=row, column=meta_column['Start']).value
     stop[bname] = \
       meta_ws.cell(row=row, column=meta_column['Stop'] ).value
-  mean_time = start[basename(files[0])] \
-            + (stop[basename(files[0])]-start[basename(files[0])])/2
+  mean_time = start[os.path.basename(files[0])] \
+            + (stop[os.path.basename(files[0])]-start[os.path.basename(files[0])])/2
   doy = DT.day_of_year(mean_time.year, mean_time.month, mean_time.day)
   jd = DT.julian_date(mean_time.year,doy) + \
        (mean_time.hour + mean_time.minute/60.)/24.
@@ -184,7 +184,7 @@ def get_file_freqs_and_pols(ws, meta_column, files):
     get_meta_data(ws, meta_column, files)
   filename_dict = {}
   for fn in files:
-    filename = basename(fn)
+    filename = os.path.basename(fn)
     f = freq[filename]
     p = pol[filename]
     if f in filename_dict:

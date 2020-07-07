@@ -1,0 +1,260 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Session &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="check_database" href="Data_Reduction.GAVRT.mysql.check_database.html" />
+    <link rel="prev" title="Observation" href="Data_Reduction.GAVRT.Observation.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.mysql.check_database.html" title="check_database"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.Observation.html" title="Observation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.GAVRT.Observation.html"
+                        title="previous chapter">Observation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.GAVRT.mysql.check_database.html"
+                        title="next chapter">check_database</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.GAVRT.Session.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="session">
+<h1>Session<a class="headerlink" href="#session" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Data_Reduction.GAVRT.Session">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.</code><code class="sig-name descname">Session</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="n">year</span></em>, <em class="sig-param"><span class="n">doy</span></em>, <em class="sig-param"><span class="n">plotter</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Data_Reduction.Session.html#Data_Reduction.Session" title="Data_Reduction.Session"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.Session</span></code></a></p>
+<p>Class for an observing session on a given year and DOY</p>
+<p>Public Attributes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">boresights</span>    <span class="o">-</span> <span class="nb">dict</span> <span class="n">keyed</span> <span class="n">on</span> <span class="s1">&#39;xpwr_cfg_id&#39;</span> <span class="k">with</span> <span class="mi">2</span><span class="n">D</span> <span class="n">arrays</span> <span class="k">for</span> <span class="n">scan</span> <span class="n">metadata</span>
+<span class="n">bs_channels</span>   <span class="o">-</span> <span class="nb">dict</span> <span class="n">keyed</span> <span class="n">on</span> <span class="s1">&#39;xpwr_cfg_id&#39;</span> <span class="k">with</span> <span class="n">lists</span> <span class="n">of</span> <span class="n">active</span> <span class="n">channels</span>
+<span class="n">bs_data</span>       <span class="o">-</span> <span class="nb">dict</span> <span class="n">keyed</span> <span class="n">on</span> <span class="s1">&#39;xpwr_cfg_id&#39;</span> <span class="k">with</span> <span class="mi">2</span><span class="n">D</span> <span class="n">rrays</span> <span class="k">for</span> <span class="s1">&#39;tlog&#39;</span> <span class="n">data</span>
+<span class="n">db</span>            <span class="o">-</span> <span class="n">database</span>
+<span class="n">doy</span>           <span class="o">-</span> <span class="n">day</span> <span class="n">of</span> <span class="n">year</span> <span class="k">for</span> <span class="n">session</span>
+<span class="n">logger</span>        <span class="o">-</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="nb">object</span>
+<span class="n">maps</span>          <span class="o">-</span> <span class="n">maps</span> <span class="ow">in</span> <span class="n">this</span> <span class="n">session</span>
+<span class="n">session_dir</span>   <span class="o">-</span> <span class="n">path</span> <span class="n">to</span> <span class="n">results</span> <span class="kn">from</span> <span class="nn">this</span> <span class="n">session</span>
+<span class="n">xpwr_metadata</span> <span class="o">-</span> <span class="mi">2</span><span class="n">D</span> <span class="n">array</span> <span class="k">with</span> <span class="n">data</span> <span class="k">for</span> <span class="n">each</span> <span class="s1">&#39;xpwr&#39;</span> <span class="n">configuration</span>
+<span class="n">year</span>          <span class="o">-</span> <span class="n">year</span> <span class="k">for</span> <span class="n">session</span>
+</pre></div>
+</div>
+<p>Notes on Data Arrays:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span> <span class="s1">&#39;boresights&#39;</span> <span class="mi">2</span><span class="n">D</span><span class="o">-</span><span class="n">arrays</span> <span class="n">have</span> <span class="n">a</span> <span class="n">row</span> <span class="k">for</span> <span class="n">each</span> <span class="n">scan</span> <span class="n">of</span> <span class="n">the</span> <span class="n">boresight</span> <span class="ow">and</span>
+  <span class="n">columns</span> <span class="k">for</span><span class="p">::</span>
+    <span class="mi">0</span> <span class="o">-</span> <span class="s1">&#39;xscan_id&#39;</span><span class="p">,</span>
+    <span class="mi">1</span> <span class="o">-</span> <span class="s1">&#39;xpwr_cfg_id&#39;</span><span class="p">,</span> <span class="ow">and</span>
+    <span class="mi">2</span> <span class="o">-</span> <span class="s1">&#39;epoch&#39;</span><span class="o">.</span>
+<span class="o">*</span> <span class="s1">&#39;bs_data&#39;</span> <span class="mi">2</span><span class="n">D</span><span class="o">-</span><span class="n">arrays</span> <span class="n">have</span> <span class="n">a</span> <span class="n">row</span> <span class="k">for</span> <span class="n">each</span> <span class="s1">&#39;tlog&#39;</span> <span class="n">row</span> <span class="ow">and</span> <span class="n">columns</span> <span class="k">for</span><span class="p">::</span>
+    <span class="mi">0</span> <span class="o">-</span> <span class="n">UNIX</span> <span class="n">time</span><span class="p">,</span>
+    <span class="mi">1</span> <span class="o">-</span> <span class="n">counts</span><span class="p">,</span>
+    <span class="mi">2</span> <span class="o">-</span> <span class="n">integration</span> <span class="n">time</span><span class="p">,</span>
+    <span class="mi">3</span> <span class="o">-</span> <span class="n">azimuth</span><span class="p">,</span>
+    <span class="mi">4</span> <span class="o">-</span> <span class="n">elevation</span><span class="p">,</span>
+    <span class="mi">5</span> <span class="o">-</span> <span class="n">noise</span> <span class="n">diode</span> <span class="n">state</span><span class="p">,</span> <span class="ow">and</span>
+    <span class="mi">6</span> <span class="o">-</span> <span class="n">channel</span> <span class="p">[</span><span class="k">if</span> <span class="n">argument</span> <span class="n">chan</span><span class="o">=</span><span class="kc">None</span><span class="p">;</span> <span class="n">see</span> <span class="n">get_boresight_data</span><span class="p">()]</span>
+<span class="o">*</span> <span class="s1">&#39;xpwr_metadata&#39;</span> <span class="ow">is</span> <span class="n">a</span> <span class="mi">2</span><span class="n">D</span><span class="o">-</span><span class="n">array</span> <span class="k">with</span> <span class="n">a</span> <span class="n">row</span> <span class="k">for</span> <span class="n">each</span> <span class="n">configuration</span> <span class="ow">and</span> <span class="n">columns</span><span class="p">::</span>
+    <span class="mi">0</span> <span class="o">-</span> <span class="s1">&#39;xpwr_cfg_id&#39;</span>
+    <span class="mi">1</span> <span class="o">-</span> <span class="n">UNIX</span> <span class="n">time</span><span class="p">,</span>
+    <span class="mi">2</span> <span class="o">-</span> <span class="n">rss_cfg_id</span><span class="p">,</span>
+    <span class="mi">3</span> <span class="o">-</span> <span class="n">source_id</span><span class="p">,</span>
+    <span class="mi">4</span> <span class="o">-</span> <span class="n">axis</span><span class="p">,</span> <span class="ow">and</span>
+    <span class="mi">5</span> <span class="o">-</span> <span class="n">chan</span>
+</pre></div>
+</div>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.Session.get_boresights" title="Data_Reduction.GAVRT.Session.get_boresights"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_boresights</span></code></a>()</p></td>
+<td><p>Returns boresights from the xpwr configurations</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.Session.get_good_boresights" title="Data_Reduction.GAVRT.Session.get_good_boresights"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_good_boresights</span></code></a>()</p></td>
+<td><p>Retrieves data from ‘tlog’ table for boresights with a given channel</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.Session.get_map_IDs" title="Data_Reduction.GAVRT.Session.get_map_IDs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_map_IDs</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.Session.get_maps" title="Data_Reduction.GAVRT.Session.get_maps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_maps</span></code></a>([map_IDs])</p></td>
+<td><p>Returns maps from the raster configuration IDs for the specified date</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.Session.get_session_dir" title="Data_Reduction.GAVRT.Session.get_session_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_session_dir</span></code></a>()</p></td>
+<td><p>find or make the sessions directory</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.Session.list_maps" title="Data_Reduction.GAVRT.Session.list_maps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_maps</span></code></a>([save])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.Session.make_bs_dir" title="Data_Reduction.GAVRT.Session.make_bs_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_bs_dir</span></code></a>([good_only, save])</p></td>
+<td><p><p class="rubric">Notes</p>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.Session.save_map_data" title="Data_Reduction.GAVRT.Session.save_map_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_map_data</span></code></a>([mapkeys])</p></td>
+<td><p>create a dict with the map data from the designated images</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.Session.summary" title="Data_Reduction.GAVRT.Session.summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code></a>([save])</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.Session.get_boresights">
+<code class="sig-name descname">get_boresights</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.get_boresights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns boresights from the xpwr configurations</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.Session.get_good_boresights">
+<code class="sig-name descname">get_good_boresights</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.get_good_boresights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves data from ‘tlog’ table for boresights with a given channel</p>
+<dl class="simple">
+<dt>Returns a numpy array with columns containing::</dt><dd><p>0 - UNIX time
+1 - counts
+2 - integration time
+3 - azimuth
+4 - elevation
+5 - noise diode state
+6 - chan (if chan=None)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.Session.get_map_IDs">
+<code class="sig-name descname">get_map_IDs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.get_map_IDs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.Session.get_maps">
+<code class="sig-name descname">get_maps</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">map_IDs</span><span class="o">=</span><span class="default_value">[]</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.get_maps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns maps from the raster configuration IDs for the specified date</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.Session.get_session_dir">
+<code class="sig-name descname">get_session_dir</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.get_session_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>find or make the sessions directory</p>
+<p>Either <cite>dss</cite> or <cite>path</cite> must be given.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dss</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – </p></li>
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.Session.list_maps">
+<code class="sig-name descname">list_maps</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">save</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.list_maps" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.Session.make_bs_dir">
+<code class="sig-name descname">make_bs_dir</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">good_only</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">save</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.make_bs_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Notes</p>
+<p>Each good boresight consists of two scans</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.Session.save_map_data">
+<code class="sig-name descname">save_map_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mapkeys</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.save_map_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a dict with the map data from the designated images</p>
+<p>This speeds up retrieval of images</p>
+<p>:param mapkeys : numbers of the maps (default: all)
+:type  mapkeys : list of int</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.GAVRT.Session.summary">
+<code class="sig-name descname">summary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">save</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.summary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.mysql.check_database.html" title="check_database"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.Observation.html" title="Observation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,156 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>get_cals &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="get_log_data" href="Data_Reduction.DSN.logs.get_log_data.html" />
+    <link rel="prev" title="get_boresights" href="Data_Reduction.DSN.logs.get_boresights.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.logs.get_log_data.html" title="get_log_data"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.logs.get_boresights.html" title="get_boresights"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.logs.get_boresights.html"
+                        title="previous chapter">get_boresights</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.logs.get_log_data.html"
+                        title="next chapter">get_log_data</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.DSN.logs.get_cals.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="get-cals">
+<h1>get_cals<a class="headerlink" href="#get-cals" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="Data_Reduction.DSN.logs.get_cals">
+<code class="sig-prename descclassname">Data_Reduction.DSN.logs.</code><code class="sig-name descname">get_cals</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cal_file</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.logs.get_cals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract the data from a minical file.</p>
+<p>This gets the data from the minical log files and puts them in a
+dictionary keyed with ‘calXXXX’ where XXXX is the frequency in MHz.</p>
+<p>:param cal_file : File with minical data
+:type  cal_file : string</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(dict of dicts) A dictionary keyed with the DOY/UT of a record.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>The values are also dictionaries whose keys are::</dt><dd><ul class="simple">
+<li><p>year:       year</p></li>
+<li><p>dss:        station number</p></li>
+<li><p>freq:       frequency in MHz</p></li>
+<li><p>bw:         bandwidth in MHz</p></li>
+<li><p>t_samp:     seconds per sample</p></li>
+<li><p>n_samp:     number of samples per measurement</p></li>
+<li><p>UT HH.HHH:  minical data for time HH.HHH in UT hours, consisting of</p></li>
+<li><p>DOY:        day of year</p></li>
+<li><p>El:         telescope elevation</p></li>
+<li><p>Freq:       receiver frequency</p></li>
+<li><p>Gain:       linear gain</p></li>
+<li><p>Hum:        humidity</p></li>
+<li><p>Lin:        linearity</p></li>
+<li><p>Pol:        polarization</p></li>
+<li><p>Press:      atmospheric pressure</p></li>
+<li><p>R1:         reduced minical measurements</p></li>
+<li><p>R2:</p></li>
+<li><p>R3:</p></li>
+<li><p>R4:</p></li>
+<li><p>R5:</p></li>
+<li><p>R6:</p></li>
+<li><p>T(follow):  post-LNA follow-on temperature</p></li>
+<li><p>T(lna):     LNA effective noise temperature</p></li>
+<li><p>T(load):    load effective noise temperature</p></li>
+<li><p>Tdiode:     effective noise diode temperature</p></li>
+<li><p>Tphys:      load physical temperature</p></li>
+<li><p>Tsys:       system noise temperature</p></li>
+<li><p>UT:         UT in decimal hours</p></li>
+<li><p>Wind_dir:   wind direction in degrees</p></li>
+<li><p>Wind_vel:   wind velocity in ?</p></li>
+<li><p>WxTemp:     air temperature</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.logs.get_log_data.html" title="get_log_data"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.logs.get_boresights.html" title="get_boresights"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

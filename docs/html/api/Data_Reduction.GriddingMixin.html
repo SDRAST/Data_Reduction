@@ -16,7 +16,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Map" href="Data_Reduction.Map.html" />
-    <link rel="prev" title="get_obs_session" href="Data_Reduction.get_obs_session.html" /> 
+    <link rel="prev" title="DataGetterMixin" href="Data_Reduction.DataGetterMixin.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -31,7 +31,7 @@
           <a href="Data_Reduction.Map.html" title="Map"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.get_obs_session.html" title="get_obs_session"
+          <a href="Data_Reduction.DataGetterMixin.html" title="DataGetterMixin"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
@@ -39,8 +39,8 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="Data_Reduction.get_obs_session.html"
-                        title="previous chapter">get_obs_session</a></p>
+  <p class="topless"><a href="Data_Reduction.DataGetterMixin.html"
+                        title="previous chapter">DataGetterMixin</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="Data_Reduction.Map.html"
                         title="next chapter">Map</a></p>
@@ -98,7 +98,7 @@ step (float):            map step size</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GriddingMixin.get_grid_stepsize" title="Data_Reduction.GriddingMixin.get_grid_stepsize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_grid_stepsize</span></code></a>()</p></td>
 <td><p>Determine the stepsize of gridded data</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.GriddingMixin.regrid" title="Data_Reduction.GriddingMixin.regrid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">regrid</span></code></a>([width, height, step])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.GriddingMixin.regrid" title="Data_Reduction.GriddingMixin.regrid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">regrid</span></code></a>([width, height, step, power_key])</p></td>
 <td><p>converts a map from observed coordinates to map coordinates</p></td>
 </tr>
 </tbody>
@@ -112,7 +112,7 @@ step (float):            map step size</p>
 
 <dl class="py method">
 <dt id="Data_Reduction.GriddingMixin.regrid">
-<code class="sig-name descname">regrid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">width</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">step</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GriddingMixin.regrid" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">regrid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">width</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">step</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">power_key</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GriddingMixin.regrid" title="Permalink to this definition">¶</a></dt>
 <dd><p>converts a map from observed coordinates to map coordinates</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">step</span></code> is not given then the step size will be the average step size
 in X and the average step in Y.  In this case, the effect is to make a
@@ -148,7 +148,7 @@ regular grid if the original positions were not exact, i.e., pointing error.</p>
           <a href="Data_Reduction.Map.html" title="Map"
              >next</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.get_obs_session.html" title="get_obs_session"
+          <a href="Data_Reduction.DataGetterMixin.html" title="DataGetterMixin"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>

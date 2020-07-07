@@ -30,11 +30,12 @@ A typical sequence for making an SDFITS data file is::
 followed by additional header card definitions and a loop to fill all
 the rows and then writing the file to disk.
 """
-import pyfits
+import astropy.io.fits as pyfits
+import logging
 import numpy
 import Data_Reduction.FITS as F
 
-diag = False
+logger = logging.getLogger(__name__)
 
 def init_SDFITS(DSS,tablesize,time_column=False):
   """
@@ -75,8 +76,7 @@ def init_SDFITS(DSS,tablesize,time_column=False):
   cols = make_basic_columns(tablesize,time_column)
   
   # add telescope location data to the table header
-  if diag:
-    print DSS
+  logger.debug("DSS: %s", DSS)
   if type(DSS) == list:
     # This may seem odd but in the most general case there could be two or
     # more antennas, like in an interferometer.  In that case, however,
@@ -129,8 +129,7 @@ def init_bintable(obs,tel,num_scans):
   # Create a blank SDFITS object
   prihdu, hdr, cols = init_SDFITS(tel,num_scans)
   prhead = prihdu.header
-  if diag:
-    print "Primary header:\n",prhead.ascardlist()
+  logger.debug("init_bintable: Primary header:\n%s", prhead.ascardlist())
   # initialize the SDFITS file with fixed data
   tel.FITS_init_frontends(hdr,cols,num_scans)
   tel.FITS_init_receivers(hdr,cols,num_scans)

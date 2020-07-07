@@ -1,0 +1,8 @@
+<map id="inheritance28bd6bf9ca" name="inheritance28bd6bf9ca">
+<area shape="rect" id="node1" href="api/Data_Reduction.DataGetterMixin.html#Data_Reduction.DataGetterMixin" target="_top" title="Class for getting data from a CSV file." alt="" coords="5,153,135,179"/>
+<area shape="rect" id="node2" href="api/Data_Reduction.GriddingMixin.html#Data_Reduction.GriddingMixin" target="_top" title="Class for all the data and methods associated with a raster scan map" alt="" coords="14,55,126,80"/>
+<area shape="rect" id="node3" href="api/Data_Reduction.Map.html#Data_Reduction.Map" target="_top" title="Map class without special features for GAVRT and Malargue" alt="" coords="189,55,261,80"/>
+<area shape="rect" id="node4" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" target="_top" title="superclass for a data structure and methods" alt="" coords="19,104,121,129"/>
+<area shape="rect" id="node6" href="api/Data_Reduction.Spectrum.html#Data_Reduction.Spectrum" target="_top" title="Class for spectra" alt="" coords="183,104,267,129"/>
+<area shape="rect" id="node5" href="api/Data_Reduction.Session.html#Data_Reduction.Session" target="_top" title="Base class for an observing session on a given year and DOY" alt="" coords="34,5,106,31"/>
+</map>

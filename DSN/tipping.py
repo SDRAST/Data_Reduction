@@ -7,20 +7,18 @@ in degrees and the second the system temperature for each of the four channels.
 Older files (like 2014) have only one reading and it may be dBm instead of Tsys
 
 """
+import collections
 import logging
 import numpy
+import os
+import pylab as PL
+import scipy.optimize as opt
 import sys
 
-from collections import OrderedDict
-from os.path import basename
-from pylab import *
-from scipy.optimize import curve_fit
-
-from local_dirs import log_dir
-from Radio_Astronomy import dBm_to_watts
-from support.logs import init_logging, get_loglevel
-from support.options import initiate_option_parser
-from support.process import search_response
+import Radio_Astronomy as RA
+import support.logs
+import support.options
+import support.process
 
 logdir  = "/home/ops/roach_data/sao_test_data/log_dir/"
 K2logs = "K2Observatory"
@@ -44,9 +42,9 @@ def sort_by_time(directory, name_template):
   """
   command = "ls -lrt "+logdir+name_template+'*'
   logger.debug("command: %s", command)
-  lines = search_response(['ls','-l', '--full-time',directory],
+  lines = support.process.search_response(['ls','-l', '--full-time',directory],
                           ['grep', name_template])
-  files = OrderedDict()
+  files = collections.OrderedDict()
   for line in lines:
     parts = line.strip().split()
     files[parts[-1]] = datestr2num(' '.join(parts[-4:-1]))
@@ -69,7 +67,7 @@ def get_tipping_data(filename):
     elif temps[0] < 0:
       # dBm
       power = array(temps)
-      tsys.append(dBm_to_watts(power))
+      tsys.append(RA.dBm_to_watts(power))
   return numpy.array(elevations), numpy.array(tsys)
 
 def plot_tipcurves(e, t, plot_title="", fig_title=""):
@@ -85,14 +83,14 @@ def plot_tipcurves(e, t, plot_title="", fig_title=""):
   #filename = tipfiles.keys()[index]
   #e,t = get_tipping_data(filename)
   for chan in range(len(t[0])):
-    plot(e,t[:,chan],label=str(chan+1))
-  xlabel("Elevation")
-  ylabel("System Temperature")
-  grid()
-  legend()
-  title(plot_title)
-  suptitle(fig_title)
-  show()
+    PL.plot(e,t[:,chan],label=str(chan+1))
+  PL.xlabel("Elevation")
+  PL.ylabel("System Temperature")
+  PL.grid()
+  PL.legend()
+  PL.title(plot_title)
+  PL.suptitle(fig_title)
+  PL.show()
 
 def fit_tipping_data(e, t, Tamb=290):
   """
@@ -131,7 +129,7 @@ def fit_tipping_data(e, t, Tamb=290):
   Trx = []
   tau = []
   for chan in range(len(t[0])):
-    popt, pcov = curve_fit(opacity_fitting,
+    popt, pcov = opt.curve_fit(opacity_fitting,
                            e[imin:imax], t[imin:imax,chan], p0 = [0, 0])
     Trx.append(popt[0])
     tau.append(popt[1])
@@ -199,16 +197,16 @@ if __name__ == "__main__":
   logging.basicConfig(level=logging.WARNING)
   mylogger = logging.getLogger()
 
-  p = initiate_option_parser(__doc__, examples)
+  p = support.options.initiate_option_parser(__doc__, examples)
   #p = MyParser(epilog=examples)
   #p.set_usage('tipping.py [options]')
   #p.set_description(__doc__)
 
   opts, args = p.parse_args(sys.argv[1:])
-  mylogger = init_logging(mylogger,
+  mylogger = support.logs.init_logging(mylogger,
                           loglevel = logging.INFO,
-                          consolevel = get_loglevel(opts.loglevel),
-                          logname = log_dir+"tipping.log")
+                          consolevel = support.logs.get_loglevel(opts.loglevel),
+                          logname = local_dirs.log_dir+"tipping.log")
   
   sys.exit()
   tipfiles = sort_by_time(logdir, tiplogs)
@@ -222,9 +220,9 @@ if __name__ == "__main__":
               (index, filename, datestr)))
     print(("min/max elevation = %4.1f/%4.1f, airmass =  %4.1f/%4.1f" % 
           (e.min(), e.max(), airmass(e.min()), airmass(e.max()) ) ))
-    figure(index)
+    PL.figure(index)
     plot_tipcurves(e, t, plot_title=datestr, fig_title=filename)
-    savefig(basename(filename)+".png")
+    PL.savefig(os.path.basename(filename)+".png")
     try:
       Trx,tau,imin,imax = fit_tipping_data(e, t)
     except Exception as details:

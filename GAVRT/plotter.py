@@ -8,9 +8,7 @@ import pickle
 import pylab as PL
 import time
 
-#from pylab import *
-
-import Data_Reduction.GAVRT.dss28db as DB
+import Data_Reduction.GAVRT as DB
 import Data_Reduction.maps as DRm
 import DatesTimes as DT
 
@@ -125,7 +123,7 @@ class SessionPlotter(DB.Session):
           pass
         else:
           continue
-        self.maps[key].center_map()
+        self.maps[key].get_offsets()
         sca(ax[row][col])
         DRm.plot_xdec_dec(self.maps[key].map_data['xdec_offset'],
                                    self.maps[key].map_data['dec_offset'],
@@ -184,7 +182,7 @@ class SessionPlotter(DB.Session):
         channels = Map.channels
       except AttributeError:
         continue
-      Map.center_map()
+      Map.get_offsets()
       x,y,z = Map.regrid(width=width, height=height)
       for chan in channels:
         if chan in z:
@@ -306,8 +304,17 @@ class SessionPlotter(DB.Session):
       fig.suptitle(str(key) + " ("+self.boresights[key].axis + ")")
       fig.show()
       fig.savefig(self.session_dir+"boresight-"+str(key)+".png")
-      
-        
+  
+  def summary(self, save=False):
+    if not self.list_maps(save=save):
+      print("no usable maps found")
+    else:
+      self.show_images()
+    if not self.make_bs_dir(save=save):
+      print("no usable boresights found")
+    else:
+      self.show_boresights()
+          
             
 class MapPlotter(DB.Map):
   """
@@ -329,7 +336,7 @@ class MapPlotter(DB.Map):
     For the other channels, the data taken from table 'tlogs' may differ
     because of timing differences in the voltage-to-frequency converters.
     The table records 'az' and 'el' for each 'chan' which can be used to
-    compute 'RA' and 'dec' and then 'center_map' can generate relative offsets.
+    compute 'RA' and 'dec' and then 'get_offsets' can generate relative offsets.
     """
     UNIXtime, xdecs, decs, tsrc = self.get_raster_data()
     DRm.plot_xdec_dec(self.raster_data['xdec'],

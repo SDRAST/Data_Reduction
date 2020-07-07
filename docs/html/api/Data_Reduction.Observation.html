@@ -73,7 +73,7 @@
 <h1>Observation<a class="headerlink" href="#observation" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="Data_Reduction.Observation">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">start</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">end</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>superclass for a data structure and methods</p>
 <dl class="py attribute">
@@ -136,23 +136,51 @@
 <code class="sig-name descname">session_path - (str) directory for session files</code></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">start        - (float) UNIX time at the beginning</code></dt>
+<dd></dd></dl>
+
 <p><strong>Reserved Column Names</strong></p>
-<p>These column names are recognized.</p>
+<p>These column names are recognized.  They are also the keys for attribute
+<code class="docutils literal notranslate"><span class="pre">data</span></code>.</p>
 <p>These quantities must be present in some form:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">unixtime</span>   <span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="n">UNIX</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">sec</span>
 <span class="n">chan_name</span>  <span class="p">(</span><span class="nb">str</span><span class="p">)</span>   <span class="n">channel</span> <span class="n">name</span>
 <span class="n">integr</span>     <span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="n">integration</span> <span class="p">(</span><span class="n">exposure</span><span class="p">)</span> <span class="ow">in</span> <span class="n">sec</span>
 <span class="n">azel</span>       <span class="p">(</span><span class="nb">float</span><span class="p">,</span><span class="nb">float</span><span class="p">)</span> <span class="n">azimuth</span> <span class="ow">and</span> <span class="n">elevation</span> <span class="ow">in</span> <span class="n">decimal</span> <span class="n">deg</span>
+<span class="n">power</span>      <span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="n">power</span> <span class="n">level</span> <span class="k">if</span> <span class="n">only</span> <span class="n">a</span> <span class="n">single</span> <span class="n">channel</span>
 </pre></div>
 </div>
+<p>Optional:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>diode      (float) 0 or power in K (integers OK)
+level      (float) (unidentified -- in ``tlog`` table)
+cryotemp   (float) cryostat temp in K
+windspeed  (float) km/hr
+winddir    (float) deg
+ambtemp    (float) deg C
+pressure   (float) mbar
+</pre></div>
+</div>
+<p>Columns to be computed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>mpldatenum (float) matplotlib ``datenum``
+</pre></div>
+</div>
+<p>Alternative for <code class="docutils literal notranslate"><span class="pre">power</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>tsys       (float) system temperature (calibrated power)
+top        (float) alternative for ``tsys`` (used in DSN)
+vfc_counts (int)   VFC counts (rate times ``integr``)
+</pre></div>
+</div>
+<p>Any column with a name which is not a reserved name is assumed to be
+power-like data from the channel with that name, unless that name is in a
+list provided to the argument <code class="docutils literal notranslate"><span class="pre">ignore</span></code> in the method <code class="docutils literal notranslate"><span class="pre">get_data_channels</span></code>
+of the class <code class="docutils literal notranslate"><span class="pre">DataGetterMixin</span></code>.</p>
 <p>Alternative for <code class="docutils literal notranslate"><span class="pre">unixtime</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">year</span>       <span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="n">year</span> <span class="n">of</span> <span class="n">observation</span>
 <span class="n">doy</span>        <span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="n">day</span> <span class="n">of</span> <span class="n">year</span>
 <span class="n">utc</span>        <span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="n">HH</span><span class="p">:</span><span class="n">MM</span><span class="p">:</span><span class="n">SS</span>
-</pre></div>
-</div>
-<p>Alternative for <code class="docutils literal notranslate"><span class="pre">unixtime</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">timestr</span>    <span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="n">something</span> <span class="n">like</span> <span class="mi">2020</span><span class="o">/</span><span class="mi">06</span><span class="o">/</span><span class="mi">14</span><span class="o">/</span><span class="mi">14</span><span class="p">:</span><span class="mi">22</span><span class="p">:</span><span class="mf">21.00</span>
+<span class="n">timestr</span>    <span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="n">something</span> <span class="n">like</span> <span class="mi">2020</span><span class="o">/</span><span class="mi">06</span><span class="o">/</span><span class="mi">14</span><span class="o">/</span><span class="mi">14</span><span class="p">:</span><span class="mi">22</span><span class="p">:</span><span class="mf">21.00</span>
 </pre></div>
 </div>
 <p>Alternative for <code class="docutils literal notranslate"><span class="pre">chan_name</span></code>:</p>
@@ -176,22 +204,6 @@
 <span class="n">dec2000</span>    <span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="n">mean</span> <span class="n">declination</span> <span class="ow">in</span> <span class="n">decimal</span> <span class="n">deg</span> <span class="n">at</span> <span class="n">epoch</span>
 </pre></div>
 </div>
-<p>Optional:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>tsys       (float) power level if only a single channel
-top        (float) alternative for ``tsys``
-diode      (float) 0 or power in K (integers OK)
-level      (float) (unidentified -- in ``tlog`` table)
-cryotemp   (float) cryostat temp in K
-windspeed  (float) km/hr
-winddir    (float) deg
-ambtemp    (float) deg C
-pressure   (float) mbar
-</pre></div>
-</div>
-<p>Columns to be computed:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>mpldatenum (float) matplotlib ``datenum``
-</pre></div>
-</div>
 <p class="rubric">Notes</p>
 <ul class="simple">
 <li><p>The <code class="docutils literal notranslate"><span class="pre">data</span></code> structure is a dict.</p></li>
@@ -209,7 +221,10 @@ never get one without the other.)</p></li>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Observation.reserved" title="Data_Reduction.Observation.reserved"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reserved</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Observation.power_keys" title="Data_Reduction.Observation.power_keys"><code class="xref py py-obj docutils literal notranslate"><span class="pre">power_keys</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Observation.reserved" title="Data_Reduction.Observation.reserved"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reserved</span></code></a></p></td>
 <td><p></p></td>
 </tr>
 </tbody>
@@ -221,60 +236,32 @@ never get one without the other.)</p></li>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Observation.azel_from_radec" title="Data_Reduction.Observation.azel_from_radec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">azel_from_radec</span></code></a>()</p></td>
-<td><p>compute azimuth and elevation from apparent right ascension and declination</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Observation.check_for" title="Data_Reduction.Observation.check_for"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_for</span></code></a>(data, longlat)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Observation.check_for" title="Data_Reduction.Observation.check_for"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_for</span></code></a>(data, longlat)</p></td>
 <td><p>Checks for separate coordinates and splits if coord pairs</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Observation.get_data_channels" title="Data_Reduction.Observation.get_data_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data_channels</span></code></a>(data[, ignore])</p></td>
-<td><p>Gets or sets the names of the signal columns</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Observation.get_offsets" title="Data_Reduction.Observation.get_offsets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_offsets</span></code></a>([source, xdec_ofst, dec_ofst])</p></td>
-<td><p>Generates a map in coordinates relative to a source</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Observation.make_channels" title="Data_Reduction.Observation.make_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_channels</span></code></a>(signals[, props])</p></td>
-<td><p>Assign properties to the channels.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Observation.make_data_struct" title="Data_Reduction.Observation.make_data_struct"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_data_struct</span></code></a>(data, metadata, signals)</p></td>
-<td><p>Takes a text table with headers and converts it into a numpy <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Observation.open_datafile" title="Data_Reduction.Observation.open_datafile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">open_datafile</span></code></a>(filename[, delimiter, names, …])</p></td>
-<td><p>Opens and reads a data file</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Observation.radec2000_from_radec" title="Data_Reduction.Observation.radec2000_from_radec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">radec2000_from_radec</span></code></a>()</p></td>
-<td><p>compute RA2000 and dec2000 from observed RA and dec</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Observation.radec_from_azel" title="Data_Reduction.Observation.radec_from_azel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">radec_from_azel</span></code></a>()</p></td>
-<td><p>compute RA and dec from az and el</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Observation.radec_from_radec2000" title="Data_Reduction.Observation.radec_from_radec2000"><code class="xref py py-obj docutils literal notranslate"><span class="pre">radec_from_radec2000</span></code></a>()</p></td>
-<td><p>compute apparent RA and dec.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Observation.sideband_separate" title="Data_Reduction.Observation.sideband_separate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sideband_separate</span></code></a>(data)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Observation.sideband_separate" title="Data_Reduction.Observation.sideband_separate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sideband_separate</span></code></a>(data)</p></td>
 <td><p>Converts a complex spectrum array and returns two reals with USB and LSB</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Observation.splitkey" title="Data_Reduction.Observation.splitkey"><code class="xref py py-obj docutils literal notranslate"><span class="pre">splitkey</span></code></a>(longlat)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Observation.splitkey" title="Data_Reduction.Observation.splitkey"><code class="xref py py-obj docutils literal notranslate"><span class="pre">splitkey</span></code></a>(longlat)</p></td>
 <td><p>Checks for presence of coordinates in pairs or singles</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Observation.unpack_to_complex" title="Data_Reduction.Observation.unpack_to_complex"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unpack_to_complex</span></code></a>(rawdata)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Observation.unpack_to_complex" title="Data_Reduction.Observation.unpack_to_complex"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unpack_to_complex</span></code></a>(rawdata)</p></td>
 <td><p>Converts a sequence of alternating real/imag samples to complex</p></td>
 </tr>
 </tbody>
 </table>
 <p class="rubric">Attributes Documentation</p>
 <dl class="py attribute">
+<dt id="Data_Reduction.Observation.power_keys">
+<code class="sig-name descname">power_keys</code><em class="property"> = ['tsys', 'top', 'vfc_counts', 'power']</em><a class="headerlink" href="#Data_Reduction.Observation.power_keys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt id="Data_Reduction.Observation.reserved">
 <code class="sig-name descname">reserved</code><em class="property"> = ['unixtime', 'chan_name', 'integr', 'az', 'el', 'year', 'doy', 'utc', 'timestr', 'chan', 'tsys', 'top', 'diode', 'level', 'cryotemp', 'windspeed', 'winddir', 'ambtemp', 'pressure', 'ra', 'dec', 'ra1950', 'dec1950', 'ra2000', 'dec2000']</em><a class="headerlink" href="#Data_Reduction.Observation.reserved" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <p class="rubric">Methods Documentation</p>
-<dl class="py method">
-<dt id="Data_Reduction.Observation.azel_from_radec">
-<code class="sig-name descname">azel_from_radec</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.azel_from_radec" title="Permalink to this definition">¶</a></dt>
-<dd><p>compute azimuth and elevation from apparent right ascension and declination</p>
-</dd></dl>
-
 <dl class="py method">
 <dt id="Data_Reduction.Observation.check_for">
 <code class="sig-name descname">check_for</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">longlat</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.check_for" title="Permalink to this definition">¶</a></dt>
@@ -287,142 +274,6 @@ never get one without the other.)</p></li>
 </ul>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.Observation.get_data_channels">
-<code class="sig-name descname">get_data_channels</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">ignore</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.get_data_channels" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets or sets the names of the signal columns</p>
-<p>Column names are separated into metadata and signals. Names in
-<code class="docutils literal notranslate"><span class="pre">ignore</span></code> re ignored. Names in <code class="docutils literal notranslate"><span class="pre">aliases</span></code> are replaced.
-:param data: data read from text file
-:type data: ndarray
-:param ignore: columns to ignore; default None
-:type ignore: list of str</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>metadata, signals</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>(list of str, list of str)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.Observation.get_offsets">
-<code class="sig-name descname">get_offsets</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">source</span><span class="o">=</span><span class="default_value">'Sun'</span></em>, <em class="sig-param"><span class="n">xdec_ofst</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">dec_ofst</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.get_offsets" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates a map in coordinates relative to a source</p>
-<p>If the source is the default, the position of the Sun will be computed for
-the time of each sample. IT SEEMS LIKE A GOOD IDEA TO DO THIS FOR PLANETS
-ALSO.</p>
-<p>This adds elements with keys <code class="docutils literal notranslate"><span class="pre">xdec_offset</span></code> and <code class="docutils literal notranslate"><span class="pre">dec_offset</span></code> to the
-attribute <code class="docutils literal notranslate"><span class="pre">data</span></code>.</p>
-<p>:param source : source at map center
-:type  source : ephem source instance</p>
-<p>:param xdec_ofst : relative X-dec position of sample
-:type  xdec_ofst : float</p>
-<p>:param dec_ofst : relative dec position of sample
-:type  dec_ofst : float</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>(dxdecs,ddecs) in degrees</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.Observation.make_channels">
-<code class="sig-name descname">make_channels</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">signals</span></em>, <em class="sig-param"><span class="n">props</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.make_channels" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assign properties to the channels.</p>
-<p>The prop keys are “freq”, “pol”, and “IFtype”.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>props</strong> (<em>dict of dicts</em>) – signal channel properties.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.Observation.make_data_struct">
-<code class="sig-name descname">make_data_struct</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">metadata</span></em>, <em class="sig-param"><span class="n">signals</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.make_data_struct" title="Permalink to this definition">¶</a></dt>
-<dd><p>Takes a text table with headers and converts it into a numpy <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>.</p>
-<p>That means that a column can be extracted using <cite>data[label]</cite>.</p>
-<p>Ideally, there must be a header word for each column and the separator must
-not be  ambiguous, for example, a space if the column headers also include
-spaces.  However, the <code class="docutils literal notranslate"><span class="pre">numpy</span></code> function <code class="docutils literal notranslate"><span class="pre">genfromtxt()</span></code> is very flexible.
-Here is an example of reading DSS-28 text files from solar observations in
-2012, 9 columns but 7 header words, when database access was not yet
-practical:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="kn">from</span> <span class="nn">Data_Reduction</span> <span class="kn">import</span> <span class="n">Observation</span>
-<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="kn">from</span> <span class="nn">Astronomy.DSN_coordinates</span> <span class="kn">import</span> <span class="n">DSS</span>
-<span class="n">In</span> <span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="kn">import</span> <span class="nn">logging</span>
-<span class="n">In</span> <span class="p">[</span><span class="mi">4</span><span class="p">]:</span> <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
-<span class="n">In</span> <span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
-<span class="n">In</span> <span class="p">[</span><span class="mi">6</span><span class="p">]:</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">Observation</span><span class="p">(</span><span class="n">dss</span><span class="o">=</span><span class="mi">28</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The <code class="docutils literal notranslate"><span class="pre">names</span></code> string was just copied by hand from the first line in the
-file. It could also be done with <code class="docutils literal notranslate"><span class="pre">file.readline()</span></code>.</p>
-<p>However, the subclass <code class="docutils literal notranslate"><span class="pre">GAVRT.Observation</span></code> will read all the t-files in a
-directory and instead of <code class="docutils literal notranslate"><span class="pre">Tsys</span></code> has <code class="docutils literal notranslate"><span class="pre">counts</span></code> which is itself a dict with
-an item for each receiver channel.</p>
-<p>By default, columns with unknown names are assumed to be power from the
-channel whose name is the column name. Columns that have unknown names
-(i.e. not in ‘reserved’) must have their names in ‘ignore’.</p>
-<p>:param filename : name of the data file
-:type  filename : str</p>
-<p>:param delimiter : column separator
-:type  delimiter : str</p>
-<p>:param aliases : alternative names for keywords
-:type  aliases : dict</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>column headers (str), data array(str)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.Observation.open_datafile">
-<code class="sig-name descname">open_datafile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="o">=</span><span class="default_value">' '</span></em>, <em class="sig-param"><span class="n">names</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">skip_header</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.open_datafile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Opens and reads a data file</p>
-<p>This is used by <code class="docutils literal notranslate"><span class="pre">Malargue</span></code> (one data files) and <code class="docutils literal notranslate"><span class="pre">GAVRT</span></code> (one data file
-for each signal).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – text data file name</p></li>
-<li><p><strong>delimiter</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – separator between columns (default: whitespace)</p></li>
-<li><p><strong>names</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – file row has column names (default: True)</p></li>
-<li><p><strong>skip_header</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – number of rows to skip at beginning of file</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.Observation.radec2000_from_radec">
-<code class="sig-name descname">radec2000_from_radec</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.radec2000_from_radec" title="Permalink to this definition">¶</a></dt>
-<dd><p>compute RA2000 and dec2000 from observed RA and dec</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.Observation.radec_from_azel">
-<code class="sig-name descname">radec_from_azel</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.radec_from_azel" title="Permalink to this definition">¶</a></dt>
-<dd><p>compute RA and dec from az and el</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.Observation.radec_from_radec2000">
-<code class="sig-name descname">radec_from_radec2000</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.radec_from_radec2000" title="Permalink to this definition">¶</a></dt>
-<dd><p>compute apparent RA and dec. from J2000 RA and dec</p>
 </dd></dl>
 
 <dl class="py method">

@@ -8,7 +8,7 @@ criteria.  They may just be a front end for a MySql query.
 import sys
 import time as T
 
-import Data_Reduction.DSN.GAVRT.Mysql as sql
+import Data_Reduction.GAVRT.mysql as sql
 from numpy import isnan
 
 diag = False
@@ -23,20 +23,19 @@ def get_scan_times(db,dss,start_time,end_time):
   times when the antenna pointing is stable and 'pointing_cmd' to get the
   pointing offsets.
 
-  @param db : database object
-    A database connection object obtained from Mysql.open_db()
+  @param db : a database connection object obtained from Mysql.open_db()
+  @type  db : database object
     
-  @param dss : int
-    Station number
+  @param dss : Station number
+  @type  dss : int
     
-  @param start_time : float
-    Unix timestamp
-    
-  @param end_time : float
-    Unix timestamp
+  @param start_time : Unix timestamp
+  @type  start_time : float
+   
+  @param end_time : Unix timestamp
+  @type  end_time : float
 
-  @return: dictionary
-    Selected records from dssXX.pointing_status as a dictionary.
+  @return: (dictionary) Selected records from dssXX.pointing_status as a dict.
   """
   c = db.cursor()
   query = "SELECT * FROM dss" + str(dss) + \
@@ -71,17 +70,16 @@ def get_scans(db,dss,scan_times_dict):
   elevation, and system temperature, and put it all in 'scan_data'.
   We the set 'onpoint' to False.
 
-  @param db : database connection object
-    Obtained from Mysql.open_db()
+  @param db : Obtained from Mysql.open_db()
+  @type  db : database connection object
 
-  @param dss : int
-    Station ID
+  @param dss : Station ID
+  @type  dss : int
 
-  @param scan_times_dict : dictionary
-    Result from get_scan-times()
+  @param scan_times_dict : Result from get_scan-times()
+  @type  scan_times_dict : dict
 
-  @return: dictionary
-    Keys of the dictionary are:
+  @return: (dict) Keys of the dictionary are::
       - source:    the source observed,
       - scan_time: the scan start time,
       - exposure:  the scan length,

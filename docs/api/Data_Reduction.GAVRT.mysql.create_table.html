@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>create_table &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="get_databases" href="Data_Reduction.GAVRT.mysql.get_databases.html" />
+    <link rel="prev" title="create_GAVRT_mysql_auth" href="Data_Reduction.GAVRT.mysql.create_GAVRT_mysql_auth.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.mysql.get_databases.html" title="get_databases"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.mysql.create_GAVRT_mysql_auth.html" title="create_GAVRT_mysql_auth"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.GAVRT.mysql.create_GAVRT_mysql_auth.html"
+                        title="previous chapter">create_GAVRT_mysql_auth</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.GAVRT.mysql.get_databases.html"
+                        title="next chapter">get_databases</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.GAVRT.mysql.create_table.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="create-table">
+<h1>create_table<a class="headerlink" href="#create-table" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="Data_Reduction.GAVRT.mysql.create_table">
+<code class="sig-prename descclassname">Data_Reduction.GAVRT.mysql.</code><code class="sig-name descname">create_table</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">database</span></em>, <em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">keys</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.create_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a table with the specified column names and types.</p>
+<p>Here’s an example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;customers&quot;</span>
+<span class="n">keys</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span>    <span class="s1">&#39;CHAR(20 NOT NULL&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;job&#39;</span><span class="p">:</span>     <span class="s1">&#39;VARCHAR(20)&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;sex&#39;</span><span class="p">:</span>     <span class="s2">&quot;ENUM(&#39;M&#39;,&#39;F&#39;)&quot;</span><span class="p">,</span>
+        <span class="s1">&#39;hobbies&#39;</span><span class="p">:</span> <span class="s2">&quot;SET(&#39;chess&#39;,&#39;sailing&#39;,&#39;reading&#39;,&#39;knitting&#39;)&quot;</span><span class="p">,</span>
+        <span class="s1">&#39;birth&#39;</span><span class="p">:</span>   <span class="s1">&#39;DATE&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;balance&#39;</span><span class="p">:</span> <span class="s1">&#39;FLOAT&#39;</span><span class="p">}</span>
+<span class="n">create_table</span><span class="p">(</span><span class="n">someDatabase</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">keys</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When a column name conflicts with a MySQL reserved word, the name is
+put in backward quotes.  This keeps the column name possibilities from
+being too restricted, e.g., <cite>dec</cite>.</p>
+<p>This exists from a time prior to when I started using ‘tedia2sql’
+to create tables and may still be useful in simple situations.</p>
+<p>:param database : the database for the new table
+:param name :     the table name
+:param keys :     a dictionary with the column names and formats.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.mysql.get_databases.html" title="get_databases"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.GAVRT.mysql.create_GAVRT_mysql_auth.html" title="create_GAVRT_mysql_auth"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

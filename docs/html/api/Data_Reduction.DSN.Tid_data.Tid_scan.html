@@ -1,0 +1,277 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Tid_scan &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="airmass" href="Data_Reduction.DSN.tipping.airmass.html" />
+    <link rel="prev" title="update_backend" href="Data_Reduction.DSN.Tid_data.update_backend.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.tipping.airmass.html" title="airmass"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.Tid_data.update_backend.html" title="update_backend"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.Tid_data.update_backend.html"
+                        title="previous chapter">update_backend</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.tipping.airmass.html"
+                        title="next chapter">airmass</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.DSN.Tid_data.Tid_scan.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="tid-scan">
+<h1>Tid_scan<a class="headerlink" href="#tid-scan" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Data_Reduction.DSN.Tid_data.Tid_scan">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.DSN.Tid_data.</code><code class="sig-name descname">Tid_scan</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dss</span></em>, <em class="sig-param"><span class="n">numbers</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.Tid_data.Tid_scan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Make a Tidbinbilla spectral scan object</p>
+<p>This covers spectra taken with the HP9825 controller.  The header
+variables are all flots and the assigments are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">01</span>   <span class="n">file</span> <span class="n">number</span> <span class="n">of</span> <span class="nb">next</span> <span class="n">scan</span> <span class="n">to</span> <span class="n">be</span> <span class="n">stored</span>
+<span class="mi">02</span>   <span class="n">integration</span> <span class="n">time</span> <span class="p">(</span><span class="n">secs</span><span class="p">)</span>
+<span class="mi">03</span>   <span class="n">year</span> <span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">e</span><span class="o">.</span> <span class="mi">1776</span><span class="p">)</span>
+<span class="mi">04</span>   <span class="n">day</span> <span class="n">of</span> <span class="n">year</span>
+<span class="mi">05</span>   <span class="n">UT</span> <span class="p">(</span><span class="n">hrs</span><span class="p">)</span> <span class="k">for</span> <span class="n">the</span> <span class="n">start</span> <span class="n">of</span> <span class="n">the</span> <span class="n">scan</span>
+<span class="mi">06</span>   <span class="n">current</span> <span class="n">R</span><span class="o">.</span><span class="n">A</span><span class="o">.</span> <span class="p">(</span><span class="n">hrs</span><span class="p">)</span>
+<span class="mi">07</span>   <span class="n">current</span> <span class="n">Decl</span><span class="o">.</span> <span class="p">(</span><span class="n">deg</span><span class="p">)</span>
+<span class="mi">08</span>   <span class="n">R</span><span class="o">.</span><span class="n">A</span><span class="o">.</span> <span class="mi">1950</span> <span class="p">(</span><span class="n">hrs</span><span class="p">)</span>
+<span class="mi">09</span>   <span class="n">Decl</span><span class="o">.</span> <span class="mi">1950</span> <span class="p">(</span><span class="n">deg</span><span class="p">)</span>
+<span class="mi">10</span>   <span class="n">Vlsr</span> <span class="p">(</span><span class="n">km</span><span class="o">/</span><span class="n">s</span><span class="p">)</span>
+<span class="mi">11</span>   <span class="n">Longitude</span> <span class="p">(</span><span class="n">deg</span><span class="p">)</span>
+<span class="mi">12</span>   <span class="n">Latitude</span> <span class="p">(</span><span class="n">deg</span><span class="p">)</span>
+<span class="mi">13</span>   <span class="n">doppler</span> <span class="n">factor</span>
+<span class="mi">14</span>   <span class="n">L</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">T</span><span class="o">.</span> <span class="p">(</span><span class="n">hrs</span><span class="p">)</span> <span class="k">for</span> <span class="n">the</span> <span class="n">end</span> <span class="n">of</span> <span class="n">the</span> <span class="n">scan</span>
+<span class="mi">15</span>   <span class="n">line</span> <span class="n">rest</span> <span class="n">freq</span> <span class="p">(</span><span class="n">MHz</span><span class="p">)</span>
+<span class="mi">16</span>   <span class="n">synthesizer</span> <span class="p">(</span><span class="n">MHz</span><span class="p">)</span>
+<span class="mi">17</span>   <span class="n">signal</span> <span class="n">I</span><span class="o">.</span><span class="n">F</span><span class="o">.</span> <span class="p">(</span><span class="n">MHz</span><span class="p">)</span>
+<span class="mi">18</span>   <span class="n">phase</span><span class="o">-</span><span class="n">lock</span> <span class="n">I</span><span class="o">.</span><span class="n">F</span><span class="o">.</span> <span class="p">(</span><span class="n">MHz</span><span class="p">)</span>
+<span class="mi">19</span>   <span class="n">sideband</span> <span class="n">number</span>
+<span class="mi">20</span>   <span class="n">calibration</span> <span class="n">temp</span> <span class="p">(</span><span class="n">K</span><span class="p">)</span>
+<span class="mi">21</span>   <span class="n">time</span> <span class="n">per</span> <span class="n">on</span> <span class="ow">or</span> <span class="n">off</span> <span class="n">source</span> <span class="n">integration</span> <span class="p">(</span><span class="n">sec</span><span class="p">)</span>
+<span class="mi">22</span>   <span class="n">observing</span> <span class="n">mode</span> <span class="n">number</span>
+  <span class="o">=</span><span class="mi">1</span>   <span class="n">TEST</span> <span class="n">mode</span>
+            <span class="n">data</span>                      <span class="o">-&gt;</span> <span class="n">C</span><span class="p">[]</span> <span class="o">-&gt;</span> <span class="n">tape</span>
+  <span class="o">=</span><span class="mi">2</span>   <span class="n">POSITION</span> <span class="n">SWITCHING</span> <span class="p">(</span><span class="n">front</span> <span class="n">end</span> <span class="ow">not</span> <span class="n">switching</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="p">)</span> <span class="n">beam</span><span class="p">)</span>
+            <span class="n">off</span> <span class="n">source</span> <span class="n">noise</span> <span class="n">diode</span> <span class="n">cal</span> <span class="n">data</span> <span class="o">-&gt;</span> <span class="n">K</span><span class="p">[]</span>
+            <span class="n">off</span> <span class="n">source</span>                      <span class="o">-&gt;</span> <span class="n">C</span><span class="p">[]</span>
+            <span class="n">on</span> <span class="n">source</span>                       <span class="o">-&gt;</span> <span class="n">D</span><span class="p">[]</span>
+                 <span class="n">Tcal</span><span class="o">*</span><span class="p">(</span><span class="n">D</span><span class="p">[]</span><span class="o">-</span><span class="n">C</span><span class="p">[])</span><span class="o">/</span><span class="p">(</span><span class="n">K</span><span class="p">[]</span><span class="o">-</span><span class="n">C</span><span class="p">[])</span> <span class="o">-&gt;</span> <span class="n">tape</span>
+  <span class="o">=</span><span class="mi">3</span>   <span class="n">LOAD</span> <span class="n">SWITCHING</span> <span class="p">(</span><span class="n">switching</span> <span class="n">between</span> <span class="p">(</span><span class="o">-</span><span class="p">)</span> <span class="n">beam</span> <span class="ow">and</span> <span class="n">load</span><span class="p">)</span>
+       <span class="n">TOTAL</span> <span class="n">POWER</span> <span class="p">(</span><span class="ow">not</span> <span class="n">switching</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="p">)</span> <span class="n">beam</span> <span class="p">(</span><span class="o">+</span><span class="p">)</span> <span class="n">ref</span> <span class="n">beam</span><span class="p">)</span>
+            <span class="n">off</span> <span class="n">source</span>                 <span class="o">-&gt;</span> <span class="n">C</span><span class="p">[]</span>
+            <span class="n">on</span> <span class="n">source</span>                 <span class="o">-&gt;</span> <span class="n">D</span><span class="p">[]</span>
+                 <span class="n">Tload</span><span class="o">*</span><span class="p">(</span><span class="n">D</span><span class="p">[]</span><span class="o">/</span><span class="n">C</span><span class="p">[]</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>    <span class="o">-&gt;</span> <span class="n">tape</span>
+                 <span class="n">Tsys</span><span class="o">*</span><span class="p">(</span><span class="n">D</span><span class="p">[]</span><span class="o">/</span><span class="n">C</span><span class="p">[]</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>     <span class="o">-&gt;</span> <span class="n">tape</span>
+  <span class="o">=</span><span class="mi">4</span>   <span class="n">CHOPPING</span> <span class="p">(</span><span class="n">symmetrical</span> <span class="n">switching</span> <span class="n">between</span> <span class="n">two</span> <span class="n">horns</span><span class="p">)</span>
+            <span class="n">noise</span> <span class="n">diode</span> <span class="n">cal</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="p">)</span> <span class="n">beam</span>   <span class="o">-&gt;</span> <span class="n">K</span><span class="p">[]</span>
+            <span class="n">source</span> <span class="ow">in</span> <span class="p">(</span><span class="o">+</span><span class="p">)</span> <span class="n">beam</span>            <span class="o">-&gt;</span> <span class="n">C</span><span class="p">[]</span>
+            <span class="n">source</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="p">)</span> <span class="n">beam</span>            <span class="o">-&gt;</span> <span class="n">D</span><span class="p">[]</span>
+                 <span class="mf">0.5</span><span class="o">*</span><span class="n">Tcal</span><span class="o">*</span><span class="p">(</span><span class="n">D</span><span class="p">[]</span><span class="o">-</span><span class="n">C</span><span class="p">[])</span><span class="o">/</span><span class="n">K</span><span class="p">[]</span>   <span class="o">-&gt;</span> <span class="n">tape</span>
+  <span class="o">=</span><span class="mi">5</span>   <span class="n">BEAM</span> <span class="n">SWITCHING</span> <span class="p">(</span><span class="n">switching</span> <span class="n">between</span> <span class="n">two</span> <span class="n">horns</span><span class="p">)</span>
+            <span class="n">cal</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="p">)</span> <span class="n">beam</span>           <span class="o">-&gt;</span> <span class="n">K</span><span class="p">[]</span>
+            <span class="n">source</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="p">)</span> <span class="n">beam</span>        <span class="o">-&gt;</span> <span class="n">C</span><span class="p">[]</span>
+                 <span class="n">Tcal</span><span class="o">*</span><span class="n">C</span><span class="p">[]</span><span class="o">/</span><span class="n">K</span><span class="p">[]</span>         <span class="o">-&gt;</span> <span class="n">tape</span>
+  <span class="o">=</span><span class="mi">6</span>   <span class="n">FREQUENCY</span> <span class="n">SWITCHING</span> <span class="p">(</span><span class="n">source</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="p">)</span> <span class="n">beam</span><span class="p">)</span>
+            <span class="n">cal</span>  <span class="k">with</span> <span class="n">r35</span> <span class="n">ch</span><span class="o">.</span> <span class="n">offset</span>        <span class="o">-&gt;</span> <span class="n">K</span><span class="p">[]</span>
+            <span class="n">data</span> <span class="k">with</span> <span class="n">r35</span> <span class="n">ch</span><span class="o">.</span> <span class="n">offset</span>        <span class="o">-&gt;</span> <span class="n">C</span><span class="p">[]</span>
+            <span class="n">data</span> <span class="k">with</span> <span class="mi">0</span>   <span class="n">ch</span><span class="o">.</span> <span class="n">offset</span>        <span class="o">-&gt;</span> <span class="n">D</span><span class="p">[]</span>
+                 <span class="n">Tcal</span><span class="o">*</span><span class="p">(</span><span class="n">D</span><span class="p">[]</span><span class="o">-</span><span class="n">C</span><span class="p">[])</span><span class="o">/</span><span class="p">(</span><span class="n">K</span><span class="p">[]</span><span class="o">-</span><span class="n">C</span><span class="p">[])</span>   <span class="o">-&gt;</span> <span class="n">tape</span>
+  <span class="o">=</span><span class="mi">21</span>  <span class="n">POSITION</span> <span class="n">SWITCHING</span> <span class="p">(</span><span class="n">front</span> <span class="n">end</span> <span class="ow">not</span> <span class="n">switching</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="p">)</span> <span class="n">beam</span><span class="p">)</span>
+            <span class="n">off</span> <span class="n">source</span> <span class="n">noise</span> <span class="n">diode</span> <span class="n">switched</span> <span class="o">-&gt;</span> <span class="n">K</span><span class="p">[]</span>
+            <span class="n">off</span> <span class="n">source</span>                    <span class="o">-&gt;</span> <span class="n">C</span><span class="p">[]</span>
+            <span class="n">on</span> <span class="n">source</span>                   <span class="o">-&gt;</span> <span class="n">D</span><span class="p">[]</span>
+                 <span class="n">Tcal</span><span class="o">*</span><span class="p">(</span><span class="n">D</span><span class="p">[]</span><span class="o">-</span><span class="n">C</span><span class="p">[])</span><span class="o">/</span><span class="n">K</span><span class="p">[]</span>      <span class="o">-&gt;</span> <span class="n">tape</span>
+  <span class="o">=</span><span class="mi">99</span>  <span class="n">Y</span><span class="o">-</span><span class="n">Factor</span> <span class="n">measured</span> <span class="k">with</span> <span class="n">power</span> <span class="n">meter</span>
+<span class="mi">23</span>   <span class="n">number</span> <span class="n">of</span> <span class="n">channels</span> <span class="n">of</span> <span class="n">center</span> <span class="n">frequency</span> <span class="n">offset</span>
+<span class="mi">24</span>   <span class="n">bandwidth</span> <span class="p">(</span><span class="n">MHz</span><span class="p">)</span>
+<span class="mi">25</span>   <span class="n">SDS</span> <span class="n">total</span> <span class="n">counts</span><span class="o">/</span><span class="n">sec</span>
+<span class="mi">26</span>   <span class="n">SDS</span> <span class="n">d</span><span class="o">.</span><span class="n">c</span><span class="o">.</span> <span class="n">counts</span><span class="o">/</span><span class="n">sec</span>
+<span class="mi">27</span>   <span class="n">system</span> <span class="n">temperature</span> <span class="p">(</span><span class="n">K</span><span class="p">)</span>
+<span class="mi">28</span>   <span class="k">if</span> <span class="mi">1</span><span class="p">,</span> <span class="n">use</span> <span class="n">comet</span> <span class="n">velocity</span> <span class="n">formula</span>
+<span class="mi">29</span>   <span class="n">azimuth</span> <span class="n">pointing</span> <span class="n">offset</span>
+<span class="mi">30</span>   <span class="n">elevation</span> <span class="n">pointing</span> <span class="n">offset</span>
+<span class="mi">31</span>   <span class="n">H</span><span class="o">.</span><span class="n">A</span><span class="o">.</span> <span class="n">reference</span> <span class="n">offset</span>
+<span class="mi">32</span>   <span class="n">dec</span><span class="o">.</span> <span class="n">reference</span> <span class="n">offset</span>
+<span class="mi">33</span>   <span class="n">H</span><span class="o">.</span><span class="n">A</span><span class="o">.</span> <span class="n">source</span> <span class="n">offset</span>
+<span class="mi">34</span>   <span class="n">dec</span><span class="o">.</span> <span class="n">source</span> <span class="n">offset</span>
+<span class="mi">35</span>   <span class="n">channel</span> <span class="n">offset</span> <span class="k">for</span> <span class="n">frequency</span> <span class="n">switching</span>
+<span class="mi">36</span>   <span class="n">synthesizer</span> <span class="n">harmonic</span>
+<span class="mi">38</span><span class="o">-</span><span class="mi">49</span> <span class="n">source</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">ASCII</span> <span class="n">codes</span>
+<span class="mi">50</span>   <span class="n">number</span> <span class="n">of</span> <span class="n">channels</span> <span class="p">(</span><span class="mi">64</span><span class="p">:</span> <span class="n">Y</span><span class="o">-</span><span class="n">factor</span><span class="p">,</span> <span class="mi">256</span><span class="p">:</span> <span class="n">SDS</span> <span class="ow">or</span> <span class="mi">16384</span><span class="p">:</span> <span class="n">DAVOS</span><span class="p">)</span>
+<span class="mi">51</span>   <span class="n">DSS</span>
+<span class="mi">52</span>   <span class="n">calibration</span> <span class="n">time</span>
+<span class="mi">53</span>   <span class="n">test</span> <span class="n">tone</span> <span class="n">frequency</span> <span class="n">offset</span> <span class="p">(</span><span class="n">relative</span> <span class="n">to</span> <span class="n">receiver</span> <span class="n">freq</span><span class="p">)</span>
+<span class="mi">54</span>   <span class="n">test</span> <span class="n">tone</span> <span class="n">level</span> <span class="p">(</span><span class="n">dBm</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<p><em>Receiver configurations</em></p>
+<ol class="arabic simple">
+<li><p>A K-band maser was installed in 1981. It had one linear
+polarization. The receiver was based on a phase-lock Gunn of an OVRO
+down-converting to S-band design. The back-end was a 256 channel
+SpectraData Fourier Transform Spectrometer built by George Morris.</p></li>
+<li><p>In early 1988 a Ku-band HEMT LNA front end was installed.  It
+used an HP synthesizer as a first LO, down-converting to S-band.</p></li>
+<li><p>Around 1995 an 18-26 GHz HEMT was installed.  Also, at some point,
+SpectraData was replaced with the DAVOS spectrometer.</p></li>
+</ol>
+<p><em>Frequency calculations</em></p>
+<ol class="arabic simple">
+<li><p>RESTFREQ is the frequency of interest, usually a line frequency,
+in the rest frame of the source, in Hz</p></li>
+<li><p>obs_freq is the frequency in the rest frame of the observer where
+this feature of interest appears.  It is computed from the Doppler
+factor.</p></li>
+<li><p>exp_freq is the frequency in the rest frame of the observer where
+this feature of interest should appear, calculated as an offset
+from the receiver frequency.  We expect exp_freq = obs_freq.</p></li>
+</ol>
+<p><em>Source name encoding</em></p>
+<p>In 1989, the convention was to put the source name on the first
+line of the scan block, after the scan number.</p>
+<p>1991/123 the header numbers[37:49] were reserved for source name
+encoding but filled with the negative of the index number.</p>
+<p>1991/174-194,1992/144-1145 zero-filled again.</p>
+<p>1992/165 source name encoding started but it was wrong, mostly:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="s1">&#39;11 09 45.&#39;</span><span class="p">,</span> <span class="s1">&#39;11 09 45.&#39;</span><span class="p">,</span> <span class="s1">&#39;17 42 29.3&#39;</span><span class="p">,</span> <span class="s1">&#39;17 42 29.3&#39;</span><span class="p">,</span><span class="o">....</span>
+ <span class="s1">&#39;17 42 29.3&#39;</span><span class="p">,</span> <span class="s1">&#39;G1.6 meth peak&#39;</span><span class="p">,</span> <span class="s1">&#39;G1.6 meth peak&#39;</span><span class="p">,</span> <span class="s1">&#39;G1.6 meth peak&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;17 42 29.3&#39;</span><span class="p">,</span><span class="o">....</span> <span class="s1">&#39;17 42 29.3&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>That was sorted out on 1992/236.</p>
+<p>1995/066 the source name encoding in numbers[37:49] was erroneously
+broken up by the number of spectrometer channels in numbers[45].
+Also, the number encoded was ‘256’ whereas the DAVOS spectrometer
+(16384 channels) was already being used.</p>
+<p>On 1995/090, number of scans moved to numbers[49]</p>
+<p>If a source name cannot be extracted, then the coordinates are used
+to try to find the source name.</p>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.DSN.Tid_data.Tid_scan.get_scan_data" title="Data_Reduction.DSN.Tid_data.Tid_scan.get_scan_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_scan_data</span></code></a>(dss, numbers)</p></td>
+<td><p>Get data for a scan.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.DSN.Tid_data.Tid_scan.print_header" title="Data_Reduction.DSN.Tid_data.Tid_scan.print_header"><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_header</span></code></a>()</p></td>
+<td><p>Print the header of a Tid_scan instance</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="Data_Reduction.DSN.Tid_data.Tid_scan.get_scan_data">
+<code class="sig-name descname">get_scan_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dss</span></em>, <em class="sig-param"><span class="n">numbers</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.Tid_data.Tid_scan.get_scan_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get data for a scan.</p>
+<p>This sets values in self.header and self.data</p>
+<p>:param dss : DSN station number
+:type  dss : int</p>
+<p>:param numbers : scan data
+:type  numbers : float</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Data_Reduction.DSN.Tid_data.Tid_scan.print_header">
+<code class="sig-name descname">print_header</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.Tid_data.Tid_scan.print_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print the header of a Tid_scan instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.tipping.airmass.html" title="airmass"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.Tid_data.update_backend.html" title="update_backend"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

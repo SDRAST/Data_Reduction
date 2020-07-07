@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>get_scans &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="group_files" href="Data_Reduction.DSN.Tid_ASCII_data.group_files.html" />
+    <link rel="prev" title="get_scan_indices" href="Data_Reduction.DSN.Tid_ASCII_data.get_scan_indices.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.Tid_ASCII_data.group_files.html" title="group_files"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.Tid_ASCII_data.get_scan_indices.html" title="get_scan_indices"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.Tid_ASCII_data.get_scan_indices.html"
+                        title="previous chapter">get_scan_indices</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.Tid_ASCII_data.group_files.html"
+                        title="next chapter">group_files</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.DSN.Tid_ASCII_data.get_scans.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="get-scans">
+<h1>get_scans<a class="headerlink" href="#get-scans" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="Data_Reduction.DSN.Tid_ASCII_data.get_scans">
+<code class="sig-prename descclassname">Data_Reduction.DSN.Tid_ASCII_data.</code><code class="sig-name descname">get_scans</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">groups</span></em>, <em class="sig-param"><span class="n">group_index</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.Tid_ASCII_data.get_scans" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build up a dictionary of Tid scans for an observing session</p>
+<p>This processes all the files for an observing session to
+create a Python dictionary of Tid scans, indexed by scan
+number.  Sometimes, scan numbers were re-used if scans had
+invalid data.  In case a scan already exists in a dictionary,
+the one with the latest date/time is retained.</p>
+<p class="rubric">Notes</p>
+<p>Some of the scans in the ASCII data files are incomplete.
+This can be detected by the number of numbers in the scan.
+SpectraData files have 64+320 numbers. DAVOS files have
+65+16384 numbers.  Anything else is invalid and rejected.</p>
+<p>scantable() does not reject bad scans (e.g. all data values the same)
+but makes them invisible to get_scan(), summary() and getscannos().
+The bad scans will show up, for example, in get_sourcename() as “” and
+get_direction() as (0.0,0.0). This is also causes scans to be lumped
+together in mini-scantables. This function rejects bad scans by
+checking that the data values are not all the same.</p>
+<dl class="simple">
+<dt>:param path<span class="classifier">str::</span></dt><dd><p>Path to the original data files</p>
+</dd>
+<dt>:param groups<span class="classifier">list of lists of strings::</span></dt><dd><p>files grouped by DOY (observing session)</p>
+</dd>
+<dt>:param group_index<span class="classifier">int::</span></dt><dd><p>index of the group to process</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dictionary of Tid_scan instances::
+indexed by scan number</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.Tid_ASCII_data.group_files.html" title="group_files"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.Tid_ASCII_data.get_scan_indices.html" title="get_scan_indices"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

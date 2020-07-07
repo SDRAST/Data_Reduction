@@ -1,0 +1,182 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>parse_boresight_line &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="parse_tsys_log_line" href="Data_Reduction.DSN.logs.parse_tsys_log_line.html" />
+    <link rel="prev" title="get_tsys" href="Data_Reduction.DSN.logs.get_tsys.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.logs.parse_tsys_log_line.html" title="parse_tsys_log_line"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.logs.get_tsys.html" title="get_tsys"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.logs.get_tsys.html"
+                        title="previous chapter">get_tsys</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.logs.parse_tsys_log_line.html"
+                        title="next chapter">parse_tsys_log_line</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.DSN.logs.parse_boresight_line.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="parse-boresight-line">
+<h1>parse_boresight_line<a class="headerlink" href="#parse-boresight-line" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="Data_Reduction.DSN.logs.parse_boresight_line">
+<code class="sig-prename descclassname">Data_Reduction.DSN.logs.</code><code class="sig-name descname">parse_boresight_line</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">line</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.logs.parse_boresight_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a line of boresight data.</p>
+<p>Proxesses data from an EAC <code class="docutils literal notranslate"><span class="pre">5pYYYYDDD.xxx</span></code> file, where
+xxx is <code class="docutils literal notranslate"><span class="pre">pri</span></code> (primary, the preferred frequency for the boresight) or <code class="docutils literal notranslate"><span class="pre">sec</span></code>
+(secondary). <code class="docutils literal notranslate"><span class="pre">line</span></code> is a line from the log file.  The columns in the table
+are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>- DOY:      day of year (3 digit integer)
+- UTC:      Coordinated Universal Time (HH:MM:SS)
+- SOURCE:   name of the source used for boresight
+- FREQ:     receiver frequency used (MHz)
+- POL:      feed polarization (LCP/RCP)
+- HA:       approximate hour angle (deg) at center position
+- DEC:      approximate declination (deg) at center position
+- AZ:       approximate azimuth (deg) at center position
+- EL:       approximate elevation (deg) at center position
+- AX_HXPOS: total initial cross-elevation or cross-declination offset (deg)
+- EL_DEPOS: total initial elevation or declination offset (deg)
+- DELTAP_X: delta Ta (K) at X-direction plus offset (nominallY +HPBW/2)
+- DELTAZ_X: delta Ta (K) at X-direction zero offset
+- DELTAM_X: delta Ta (K) at X-direction minus offset (nominally -HPBW/2)
+- NUMPTS_X: always 0 (number of samples at a position?)
+- RMS_X:    always 0.0 (r.m.s. of sample mean)
+- BASEP_X:  Ta (K) of baseline in plus X offset direction
+- ON1_X:    always 0
+- ON2_X:    always 0
+- BASEM_X:  Ta (K) of baseline in minus X offset direction
+- BW_X:     measured beamwidth (deg) in X direction
+- ERR_X:    estimated error (deg) of beamwidth in X direction
+- POS_X:    total boresight offset (deg) in X not including manual offset
+- DELTAP_Y: delta Ta (K) at Y-direction minus offset (nominallY -HPBW/2)
+- DELTAZ_Y: delta Ta (K) at Y-direction zero offset position
+- DELTAM_Y: delta Ta (K) at Y-direction plus offset (nominallY +HPBW/2)
+- NUMPTS_Y: always 0
+- RMS_Y:    always 0.0
+- BASEP_Y:  Ta (K) of baseline in plus Y offset direction
+- ON1_Y:    always 0
+- ON2_Y:    always 0
+- BASEM_Y:  Ta (K) of baseline in minus Y offset direction
+- BW_Y:     measured beamwidth (DEG) in Y direction
+- ERR_Y:    estimated error (deg) of beamwidth in Y direction
+- POS_Y:    total boresight offset (deg) in Y not including manual offset
+</pre></div>
+</div>
+<p>The following summarize the boresight results.  One pair of columns should
+be the same as POS_X and POS_Y and the other pair calculated from these,
+depending on whether the boresight was done in XDEC,DEC or XEL,EL:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="n">XELOFF</span><span class="p">:</span>   <span class="n">total</span> <span class="n">boresight</span> <span class="n">offet</span> <span class="p">(</span><span class="n">deg</span><span class="p">)</span> <span class="ow">in</span> <span class="n">cross</span><span class="o">-</span><span class="n">el</span><span class="p">,</span> <span class="ow">not</span> <span class="n">incl</span><span class="o">.</span> <span class="n">manual</span> <span class="n">offs</span><span class="o">.</span>
+<span class="o">-</span> <span class="n">ELOFF</span><span class="p">:</span>    <span class="n">total</span> <span class="n">boresight</span> <span class="n">offet</span> <span class="p">(</span><span class="n">deg</span><span class="p">)</span> <span class="ow">in</span> <span class="n">elevation</span><span class="p">,</span> <span class="ow">not</span> <span class="n">incl</span><span class="o">.</span> <span class="n">manual</span> <span class="n">offs</span><span class="o">.</span>
+<span class="o">-</span> <span class="n">XDECOFF</span><span class="p">:</span>  <span class="n">total</span> <span class="n">boresight</span> <span class="n">offet</span> <span class="p">(</span><span class="n">deg</span><span class="p">)</span> <span class="ow">in</span> <span class="n">cross</span><span class="o">-</span><span class="n">dec</span><span class="p">,</span> <span class="ow">not</span> <span class="n">incl</span><span class="o">.</span> <span class="n">manual</span> <span class="n">offs</span><span class="o">.</span>
+<span class="o">-</span> <span class="n">DECOFF</span><span class="p">:</span>   <span class="n">total</span> <span class="n">boresight</span> <span class="n">offet</span> <span class="p">(</span><span class="n">deg</span><span class="p">)</span> <span class="ow">in</span> <span class="n">declination</span><span class="p">,</span> <span class="ow">not</span> <span class="n">incl</span><span class="o">.</span> <span class="n">manual</span> <span class="n">offs</span><span class="o">.</span>
+<span class="o">-</span> <span class="n">The</span> <span class="n">following</span> <span class="n">may</span> <span class="n">vary</span> <span class="n">according</span> <span class="n">to</span> <span class="n">a</span> <span class="n">subreflector</span> <span class="n">position</span> <span class="n">model</span>
+<span class="o">-</span> <span class="n">YPOS</span><span class="p">:</span>     <span class="n">subreflector</span> <span class="n">Y</span> <span class="n">axis</span> <span class="n">position</span> <span class="p">(</span><span class="n">inches</span><span class="p">)</span>
+<span class="o">-</span> <span class="n">ZPOS</span><span class="p">:</span>     <span class="n">subreflector</span> <span class="n">Z</span> <span class="n">axis</span> <span class="n">position</span> <span class="p">(</span><span class="n">inches</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The following are offsets from the model:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="n">YOFF</span><span class="p">:</span>     <span class="n">subreflector</span> <span class="n">Y</span> <span class="n">axis</span> <span class="n">offset</span> <span class="p">(</span><span class="n">inches</span><span class="p">)</span>
+<span class="o">-</span> <span class="n">ZOFF</span><span class="p">:</span>     <span class="n">subreflector</span> <span class="n">Z</span> <span class="n">axis</span> <span class="n">offset</span> <span class="p">(</span><span class="n">inches</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The information extracted from this and returned in a dictionary is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="n">time</span><span class="p">:</span>     <span class="n">UNIX</span> <span class="n">timestamp</span> <span class="ow">in</span> <span class="n">seconds</span> <span class="n">since</span> <span class="n">the</span> <span class="n">epoch</span> <span class="mf">1970.0</span>
+<span class="o">-</span> <span class="n">SOURCE</span><span class="p">:</span>
+<span class="o">-</span> <span class="n">FREQ</span><span class="p">:</span>
+<span class="o">-</span> <span class="n">POL</span><span class="p">:</span>
+<span class="o">-</span> <span class="n">HA</span><span class="p">:</span>
+<span class="o">-</span> <span class="n">DEC</span>
+<span class="o">-</span> <span class="n">AZ</span><span class="p">:</span>
+<span class="o">-</span> <span class="n">EL</span><span class="p">:</span>
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<p>This function is unfinished.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.logs.parse_tsys_log_line.html" title="parse_tsys_log_line"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.logs.get_tsys.html" title="get_tsys"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

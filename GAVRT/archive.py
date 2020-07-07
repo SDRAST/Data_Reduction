@@ -17,7 +17,7 @@ import logging
 import MySQLdb
 import numpy as np
 
-from Data_Reduction.DSN.GAVRT.Mysql import _validate_login
+from Data_Reduction.GAVRT.mysql import _validate_login
 
 logger = logging.getLogger(__name__)
 

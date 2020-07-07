@@ -1,21 +1,15 @@
 """
 Functions for extracting data from the various DSN logs.
 """
-
-import re
+import glob
 import os
+import re
 import shutil
-from os.path import basename,exists
-from time import gmtime
-from glob import glob
+import time
 
-from Astronomy import day_of_year
-from DatesTimes import *
-from Data_Reduction.DSN import eaclogdir,raclogdir,vsrLogDir,raviLogDir
-from Data_Reduction.DSN import vsrScriptDir,vsr_atJobsDir,ravi_atJobsDir
-from Data_Reduction.DSN import ravi_data_dir
-from Data_Reduction.DSN import obs_dir
-#from Data_Reduction.DSN.logs import parse_eac_time
+import Astronomy as A
+import DatesTimes as DT
+import Data_Reduction.DSN as DRDSN
 
 diag = False
 
@@ -40,7 +34,7 @@ def eac_macro_file_name(datadir,year,DOY):
   pattern = "PESD-pm-%4d-%03d*.log" % (year,DOY)
   if diag:
     print("Looking for file pattern",pattern)
-  files = glob(datadir+pattern)
+  files = glob.glob(datadir+pattern)
   if len(files) == 0:
     return []
   elif len(files) > 1:
@@ -89,26 +83,29 @@ def find_EAC_macro_log(year,DOY):
   """
   Get the EAC macro processor log file names.
   
-  This finds the macro processor log(s) which are created by the 'at' script
+  This finds the macro processor log(s) which are created by the ``at`` script
   which starts the macro processor.  There maybe several log names which include
   a time.
 
   Notes
   =====
   This first looks for a new-style filename pattern::
+  
     "PESD-pm-%4d-%03d-*.log" % (year,DOY)
+    
   and then for the old style format::
+  
     "PESD-pm-%4d%03d.log" % (year,DOY)
+    
   The new style allows for a time code HHMM
 
-  @param year : int
-    Year of observation.
+  @param year : Year of observation.
+  @type  year : int
 
-  @param DOY : int
-    Day of observation
+  @param DOY : Day of observation
+  @type  DOY : int
 
-  @return: list
-    Macro processor log file names
+  @return: (list)Macro processor log file names
   """
   # Try the new name format first
   # new_style_macro_pattern = ("%4d-%03d-*.log" % (year,DOY))
@@ -116,7 +113,7 @@ def find_EAC_macro_log(year,DOY):
   midfix = '-'
   suffix = '-*.log'
   # There could be more than one for this date
-  files = find_log_file(eaclogdir,prefix,year,midfix,DOY,suffix,1)
+  files = find_log_file(DRDSN.eaclogdir,prefix,year,midfix,DOY,suffix,1)
   if files != []:
     pm_logs = []
     for f in files:
@@ -126,7 +123,7 @@ def find_EAC_macro_log(year,DOY):
     # old_style_macro_logname = 'PESD-pm-'+("%4d%03d.log" % (year,DOY))
     prefix = 'PESD-pm-'
     suffix = '.log'
-    pm_logs = find_log_file(eaclogdir,prefix,year,'',DOY,suffix,1)
+    pm_logs = find_log_file(DRDSN.eaclogdir,prefix,year,'',DOY,suffix,1)
   return pm_logs
   
 def find_log_file(logdir,prefix,year,midfix,doy,suffix,max_look_back):
@@ -192,7 +189,7 @@ def find_log_file(logdir,prefix,year,midfix,doy,suffix,max_look_back):
     test_name = logdir+prefix+YYYYDDD_datecode(year,midfix,doy)+suffix
     if test_name != "" and re.search('\*',test_name):
      # search for possibly multiple files
-      files = glob(test_name)
+      files = glob.glob(test_name)
       if files != []:
         return files
       elif count > max_look_back:
@@ -206,9 +203,9 @@ def find_log_file(logdir,prefix,year,midfix,doy,suffix,max_look_back):
         count += 1
     else:
       # See if the file exists
-      if exists(test_name):
-        file_yr,file_mn,file_dy = gmtime(os.stat(test_name).st_mtime)[0:3]
-        file_doy = day_of_year(file_yr,file_mn,file_dy)
+      if os.path.exists(test_name):
+        file_yr,file_mn,file_dy = time.gmtime(os.stat(test_name).st_mtime)[0:3]
+        file_doy = DT.day_of_year(file_yr,file_mn,file_dy)
         if file_doy >= doy:
           # could be 'tomorrow' if there was a midnight transition but we
           # don't want files closed earlier than today
@@ -244,18 +241,18 @@ def find_minical_logs(logdir,year,doy):
   global log_dict
   pattern = logdir+"m"+YYYYDDD_datecode(year,'',doy)+'*'
   print("Initial pattern:",pattern)
-  logs = glob(logdir+"m"+YYYYDDD_datecode(year,'',doy)+'*')
+  logs = glob.glob(logdir+"m"+YYYYDDD_datecode(year,'',doy)+'*')
   requested_doy = doy
   while logs == []:
     # Try the previous day
     doy -= 1
     print("Trying DOY",doy)
     pattern = logdir+"m"+YYYYDDD_datecode(year,'',doy)+'*'
-    logs = glob(pattern)
+    logs = glob.glob(pattern)
     if requested_doy-doy > 7:
       return []
   for f in logs:
-    b = basename(f)
+    b = os.path.basename(f)
     if b[0] == 'm':
       # minicals
       freq = f.split('.')[1]
@@ -268,11 +265,10 @@ def get_boresights(bore_files):
   """
   Extract data from five-point boresight files.
 
-  @param bore_files : list
-    Full paths to the boresight files.
+  @param bore_files : Full paths to the boresight files.
+  @type  bore_files : list
 
-  @return: dictionary
-    The keys are:
+  @return: (dict) The keys are::
       - X_BW:       measured beamwidth in cross-elevation or cross-declination
       - DOY:        day of year
       - UTC:        coordinated universal time
@@ -338,12 +334,12 @@ def get_cals(cal_file):
   This gets the data from the minical log files and puts them in a
   dictionary keyed with 'calXXXX' where XXXX is the frequency in MHz.
 
-  @param cal_file : string
-    File with minical data
+  @param cal_file : File with minical data
+  @type  cal_file : string
 
-  @return: dictionary of dictionaries
-    A dictionary keyed with the DOY/UT of a record.
-    The values are also dictionaries whose keys are:
+  @return: (dict of dicts) A dictionary keyed with the DOY/UT of a record.
+  
+  The values are also dictionaries whose keys are::
       - year:       year
       - dss:        station number
       - freq:       frequency in MHz
@@ -438,9 +434,9 @@ def get_EAC_macro_log(year,DOY,dest_path):
     for f in pm_logs:
       try:
         shutil.copy(f,dest_path)
-        print(basename(f),"copied to",dest_path)
+        print(os.path.basename(f),"copied to",dest_path)
       except:
-        print("Could not copy",basename(f),'because', sys.exc_info()[0])
+        print("Could not copy",os.path.basename(f),'because', sys.exc_info()[0])
   return pm_logs
 
 def get_EAC_logs(year,DOY,dest_path):
@@ -457,7 +453,7 @@ def get_EAC_logs(year,DOY,dest_path):
   @return: dictionary
     EAC logs copied
   """
-  eac_logs = find_EAC_logs(eaclogdir,year,DOY)
+  eac_logs = find_EAC_logs(DRDSN.eaclogdir,year,DOY)
   for key in list(eac_logs.keys()):
     print("In get_EAC_logs, processing",key)
     # an item in the logs list could itself be a list
@@ -467,14 +463,14 @@ def get_EAC_logs(year,DOY,dest_path):
       for logfile in eac_logs[key]:
         # This overwrites anything of the same name
         shutil.copy(logfile,dest_path)
-        print(basename(logfile),"copied")
+        print(os.path.basename(logfile),"copied")
     else:
       # process the item as a file
       print("EAC log file:",eac_logs[key])
       shutil.copy(eac_logs[key],dest_path)
-      print(basename(eac_logs[key]),"copied")
+      print(os.path.basename(eac_logs[key]),"copied")
   # also get the 'process_macro' input file
-  eac_logs['macro'] = find_log_file(eaclogdir,'PESD-pm-',year,'-',DOY,'*.log',1)
+  eac_logs['macro'] = find_log_file(DRDSN.eaclogdir,'PESD-pm-',year,'-',DOY,'*.log',1)
   if eac_logs['macro'] != None:
     if type(eac_logs['macro']) == list:
       for macrofile in eac_logs['macro']:
@@ -525,11 +521,10 @@ def get_on_off_times(eaclog):
   and the source name. It returns a list of
   [on time, off time, source, offset, deg] list.
 
-  @param eaclog : string
-    The full path to an EAC macro response file.
-
-  @return: list
-    A list of lists.  The sublist consist of
+  @param eaclog : The full path to an EAC macro response file.
+  @type  eaclog : str
+    
+  @return: (list of lists)  The sublist consist of::
       - on_time:   UNIX timestamp for when the antenna is on-source
       - offtime:   UNIX timestamp for when the antenna is off-source
       - source:    name of the source (string)
@@ -537,7 +532,7 @@ def get_on_off_times(eaclog):
       - amount:    the amount of the offset (degrees, float)
   """
   # Get the year and day-of-year from the filename
-  parts = basename(eaclog).split('-')
+  parts = os.path.basename(eaclog).split('-')
   if diag:
     print(parts)
   if len(parts) == 3:
@@ -610,15 +605,15 @@ def get_RAC_logs(year,DOY,dest_path):
   @param dest_path : string
     Full path to the directory where the files should go.
   """
-  rac_logs = glob(raclogdir+'rac_'+("%4d.%03d" % (year,DOY)))
+  rac_logs = glob.glob(DRDSN.raclogdir+'rac_'+("%4d.%03d" % (year,DOY)))
   while rac_logs == []:
     DOY -= 1
-    rac_logs = glob(raclogdir+'rac_'+("%4d.%03d" % (year,DOY)))
+    rac_logs = glob.glob(DRDSN.raclogdir+'rac_'+("%4d.%03d" % (year,DOY)))
   for log in rac_logs:
-    print("Copying",basename(log),"to",dest_path)
+    print("Copying",os.path.basename(log),"to",dest_path)
     # This overwrites anything of the same name
     shutil.copy(log,dest_path)
-    print(basename(log),"copied")
+    print(os.path.basename(log),"copied")
   return rac_logs
 
 def get_RAVI_logs(year,DOY,dest_path):
@@ -637,27 +632,27 @@ def get_RAVI_logs(year,DOY,dest_path):
   @return: tuple
     Names of the RAVI logs, RAVI 'at' jobs, and means data files.
   """
-  ravi_logs = glob(raviLogDir+"vsr1*"+str(year)[2:]+("-%03d" % DOY)+"*.log")
+  ravi_logs = glob.glob(DRDSN.raviLogDir+"vsr1*"+str(year)[2:]+("-%03d" % DOY)+"*.log")
   for log in ravi_logs:
     # This overwrites anything of the same name
     shutil.copy(log,dest_path)
-    print(basename(log),"copied")
-  ravi_at_jobs = glob(ravi_atJobsDir
+    print(os.path.basename(log),"copied")
+  ravi_at_jobs = glob.glob(DRDSN.ravi_atJobsDir
                       +"PESD-at-"+str(year)+("%03d" % DOY)+"*.ravi")
   for job in ravi_at_jobs:
     # This overwrites anything of the same name
     shutil.copy(job,dest_path)
-    print(basename(job),"copied")
-  means = glob(ravi_data_dir
+    print(os.path.basename(job),"copied")
+  means = glob.glob(DRDSN.ravi_data_dir
                +"STATS_NP1000_vsr1*"+str(year)[2:]+("-%03d" % DOY)+"*-qlook")
   for datafile in means:
     # This overwrites anything of the same name
-    destination = dest_path + "/means_" + basename(datafile)[12:34]
+    destination = dest_path + "/means_" + os.path.basename(datafile)[12:34]
     try:
       shutil.copy(datafile,destination)
-      print(basename(datafile),"copied to",destination)
+      print(os.path.basename(datafile),"copied to",destination)
     except:
-      print("Could not copy",basename(datafile),"to",destination)
+      print("Could not copy",os.path.basename(datafile),"to",destination)
   return ravi_logs, ravi_at_jobs, means
   
 def get_tsys(tsys_files):
@@ -665,7 +660,8 @@ def get_tsys(tsys_files):
   Get Tsys data.
    
   Gets system temperature data from the log files and puts them in a
-  dictionary keyed with 'TsX' where X is the channel.  The keys are:
+  dictionary keyed with 'TsX' where X is the channel.  The keys are::
+  
     - UTC:          hh:mm:ss string
     - RAC_chan:     int string
     - DOY:          int string
@@ -678,14 +674,13 @@ def get_tsys(tsys_files):
     
   Notes
   =====
-  'int string' means a string amenable to conversion
-  to a number with int(string).  Similarly for float.
+  ``int string`` means a string amenable to conversion
+  to a number with ``int(str)``.  Similarly for float.
 
-  @param tsys_files : list
-    Full paths to the Tsys files.
+  @param tsys_files : Full paths to the Tsys files.
+  @type  tsys_files : list
 
-  @return: dictionary
-    System temperature data as lists associated with each key.
+  @return: (dict) System temperature data as lists associated with each key.
   """
   tsys_files.sort()
   data = {}
@@ -728,30 +723,30 @@ def get_VSR_logs(year,DOY,dest_path):
     Names of VSR logs, VSR scripts, and VSR 'at' jobs.
   """
   
-  vsr_HW_logs = glob(vsrLogDir+'VSR*log.'+("%03d-" % DOY)+'*')
+  vsr_HW_logs = glob.glob(DRDSN.vsrLogDir+'VSR*log.'+("%03d-" % DOY)+'*')
   for log in vsr_HW_logs:
     # This overwrites anything of the same name
     shutil.copy(log,dest_path)
-    print(basename(log),"copied")
+    print(os.path.basename(log),"copied")
   ses_date = dest_path.split('/')[-2]
   print("Session",ses_date)
-  vsr_SW_logs = glob(obs_dir+ses_date+"/vrt*log."+("%03d" % DOY)+"*")
+  vsr_SW_logs = glob.glob(DRDSN.obs_dir+ses_date+"/vrt*log."+("%03d" % DOY)+"*")
   for log in vsr_SW_logs:
     # This overwrites anything of the same name
     shutil.copy(log,dest_path)
-    print(basename(log),"copied")
+    print(os.path.basename(log),"copied")
   
-  vsr_scripts = glob(vsrScriptDir+'PESD-'+str(year)+'-'+("%03d" % DOY)+'*.vsr')
+  vsr_scripts = glob.glob(DRDSN.vsrScriptDir+'PESD-'+str(year)+'-'+("%03d" % DOY)+'*.vsr')
   for script in vsr_scripts:
     # This overwrites anything of the same name
     shutil.copy(script,dest_path)
-    print(basename(script),"copied")
+    print(os.path.basename(script),"copied")
     
-  vsr_at_jobs = glob(vsr_atJobsDir+"PESD-at-"+str(year)+'-'+("%03d" % DOY)+"*.vsr")
+  vsr_at_jobs = glob.glob(DRDSN.vsr_atJobsDir+"PESD-at-"+str(year)+'-'+("%03d" % DOY)+"*.vsr")
   for job in vsr_at_jobs:
     # This overwrites anything of the same name
     shutil.copy(job,dest_path)
-    print(basename(job),"copied")
+    print(os.path.basename(job),"copied")
   vsr_logs = vsr_HW_logs + vsr_SW_logs
   return vsr_logs, vsr_scripts, vsr_at_jobs
 
@@ -795,10 +790,11 @@ def report_logs(cal_data,tsys_data,bore_data,track_data):
 def parse_boresight_line(line):
   """Parse a line of boresight data.
    
-  Proxesses data from an EAC 5pYYYYDDD.xxx file, where
-  xxx is 'pri' (primary, the preferred frequency for the boresight) or 'sec'
-  (secondary). 'line' is a line from the log file.  The columns in the table
-  are:
+  Proxesses data from an EAC ``5pYYYYDDD.xxx`` file, where
+  xxx is ``pri`` (primary, the preferred frequency for the boresight) or ``sec``
+  (secondary). ``line`` is a line from the log file.  The columns in the table
+  are::
+  
     - DOY:      day of year (3 digit integer)
     - UTC:      Coordinated Universal Time (HH:MM:SS)
     - SOURCE:   name of the source used for boresight
@@ -834,9 +830,11 @@ def parse_boresight_line(line):
     - BW_Y:     measured beamwidth (DEG) in Y direction
     - ERR_Y:    estimated error (deg) of beamwidth in Y direction
     - POS_Y:    total boresight offset (deg) in Y not including manual offset
+    
   The following summarize the boresight results.  One pair of columns should
   be the same as POS_X and POS_Y and the other pair calculated from these,
-  depending on whether the boresight was done in XDEC,DEC or XEL,EL.
+  depending on whether the boresight was done in XDEC,DEC or XEL,EL::
+  
     - XELOFF:   total boresight offet (deg) in cross-el, not incl. manual offs.
     - ELOFF:    total boresight offet (deg) in elevation, not incl. manual offs.
     - XDECOFF:  total boresight offet (deg) in cross-dec, not incl. manual offs.
@@ -844,10 +842,14 @@ def parse_boresight_line(line):
     - The following may vary according to a subreflector position model
     - YPOS:     subreflector Y axis position (inches)
     - ZPOS:     subreflector Z axis position (inches)
-  The following are offsets from the model
+    
+  The following are offsets from the model::
+  
     - YOFF:     subreflector Y axis offset (inches)
     - ZOFF:     subreflector Z axis offset (inches)
-  The information extracted from this and returned in a dictionary is:
+    
+  The information extracted from this and returned in a dictionary is::
+  
     - time:     UNIX timestamp in seconds since the epoch 1970.0
     - SOURCE:
     - FREQ:
@@ -878,7 +880,8 @@ def parse_tsys_log_line(line):
   Parse a line in a Tsys log.
    
   A Tsys log has the name tYYYYDDD.x (where x is A or B).
-  It has the following columns:
+  It has the following columns::
+  
     - DOY:          (3-digit int)
     - UTC:          (HH:MM:SS) Coordinated Universal Time
     - Tsys:         (K) - system temperature

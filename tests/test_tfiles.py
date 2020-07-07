@@ -1,3 +1,3 @@
-from Data_Reduction.GAVRT import Observation
+from Data_Reduction.GAVRT import Observation, Session
 
-obs = Observation(date="2012/127")
+ses = Session(dss=28, date="2012/127", project="SolarPatrol")

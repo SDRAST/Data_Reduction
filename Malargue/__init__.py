@@ -97,7 +97,7 @@ def DSS84_beamwidth(freq):
   """
   return RA.HPBW(DSS84_beamtaper(freq), 0.3/float(freq), 34)*180/math.pi
 
-class Observation(DR.Observation):
+class Observation(DR.Observation, DR.DataGetterMixin):
   """
   Class for any group of data for a single purpose.
   

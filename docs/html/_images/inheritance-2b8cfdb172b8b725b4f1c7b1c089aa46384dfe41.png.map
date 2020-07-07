@@ -1,0 +1,8 @@
+<map id="inheritanceb272fab77a" name="inheritanceb272fab77a">
+<area shape="rect" id="node1" href="api/Data_Reduction.Malargue.BoresightScan.html#Data_Reduction.Malargue.BoresightScan" target="_top" title="class for a single scan during a boresight" alt="" coords="343,103,457,128"/>
+<area shape="rect" id="node2" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" target="_top" title="superclass for a data structure and methods" alt="" coords="188,79,289,104"/>
+<area shape="rect" id="node5" href="api/Data_Reduction.Map.html#Data_Reduction.Map" target="_top" title="Map class without special features for GAVRT and Malargue" alt="" coords="364,53,436,79"/>
+<area shape="rect" id="node3" href="api/Data_Reduction.DataGetterMixin.html#Data_Reduction.DataGetterMixin" target="_top" title="Class for getting data from a CSV file." alt="" coords="5,79,135,104"/>
+<area shape="rect" id="node4" href="api/Data_Reduction.GriddingMixin.html#Data_Reduction.GriddingMixin" target="_top" title="Class for all the data and methods associated with a raster scan map" alt="" coords="183,5,295,31"/>
+<area shape="rect" id="node6" href="api/Data_Reduction.Malargue.Session.html#Data_Reduction.Malargue.Session" target="_top" title="Class for an observing session on a given year and DOY" alt="" coords="34,29,106,55"/>
+</map>
