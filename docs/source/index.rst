@@ -24,6 +24,7 @@ Context Modules
 .. automodapi:: Data_Reduction.DSN
 .. automodapi:: Data_Reduction.DSN.database
 .. automodapi:: Data_Reduction.DSN.logs
+.. automodapi:: Data_Reduction.DSN.old_init
 .. automodapi:: Data_Reduction.DSN.old_VSR
 .. automodapi:: Data_Reduction.DSN.OLSR
 .. automodapi:: Data_Reduction.DSN.STATS

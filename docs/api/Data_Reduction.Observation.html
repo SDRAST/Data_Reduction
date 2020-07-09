@@ -78,17 +78,22 @@
 <p>superclass for a data structure and methods</p>
 <dl class="py attribute">
 <dt>
-<code class="sig-name descname">aliases      - (dict) data keys to replace column names</code></dt>
+<code class="sig-name descname">aliases      - (dict) data keys to replace those in original data</code></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt>
-<code class="sig-name descname">channel      - (dict) signal paths</code></dt>
+<code class="sig-name descname">channel      - (dict) signal paths, e.g., different freqs and pols</code></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt>
-<code class="sig-name descname">data         - (dict) table contents</code></dt>
+<code class="sig-name descname">data         - (dict) original data, e.g., read from file or database</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">DOY          - (int) day of year of observation</code></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -128,7 +133,7 @@
 
 <dl class="py attribute">
 <dt>
-<code class="sig-name descname">session      - (Session) set of observations</code></dt>
+<code class="sig-name descname">session      - (Session) set of observations, parent to Observation</code></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -139,6 +144,11 @@
 <dl class="py attribute">
 <dt>
 <code class="sig-name descname">start        - (float) UNIX time at the beginning</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">year         - (int) year of observation</code></dt>
 <dd></dd></dl>
 
 <p><strong>Reserved Column Names</strong></p>

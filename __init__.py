@@ -60,9 +60,11 @@ class Observation(object):
   
   Attributes
   ==========
-    aliases      - (dict) data keys to replace column names
-    channel      - (dict) signal paths
-    data         - (dict) table contents
+    aliases      - (dict) data keys to replace those in original data
+    channel      - (dict) signal paths, e.g., different freqs and pols
+    data         - (dict) original data, e.g., read from file or database
+
+    DOY          - (int) day of year of observation
     end          - (float) UNIX time at the end
     latitude     - (float) from obs
     logger       - (logging.Logger)
@@ -70,9 +72,10 @@ class Observation(object):
     name         - (str) user assigned, defaults to YEAR/DOY
     numdata      - (int) number of data samples
     obs          - (AE.DSS) observatory
-    session      - (Session) set of observations
+    session      - (Session) set of observations, parent to Observation
     session_path - (str) directory for session files
     start        - (float) UNIX time at the beginning
+    year         - (int) year of observation
   
   **Reserved Column Names**
   
@@ -173,6 +176,8 @@ class Observation(object):
       name (str):         an identifier; default is station ID + "obs"
       dss (int):          station number
       date (str):         "YEAR/DOY"
+      start (float):      UNIX time at the start
+      end (float):        UNIX time at the end
       project (str):      directory under /usr/local/projects
     """
     self.logger = logging.getLogger(logger.name+".Observation")
@@ -201,7 +206,8 @@ class Observation(object):
     # the observation was done on some date
     if date:
       y,d = date.split('/')
-      self.year = int(y); self.DOY = int(d)
+      self.year = int(y); 
+      self.DOY = int(d)
       projdatapath, self.sessionpath, rawdatapath = \
                               get_obs_dirs(project, dss, self.year, self.DOY,
                                            datafmt=None)

@@ -7,32 +7,55 @@ For open loop science recorder files.
 Supports data files from the VSR, WVSR, PVSR, OLR, etc.
 
 Recognizes RDEF, VDR, SFDU formats
+
+Option keys are ``'format'``, ``'toPrintHeaders'``, ``'startTime'``,
+``'startDate'``, ``'file'``, ``'leaveFileOpen'``, ``'lookForDate'``, 
+``'duration'``, 'endDate'``, and ``'toPrintData'``.
+
+Date formats may be given as ``YYYY-MM-DD-HH:MM:SS.fff`` or UNIX time seconds.
+
+Notes
+=====
+The file reading functions read all the data between the specified times and
+their defaults. Each record is a dict which looks like this::
+
+    {'values': array([ 11. -1.j,  -5. -3.j,  -7.+13.j, ...,
+                        9.+15.j, -15.-21.j, -25. +1.j]),
+     'times': array([0.00000e+00, 1.00000e-06, 2.00000e-06, ...,
+                     9.99997e-01, 9.99998e-01, 9.99999e-01]),
+     'phase': array([-885534.63141, -885534.63141, -885534.63141, ...,
+                     -885534.63141, -885534.63141, -885534.63141]),
+  'phCoeff': [[-885534.63141,
+               1.1125369292536007e-308, 
+               1.1125369292536007e-308,
+               1.1125369292536007e-308]],
+  'LO': 31960000000.0,
+  'DDCLO': -11500000.0,
+  'sampleSize': 8,
+  'DATAFIL': '/usr/local/projects/SolarPatrol/Observations/dss84/2020/163/\
+              NET4n004tSsMG12rOPc05-20163121517.prd',
+  't0': datetime.datetime(2020, 6, 11, 12, 15, 20, 999979),
+  'file': {'f':         [], 
+           'curRecord': []}}
+           
+Todo
+====
+  1. Fix the ``timedelta`` and ``datetime`` overflow errors in ``VDR()`` and
+     ``SFDU()``.
 """
-import numpy as np
-import math
-import sys
 import datetime
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-from matplotlib.ticker import FuncFormatter
-from matplotlib.ticker import FormatStrFormatter
+import logging
+import math
+import numpy as np
+import sys
+
+import Math.Bin
+
+logger = logging.getLogger(__name__)
 
 # --------
 # Lower Level Subfunctions
 # --------
-def bin2sint(bin):
-    """
-    binary to signed integer
-    """
-    if bin[0] == '1':
-        # Negative
-        integer = -(2**(len(bin)-1) - int(bin[1:], 2))
-    else:
-        integer = int(bin, 2)
-
-    integer = int(2*integer + 1)
-    return integer
 
 def data2int(data, format):
     """
@@ -83,36 +106,38 @@ def data2float(data, format):
 
     return value
 
-def to_percent(y, position):
-    """
-    Convert a float to percent
-    """
-    # Ignore the passed in position. This has the effect of scaling the default
-    # tick locations.
-    s = str(100 * y)
-
-    # The percent symbol needs escaping in latex
-    if matplotlib.rcParams['text.usetex'] is True:
-        return s + r'$\%$'
-    else:
-        return s + '%'
+# -----------------
+# supporting functions
+#------------------
 
 def readHeaders(f, options):
     """
-    decode the file header
+    Decode the file header
+    
+    This will read all the headers between ``startTime`` and ``endTime`` (or
+    their defaults) and return them as dicts.  If you want to see only the first
+    header set option ``'duration'`` to 1. If you want to see them on your
+    screen also, set option ``'toPrintHeaders'`` to 1.
+    
+    Uses options 'format' and 'toPrintHeaders'
     """
     if options['format'] == 'RDEF':
         # Header Elements
         headers = ['RECORD_LABEL','RECORD_LENGTH', 'RECORD_VERSION_ID',
                 'STATION_ID', 'SPACECRAFT_ID', 'SAMPLE_SIZE', 'SAMPLE_RATE',
-                'VALIDITY_FLAG', 'AGENCY_FLAG', 'RF_TO_IF_DOWNCONV', 'IF_TO_CHANNEL_DOWNCONV',
-                'TIME_TAG_YEAR', 'TIME_TAG_DOY', 'TIME_TAG_SECOND_OF_DAY',
-                'TIMETAG_PICOSECONDS_OF_THE_SECOND', 'CHANNEL_ACCUMULATED_PHASE',
-                'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT0', 'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT1',
-                'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT2', 'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT3',
-                'EMPTY_FIELDS1', 'PREDICT_PASS_NUMBER', 'UPLINK_BAND', 'DOWNLINK_BAND',
-                'TRACK_MODE', 'UPLINK_DSS_ID', 'OLR_ID', 'OLR_SOFTWARE_VERSION', 'CHANNEL_POWER_CALIBRATION_FACTOR',
-                'TOTAL_FREQUENCY_OFFSET', 'CHANNEL_NUMBER', 'EMPTY_FIELDS2', 'END_LABEL'];
+                'VALIDITY_FLAG', 'AGENCY_FLAG', 'RF_TO_IF_DOWNCONV', 
+                'IF_TO_CHANNEL_DOWNCONV','TIME_TAG_YEAR', 'TIME_TAG_DOY',
+                'TIME_TAG_SECOND_OF_DAY', 'TIMETAG_PICOSECONDS_OF_THE_SECOND',
+                'CHANNEL_ACCUMULATED_PHASE', 
+                'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT0',
+                'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT1',
+                'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT2',
+                'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT3',
+                'EMPTY_FIELDS1', 'PREDICT_PASS_NUMBER', 'UPLINK_BAND',
+                'DOWNLINK_BAND', 'TRACK_MODE', 'UPLINK_DSS_ID', 'OLR_ID',
+                'OLR_SOFTWARE_VERSION', 'CHANNEL_POWER_CALIBRATION_FACTOR',
+                'TOTAL_FREQUENCY_OFFSET', 'CHANNEL_NUMBER', 'EMPTY_FIELDS2',
+                'END_LABEL'];
 
         dict = {'RECORD_LABEL':{'Size':4, 'Type':'CHARACTER'},
                 'RECORD_LENGTH':{'Size':4, 'Type':'UNSIGNED INTEGER'},
@@ -128,12 +153,17 @@ def readHeaders(f, options):
                 'TIME_TAG_YEAR':{'Size':2, 'Type':'UNSIGNED INTEGER'},
                 'TIME_TAG_DOY':{'Size':2, 'Type':'UNSIGNED INTEGER'},
                 'TIME_TAG_SECOND_OF_DAY':{'Size':4, 'Type':'UNSIGNED INTEGER'},
-                'TIMETAG_PICOSECONDS_OF_THE_SECOND':{'Size':8, 'Type':'FLOATING POINT'},
+                'TIMETAG_PICOSECONDS_OF_THE_SECOND':{'Size':8,
+                                                     'Type':'FLOATING POINT'},
                 'CHANNEL_ACCUMULATED_PHASE':{'Size':8, 'Type':'FLOATING POINT'},
-                'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT0':{'Size':8, 'Type':'FLOATING POINT'},
-                'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT1':{'Size':8, 'Type':'FLOATING POINT'},
-                'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT2':{'Size':8, 'Type':'FLOATING POINT'},
-                'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT3':{'Size':8, 'Type':'FLOATING POINT'},
+                'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT0':{'Size':8,
+                                                         'Type':'FLOATING POINT'},
+                'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT1':{'Size':8,
+                                                         'Type':'FLOATING POINT'},
+                'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT2':{'Size':8,
+                                                         'Type':'FLOATING POINT'},
+                'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT3':{'Size':8,
+                                                         'Type':'FLOATING POINT'},
                 'EMPTY_FIELDS1':{'Size':36, 'Type':'EMPTY'},
                 'PREDICT_PASS_NUMBER':{'Size':2, 'Type':'UNSIGNED INTEGER'},
                 'UPLINK_BAND':{'Size':1, 'Type':'UNSIGNED INTEGER'},
@@ -142,7 +172,8 @@ def readHeaders(f, options):
                 'UPLINK_DSS_ID':{'Size':1, 'Type':'UNSIGNED INTEGER'},
                 'OLR_ID':{'Size':1, 'Type':'UNSIGNED INTEGER'},
                 'OLR_SOFTWARE_VERSION':{'Size':1, 'Type':'UNSIGNED INTEGER'},
-                'CHANNEL_POWER_CALIBRATION_FACTOR':{'Size':4, 'Type':'FLOATING POINT'},
+                'CHANNEL_POWER_CALIBRATION_FACTOR':{'Size':4,
+                                                    'Type':'FLOATING POINT'},
                 'TOTAL_FREQUENCY_OFFSET':{'Size':8, 'Type':'FLOATING POINT'},
                 'CHANNEL_NUMBER':{'Size':1, 'Type':'UNSIGNED INTEGER'},
                 'EMPTY_FIELDS2':{'Size':19, 'Type':'EMPTY'},
@@ -157,11 +188,13 @@ def readHeaders(f, options):
                 'WVSR_SOFTWARE_VERSION', 'SPC_ID', 'WVSR_ID', 'CHAN_ID',
                 'SAMPLE_SIZE', 'SAMPLE_RATE', 'CHAN_DOPPLER_MODE',
                 'PRDX_DSS_ID', 'PRDX_SC_ID', 'PRDX_PASS_NUMBER', 'PRDX_UL_BAND',
-                'PRDX_DL_BAND', 'TRK_MODE', 'UL_DSS_ID', 'DDCLO_MHZ', 'RF_TO_IF_DOWNCONV_MHZ',
-                'DATA_ERROR', 'TIME_TAG_YEAR', 'TIME_TAG_DOY', 'TIME_TAG_SECOND_OF_DAY',
+                'PRDX_DL_BAND', 'TRK_MODE', 'UL_DSS_ID', 'DDCLO_MHZ',
+                'RF_TO_IF_DOWNCONV_MHZ', 'DATA_ERROR', 'TIME_TAG_YEAR',
+                'TIME_TAG_DOY', 'TIME_TAG_SECOND_OF_DAY',
                 'DATA_TIME_OFFSET_NANOSECONDS', 'PREDICTS_FREQ_OVERRIDE',
-                'PREDICTS_FREQ_OFFSET', 'PREDICTS_FREQ_RATE', 'CHANNEL_FREQ_OFFSET',
-                'RF_FREQ_POINT', 'CHANNEL_ACCUMULATED_PHASE',
+                'PREDICTS_FREQ_OFFSET', 'PREDICTS_FREQ_RATE',
+                'CHANNEL_FREQ_OFFSET', 'RF_FREQ_POINT',
+                'CHANNEL_ACCUMULATED_PHASE',
                 'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT1',
                 'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT2',
                 'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT3',
@@ -197,10 +230,14 @@ def readHeaders(f, options):
             'CHANNEL_FREQ_OFFSET':{'Size':8, 'Type':'FLOATING POINT'},
             'RF_FREQ_POINT':{'Size':8, 'Type':'FLOATING POINT'},
             'CHANNEL_ACCUMULATED_PHASE':{'Size':8, 'Type':'FLOATING POINT'},
-            'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT1':{'Size':8, 'Type':'FLOATING POINT'},
-            'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT2':{'Size':8, 'Type':'FLOATING POINT'},
-            'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT3':{'Size':8, 'Type':'FLOATING POINT'},
-            'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT4':{'Size':8, 'Type':'FLOATING POINT'},
+            'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT1':{'Size':8,
+                                                     'Type':'FLOATING POINT'},
+            'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT2':{'Size':8,
+                                                     'Type':'FLOATING POINT'},
+            'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT3':{'Size':8,
+                                                     'Type':'FLOATING POINT'},
+            'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT4':{'Size':8,
+                                                     'Type':'FLOATING POINT'},
             'CHAN_LABEL':{'Size':16, 'Type':'CHARACTER'}}
 
         # Define number of header bytes
@@ -213,18 +250,22 @@ def readHeaders(f, options):
                 'PHCHDO_TYPE', 'PHCHDO_LENGTH', 'DATA_CLASS', 'DATA_SOURCE',
                 'MISSION_ID', 'FORMAT_CODE', 'SHCHDO_TYPE', 'SHCHDO_LENGTH',
                 'ORIGINATOR_ID', 'LAST_MODIFIED_ID', 'RSR_SOFTWARE_ID',
-                'RECORD_SEQUENCE_NUMBER', 'SPC_ID', 'DSS_ID', 'RSR_ID', 'SCCHAN_ID',
-                'RESERVED2', 'SPACECRAFT_ID', 'PRDX_PASS_NUMBER', 'UL_BAND', 'DL_BAND',
-                'TRK_MODE', 'UL_DSS_ID', 'FGAIN_PX_NO', 'FGAIN_IF_BANDWIDTH', 'FROV_FLAG',
-                'ATTENUATION', 'ADC_RMS', 'ADC_PEAK', 'ADC_TIME_TAG_YEAR', 'ADC_TIME_TAG_DOY',
-                'ADC_TIME_TAG_SECOND_OF_DAY', 'SAMPLE_SIZE', 'DATA_ERROR', 'SAMPLE_RATE',
-                'DDC_LO', 'RF_IF_LO', 'SFDU_TIME_TAG_YEAR', 'SFDU_TIME_TAG_DOY',
-                'SFDU_TIME_TAG_SECOND_OF_DAY', 'PREDICTS_TIME_SHIFT', 'PREDICTS_FREQ_OVERRIDE',
-                'PREDICTS_FREQ_RATE', 'PREDICTS_FREQ_OFFSET', 'SUBCHANNEL_FREQ_OFFSET',
-                'RF_FREQ_POINT_1', 'RF_FREQ_POINT_2', 'RF_FREQ_POINT_3', 'SCHAN_FREQ_POINT_1',
-                'SCHAN_FREQ_POINT_2', 'SCHAN_FREQ_POINT_3', 'SCHAN_FREQ_POLY_COEF_1',
-                'SCHAN_FREQ_POLY_COEF_2', 'SCHAN_FREQ_POLY_COEF_3', 'SCHAN_ACCUM_PHASE',
-                'SCHAN_PHASE_POLY_COEF_1', 'SCHAN_PHASE_POLY_COEF_2', 'SCHAN_PHASE_POLY_COEF_3',
+                'RECORD_SEQUENCE_NUMBER', 'SPC_ID', 'DSS_ID', 'RSR_ID',
+                'SCCHAN_ID', 'RESERVED2', 'SPACECRAFT_ID', 'PRDX_PASS_NUMBER',
+                'UL_BAND', 'DL_BAND', 'TRK_MODE', 'UL_DSS_ID', 'FGAIN_PX_NO',
+                'FGAIN_IF_BANDWIDTH', 'FROV_FLAG', 'ATTENUATION', 'ADC_RMS',
+                'ADC_PEAK', 'ADC_TIME_TAG_YEAR', 'ADC_TIME_TAG_DOY',
+                'ADC_TIME_TAG_SECOND_OF_DAY', 'SAMPLE_SIZE', 'DATA_ERROR',
+                'SAMPLE_RATE', 'DDC_LO', 'RF_IF_LO', 'SFDU_TIME_TAG_YEAR',
+                'SFDU_TIME_TAG_DOY', 'SFDU_TIME_TAG_SECOND_OF_DAY',
+                'PREDICTS_TIME_SHIFT', 'PREDICTS_FREQ_OVERRIDE',
+                'PREDICTS_FREQ_RATE', 'PREDICTS_FREQ_OFFSET',
+                'SUBCHANNEL_FREQ_OFFSET', 'RF_FREQ_POINT_1', 'RF_FREQ_POINT_2',
+                'RF_FREQ_POINT_3', 'SCHAN_FREQ_POINT_1', 'SCHAN_FREQ_POINT_2',
+                'SCHAN_FREQ_POINT_3', 'SCHAN_FREQ_POLY_COEF_1',
+                'SCHAN_FREQ_POLY_COEF_2', 'SCHAN_FREQ_POLY_COEF_3',
+                'SCHAN_ACCUM_PHASE', 'SCHAN_PHASE_POLY_COEF_1',
+                'SCHAN_PHASE_POLY_COEF_2', 'SCHAN_PHASE_POLY_COEF_3',
                 'SCHAN_PHASE_POLY_COEF_4', 'SCHAN_MULT', 'RESERVED3']
 
         dict = {'CONTROL_AUTHORITY_ID':{'Size':4, 'Type':'CHARACTER'},
@@ -365,197 +406,6 @@ def checkFormat(DATAFIL):
 
     return output
 
-def plot(data):
-    # Convert to time offset
-    t0 = data['t0']
-
-    # Get date string
-    #dateStr = "%s - %s" % (data['times'][0].strftime('%Y-%m-%d-%H:%M:%S.%f')[:-4],
-    #                       data['times'][-1].strftime('%Y-%m-%d-%H:%M:%S.%f')[:-4])
-    dateStr = "Test"
-
-    #tPlot = [(x - t0).microseconds/1000000.0 for x in data['times']]
-    tPlot = []
-    for x in data['times']:
-        tPlot.append(x)
-    duration = tPlot[-1] - tPlot[0]
-
-    # Get x-limit
-    xLimMag = [tPlot[0], tPlot[-1]]
-    yLimMag = 2**(data['sampleSize'])
-    if data['sampleSize'] > 4:
-        yTicks = np.arange(-yLimMag, yLimMag+0.001, 2**(data['sampleSize']-2))
-    else:
-        yTicks = np.arange(-yLimMag, yLimMag+0.001, 1)
-
-    # ----
-    # Figure 1: Raw Data values
-    # ----
-    # Limit the number of points
-    if len(data['values']) < 100000:
-        plt.figure(figsize=(20,12))
-
-        # Subplot 1: I-Signal
-        ax1 = plt.subplot(211)
-        plt.plot(tPlot, np.real(data['values']))
-        ax1.grid(True)
-        plt.ylabel('I Signal (counts)')
-        plt.xlabel('Time (seconds)')
-        plt.ylim([-yLimMag, yLimMag])
-        plt.yticks(yTicks)
-        plt.xlim(xLimMag)
-
-        # Subplot 2: Q-Signal
-        ax2 = plt.subplot(212)
-        plt.plot(tPlot, np.imag(data['values']))
-        ax2.grid(True)
-        plt.ylabel('Q Signal (counts)')
-        plt.xlabel('Time (seconds)')
-        plt.ylim([-yLimMag, yLimMag])
-        plt.yticks(yTicks)
-        plt.xlim(xLimMag)
-
-        # Add filename to figure?
-        plt.suptitle('Raw Data\n%s\n%s' % (data['DATAFIL'], dateStr))
-
-    # ----
-    # Figure 2: Histogram
-    # ----
-    plt.figure(figsize=(20,12))
-    if data['sampleSize'] > 8:
-        nbins = 256;
-        bins = np.linspace(-yLimMag-1, yLimMag+1, nbins)
-    else:
-        bins = np.arange(-yLimMag-2, yLimMag+3, 2) + 0.0001
-
-    # Create Histogram 1 & normalize to percentage
-    binCounts, binEdges = np.histogram(np.real(data['values']), bins)
-    pctCounts = 100.0*binCounts/float(len(data['values']))
-    widths = np.diff(binEdges)
-
-    # Subplot 1: I-signal
-    ax1 = plt.subplot(211)
-    plt.bar(binEdges[:-1], pctCounts, widths, align='edge')
-    ax1.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
-    plt.xlim([-yLimMag, yLimMag])
-    plt.xlabel('I-Signal (counts)')
-    plt.xticks(yTicks)
-    plt.ylabel('Percentage Occurance')
-    ax1.grid(True)
-
-    # Create Histogram 1 & normalize to percentage
-    binCounts, binEdges = np.histogram(np.imag(data['values']), bins)
-    pctCounts = 100.0*binCounts/float(len(data['values']))
-    widths = np.diff(binEdges)
-
-    # Subplot 2: Q-signal
-    ax2 = plt.subplot(212)
-    plt.bar(binEdges[:-1], pctCounts, widths, align='edge')
-    ax2.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
-    plt.xlim([-yLimMag, yLimMag])
-    plt.xlabel('Q-Signal (counts)')
-    plt.xticks(yTicks)
-    plt.ylabel('Percentage Occurances')
-    ax2.grid(True)
-
-    # Get some stats
-    Imean = np.mean(np.real(data['values']))
-    Istd  = np.std(np.real(data['values']))
-    Qmean = np.mean(np.imag(data['values']))
-    Qstd  = np.std(np.imag(data['values']))
-
-
-    # Add filename to figure?
-    plt.suptitle('Histogram\n%s\n%s\nI-Signal: = %8.1f, sigma = %8.1f\nQ-Signal: = %8.1f, sigma = %8.1f' % (
-        data['DATAFIL'], dateStr, Imean, Istd, Qmean, Qstd))
-
-    # ----
-    # Figure 3: FFT Spectrum
-    # ----
-    t1 = datetime.datetime.now()
-
-    # Do FFT
-    npad = int(2**math.ceil(math.log(len(data['values']), 2)) - len(data['values']))
-    ytmp = np.pad(data['values'], (0, npad), mode='constant')
-
-    t1 = datetime.datetime.now()
-    fft = np.fft.fftshift(np.fft.fft(ytmp))/float(len(ytmp))
-
-    fftPower = np.sqrt(fft*fft.conj()).real
-
-    # Compute frequency range
-    dt = duration/float(len(data['values']))
-    freq = np.fft.fftshift(np.fft.fftfreq(len(fft), d=dt))
-    freqLim = max(abs(freq))
-    freqRes = np.mean(np.diff(freq))
-
-    # Find peak frequency
-    peakInd = np.argmax(fftPower)
-    peakFreq = freq[np.argmax(fftPower)]
-    xLim = [math.floor((peakFreq-100)/100)*100, math.ceil((peakFreq+100)/100)*100]
-
-
-    # Reduce resolution for plotting
-    Npts = 65536
-    if len(freq)>(2*Npts):
-        npts = np.ceil(len(freq)/float(Npts))
-        thinFFT = []
-        thinFreq = []
-        for ind in range(0, Npts):
-            ind0 = int(npts*(ind))
-            ind1 = int(npts*(ind+1))
-
-            if (ind0 >= len(freq)) or (ind0 >= len(fftPower)):
-                break
-
-            # Method 1: Max in bin
-            thinFFT.append(np.max(fftPower[ind0:ind1]))
-            indmax = np.argmax(fftPower[ind0:ind1])
-            thinFreq.append(freq[ind0+indmax])
-
-            # Metjhod 2: Sum in bin
-            #thinFFT.append(np.sum(fftPower[ind0:ind1]))
-            #thinFreq.append(np.mean(freq[ind0:ind1]))
-    else:
-        thinFFT = fftPower
-        thinFreq = freq
-
-    # Subplot 1: Full FFT
-    plt.figure(figsize=(5,4))
-    ax1 = plt.subplot(111)
-    ax1.grid(True)
-    plt.ylabel('Amplitude (dB)')
-    plt.xlabel('Frequency (MHz)')
-    plt.xlim([-freqLim/1000000.0, freqLim/1000000.0])
-    if np.max(10*np.log10(fftPower)) < 25:
-        plt.ylim([-40, 25])
-    else:
-        plt.ylim([-40, np.max(10*np.log10(fftPower))])
-    plt.gca().ticklabel_format(useOffset=False, style='plain')
-    #plt.plot(freq, 10*np.log10(fftPower), 'b-')
-    plt.plot(np.array(thinFreq)/1000000.0, 10*np.log10(thinFFT), 'b-')
-
-    # Subplot 2: Zoomed in FFT
-    #ax2 = plt.subplot(212)
-    #ax2.grid(True)
-    #plt.ylabel('Amplitude (dB)')
-    #plt.xlabel('Frequency (Hz)')
-    #plt.xlim(xLim)
-    #if np.max(10*np.log10(fftPower)) < 25:
-    #    plt.ylim([-30, 25])
-    #else:
-    #    plt.ylim([-30, np.max(10*np.log10(fftPower))])
-    #ax2.get_xaxis().get_major_formatter().set_useOffset(False)
-    #ax2.get_yaxis().get_major_formatter().set_useOffset(False)
-    #plt.plot(freq, 10*np.log10(fftPower), 'b-')
-
-    # Add title
-    #plt.suptitle('FFT\n%s\n%s\nPeak Freq = %1.2f Hz\nResolution = %1.2f Hz' % (
-    #    data['DATAFIL'], dateStr, peakFreq, freqRes))
-
-    # Show figure
-    plt.show()
-
 # --------
 # Main File I/O Subfunctions
 # --------
@@ -565,16 +415,22 @@ def plot(data):
 #   This script reads in RDEF data formatted files
 # ----
 def RDEF(DATAFIL, options):
-    # Default Inputs
-    # DATAFIL = '/Users/cvolk/Documents/MATLAB/RSR_Test/olr4.gdscc_stab_test_c1.18_088_035414'
-    # DATAFIL = ''
+    """
+    Read RDEF format datafile
+    
+    Uses options 'startTime', 'startDate', 'file', 'leaveFileOpen', 
+    'lookForDate', 'duration', and 'toPrintData'
+    """
     if 'startTime' not in options:
-        timeRange = [0, float('inf')]
+        #timeRange = [0, float('inf')]
+        timeRange = [0, datetime.timedelta.max.total_seconds()-1]
     else:
-        timeRange = [options['startTime'], float('inf')]
+        #timeRange = [options['startTime'], float('inf')]
+        timeRange = [options['startTime'],
+                     datetime.timedelta.max.total_seconds()-1]
 
     if 'startDate' not in options:
-        options['startDate'] = [datetime.datetime.strptime('1970-01-01', '%Y-%m-%d')]
+        options['startDate'] = datetime.datetime.strptime('1970-01-01', '%Y-%m-%d')
 
     if 'file' not in options:
         # Open file
@@ -601,22 +457,30 @@ def RDEF(DATAFIL, options):
         tStr = '%04d-%03d' % (headers['TIME_TAG_YEAR'], headers['TIME_TAG_DOY'])
         t0 = datetime.datetime.strptime(tStr, '%Y-%j')
         t0 = (t0 + datetime.timedelta(0,headers['TIME_TAG_SECOND_OF_DAY'])
-                + datetime.timedelta(0,headers['TIMETAG_PICOSECONDS_OF_THE_SECOND'])/1000000000000)
+                 + datetime.timedelta(0,headers[
+                            'TIMETAG_PICOSECONDS_OF_THE_SECOND'])/1000000000000)
 
         td = (options['startDate'] - t0)
-        deltaT = ((td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) // 10.0**6)
+        deltaT = (  (td.microseconds
+                  + (td.seconds + td.days * 24 * 3600) * 10**6) // 10.0**6)
         if deltaT > 0:
             timeRange[0] = deltaT
     else:
         tStr = '%04d-%03d' % (headers['TIME_TAG_YEAR'], headers['TIME_TAG_DOY'])
-        t0 = (datetime.datetime.strptime(tStr, '%Y-%j') + datetime.timedelta(0,headers['TIME_TAG_SECOND_OF_DAY'])
-                                   + datetime.timedelta(0,headers['TIMETAG_PICOSECONDS_OF_THE_SECOND'])/1000000000000)
+        t0 = (datetime.datetime.strptime(tStr, '%Y-%j')
+              + datetime.timedelta(0,headers['TIME_TAG_SECOND_OF_DAY'])
+              + datetime.timedelta(
+                  0,headers['TIMETAG_PICOSECONDS_OF_THE_SECOND'])/1000000000000)
         options['startDate'] = (t0 + datetime.timedelta(0,timeRange[0]))
 
     # Apply duration (if applicable)
     if 'duration' in options:
         timeRange[1] = timeRange[0] + options['duration']
-    options['endDate'] = options['startDate'] + datetime.timedelta(0, timeRange[1]-timeRange[0])
+    try:
+        options['endDate'] = options['startDate'] + datetime.timedelta(0,
+                                                      timeRange[1]-timeRange[0])
+    except OverflowError:
+        options['endDate'] = datetime.datetime.max
 
     # Calculate data rate, time step
     bytesPerSecond = int(2*headers['SAMPLE_SIZE']*headers['SAMPLE_RATE']/8.0)
@@ -669,7 +533,8 @@ def RDEF(DATAFIL, options):
             # This is the first section to read
             headers = readHeaders(f, options)
             f.seek(startByte, 1)
-            dataBytes = np.fromfile(f, dtype=dt, count=int(bytesPerSecond-startByte))
+            dataBytes = np.fromfile(f, dtype=dt,
+                                       count=int(bytesPerSecond-startByte))
 
         elif (curRecord == stopRecord) and (stopByte > 0):
             # This is the last section we need to read
@@ -721,11 +586,9 @@ def RDEF(DATAFIL, options):
                 # Combine row into one 16-bit unsigned integer
                 #   Convert to 32-bit signed integer for conversion to engineering values
                 data = np.array(dataBytes[:,0] + (2**8)*dataBytes[:,1]).astype(np.int32)
-
             else:
-                print('')
-                print('ERROR: SAMPLE SIZE %d is not currently supported!!' % headers['SAMPLE_SIZE'])
-                print('')
+                logger.error('RDEF: SAMPLE SIZE %d is not currently supported!',
+                             headers['SAMPLE_SIZE'])
                 stopHere
 
             # Reshape into samples (real, imag)
@@ -755,7 +618,8 @@ def RDEF(DATAFIL, options):
             c3 = headers['CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT3']
 
             output['phCoeff'].append([c0, c1, c2, c3])
-            output['phase'] = np.append(output['phase'], c0 + c1*tVec + c2*(tVec**2) + c3*(tVec**3))
+            output['phase'] = np.append(output['phase'],
+                                     c0 + c1*tVec + c2*(tVec**2) + c3*(tVec**3))
 
             if options['toPrintData']:
                 printStr = ''
@@ -789,7 +653,6 @@ def RDEF(DATAFIL, options):
         output['file']['curRecord'] = curRecord
         output['file']['f'] = f
 
-
     # Return outputs
     return output
 
@@ -797,16 +660,20 @@ def RDEF(DATAFIL, options):
 #     VDR
 # ----
 def VDR(DATAFIL, options):
-    # Default Inputs
-    # DATAFIL = '/Users/cvolk/Documents/MATLAB/RSR_Test/olr4.gdscc_stab_test_c1.18_088_035414'
-    # DATAFIL = ''
+    """
+    Read VDR format datafile
+    
+    Uses options 'startTime', 'startDate', 'file', 'leaveFileOpen', 
+    'lookFor Date', 'duration', and 'toPrintData'
+    """
     if 'startTime' not in options:
         timeRange = [0, float('inf')]
     else:
         timeRange = [options['startTime'], float('inf')]
 
     if 'startDate' not in options:
-        options['startDate'] = [datetime.datetime.strptime('1970-01-01', '%Y-%m-%d')]
+        options['startDate'] = [datetime.datetime.strptime('1970-01-01',
+                                                           '%Y-%m-%d')]
 
     if 'file' not in options:
         # Open file
@@ -836,23 +703,28 @@ def VDR(DATAFIL, options):
         tStr = '%04d-%03d' % (headers['TIME_TAG_YEAR'], headers['TIME_TAG_DOY'])
         t0 = datetime.datetime.strptime(tStr, '%Y-%j')
         t0 = (t0 + datetime.timedelta(0,headers['TIME_TAG_SECOND_OF_DAY'])
-                + datetime.timedelta(0,headers['DATA_TIME_OFFSET_NANOSECONDS'])/1000000000)
+                 + datetime.timedelta(0,
+                            headers['DATA_TIME_OFFSET_NANOSECONDS'])/1000000000)
 
         td     = (options['startDate'] - t0)
-        deltaT = ((td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) // 10.0**6)
+        deltaT = ((   td.microseconds
+                   + (td.seconds + td.days * 24 * 3600) * 10**6) // 10.0**6)
         if deltaT > 0:
             timeRange[0] = deltaT
     else:
         tStr = '%04d-%03d' % (headers['TIME_TAG_YEAR'], headers['TIME_TAG_DOY'])
-        t0 = (datetime.datetime.strptime(tStr, '%Y-%j') + datetime.timedelta(0,headers['TIME_TAG_SECOND_OF_DAY'])
-                                   + datetime.timedelta(0,headers['DATA_TIME_OFFSET_NANOSECONDS'])/1000000000)
+        t0 = (datetime.datetime.strptime(tStr, '%Y-%j')
+            + datetime.timedelta(0,headers['TIME_TAG_SECOND_OF_DAY'])
+            + datetime.timedelta(0,
+                            headers['DATA_TIME_OFFSET_NANOSECONDS'])/1000000000)
         options['startDate'] = (t0 + datetime.timedelta(0,timeRange[0]))
 
     # Apply duration (if applicable)
     if 'duration' in options:
         timeRange[1] = timeRange[0] + options['duration']
 
-    options['endDate'] = options['startDate'] + datetime.timedelta(0, timeRange[1]-timeRange[0])
+    options['endDate'] = options['startDate'] + datetime.timedelta(
+                                                   0, timeRange[1]-timeRange[0])
 
     # Calculate data rate, time step
     bytesPerSecond = 2000*headers['SAMPLE_SIZE']*headers['SAMPLE_RATE']/8.0
@@ -893,13 +765,15 @@ def VDR(DATAFIL, options):
             # This is the only section we need to read
             headers = readHeaders(f, options)
             f.seek(startByte, 1)
-            dataBytes = np.fromfile(f, dtype=np.uint8, count=int(stopByte-startByte))
+            dataBytes = np.fromfile(f, dtype=np.uint8,
+                                       count=int(stopByte-startByte))
 
         elif curRecord == startRecord:
             # This is the first section to read
             headers = readHeaders(f, options)
             f.seek(startByte, 1)
-            dataBytes = np.fromfile(f, dtype=np.uint8, count=int(bytesPerSecond-startByte))
+            dataBytes = np.fromfile(f, dtype=np.uint8,
+                                       count=int(bytesPerSecond-startByte))
 
         elif (curRecord == stopRecord) and (stopByte > 0):
             # This is the last section we need to read
@@ -909,7 +783,8 @@ def VDR(DATAFIL, options):
         elif (curRecord > startRecord) and (curRecord < stopRecord):
             # This is one of the sections we need to read
             headers = readHeaders(f, options)
-            dataBytes = np.fromfile(f, dtype=np.uint8, count=int(bytesPerSecond))
+            dataBytes = np.fromfile(f, dtype=np.uint8, 
+                                       count=int(bytesPerSecond))
 
         # Check for EOF
         if 'EOF' in headers:
@@ -940,9 +815,8 @@ def VDR(DATAFIL, options):
                 data = np.array(dataBytes[:,0] + (2**8)*dataBytes[:,1]).astype(np.int32)
 
             else:
-                print('')
-                print('ERROR: SAMPLE SIZE %d is not currently supported!!' % headers['SAMPLE_SIZE'])
-                print('')
+                logger.error('VDR: SAMPLE SIZE %d is not currently supported!',
+                             headers['SAMPLE_SIZE'])
                 stopHere
 
             # Add headers to output
@@ -958,7 +832,8 @@ def VDR(DATAFIL, options):
             data = np.fliplr(data)
 
             # Reshape into complex numbers
-            data = np.reshape((2*data[:, 0:(Nsamps/2)]+1) + 1j*(2*data[:, (Nsamps/2):]+1), (-1, 1))
+            data = np.reshape(     (2*data[:, 0:(Nsamps/2)]+1)
+                              + 1j*(2*data[:, (Nsamps/2): ]+1), (-1, 1))
 
             # Convert to complex numbers
             output['values'] = np.append( output['values'], data )
@@ -979,7 +854,8 @@ def VDR(DATAFIL, options):
             c3 = headers['CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT4']
 
             output['phCoeff'].append([c0, c1, c2, c3])
-            output['phase'] = np.append(output['phase'], c0 + c1*tVec + c2*(tVec**2) + c3*(tVec**3))
+            output['phase'] = np.append(output['phase'],
+                                     c0 + c1*tVec + c2*(tVec**2) + c3*(tVec**3))
 
             if options['toPrintData']:
                 printStr = ''
@@ -1021,6 +897,12 @@ def VDR(DATAFIL, options):
 # ----
 
 def SFDU(DATAFIL, options):
+    """
+    Read RSR format file
+    
+    Uses options 'startTime', 'startDate', 'lookForDate', 'duration', 
+    'toPrintData'
+    """
     # Open file
     f = open(DATAFIL, 'rb')
 
@@ -1031,7 +913,8 @@ def SFDU(DATAFIL, options):
         timeRange = [options['startTime'], float('inf')]
 
     if 'startDate' not in options:
-        options['startDate'] = [datetime.datetime.strptime('1970-01-01', '%Y-%m-%d')]
+        options['startDate'] = [datetime.datetime.strptime('1970-01-01',
+                                                           '%Y-%m-%d')]
 
     # Open file
     f = open(DATAFIL, 'rb')
@@ -1048,23 +931,28 @@ def SFDU(DATAFIL, options):
 
     # Alter time range if looking for date
     if options['lookForDate']:
-        tStr = '%04d-%03d' % (headers['SFDU_TIME_TAG_YEAR'], headers['SFDU_TIME_TAG_DOY'])
+        tStr = '%04d-%03d' % (headers['SFDU_TIME_TAG_YEAR'],
+                              headers['SFDU_TIME_TAG_DOY'])
         t0 = datetime.datetime.strptime(tStr, '%Y-%j')
         t0 = (t0 + datetime.timedelta(0,headers['SFDU_TIME_TAG_SECOND_OF_DAY']))
 
         td     = (options['startDate'] - t0)
-        deltaT = ((td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) // 10.0**6)
+        deltaT = ( (td.microseconds
+                  + (td.seconds + td.days * 24 * 3600) * 10**6) // 10.0**6)
         if deltaT > 0:
             timeRange[0] = deltaT
     else:
-        tStr = '%04d-%03d' % (headers['SFDU_TIME_TAG_YEAR'], headers['SFDU_TIME_TAG_DOY'])
-        t0 = datetime.datetime.strptime(tStr, '%Y-%j') + datetime.timedelta(0,headers['SFDU_TIME_TAG_SECOND_OF_DAY'])
+        tStr = '%04d-%03d' % (headers['SFDU_TIME_TAG_YEAR'],
+                              headers['SFDU_TIME_TAG_DOY'])
+        t0 = datetime.datetime.strptime(tStr, '%Y-%j') + datetime.timedelta(0,
+                                         headers['SFDU_TIME_TAG_SECOND_OF_DAY'])
         options['startDate'] = (t0 + datetime.timedelta(0,timeRange[0]))
 
     # Apply duration (if applicable)
     if 'duration' in options:
         timeRange[1] = timeRange[0] + options['duration']
-    options['endDate'] = options['startDate'] + datetime.timedelta(0, timeRange[1]-timeRange[0])
+    options['endDate'] = options['startDate'] + datetime.timedelta(0,
+                                                      timeRange[1]-timeRange[0])
 
 
     # Calculate data rate, time step
@@ -1080,8 +968,8 @@ def SFDU(DATAFIL, options):
     curRecord = 1
 
     # Determine start and stop bytes (to nearest word)
-    #startByte = math.floor(bytesPerSecond*(timeRange[0]%1)/2.0)*2.0
-    #stopByte  = math.ceil(bytesPerSecond*(timeRange[1]%1)/2.0)*2.0
+    # startByte = math.floor(bytesPerSecond*(timeRange[0]%1)/2.0)*2.0
+    # stopByte  = math.ceil(bytesPerSecond*(timeRange[1]%1)/2.0)*2.0
     # Some floating point issues cause this to not work always... see floor(8.2-0.2)=7
     startByte = 0
     stopByte = bytesPerSecond
@@ -1110,14 +998,16 @@ def SFDU(DATAFIL, options):
             headers = readHeaders(f, options)
             f.seek(4, 1)
             f.seek(startByte, 1)
-            dataBytes = np.fromfile(f, dtype=np.uint8, count=int(stopByte-startByte))
+            dataBytes = np.fromfile(f, dtype=np.uint8,
+                                       count=int(stopByte-startByte))
 
         elif curRecord == startRecord:
             # This is the first section to read
             headers = readHeaders(f, options)
             f.seek(4, 1)
             f.seek(startByte, 1)
-            dataBytes = np.fromfile(f, dtype=np.uint8, count=int(bytesPerSecond-startByte))
+            dataBytes = np.fromfile(f, dtype=np.uint8,
+                                       count=int(bytesPerSecond-startByte))
 
         elif (curRecord == stopRecord) and (stopByte > 0):
             # This is the last section we need to read
@@ -1129,7 +1019,8 @@ def SFDU(DATAFIL, options):
             # This is one of the sections we need to read
             headers = readHeaders(f, options)
             f.seek(4, 1)
-            dataBytes = np.fromfile(f, dtype=np.uint8, count=int(bytesPerSecond))
+            dataBytes = np.fromfile(f, dtype=np.uint8,
+                                       count=int(bytesPerSecond))
 
         # Check for EOF
         if 'EOF' in headers:
@@ -1137,9 +1028,11 @@ def SFDU(DATAFIL, options):
 
         if len(dataBytes) > 0:
             # Get time
-            tStr = '%04d-%03d' % (headers['SFDU_TIME_TAG_YEAR'], headers['SFDU_TIME_TAG_DOY'])
+            tStr = '%04d-%03d' % (headers['SFDU_TIME_TAG_YEAR'],
+                                  headers['SFDU_TIME_TAG_DOY'])
             t0 = datetime.datetime.strptime(tStr, '%Y-%j')
-            t0 = t0 + datetime.timedelta(0,headers['SFDU_TIME_TAG_SECOND_OF_DAY'])
+            t0 = t0 + datetime.timedelta(0,
+                                         headers['SFDU_TIME_TAG_SECOND_OF_DAY'])
 
             # Get phase coefficients
             c0 = -(headers['SCHAN_PHASE_POLY_COEF_1']
@@ -1178,12 +1071,15 @@ def SFDU(DATAFIL, options):
                     startBit = (index-1)*headers['SAMPLE_SIZE']
                     stopBit  = startBit + headers['SAMPLE_SIZE']
 
-                    dataVal = bin2sint(binVec[startBit:stopBit]);
+                    dataVal = Math.Bin.bin2sint(binVec[startBit:stopBit]);
                     if colIndex == 1:
                         imagVal = dataVal
-                        tVal    = t0 + datetime.timedelta(0,timeStep*(rowIndex-1))
+                        tVal    = t0 + datetime.timedelta(0,
+                                                          timeStep*(rowIndex-1))
                         td      = (tVal - t0)
-                        dt      = ((td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / 10.0**6) + dt0
+                        dt      = ((td.microseconds
+                                  + (td.seconds + td.days * 24 * 3600)
+                                                      * 10**6) // 10.0**6) + dt0
                         ph      = c0 + c1*dt + c2*(dt**2)
                         colIndex = 2
 
@@ -1192,8 +1088,10 @@ def SFDU(DATAFIL, options):
                         colIndex = 1
                         rowIndex = rowIndex + 1;
 
-                        if (tVal >= options['startDate']) and (tVal < options['endDate']):
-                            printStr = printStr + str(int(realVal)).rjust(8) + str(int(imagVal)).rjust(8)
+                        if (tVal >= options['startDate']) and \
+                           (tVal < options['endDate']):
+                            printStr = printStr + str(int(realVal)).rjust(8) \
+                                                + str(int(imagVal)).rjust(8)
                             output['times'].append(tVal)
                             output['values'].append(complex(realVal, imagVal))
                             output['phase'].append(ph)
@@ -1219,51 +1117,51 @@ def SFDU(DATAFIL, options):
 
 # --------------- functions to run as stand-alone program ----------------------
 
-def getopts(argv):
-    fileName = ''
-    opts = {}  # Empty dictionary to store key-value pairs.
-    index = 0
-    while index < len(argv):  # While there are arguments left to parse...
-        if argv[index] == '--help':
-            opts['--help'] = ''
-            index = index + 1
-            return fileName, opts
-        elif argv[index] == '-p':
-            opts['-p'] = ''
-            index = index + 1
-        elif argv[index] == '-v':
-            opts['-v'] = ''
-            index = index + 1
-        elif argv[index] == '-q':
-            opts['-q'] = ''
-            index = index + 1
-        elif argv[index] == '-d':
-            opts['-d'] = argv[index+1]
-            index = index + 2
-        elif argv[index] == '-s':
-            opts['-s'] = argv[index+1]
-            index = index + 2
-        else:
-            fileName = argv[index]
-            index = index + 1
-    return fileName, opts
-
-
-def main(DATAFIL, options):
-    # Check for file type
-    options['format'] = checkFormat(DATAFIL)
-
-    #Run as main program
-    if options['format'] == 'RDEF':
-        data = RDEF(DATAFIL, options)
-    elif options['format'] == 'VDR':
-        data = VDR(DATAFIL, options)
-    elif options['format'] == 'SFDU':
-        data = SFDU(DATAFIL, options)
-
-    return data
-
 if __name__ == "__main__":
+    from Data_Reduction.DSN.OLSRplots import plot
+    
+    def getopts(argv):
+        fileName = ''
+        opts = {}  # Empty dictionary to store key-value pairs.
+        index = 0
+        while index < len(argv):  # While there are arguments left to parse...
+            if argv[index] == '--help':
+                opts['--help'] = ''
+                index = index + 1
+                return fileName, opts
+            elif argv[index] == '-p':
+                opts['-p'] = ''
+                index = index + 1
+            elif argv[index] == '-v':
+                opts['-v'] = ''
+                index = index + 1
+            elif argv[index] == '-q':
+                opts['-q'] = ''
+                index = index + 1
+            elif argv[index] == '-d':
+                opts['-d'] = argv[index+1]
+                index = index + 2
+            elif argv[index] == '-s':
+                opts['-s'] = argv[index+1]
+                index = index + 2
+            else:
+                fileName = argv[index]
+                index = index + 1
+        return fileName, opts
+
+    def main(DATAFIL, options):
+        # Check for file type
+        options['format'] = checkFormat(DATAFIL)
+
+        #Run as main program
+        if options['format'] == 'RDEF':
+            data = RDEF(DATAFIL, options)
+        elif options['format'] == 'VDR':
+            data = VDR(DATAFIL, options)
+        elif options['format'] == 'SFDU':
+            data = SFDU(DATAFIL, options)
+        return data
+        
     # Default inputs
     options = {'toPlot':         False, 
                'toPrintData':    True, 
@@ -1300,15 +1198,18 @@ if __name__ == "__main__":
             options['toPrintHeaders'] = True
 
         if '-q' in myargs:
-            options['toPrintHeaders'] = False
+            # options['toPrintHeaders'] = False
             options['toPrintData'] = False
 
         if '-s' in myargs:
+            # detect if argument is in string format
             if myargs['-s'].find('-') != -1:
-                options['startDate'] = datetime.datetime.strptime(myargs['-s'], '%Y-%m-%d-%H:%M:%S.%f')
+                options['startDate'] = datetime.datetime.strptime(myargs['-s'],
+                                                         '%Y-%m-%d-%H:%M:%S.%f')
                 options['lookForDate'] = True
             else:
                 try:
+                    # try seconds format
                     options['startTime'] = float(myargs['-s'])
                 except:
                     raise ValueError('Start time input not recognized, use %Y-%m-%d-%H:%M:%S.%f or %S')

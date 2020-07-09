@@ -45,36 +45,14 @@ import DatesTimes as DT
 
 mylogger = logging.getLogger("__main__."+__name__)
 
-def send_ssh_command(local_cmd,remote_cmd):
-  """
-  Sends an ssh comand to a remote host.
-  
-  @param local_cmd : string
-    Something like 'ssh -l napoleon venus-eac1'
-  @param remote_cmd : string
-    What is to be executed on the remote host, like 'date'
-  """
-  # proc_in,proc_out,proc_err = os.popen3(local_cmd+' '+remote_cmd)
-  p = subprocess.Popen(local_cmd+' '+remote_cmd,
-            shell=True,
-          stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  (proc_in,
-   proc_out,
-   proc_err) = (p.stdin, p.stdout, p.stderr)
-  STDOUT = proc_out.readlines()
-  proc_out.close()
-  STDERR = proc_err.readlines()
-  proc_err.close()
-  proc_in.close()
-  return STDOUT,STDERR
-
 def verify_ssh_mount(server):
   """
   Verify that a server is mounted.
-
-  @param server : string
-    One of 'EAC', 'VSR', 'RAVI', 'RAC'.  These names are 
-    used for the scripts in /usr/local/projects/PESD/bin.
+  
+  These names are used for the scripts in /usr/local/projects/PESD/bin.
+  
+  @param server : One of 'EAC', 'VSR', 'RAVI', 'RAC'.
+  @type  server : string
   """
   servername = {}
   servername['EAC'] = 'venus-eac'
@@ -109,7 +87,7 @@ def verify_ssh_mount(server):
 
 def check_vsr():
   """
-  Check the usage of the VSR BLS disk area.
+  Check the usage of the Venus VSR BLS disk area.
 
   Reports names of files and amount of disk used.
   """
@@ -178,42 +156,7 @@ def clear_vsr(year,DOY):
     print(("Error:",status))
 
 
-def backup_one_line(fd):
-  """
-  Moves the file pointer to right after the previous newline.
-
-  @param fd : file descriptor
-  Notes
-  =====
-  It ignores the current character in case it is a newline.
-  """
-  index = -2
-  c = ""
-  while c != "\n":
-    fd.seek(index,2)
-    c = fd.read(1)
-    index -= 1
-
-def get_last_line(fd):
-  """
-  Gets the last line in an ASCII file.
-  
-  This is useful for getting the last line in a very large ASCII file.
-  It also reports of the last line was completed with a newline or interrupted.
-
-  @param fd : file descriptor
-  """
-  fd.seek(-1,2)
-  clast = fd.read(1)
-  if clast == "\n":
-    complete_line = True
-  else:
-    complete_line = False
-  backup_one_line(fd)
-  line = fd.readline()
-  return (complete_line, line)
-
-def header_report(year,doy,start_sec,freq,spc,vsr,nchan,bw,bps,nsamps):
+def header_report(year, doy, start_sec, freq, spc, vsr, nchan, bw, bps, nsamps):
   """
   Format a report of the observing parameters
 
@@ -265,7 +208,7 @@ def header_report(year,doy,start_sec,freq,spc,vsr,nchan,bw,bps,nsamps):
 
 def get_obs_date(filename):
   """
-  Parse a filename for the date of observation.
+  Parse a VSR filename for the date of observation.
 
   Given a VSR or RAVI data file, return the year, month, day of
   observation as a tuple.  Generally, the data file has the year and DOY
@@ -421,6 +364,15 @@ def rx_band(freq):
 
 def path_to_remote(workstation, local_path):
   """
+  Form a path to an SSH mounted destination.
+  
+  This allows mounting a destination to ``gpu1`` and ``gpu2`` via ``dto``.
+  
+  @param workstation : destination host for path
+  @type  workstation : str
+  
+  @param local_path : path local on ``workstation``
+  @type  local_path : str
   """
   thishost = socket.gethostname()
   if thishost == workstation:
