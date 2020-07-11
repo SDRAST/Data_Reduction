@@ -70,10 +70,43 @@ class Observation(DR.Observation):
                                   project=project)
     self.logger =  mylogger
     
-    
   def load_file(self, num_recs=5, datafile=None, schdfile=None, catlfile=None):
     """
     loads data from an OLR file
+    
+    This is Malargue soecific because of the catalog and schedule file formats.
+    
+    We load five records at a time or poor old Python really bogs down.
+    
+    I think we proceed as follows:
+    
+    #. Get a list of data files in the directory.
+    #. We parse the ``*.obs`` file in the directory to get:
+    
+       #. a list of scan numbers,
+       #. the base file name for each scan (without scan or channel number),
+       #. a list of channel numbers from the first scan.
+       
+    #. For each scan (which is a map):
+    
+       #. Ignore if there is no corresponding data file (``NET*.prd``)
+       #. Find the corresponding schedule (``sch*.txt``) and load the times and position names.
+       #. Open the matching catalog (``cat*.txt``) and for each position get the coordinates.
+       #. for each channel:
+       
+          #. Form the file name: ``NET4n%03dtSsMG12rOPc%02d*.prd`` where the first formatted item is scan number and the second is channel.
+          #. Process the ordered list of data files found with the above mask.
+          
+             #. Read and parse the file header.
+             #. For each record (in groups of five records at a time) for efficiency):
+          
+                #. For the first record of the file only:
+                   #. Put the time and coordinates in the first row of the structured numpy array.
+                #. Read the record data from the datafile.
+                #. Process the data (e.g. sum square average, power spectrum, spectrogram, etc.)
+                #. Save the processed data for each record in the numpy dict keyed on channel number.
+             
+       #. save the numpy array of reduced data.
     """
     if datafile and schdfile:  #  and catlfile:
       pass

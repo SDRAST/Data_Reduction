@@ -5,3 +5,13 @@ Observation
 
 .. autoclass:: Observation
    :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Observation.load_file
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: load_file

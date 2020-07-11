@@ -80,6 +80,65 @@
 <code class="docutils literal notranslate"><span class="pre">self</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>), <code class="docutils literal notranslate"><span class="pre">name</span></code> (will be set to a YEAR/DOY default if not
 provided), <code class="docutils literal notranslate"><span class="pre">dss</span></code> (required), <code class="docutils literal notranslate"><span class="pre">date</span></code> (YEAR/DOY required), <code class="docutils literal notranslate"><span class="pre">start</span></code>,
 <code class="docutils literal notranslate"><span class="pre">end</span></code>, and <code class="docutils literal notranslate"><span class="pre">project</span></code> (required).</p>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.DSN.Observation.load_file" title="Data_Reduction.DSN.Observation.load_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_file</span></code></a>([num_recs, datafile, schdfile, …])</p></td>
+<td><p>loads data from an OLR file</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="Data_Reduction.DSN.Observation.load_file">
+<code class="sig-name descname">load_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_recs</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">datafile</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">schdfile</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">catlfile</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.Observation.load_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>loads data from an OLR file</p>
+<p>This is Malargue soecific because of the catalog and schedule file formats.</p>
+<p>We load five records at a time or poor old Python really bogs down.</p>
+<p>I think we proceed as follows:</p>
+<ol class="arabic simple">
+<li><p>Get a list of data files in the directory.</p></li>
+<li><p>We parse the <code class="docutils literal notranslate"><span class="pre">*.obs</span></code> file in the directory to get:</p>
+<ol class="arabic simple">
+<li><p>a list of scan numbers,</p></li>
+<li><p>the base file name for each scan (without scan or channel number),</p></li>
+<li><p>a list of channel numbers from the first scan.</p></li>
+</ol>
+</li>
+<li><p>For each scan (which is a map):</p>
+<ol class="arabic simple">
+<li><p>Ignore if there is no corresponding data file (<code class="docutils literal notranslate"><span class="pre">NET*.prd</span></code>)</p></li>
+<li><p>Find the corresponding schedule (<code class="docutils literal notranslate"><span class="pre">sch*.txt</span></code>) and load the times and position names.</p></li>
+<li><p>Open the matching catalog (<code class="docutils literal notranslate"><span class="pre">cat*.txt</span></code>) and for each position get the coordinates.</p></li>
+<li><p>for each channel:</p>
+<ol class="arabic simple">
+<li><p>Form the file name: <code class="docutils literal notranslate"><span class="pre">NET4n%03dtSsMG12rOPc%02d*.prd</span></code> where the first formatted item is scan number and the second is channel.</p></li>
+<li><p>Process the ordered list of data files found with the above mask.</p>
+<ol class="arabic simple">
+<li><p>Read and parse the file header.</p></li>
+<li><p>For each record (in groups of five records at a time) for efficiency):</p>
+<ol class="arabic simple">
+<li><p>For the first record of the file only:
+#. Put the time and coordinates in the first row of the structured numpy array.</p></li>
+<li><p>Read the record data from the datafile.</p></li>
+<li><p>Process the data (e.g. sum square average, power spectrum, spectrogram, etc.)</p></li>
+<li><p>Save the processed data for each record in the numpy dict keyed on channel number.</p></li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li><p>save the numpy array of reduced data.</p></li>
+</ol>
+</li>
+</ol>
+</dd></dl>
+
 </dd></dl>
 
 </div>
