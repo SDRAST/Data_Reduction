@@ -136,61 +136,61 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#module-Data_Reduction.Malargue">Data_Reduction.Malargue Package</a><ul>
-<li><a class="reference internal" href="#id30">Functions</a></li>
-<li><a class="reference internal" href="#id31">Classes</a></li>
-<li><a class="reference internal" href="#id32">Class Inheritance Diagram</a></li>
+<li><a class="reference internal" href="#data-reduction-malargue">Data_Reduction.Malargue</a></li>
+<li><a class="reference internal" href="#id30">Classes</a></li>
+<li><a class="reference internal" href="#id31">Class Inheritance Diagram</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-Data_Reduction.OldGAVRT">Data_Reduction.OldGAVRT Package</a><ul>
-<li><a class="reference internal" href="#id33">Functions</a></li>
-<li><a class="reference internal" href="#id34">Classes</a></li>
-<li><a class="reference internal" href="#id35">Class Inheritance Diagram</a></li>
+<li><a class="reference internal" href="#id32">Functions</a></li>
+<li><a class="reference internal" href="#id33">Classes</a></li>
+<li><a class="reference internal" href="#id34">Class Inheritance Diagram</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-Data_Reduction.OldGAVRT.plotting">Data_Reduction.OldGAVRT.plotting Module</a><ul>
-<li><a class="reference internal" href="#id36">Functions</a></li>
+<li><a class="reference internal" href="#id35">Functions</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-Data_Reduction.OldGAVRT.solar">Data_Reduction.OldGAVRT.solar Module</a><ul>
-<li><a class="reference internal" href="#id37">Functions</a></li>
+<li><a class="reference internal" href="#id36">Functions</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li><a class="reference internal" href="#supporting-modules">Supporting Modules</a><ul>
 <li><a class="reference internal" href="#module-Data_Reduction.boresight_fitter">Data_Reduction.boresight_fitter Module</a><ul>
-<li><a class="reference internal" href="#id38">Classes</a></li>
-<li><a class="reference internal" href="#id39">Class Inheritance Diagram</a></li>
+<li><a class="reference internal" href="#id37">Classes</a></li>
+<li><a class="reference internal" href="#id38">Class Inheritance Diagram</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-Data_Reduction.hyperfine_fit">Data_Reduction.hyperfine_fit Module</a><ul>
 <li><a class="reference internal" href="#problem">Problem</a></li>
-<li><a class="reference internal" href="#id40">Functions</a></li>
+<li><a class="reference internal" href="#id39">Functions</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-Data_Reduction.maps">Data_Reduction.maps Module</a><ul>
-<li><a class="reference internal" href="#id41">Functions</a></li>
+<li><a class="reference internal" href="#id40">Functions</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-Data_Reduction.SLATool">Data_Reduction.SLATool Module</a><ul>
-<li><a class="reference internal" href="#id42">Classes</a></li>
-<li><a class="reference internal" href="#id43">Class Inheritance Diagram</a></li>
+<li><a class="reference internal" href="#id41">Classes</a></li>
+<li><a class="reference internal" href="#id42">Class Inheritance Diagram</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-Data_Reduction.SLAPlotter">Data_Reduction.SLAPlotter Module</a><ul>
-<li><a class="reference internal" href="#id44">Classes</a></li>
-<li><a class="reference internal" href="#id45">Class Inheritance Diagram</a></li>
+<li><a class="reference internal" href="#id43">Classes</a></li>
+<li><a class="reference internal" href="#id44">Class Inheritance Diagram</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-Data_Reduction.TAMS_tipping">Data_Reduction.TAMS_tipping Module</a><ul>
-<li><a class="reference internal" href="#id46">Classes</a></li>
-<li><a class="reference internal" href="#id47">Class Inheritance Diagram</a></li>
+<li><a class="reference internal" href="#id45">Classes</a></li>
+<li><a class="reference internal" href="#id46">Class Inheritance Diagram</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-Data_Reduction.tipping">Data_Reduction.tipping Module</a><ul>
-<li><a class="reference internal" href="#id48">Functions</a></li>
-<li><a class="reference internal" href="#id49">Classes</a></li>
-<li><a class="reference internal" href="#id50">Class Inheritance Diagram</a></li>
+<li><a class="reference internal" href="#id47">Functions</a></li>
+<li><a class="reference internal" href="#id48">Classes</a></li>
+<li><a class="reference internal" href="#id49">Class Inheritance Diagram</a></li>
 </ul>
 </li>
 </ul>
@@ -1397,102 +1397,44 @@ subclasses for reducing data stored in the DSS-28 database.</p>
 </div>
 <div class="section" id="module-Data_Reduction.Malargue">
 <span id="data-reduction-malargue-package"></span><h2>Data_Reduction.Malargue Package<a class="headerlink" href="#module-Data_Reduction.Malargue" title="Permalink to this headline">¶</a></h2>
-<p>Classes for reducing observations</p>
-<p>This was designed to support Malargue observations but can be used for other
-observatories (identified by a DSS number) that produce a single text file in
-row/column format.</p>
-<p>An <code class="docutils literal notranslate"><span class="pre">Observation</span></code> object comprises a data structure in this form:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>UNIXtime     NP.float (N,)            seconds since 1970.0
-azimuth      NP.float (N,)            horizon system longitude (deg)
-elevation    NP.float (N,)            horizon system latitude (deg)
-RA           NP.float (N,)            apparent topocentric right ascension
-dec          NP.float (N,)            apparent topocentric declination
-MPL_datenum  NP.float (N,)            number of days since 0001-01-01 UTC +1
-                                      ({*e.g.* 0001-01-01, 06:00 is 1.25)
-power        NP.float {ch:(N,),... }  or equivalent, like detector volts,
-                                      for each channel
-freq         float    {ch: ?}         frequency of the channel (MHz)
-pol          str      {ch: ?}         polarization of the channel
-</pre></div>
-</div>
-<p class="rubric">Notes</p>
-<p>Data from a text file:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>* The original data are provided as a 2D text array. Each provided parameter
-  must be in a column.
-* If the column names in the text file are not suitable, then there must be
-  a dict to map parameter name to column number.
-* The telescope position and other attributes are determined from its DSN
-  number designation, *e.g.* ``DSS(28)``.
-* If the mean astrometic geocentric position (RA, dec from a catalog at some
-  epoch) is given, then the topocentric apparent celestial position
-  (RA, dec for the date of observation) is computed, and then the
-  topocentric horizontal position (az, el) is computed.
-* If a topocentric position is given, then the topocentric apparent celestial
-  position is computed.
-</pre></div>
-</div>
-<p>Data from a <code class="docutils literal notranslate"><span class="pre">numpy</span></code> (structured) <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>* If the data are provided as a structured NP array, then the ``names`` item
-  of the array must use those defined above.
-</pre></div>
-</div>
-<p>Additional items:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>* Other items may be defined for the dict but might not be used by the
-  ``Observation`` object.
-* ``MPL_datenum`` is computed from ``UNIXtime`` for convenience in plotting
-  time series.
-</pre></div>
+<div class="section" id="data-reduction-malargue">
+<h3>Data_Reduction.Malargue<a class="headerlink" href="#data-reduction-malargue" title="Permalink to this headline">¶</a></h3>
+<p>Subclasses for reducing data taken with DSN-like open loop recorders.</p>
+<p>Open-loop recorders are raw IF voltage recorders that are not synchronized with
+the communications between the spacecraft and the ground station.  As such, they
+are the most basic kind of recorder possible in radio astronomy, equivalent to
+VLBI recorders.  Indeed, an early implementation was known as the “VLBI Science
+Recorder” (VSR), followed by later varieties of VSR and eventually, the OSR.</p>
+<p>OLR recordings at different stations are indeed combined for VLBI measurements
+of spacecraft with respect to distant radio sources, a powerful navigation tool.</p>
+<p>Raw IF recordings can be computational converted into any of the standard
+signal types used in radio astronomy – square-law detected power, spectra,
+Stokes parameters, VLBI U-V maps, high time ans spectral resolution pulsar data,
+<em>etc.</em></p>
 </div>
 <div class="section" id="id30">
-<h3>Functions<a class="headerlink" href="#id30" title="Permalink to this headline">¶</a></h3>
+<h3>Classes<a class="headerlink" href="#id30" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.DSS84_beamtaper.html#Data_Reduction.Malargue.DSS84_beamtaper" title="Data_Reduction.Malargue.DSS84_beamtaper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DSS84_beamtaper</span></code></a>(freq)</p></td>
-<td><p>ad hoc fit to beamwidth vs frequency plot</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.Map.html#Data_Reduction.Malargue.Map" title="Data_Reduction.Malargue.Map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Map</span></code></a>()</p></td>
+<td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.DSS84_beamwidth.html#Data_Reduction.Malargue.DSS84_beamwidth" title="Data_Reduction.Malargue.DSS84_beamwidth"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DSS84_beamwidth</span></code></a>(freq)</p></td>
-<td><p>beamwidth in deg.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.Observation.html#Data_Reduction.Malargue.Observation" title="Data_Reduction.Malargue.Observation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observation</span></code></a>([parent, name, dss, date, …])</p></td>
+<td><p>Class for observations based on open-loop recording made as DSA-3 (DSS-84)</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="id31">
-<h3>Classes<a class="headerlink" href="#id31" title="Permalink to this headline">¶</a></h3>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.BoresightScan.html#Data_Reduction.Malargue.BoresightScan" title="Data_Reduction.Malargue.BoresightScan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BoresightScan</span></code></a>(parent, xpwr_cfg_id[, source, …])</p></td>
-<td><p>class for a single scan during a boresight</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.Map.html#Data_Reduction.Malargue.Map" title="Data_Reduction.Malargue.Map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Map</span></code></a>([parent, name, dss, date, project, …])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.Observation.html#Data_Reduction.Malargue.Observation" title="Data_Reduction.Malargue.Observation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observation</span></code></a>([parent, name, dss, date, …])</p></td>
-<td><p>Class for any group of data for a single purpose.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Malargue.Session.html#Data_Reduction.Malargue.Session" title="Data_Reduction.Malargue.Session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Session</span></code></a>(parent, year, doy[, plotter])</p></td>
-<td><p>Class for an observing session on a given year and DOY</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="id32">
-<h3>Class Inheritance Diagram<a class="headerlink" href="#id32" title="Permalink to this headline">¶</a></h3>
-<div class="graphviz"><img src="_images/inheritance-2b8cfdb172b8b725b4f1c7b1c089aa46384dfe41.png" alt="Inheritance diagram of Data_Reduction.Malargue.BoresightScan, Data_Reduction.Malargue.Map, Data_Reduction.Malargue.Observation, Data_Reduction.Malargue.Session" usemap="#inheritanceb272fab77a" class="inheritance graphviz" /></div>
-<map id="inheritanceb272fab77a" name="inheritanceb272fab77a">
-<area shape="rect" id="node1" href="api/Data_Reduction.Malargue.BoresightScan.html#Data_Reduction.Malargue.BoresightScan" target="_top" title="class for a single scan during a boresight" alt="" coords="343,103,457,128"/>
-<area shape="rect" id="node2" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" target="_top" title="superclass for a data structure and methods" alt="" coords="188,79,289,104"/>
-<area shape="rect" id="node5" href="api/Data_Reduction.Map.html#Data_Reduction.Map" target="_top" title="Map class without special features for GAVRT and Malargue" alt="" coords="364,53,436,79"/>
-<area shape="rect" id="node3" href="api/Data_Reduction.DataGetterMixin.html#Data_Reduction.DataGetterMixin" target="_top" title="Class for getting data from a CSV file." alt="" coords="5,79,135,104"/>
-<area shape="rect" id="node4" href="api/Data_Reduction.GriddingMixin.html#Data_Reduction.GriddingMixin" target="_top" title="Class for all the data and methods associated with a raster scan map" alt="" coords="183,5,295,31"/>
-<area shape="rect" id="node6" href="api/Data_Reduction.Malargue.Session.html#Data_Reduction.Malargue.Session" target="_top" title="Class for an observing session on a given year and DOY" alt="" coords="34,29,106,55"/>
+<h3>Class Inheritance Diagram<a class="headerlink" href="#id31" title="Permalink to this headline">¶</a></h3>
+<div class="graphviz"><img src="_images/inheritance-2c13c2676afe55717296df737384b6f6c0987432.png" alt="Inheritance diagram of Data_Reduction.Malargue.Map, Data_Reduction.Malargue.Observation" usemap="#inheritanced355ff620c" class="inheritance graphviz" /></div>
+<map id="inheritanced355ff620c" name="inheritanced355ff620c">
+<area shape="rect" id="node1" href="api/Data_Reduction.Malargue.Map.html#Data_Reduction.Malargue.Map" target="_top" title="Map" alt="" coords="155,53,227,79"/>
+<area shape="rect" id="node2" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" target="_top" title="superclass for a data structure and methods" alt="" coords="5,53,107,79"/>
 </map></div>
 </div>
 <div class="section" id="module-Data_Reduction.OldGAVRT">
@@ -1500,8 +1442,8 @@ pol          str      {ch: ?}         polarization of the channel
 <p>Functions for reducing Solar Patrol data</p>
 <p>A lot of modules under this need fixing up because of change from package
 Observatory to MonitorControl and algorithmic to object-oriented programming.</p>
-<div class="section" id="id33">
-<h3>Functions<a class="headerlink" href="#id33" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id32">
+<h3>Functions<a class="headerlink" href="#id32" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -1523,8 +1465,8 @@ Observatory to MonitorControl and algorithmic to object-oriented programming.</p
 </tbody>
 </table>
 </div>
-<div class="section" id="id34">
-<h3>Classes<a class="headerlink" href="#id34" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id33">
+<h3>Classes<a class="headerlink" href="#id33" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -1537,8 +1479,8 @@ Observatory to MonitorControl and algorithmic to object-oriented programming.</p
 </tbody>
 </table>
 </div>
-<div class="section" id="id35">
-<h3>Class Inheritance Diagram<a class="headerlink" href="#id35" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id34">
+<h3>Class Inheritance Diagram<a class="headerlink" href="#id34" title="Permalink to this headline">¶</a></h3>
 <div class="graphviz"><img src="_images/inheritance-8fb183cdb8b2befe58cc51a2ecc84a97b05c97f4.png" alt="Inheritance diagram of Data_Reduction.OldGAVRT.Observation" usemap="#inheritance282e3c310f" class="inheritance graphviz" /></div>
 <map id="inheritance282e3c310f" name="inheritance282e3c310f">
 <area shape="rect" id="node1" href="api/Data_Reduction.OldGAVRT.Observation.html#Data_Reduction.OldGAVRT.Observation" target="_top" title="DSS&#45;28 observations from before the ``tlog`` database table became available." alt="" coords="5,29,107,55"/>
@@ -1547,8 +1489,8 @@ Observatory to MonitorControl and algorithmic to object-oriented programming.</p
 <div class="section" id="module-Data_Reduction.OldGAVRT.plotting">
 <span id="data-reduction-oldgavrt-plotting-module"></span><h2>Data_Reduction.OldGAVRT.plotting Module<a class="headerlink" href="#module-Data_Reduction.OldGAVRT.plotting" title="Permalink to this headline">¶</a></h2>
 <p>plot system temperatures</p>
-<div class="section" id="id36">
-<h3>Functions<a class="headerlink" href="#id36" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id35">
+<h3>Functions<a class="headerlink" href="#id35" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -1564,8 +1506,8 @@ Observatory to MonitorControl and algorithmic to object-oriented programming.</p
 </div>
 <div class="section" id="module-Data_Reduction.OldGAVRT.solar">
 <span id="data-reduction-oldgavrt-solar-module"></span><h2>Data_Reduction.OldGAVRT.solar Module<a class="headerlink" href="#module-Data_Reduction.OldGAVRT.solar" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id37">
-<h3>Functions<a class="headerlink" href="#id37" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id36">
+<h3>Functions<a class="headerlink" href="#id36" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -1601,8 +1543,8 @@ Observatory to MonitorControl and algorithmic to object-oriented programming.</p
 <span id="data-reduction-boresight-fitter-module"></span><h2>Data_Reduction.boresight_fitter Module<a class="headerlink" href="#module-Data_Reduction.boresight_fitter" title="Permalink to this headline">¶</a></h2>
 <p>This is supposed to be a general purpose boresight fitter but it has too many
 DSS-28 dependencies.</p>
-<div class="section" id="id38">
-<h3>Classes<a class="headerlink" href="#id38" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id37">
+<h3>Classes<a class="headerlink" href="#id37" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -1615,8 +1557,8 @@ DSS-28 dependencies.</p>
 </tbody>
 </table>
 </div>
-<div class="section" id="id39">
-<h3>Class Inheritance Diagram<a class="headerlink" href="#id39" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id38">
+<h3>Class Inheritance Diagram<a class="headerlink" href="#id38" title="Permalink to this headline">¶</a></h3>
 <div class="graphviz"><img src="_images/inheritance-a9af11d6dd818bc9a02a6d5790b5dd5af2fd86e6.png" alt="Inheritance diagram of Data_Reduction.boresight_fitter.ScanFitter" usemap="#inheritance8cfe299333" class="inheritance graphviz" /></div>
 <map id="inheritance8cfe299333" name="inheritance8cfe299333">
 <area shape="rect" id="node1" href="api/Data_Reduction.boresight_fitter.ScanFitter.html#Data_Reduction.boresight_fitter.ScanFitter" target="_top" title="Create an object to fit a scan in one direction to a baseline and a Gaussian" alt="" coords="5,5,92,31"/>
@@ -1647,8 +1589,8 @@ x(in MHz) and y:</p>
 and calculating A_ul gives the wrong relative intensities.
 10**logint gives the right ratios.</p>
 </div>
-<div class="section" id="id40">
-<h3>Functions<a class="headerlink" href="#id40" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id39">
+<h3>Functions<a class="headerlink" href="#id39" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -1683,8 +1625,8 @@ and calculating A_ul gives the wrong relative intensities.
 <div class="section" id="module-Data_Reduction.maps">
 <span id="data-reduction-maps-module"></span><h2>Data_Reduction.maps Module<a class="headerlink" href="#module-Data_Reduction.maps" title="Permalink to this headline">¶</a></h2>
 <p>Obsolete module replaced by <code class="docutils literal notranslate"><span class="pre">plotting</span></code> and the <code class="docutils literal notranslate"><span class="pre">MapPlotter</span></code> class.</p>
-<div class="section" id="id41">
-<h3>Functions<a class="headerlink" href="#id41" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id40">
+<h3>Functions<a class="headerlink" href="#id40" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -1715,8 +1657,8 @@ and calculating A_ul gives the wrong relative intensities.
 <p>Spectral Line Analysis Tool</p>
 <p>Environment for analyzing spectral line from multiple observatories. Manages
 various data reduction programs</p>
-<div class="section" id="id42">
-<h3>Classes<a class="headerlink" href="#id42" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id41">
+<h3>Classes<a class="headerlink" href="#id41" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -1732,8 +1674,8 @@ various data reduction programs</p>
 </tbody>
 </table>
 </div>
-<div class="section" id="id43">
-<h3>Class Inheritance Diagram<a class="headerlink" href="#id43" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id42">
+<h3>Class Inheritance Diagram<a class="headerlink" href="#id42" title="Permalink to this headline">¶</a></h3>
 <div class="graphviz"><img src="_images/inheritance-668144a133acb5c973cc50586c4e8e09b975feaf.png" alt="Inheritance diagram of Data_Reduction.SLATool.SessionAnalyzer, Data_Reduction.SLATool.Spectrum" usemap="#inheritance680f3c5242" class="inheritance graphviz" /></div>
 <map id="inheritance680f3c5242" name="inheritance680f3c5242">
 <area shape="rect" id="node1" href="api/Data_Reduction.SLATool.SessionAnalyzer.html#Data_Reduction.SLATool.SessionAnalyzer" target="_top" title="Tool for reducing multiple data reduction sessions" alt="" coords="5,55,135,80"/>
@@ -1745,8 +1687,8 @@ various data reduction programs</p>
 <p>Session plotting methods</p>
 <p>Plotting component of an environment for analyzing spectral line from multiple
 observatories. Manages various data reduction programs.</p>
-<div class="section" id="id44">
-<h3>Classes<a class="headerlink" href="#id44" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id43">
+<h3>Classes<a class="headerlink" href="#id43" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -1759,8 +1701,8 @@ observatories. Manages various data reduction programs.</p>
 </tbody>
 </table>
 </div>
-<div class="section" id="id45">
-<h3>Class Inheritance Diagram<a class="headerlink" href="#id45" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id44">
+<h3>Class Inheritance Diagram<a class="headerlink" href="#id44" title="Permalink to this headline">¶</a></h3>
 <div class="graphviz"><img src="_images/inheritance-10b2ac863181d420283f2933a460916f8c7f7ce6.png" alt="Inheritance diagram of Data_Reduction.SLAPlotter.SessionPlotter" usemap="#inheritance118f1d29bb" class="inheritance graphviz" /></div>
 <map id="inheritance118f1d29bb" name="inheritance118f1d29bb">
 <area shape="rect" id="node1" href="api/Data_Reduction.SLATool.SessionAnalyzer.html#Data_Reduction.SLATool.SessionAnalyzer" target="_top" title="Tool for reducing multiple data reduction sessions" alt="" coords="5,5,135,31"/>
@@ -1774,8 +1716,8 @@ observatories. Manages various data reduction programs.</p>
 <p>Instead of ‘TidTipFinder’ having an initialization argument ‘remote’, one could
 just test with ‘socket.gethostname’ and do a remote mount if the response is
 not ‘crux’.</p>
-<div class="section" id="id46">
-<h3>Classes<a class="headerlink" href="#id46" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id45">
+<h3>Classes<a class="headerlink" href="#id45" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -1788,8 +1730,8 @@ not ‘crux’.</p>
 </tbody>
 </table>
 </div>
-<div class="section" id="id47">
-<h3>Class Inheritance Diagram<a class="headerlink" href="#id47" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id46">
+<h3>Class Inheritance Diagram<a class="headerlink" href="#id46" title="Permalink to this headline">¶</a></h3>
 <div class="graphviz"><img src="_images/inheritance-dfd84f02b8f2d2d2860f7cebd9657ee81ec64bc4.png" alt="Inheritance diagram of Data_Reduction.TAMS_tipping.TidTipFinder" usemap="#inheritance92a48f46e7" class="inheritance graphviz" /></div>
 <map id="inheritance92a48f46e7" name="inheritance92a48f46e7">
 <area shape="rect" id="node1" href="api/Data_Reduction.TAMS_tipping.TidTipFinder.html#Data_Reduction.TAMS_tipping.TidTipFinder" target="_top" title="Attributes::" alt="" coords="5,5,107,31"/>
@@ -1802,8 +1744,8 @@ not ‘crux’.</p>
 <p>A tipping array consists of two 1-D arrays, the first containing the elevation
 in degrees and the second the system temperature for each of the four channels.</p>
 <p>Older files (like 2014) have only one reading and it may be dBm instead of Tsys</p>
-<div class="section" id="id48">
-<h3>Functions<a class="headerlink" href="#id48" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id47">
+<h3>Functions<a class="headerlink" href="#id47" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -1819,8 +1761,8 @@ in degrees and the second the system temperature for each of the four channels.<
 </tbody>
 </table>
 </div>
-<div class="section" id="id49">
-<h3>Classes<a class="headerlink" href="#id49" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id48">
+<h3>Classes<a class="headerlink" href="#id48" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -1833,8 +1775,8 @@ in degrees and the second the system temperature for each of the four channels.<
 </tbody>
 </table>
 </div>
-<div class="section" id="id50">
-<h3>Class Inheritance Diagram<a class="headerlink" href="#id50" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id49">
+<h3>Class Inheritance Diagram<a class="headerlink" href="#id49" title="Permalink to this headline">¶</a></h3>
 <div class="graphviz"><img src="_images/inheritance-d46dc893fcccbc7b69eb767aaab236855bc6a38a.png" alt="Inheritance diagram of Data_Reduction.tipping.AtmosAnalyzer" usemap="#inheritancea3017527ce" class="inheritance graphviz" /></div>
 <map id="inheritancea3017527ce" name="inheritancea3017527ce">
 <area shape="rect" id="node1" href="api/Data_Reduction.tipping.AtmosAnalyzer.html#Data_Reduction.tipping.AtmosAnalyzer" target="_top" title="Analyzer for environmental data contained in a weather data cube" alt="" coords="5,5,127,31"/>

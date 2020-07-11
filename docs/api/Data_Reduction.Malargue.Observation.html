@@ -15,7 +15,7 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Session" href="Data_Reduction.Malargue.Session.html" />
+    <link rel="next" title="DSS28_beamwidth" href="Data_Reduction.OldGAVRT.DSS28_beamwidth.html" />
     <link rel="prev" title="Map" href="Data_Reduction.Malargue.Map.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -28,7 +28,7 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.Malargue.Session.html" title="Session"
+          <a href="Data_Reduction.OldGAVRT.DSS28_beamwidth.html" title="DSS28_beamwidth"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="Data_Reduction.Malargue.Map.html" title="Map"
@@ -42,8 +42,8 @@
   <p class="topless"><a href="Data_Reduction.Malargue.Map.html"
                         title="previous chapter">Map</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="Data_Reduction.Malargue.Session.html"
-                        title="next chapter">Session</a></p>
+  <p class="topless"><a href="Data_Reduction.OldGAVRT.DSS28_beamwidth.html"
+                        title="next chapter">DSS28_beamwidth</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -73,24 +73,17 @@
 <h1>Observation<a class="headerlink" href="#observation" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="Data_Reduction.Malargue.Observation">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.Malargue.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">'Malargue'</span></em>, <em class="sig-param"><span class="n">datafile</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="o">=</span><span class="default_value">' '</span></em>, <em class="sig-param"><span class="n">skip_header</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">names</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">aliases</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">props</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Observation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="Data_Reduction.Observation.html#Data_Reduction.Observation" title="Data_Reduction.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.Observation</span></code></a>, <a class="reference internal" href="Data_Reduction.DataGetterMixin.html#Data_Reduction.DataGetterMixin" title="Data_Reduction.DataGetterMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.DataGetterMixin</span></code></a></p>
-<p>Class for any group of data for a single purpose.</p>
-<p><strong>Attributes</strong></p>
-<dl>
-<dt>channels<span class="classifier">list of str</span></dt><dd><p>active channels</p>
-</dd>
-<dt>conv_cfg<span class="classifier">dict</span></dt><dd><p>converter configuration</p>
-</dd>
-<dt>end<span class="classifier">float</span></dt><dd><p>observation end UNIX time, provided by the subclasses</p>
-</dd>
-<dt>logger</dt><dd><p><code class="docutils literal notranslate"><span class="pre">logging.Logger</span></code> instance</p>
-</dd>
-<dt>parent<span class="classifier"><code class="docutils literal notranslate"><span class="pre">Session</span></code> instance</span></dt><dd><p>a collection or group of observations</p>
-</dd>
-<dt>rss_cfg<span class="classifier">dict</span></dt><dd><p>receiver configuration</p>
-</dd>
-<dt>start<span class="classifier">float</span></dt><dd><p>observation start UNIX time,  provided by the subclasses</p>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.Malargue.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">start</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">end</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Observation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Data_Reduction.DSN.Observation.html#Data_Reduction.DSN.Observation" title="Data_Reduction.DSN.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.DSN.Observation</span></code></a></p>
+<p>Class for observations based on open-loop recording made as DSA-3 (DSS-84)</p>
+<dl class="simple">
+<dt>The arguments for the superclass initialization are::</dt><dd><p><code class="docutils literal notranslate"><span class="pre">parent</span></code> (typically <code class="docutils literal notranslate"><span class="pre">self</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>),
+<code class="docutils literal notranslate"><span class="pre">name</span></code>   (will be set to a YEAR/DOY default if not provided),
+<code class="docutils literal notranslate"><span class="pre">dss</span></code>    (required),
+<code class="docutils literal notranslate"><span class="pre">date</span></code>   (YEAR/DOY required),
+<code class="docutils literal notranslate"><span class="pre">start</span></code>  (optional, usually taken from file header),
+<code class="docutils literal notranslate"><span class="pre">end</span></code>    (otional, inferred from header and number of records), and
+<code class="docutils literal notranslate"><span class="pre">project</span></code> (required).</p>
 </dd>
 </dl>
 <p class="rubric">Methods Summary</p>
@@ -100,18 +93,35 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Observation.get_active_channels" title="Data_Reduction.Malargue.Observation.get_active_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_active_channels</span></code></a>(filename)</p></td>
-<td><p>Returns IDs of channels which took data during this observation</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Observation.parse_obs_file" title="Data_Reduction.Malargue.Observation.parse_obs_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_obs_file</span></code></a>([filename])</p></td>
+<td><p>An <code class="docutils literal notranslate"><span class="pre">.obs</span></code> file has some preliminary observation followed by a section for each <code class="docutils literal notranslate"><span class="pre">scan</span></code>, which might be a map or series of spectra.</p></td>
 </tr>
 </tbody>
 </table>
 <p class="rubric">Methods Documentation</p>
 <dl class="py method">
-<dt id="Data_Reduction.Malargue.Observation.get_active_channels">
-<code class="sig-name descname">get_active_channels</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Observation.get_active_channels" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns IDs of channels which took data during this observation</p>
-<p>This is intended to be Malargue-specific in that the allowed signal names
-are predefined.</p>
+<dt id="Data_Reduction.Malargue.Observation.parse_obs_file">
+<code class="sig-name descname">parse_obs_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Observation.parse_obs_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>An <code class="docutils literal notranslate"><span class="pre">.obs</span></code> file has some preliminary observation followed by a section for
+each <code class="docutils literal notranslate"><span class="pre">scan</span></code>, which might be a map or series of spectra:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#=========================================================================================================</span>
+<span class="c1"># SCAN_NUM  SRC_ID            START_TIME         STOP_TIME                  RA         DEC      TFREQ</span>
+<span class="c1"># --------  ----------------  -----------------  -----------------  ----------  ----------  ----------</span>
+<span class="n">S</span> <span class="mi">001</span>       <span class="o">...</span>               <span class="mi">2020</span><span class="o">-</span><span class="mi">163</span><span class="n">T11</span><span class="p">:</span><span class="mi">44</span><span class="p">:</span><span class="mi">46</span>  <span class="mi">2020</span><span class="o">-</span><span class="mi">163</span><span class="n">T11</span><span class="p">:</span><span class="mi">54</span><span class="p">:</span><span class="mi">49</span>  <span class="mf">999.000000</span>  <span class="mf">999.000000</span>  <span class="mf">31950000000.000000</span>
+<span class="c1"># DATAFILE                               COH_FLAG  DOR_MULT                 FSUB    HARMONIC</span>
+<span class="c1"># -------------------------------------  --------  -----------  ----------------  ----------</span>
+<span class="n">D</span> <span class="n">NET4n001tSsMG12rOPc01</span><span class="o">-</span><span class="mf">20163114446.</span><span class="n">prd</span>  <span class="n">F</span>         <span class="n">xxx</span>              <span class="o">-</span><span class="mf">3.00000e+06</span>           <span class="mi">0</span>
+<span class="n">D</span> <span class="n">NET4n001tSsMG12rOPc02</span><span class="o">-</span><span class="mf">20163114446.</span><span class="n">prd</span>  <span class="n">F</span>         <span class="n">xxx</span>              <span class="o">-</span><span class="mf">1.00000e+06</span>           <span class="mi">0</span>
+<span class="n">D</span> <span class="n">NET4n001tSsMG12rOPc03</span><span class="o">-</span><span class="mf">20163114446.</span><span class="n">prd</span>  <span class="n">F</span>         <span class="n">xxx</span>              <span class="o">+</span><span class="mf">1.00000e+06</span>           <span class="mi">0</span>
+<span class="n">D</span> <span class="n">NET4n001tSsMG12rOPc04</span><span class="o">-</span><span class="mf">20163114446.</span><span class="n">prd</span>  <span class="n">F</span>         <span class="n">xxx</span>              <span class="o">+</span><span class="mf">3.00000e+06</span>           <span class="mi">0</span>
+<span class="n">D</span> <span class="n">NET4n001tSsMG12rOPc05</span><span class="o">-</span><span class="mf">20163114446.</span><span class="n">prd</span>  <span class="n">F</span>         <span class="n">xxx</span>              <span class="o">-</span><span class="mf">3.00000e+06</span>           <span class="mi">0</span>
+<span class="n">D</span> <span class="n">NET4n001tSsMG12rOPc06</span><span class="o">-</span><span class="mf">20163114446.</span><span class="n">prd</span>  <span class="n">F</span>         <span class="n">xxx</span>              <span class="o">-</span><span class="mf">1.00000e+06</span>           <span class="mi">0</span>
+<span class="n">D</span> <span class="n">NET4n001tSsMG12rOPc07</span><span class="o">-</span><span class="mf">20163114446.</span><span class="n">prd</span>  <span class="n">F</span>         <span class="n">xxx</span>              <span class="o">+</span><span class="mf">1.00000e+06</span>           <span class="mi">0</span>
+<span class="n">D</span> <span class="n">NET4n001tSsMG12rOPc08</span><span class="o">-</span><span class="mf">20163114446.</span><span class="n">prd</span>  <span class="n">F</span>         <span class="n">xxx</span>              <span class="o">+</span><span class="mf">3.00000e+06</span>           <span class="mi">0</span>
+<span class="n">Z</span>
+<span class="c1">#=========================================================================================================</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -134,7 +144,7 @@ are predefined.</p>
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.Malargue.Session.html" title="Session"
+          <a href="Data_Reduction.OldGAVRT.DSS28_beamwidth.html" title="DSS28_beamwidth"
              >next</a> |</li>
         <li class="right" >
           <a href="Data_Reduction.Malargue.Map.html" title="Map"

@@ -10,8 +10,8 @@ Observation
 
    .. autosummary::
 
-      ~Observation.get_active_channels
+      ~Observation.parse_obs_file
 
    .. rubric:: Methods Documentation
 
-   .. automethod:: get_active_channels
+   .. automethod:: parse_obs_file

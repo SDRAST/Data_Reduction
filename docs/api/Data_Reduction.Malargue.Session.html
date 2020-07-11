@@ -14,9 +14,7 @@
     <script src="../_static/doctools.js"></script>
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="DSS28_beamwidth" href="Data_Reduction.OldGAVRT.DSS28_beamwidth.html" />
-    <link rel="prev" title="Observation" href="Data_Reduction.Malargue.Observation.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -27,23 +25,11 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.OldGAVRT.DSS28_beamwidth.html" title="DSS28_beamwidth"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.Malargue.Observation.html" title="Observation"
-             accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="Data_Reduction.Malargue.Observation.html"
-                        title="previous chapter">Observation</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="Data_Reduction.OldGAVRT.DSS28_beamwidth.html"
-                        title="next chapter">DSS28_beamwidth</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -71,212 +57,6 @@
             
   <div class="section" id="session">
 <h1>Session<a class="headerlink" href="#session" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
-<dt id="Data_Reduction.Malargue.Session">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.Malargue.</code><code class="sig-name descname">Session</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="n">year</span></em>, <em class="sig-param"><span class="n">doy</span></em>, <em class="sig-param"><span class="n">plotter</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Session" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>Class for an observing session on a given year and DOY</p>
-<dl class="simple">
-<dt>Public Attributes::</dt><dd><p>boresights    - dict keyed on ‘xpwr_cfg_id’ with 2D arrays for scan metadata
-bs_channels   - dict keyed on ‘xpwr_cfg_id’ with lists of active channels
-bs_data       - dict keyed on ‘xpwr_cfg_id’ with 2D rrays for ‘tlog’ data
-db            - database
-doy           - day of year for session
-logger        - logging.Logger object
-maps          - maps in this session
-session_dir   - path to results from this session
-xpwr_metadata - 2D array with data for each ‘xpwr’ configuration
-year          - year for session</p>
-</dd>
-<dt>Notes on Data Arrays::</dt><dd><ul class="simple">
-<li><dl class="simple">
-<dt>‘boresights’ 2D-arrays have a row for each scan of the boresight and columns for::</dt><dd><p>0 - ‘xscan_id’,
-1 - ‘xpwr_cfg_id’, and
-2 - ‘epoch’.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>‘bs_data’ 2D-arrays have a row for each ‘tlog’ row and columns for::</dt><dd><p>0 - UNIX time,
-1 - counts,
-2 - integration time,
-3 - azimuth,
-4 - elevation,
-5 - noise diode state, and
-6 - channel [if argument chan=None; see get_boresight_data()]</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>‘xpwr_metadata’ is a 2D-array with a row for each configuration and columns::</dt><dd><p>0 - ‘xpwr_cfg_id’
-1 - UNIX time,
-2 - rss_cfg_id,
-3 - source_id,
-4 - axis, and
-5 - chan</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Methods Summary</p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Session.get_boresights" title="Data_Reduction.Malargue.Session.get_boresights"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_boresights</span></code></a>()</p></td>
-<td><p>Returns boresights from the xpwr configurations</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Session.get_good_boresights" title="Data_Reduction.Malargue.Session.get_good_boresights"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_good_boresights</span></code></a>()</p></td>
-<td><p>Retrieves data from ‘tlog’ table for boresights with a given channel</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Session.get_map_IDs" title="Data_Reduction.Malargue.Session.get_map_IDs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_map_IDs</span></code></a>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Session.get_maps" title="Data_Reduction.Malargue.Session.get_maps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_maps</span></code></a>([map_IDs])</p></td>
-<td><p>Returns maps from the raster configuration IDs for the specified date</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Session.get_receiver_data" title="Data_Reduction.Malargue.Session.get_receiver_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_receiver_data</span></code></a>(time, columns)</p></td>
-<td><p>Get the receiver state at a given time</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Session.get_session_dir" title="Data_Reduction.Malargue.Session.get_session_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_session_dir</span></code></a>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Session.list_maps" title="Data_Reduction.Malargue.Session.list_maps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_maps</span></code></a>([save])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Session.make_bs_dir" title="Data_Reduction.Malargue.Session.make_bs_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_bs_dir</span></code></a>([good_only, save])</p></td>
-<td><p><p class="rubric">Notes</p>
-</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Session.save_map_data" title="Data_Reduction.Malargue.Session.save_map_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_map_data</span></code></a>([mapkeys])</p></td>
-<td><p>create a dict with the map data from the designated images</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.Session.summary" title="Data_Reduction.Malargue.Session.summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code></a>([save])</p></td>
-<td><p></p></td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Methods Documentation</p>
-<dl class="py method">
-<dt id="Data_Reduction.Malargue.Session.get_boresights">
-<code class="sig-name descname">get_boresights</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Session.get_boresights" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns boresights from the xpwr configurations</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.Malargue.Session.get_good_boresights">
-<code class="sig-name descname">get_good_boresights</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Session.get_good_boresights" title="Permalink to this definition">¶</a></dt>
-<dd><p>Retrieves data from ‘tlog’ table for boresights with a given channel</p>
-<dl class="simple">
-<dt>Returns a numpy array with columns containing::</dt><dd><p>0 - UNIX time
-1 - counts
-2 - integration time
-3 - azimuth
-4 - elevation
-5 - noise diode state
-6 - chan (if chan=None)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.Malargue.Session.get_map_IDs">
-<code class="sig-name descname">get_map_IDs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Session.get_map_IDs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.Malargue.Session.get_maps">
-<code class="sig-name descname">get_maps</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">map_IDs</span><span class="o">=</span><span class="default_value">[]</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Session.get_maps" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns maps from the raster configuration IDs for the specified date</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.Malargue.Session.get_receiver_data">
-<code class="sig-name descname">get_receiver_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">columns</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Session.get_receiver_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the receiver state at a given time</p>
-<p>Columns is a string with column names separated by commas.</p>
-<p>This creates a dictionary keyed with channel number and returns a dictionary
-of the receiver configuration, keyed with specified in the columns, that was
-in effect at the given time.</p>
-<p>The columns in the ‘rss_cfg’ table are:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rss_cfg_id</span> <span class="o">-</span> <span class="n">primary</span> <span class="n">key</span>
-<span class="n">year</span>       <span class="o">-</span>
-<span class="n">doy</span>        <span class="o">-</span>
-<span class="n">utc</span>        <span class="o">-</span>
-<span class="n">epoch</span>      <span class="o">-</span> <span class="n">UNIX</span> <span class="n">time</span>
-<span class="n">chan</span>       <span class="o">-</span>
-<span class="n">sky_freq</span>   <span class="o">-</span>
-<span class="n">feed</span>       <span class="o">-</span>
-<span class="n">pol</span>        <span class="o">-</span>
-<span class="n">nd</span>         <span class="o">-</span>
-<span class="n">if_mode</span>    <span class="o">-</span>
-<span class="n">if_bw</span>      <span class="o">-</span>
-<span class="n">bb_bw</span>      <span class="o">-</span>
-<span class="n">fiber_chan</span> <span class="o">-</span>
-</pre></div>
-</div>
-<p>Returns a dict of dicts keyed on column name, where the sub-dicts are keyed
-on channel number.</p>
-<p class="rubric">Notes</p>
-<p><strong>Logic</strong></p>
-<p>The challenge here is to get the latest configuration data for each channel
-at or prior to the specified time.  That channel may have been configured on
-the same day or a prior day. The method we’ll use is to find the ID of last
-configuration change and assume that the IDs are sequential in date/time.</p>
-<p>:param db : database
-:type  db : Mysql.BaseDB instance</p>
-<p>:param year : year of observation
-:type  year : int</p>
-<p>:param doy : day of year
-:type  doy : int</p>
-<p>:param time : UTC for the requested receiver state
-:type  time : datetime.timedelta</p>
-<p>:param columns : data items to be returned
-:type  columns : list of str</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.Malargue.Session.get_session_dir">
-<code class="sig-name descname">get_session_dir</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Session.get_session_dir" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.Malargue.Session.list_maps">
-<code class="sig-name descname">list_maps</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">save</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Session.list_maps" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.Malargue.Session.make_bs_dir">
-<code class="sig-name descname">make_bs_dir</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">good_only</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">save</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Session.make_bs_dir" title="Permalink to this definition">¶</a></dt>
-<dd><p class="rubric">Notes</p>
-<p>Each good boresight consists of two scans</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.Malargue.Session.save_map_data">
-<code class="sig-name descname">save_map_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mapkeys</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Session.save_map_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>create a dict with the map data from the designated images</p>
-<p>This speeds up retrieval of images</p>
-<p>:param mapkeys : numbers of the maps (default: all)
-:type  mapkeys : list of int</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.Malargue.Session.summary">
-<code class="sig-name descname">summary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">save</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.Session.summary" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
 </div>
 
 
@@ -294,12 +74,6 @@ configuration change and assume that the IDs are sequential in date/time.</p>
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.OldGAVRT.DSS28_beamwidth.html" title="DSS28_beamwidth"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.Malargue.Observation.html" title="Observation"
-             >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
     </div>

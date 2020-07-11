@@ -14,9 +14,7 @@
     <script src="../_static/doctools.js"></script>
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Map" href="Data_Reduction.Malargue.Map.html" />
-    <link rel="prev" title="DSS84_beamwidth" href="Data_Reduction.Malargue.DSS84_beamwidth.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -27,23 +25,11 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.Malargue.Map.html" title="Map"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.Malargue.DSS84_beamwidth.html" title="DSS84_beamwidth"
-             accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="Data_Reduction.Malargue.DSS84_beamwidth.html"
-                        title="previous chapter">DSS84_beamwidth</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="Data_Reduction.Malargue.Map.html"
-                        title="next chapter">Map</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -71,66 +57,6 @@
             
   <div class="section" id="boresightscan">
 <h1>BoresightScan<a class="headerlink" href="#boresightscan" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
-<dt id="Data_Reduction.Malargue.BoresightScan">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.Malargue.</code><code class="sig-name descname">BoresightScan</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="n">xpwr_cfg_id</span></em>, <em class="sig-param"><span class="n">source</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">axis</span><span class="o">=</span><span class="default_value">'dec'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.BoresightScan" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="Data_Reduction.Malargue.Observation.html#Data_Reduction.Malargue.Observation" title="Data_Reduction.Malargue.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.Malargue.Observation</span></code></a></p>
-<p>class for a single scan during a boresight</p>
-<dl class="simple">
-<dt>Attributes::</dt><dd><p>axis     - direction of the scan
-bs_data  - scan data (time, positions and Tsys) from ‘xpwr’ table
-cal_flux - flux of the calibrator source
-cal_src  - source used to set the flux scale
-chan     - channel used for the boresight by EAC program ‘xant’
-data     - scan data (time, positions and Tsys) from ‘tlog’ table
-diode    - state of the noise diode
-epoch    - UNIX time start of scan
-freq     - frequency xant used to fit ‘xpwr’ data, in MHz
-IFbw     - IF band width in MHz
-IFmode   - IF phasing
-logger   - logging.Logger object
-log_data - data from ‘tlog’ table
-name     - identifier string based on xpwr_cfg_id
-pol      - channel polarization
-session  - parent Session object
-source   - name of scanned source</p>
-</dd>
-</dl>
-<p class="rubric">Methods Summary</p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Malargue.BoresightScan.fit_gaussian" title="Data_Reduction.Malargue.BoresightScan.fit_gaussian"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_gaussian</span></code></a>(channel[, beam_limit])</p></td>
-<td><p>Fit the scan to a Gaussian and a baseline</p></td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Methods Documentation</p>
-<dl class="py method">
-<dt id="Data_Reduction.Malargue.BoresightScan.fit_gaussian">
-<code class="sig-name descname">fit_gaussian</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">channel</span></em>, <em class="sig-param"><span class="n">beam_limit</span><span class="o">=</span><span class="default_value">2.5</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Malargue.BoresightScan.fit_gaussian" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fit the scan to a Gaussian and a baseline</p>
-<p>Extract the appropriate data:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">For</span> <span class="n">raster</span> <span class="n">scans</span><span class="p">,</span> <span class="s1">&#39;xdec&#39;</span> <span class="n">means</span> <span class="n">that</span> <span class="s1">&#39;xdec&#39;</span> <span class="n">stays</span> <span class="n">fixed</span> <span class="k">while</span> <span class="n">the</span>
-<span class="n">antenna</span> <span class="n">moves</span> <span class="n">up</span> <span class="ow">and</span> <span class="n">down</span><span class="p">;</span> <span class="s1">&#39;dec&#39;</span> <span class="n">means</span> <span class="n">that</span> <span class="s1">&#39;dec&#39;</span> <span class="n">stays</span> <span class="n">fixed</span> <span class="k">while</span> <span class="n">the</span>
-<span class="n">left</span> <span class="ow">and</span> <span class="n">right</span><span class="o">.</span>
-</pre></div>
-</div>
-<p>The Gaussian is assumed to fit the inner five beamwidths of the data,
-though that limit can be adjusted.  The baseline is the rest of the data,
-although the lower baseline includes at least data[:5] and the upper
-baseline includes data[-5:]</p>
-<p>:param channel : channel whose data will be fit (required)
-:type  channel : int</p>
-<p>:param beam_limit : distance from the center included in Gaussian fit
-:type  beam_limit : float</p>
-</dd></dl>
-
-</dd></dl>
-
 </div>
 
 
@@ -148,12 +74,6 @@ baseline includes data[-5:]</p>
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.Malargue.Map.html" title="Map"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.Malargue.DSS84_beamwidth.html" title="DSS84_beamwidth"
-             >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
     </div>

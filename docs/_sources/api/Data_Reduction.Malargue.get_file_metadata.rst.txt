@@ -1,0 +1,6 @@
+get_file_metadata
+=================
+
+.. currentmodule:: Data_Reduction.Malargue
+
+.. autofunction:: get_file_metadata
