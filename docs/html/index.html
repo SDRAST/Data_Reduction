@@ -300,7 +300,7 @@ structure of the file.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Map.html#Data_Reduction.Map" title="Data_Reduction.Map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Map</span></code></a>([parent, name, dss, date, project])</p></td>
 <td><p>Map class without special features for GAVRT and Malargue</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" title="Data_Reduction.Observation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observation</span></code></a>([parent, name, dss, date, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" title="Data_Reduction.Observation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observation</span></code></a>([parent, name, dss, date, project])</p></td>
 <td><p>superclass for a data structure and methods</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.Session.html#Data_Reduction.Session" title="Data_Reduction.Session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Session</span></code></a>([parent, year, doy, project])</p></td>
@@ -377,6 +377,9 @@ Stokes parameters, VLBI U-V maps, high time ans spectral resolution pulsar data,
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.get_file_metadata.html#Data_Reduction.DSN.get_file_metadata" title="Data_Reduction.DSN.get_file_metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_file_metadata</span></code></a>(project, dss, year, doy, …)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/Data_Reduction.DSN.print_file_metadata.html#Data_Reduction.DSN.print_file_metadata" title="Data_Reduction.DSN.print_file_metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_file_metadata</span></code></a>(project, dss, year, doy, …)</p></td>
 <td><p></p></td>
 </tr>
 </tbody>
@@ -656,9 +659,19 @@ will be created when ‘make_scripts’ is run.</p>
 <p>For open loop science recorder files.</p>
 <p>Supports data files from the VSR, WVSR, PVSR, OLR, etc.</p>
 <p>Recognizes RDEF, VDR, SFDU formats</p>
-<p>Option keys are <code class="docutils literal notranslate"><span class="pre">'format'</span></code>, <code class="docutils literal notranslate"><span class="pre">'toPrintHeaders'</span></code>, <code class="docutils literal notranslate"><span class="pre">'startTime'</span></code>,
-<code class="docutils literal notranslate"><span class="pre">'startDate'</span></code>, <code class="docutils literal notranslate"><span class="pre">'file'</span></code>, <code class="docutils literal notranslate"><span class="pre">'leaveFileOpen'</span></code>, <code class="docutils literal notranslate"><span class="pre">'lookForDate'</span></code>,
-<code class="docutils literal notranslate"><span class="pre">'duration'</span></code>, ‘endDate’<code class="docutils literal notranslate"><span class="pre">,</span> <span class="pre">and</span> <span class="pre">``'toPrintData'</span></code>.</p>
+<dl class="simple">
+<dt>Option keys are::</dt><dd><p>‘startDate’       datetime.datetime
+‘startTime’       alternate for ‘startDate’ as UNIX time
+‘lookForDate’     set True if using ‘startDate’
+‘endDate’         datetime.datetime
+‘duration’        compute ‘endDate’ from ‘startDate’
+‘fixTime’         ignore the fractional second of the start time
+‘format’          a string with one of the recognized formats
+‘toPrintHeaders’  output header
+‘toPrintData’     output data
+‘leaveFileOpen’   keep reading from the same file</p>
+</dd>
+</dl>
 <p>Date formats may be given as <code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD-HH:MM:SS.fff</span></code> or UNIX time seconds.</p>
 <p class="rubric">Notes</p>
 <p>The file reading functions read all the data between the specified times and

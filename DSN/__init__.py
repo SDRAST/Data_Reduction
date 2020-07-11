@@ -18,12 +18,16 @@ signal types used in radio astronomy -- square-law detected power, spectra,
 Stokes parameters, VLBI U-V maps, high time ans spectral resolution pulsar data,
 *etc.*
 """
+import datetime
 import glob
 import logging
+import numpy as NP
 import os.path
+import time
 
 import Data_Reduction as DR
 import Data_Reduction.DSN.OLSR as OLSR
+import DatesTimes as DT
 
 logger =  logging.getLogger(__name__)
 
@@ -63,10 +67,50 @@ class Observation(DR.Observation):
     """
     mylogger = logging.getLogger(logger.name+".Observation")
     DR.Observation.__init__(self, parent=parent, name=name, dss=dss, date=date,
-                                  start=start, end=end, project=project)
+                                  project=project)
     self.logger =  mylogger
     
-
+    
+  def load_file(self, num_recs=5, datafile=None, schdfile=None, catlfile=None):
+    """
+    loads data from an OLR file
+    """
+    if datafile and schdfile:  #  and catlfile:
+      pass
+    else:
+      self.logger.error("load_file: missing file: data=%s, sched=%s catlog=%s")
+      raise RuntimeError("need data, a recording schedule, and coordinates")
+    # set the datafile reader options
+    options = {'toPrintHeaders':False, 'toPrintData': False,
+               'lookForDate': True, 'fixTime': True}
+    fname = self.sessionpath+datafile
+    fmt = OLSR.checkFormat(fname)
+    options.update({'format':fmt})
+    # extract the datasets
+    self.schedule = NP.genfromtxt(schdfile, dtype=[('time',     'S24'),
+                                                   ('duration', int),
+                                                   ('name',     'S8')])
+    self.times = self.schedule['time']
+    self.durations = self.schedule['duration']
+    num_samples = len(self.times)
+    self.records = {}
+    if True:
+      for start in self.times[:num_recs]:
+        idx = list(self.times).index(start)
+        options.update({'startDate': datetime.datetime.strptime(
+                                                          start.decode("utf-8"),
+                                                          '%Y/%m/%d/%H:%M:%S')})
+        options.update({'duration': float(self.durations[idx])})
+        if fmt == "RDEF":
+          self.records[idx] = OLSR.RDEF(fname, options)
+        elif fmt == "VDR":
+          self.records[idx] = OLSR.VDR(fname, options)
+        elif fmt == "SFDU":
+          self.records[idx] = OLSR.SFDU(fname, options)
+        else:
+          logger.error("get_file_metadata: %s has unknown format %s", 
+                   filename, fmt)
+    
 class Map(Observation):
   """
   """
@@ -85,19 +129,52 @@ def get_file_metadata(project, dss, year, doy, pattern):
   files = glob.glob(sessionpath+pattern)
   logger.info("get_file_metadata: files: %s", files)
   header = {}
+  metadata = {}
+  options = {'toPrintHeaders': False, 'format': fmt}
   for fname in files:
+    fidx = files.index(fname)
     fmt = OLSR.checkFormat(fname)
     filename = os.path.basename(fname)
     # get the first header
     if fmt == "RDEF":
-      header[filename] = (OLSR.readHeaders(fname,
-                                           {'toPrintHeaders': False, 
-                                            'format': fmt}))
+      header[filename] = OLSR.readHeaders(fname, options)
     elif fmt == "VDR":
-      header.append(OLSR.VDR(fname, {'toPrintHeaders':True, 'format': fmt}))
+      header.append(OLSR.VDR(fname, options))
     elif fmt == "SFDU":
-      header.append(OLSR.SFDU(fname, {'toPrintHeaders': True, 'format': fmt}))
+      header.append(OLSR.SFDU(fname, options))
     else:
       logger.error("get_file_metadata: %s has unknown format %s", 
                    filename, fmt)
-  return header
+    # get the metadata
+    metadata[fidx] = {"file":   fname,
+              "bpS":    header[filename]["SAMPLE_SIZE"],
+              "bw":     header[filename]["SAMPLE_RATE"]/1e6,
+              "f_ofst":(header[filename]['RF_TO_IF_DOWNCONV']-31950000000\
+                       +header[filename]['IF_TO_CHANNEL_DOWNCONV'])/1e6,
+          "freq":  (31950000000+header[filename]['IF_TO_CHANNEL_DOWNCONV'])/1e6,
+              "unixtime": DT.VSR_tuple_to_timestamp(
+                    header[filename]['TIME_TAG_YEAR'], 
+                    header[filename]['TIME_TAG_DOY'], 
+                    header[filename]['TIME_TAG_SECOND_OF_DAY']
+                   +header[filename]['TIMETAG_PICOSECONDS_OF_THE_SECOND']/1e12),
+                      "year":   header[filename]['TIME_TAG_YEAR'],
+                      "DOY":    header[filename]['TIME_TAG_DOY']}
+  return header, metadata
+  
+def print_file_metadata(project, dss, year, doy, pattern):
+  """
+  """
+  header, metadata = get_file_metadata(project, dss, year, doy, pattern)
+  print(27*" "+" Freq."+4*" "+"BW   File")
+  output = []
+  for fidx in list(metadata.keys()):
+    output.append("%24s %7.1f %5.1f %38s"
+                                     % (time.ctime(metadata[fidx]['unixtime']),
+                                        metadata[fidx]['freq'],
+                                        metadata[fidx]['bw'],
+                                        os.path.basename(metadata[fidx]['file'])
+                                       ))
+  output.sort()
+  return output
+  
+    

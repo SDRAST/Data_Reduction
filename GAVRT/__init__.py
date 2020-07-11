@@ -221,10 +221,20 @@ class Observation(DR.Observation, DR.GriddingMixin):
         self.logger = logging.getLogger(logger.name+".Observation")
         self.logger.error("__init__: no parent session specified")
         raise Exception("You must initialize a session first")
+    if start and end:
+      self.start = start
+      self.end = end
+    else:
+      self.logger.error("__init__: no 'start' and/or 'end' attributes")
+      raise Exception("'start' and 'end' can be arguments or subclass attrs")
     DR.Observation.__init__(self, parent=parent, name=name, dss=dss, date=date,
-                                  start=self.start, end=self.end,
                                   project=project)
     self.logger = mylogger
+    if self.start and self.end:
+      pass
+    else:
+      self.logger.error("__init__: no 'start' and/or 'end' attributes defined")
+      raise Exception("'start' and 'end' can be arguments or subclass attrs")
 
   def get_conv_config(self, time, converter):
     """

@@ -161,8 +161,7 @@ class Observation(object):
   power_keys = ['tsys', 'top', 'vfc_counts', 'power']
   
   def __init__(self, parent=None, name=None, dss=None,
-                     date=None, start=None, end=None,
-                     project=None):
+                     date=None, project=None):
     """
     Create a base Observation object.
     
@@ -215,12 +214,6 @@ class Observation(object):
     else:
       self.logger.error("__init__: requires a date")
       raise Exception("When were the date taken?")
-    if start and end:
-      self.start = start
-      self.end = end
-    else:
-      self.logger.error("__init__: no 'start' and/or 'end' attributes")
-      raise Exception("'start' and 'end' can be arguments or subclass attrs")
     # accomodate subclass arguments
     self.aliases = {}
     # what I really want to do here is see if this was called by a subclass,

@@ -8,9 +8,17 @@ Supports data files from the VSR, WVSR, PVSR, OLR, etc.
 
 Recognizes RDEF, VDR, SFDU formats
 
-Option keys are ``'format'``, ``'toPrintHeaders'``, ``'startTime'``,
-``'startDate'``, ``'file'``, ``'leaveFileOpen'``, ``'lookForDate'``, 
-``'duration'``, 'endDate'``, and ``'toPrintData'``.
+Option keys are:: 
+  'startDate'       datetime.datetime
+  'startTime'       alternate for 'startDate' as UNIX time
+  'lookForDate'     set True if using 'startDate'
+  'endDate'         datetime.datetime
+  'duration'        compute 'endDate' from 'startDate'
+  'fixTime'         ignore the fractional second of the start time
+  'format'          a string with one of the recognized formats 
+  'toPrintHeaders'  output header
+  'toPrintData'     output data
+  'leaveFileOpen'   keep reading from the same file
 
 Date formats may be given as ``YYYY-MM-DD-HH:MM:SS.fff`` or UNIX time seconds.
 
@@ -428,8 +436,9 @@ def RDEF(DATAFIL, options):
         #timeRange = [options['startTime'], float('inf')]
         timeRange = [options['startTime'],
                      datetime.timedelta.max.total_seconds()-1]
-
+    logger.debug("RDEF: timeRange = %s", timeRange)
     if 'startDate' not in options:
+        # this is the start of UNIX time
         options['startDate'] = datetime.datetime.strptime('1970-01-01', '%Y-%m-%d')
 
     if 'file' not in options:
@@ -456,10 +465,15 @@ def RDEF(DATAFIL, options):
     if options['lookForDate']:
         tStr = '%04d-%03d' % (headers['TIME_TAG_YEAR'], headers['TIME_TAG_DOY'])
         t0 = datetime.datetime.strptime(tStr, '%Y-%j')
-        t0 = (t0 + datetime.timedelta(0,headers['TIME_TAG_SECOND_OF_DAY'])
-                 + datetime.timedelta(0,headers[
-                            'TIMETAG_PICOSECONDS_OF_THE_SECOND'])/1000000000000)
-
+        #t0 = (t0 + datetime.timedelta(0,headers['TIME_TAG_SECOND_OF_DAY'])
+        #         + datetime.timedelta(0,headers[
+        #                    'TIMETAG_PICOSECONDS_OF_THE_SECOND'])/1000000000000)
+        t0 += datetime.timedelta(0,headers['TIME_TAG_SECOND_OF_DAY'])
+        if options['fixTime']:
+            pass
+        else:
+            t0 += datetime.timedelta(0,headers[
+                             'TIMETAG_PICOSECONDS_OF_THE_SECOND'])/1000000000000
         td = (options['startDate'] - t0)
         deltaT = (  (td.microseconds
                   + (td.seconds + td.days * 24 * 3600) * 10**6) // 10.0**6)
@@ -467,12 +481,18 @@ def RDEF(DATAFIL, options):
             timeRange[0] = deltaT
     else:
         tStr = '%04d-%03d' % (headers['TIME_TAG_YEAR'], headers['TIME_TAG_DOY'])
-        t0 = (datetime.datetime.strptime(tStr, '%Y-%j')
-              + datetime.timedelta(0,headers['TIME_TAG_SECOND_OF_DAY'])
-              + datetime.timedelta(
-                  0,headers['TIMETAG_PICOSECONDS_OF_THE_SECOND'])/1000000000000)
-        options['startDate'] = (t0 + datetime.timedelta(0,timeRange[0]))
-
+        t0 = datetime.datetime.strptime(tStr, '%Y-%j')
+        #      + datetime.timedelta(0,headers['TIME_TAG_SECOND_OF_DAY'])
+        #      + datetime.timedelta(
+        #          0,headers['TIMETAG_PICOSECONDS_OF_THE_SECOND'])/1000000000000)
+        t0 += datetime.timedelta(0,headers['TIME_TAG_SECOND_OF_DAY'])
+        options['startDate'] = t0 + datetime.timedelta(0,timeRange[0])
+        if options['fixTime']:
+            pass
+        else:
+            t0 += datetime.timedelta(0,
+                     headers['TIMETAG_PICOSECONDS_OF_THE_SECOND'])/1000000000000
+    logger.debug("RDEF: t0 = %s", t0)
     # Apply duration (if applicable)
     if 'duration' in options:
         timeRange[1] = timeRange[0] + options['duration']
@@ -1212,7 +1232,8 @@ if __name__ == "__main__":
                     # try seconds format
                     options['startTime'] = float(myargs['-s'])
                 except:
-                    raise ValueError('Start time input not recognized, use %Y-%m-%d-%H:%M:%S.%f or %S')
+                    raise ValueError('Start time input not recognized,'
+                                     +' use %Y-%m-%d-%H:%M:%S.%f or %S')
 
         if '-d' in myargs:
             options['duration'] = float(myargs['-d'])
