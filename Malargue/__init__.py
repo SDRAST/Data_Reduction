@@ -120,14 +120,20 @@ class Observation(DSN.Observation):
       if line[0] == "#":
         pass
       elif line[0] == "S":
+        skip_this_scan = False
         scan_ID = int(parts[1])
-        scan[scan_ID] = {"start":  DT.ISOtime2datetime(parts[3]),
-                         "stop":   DT.ISOtime2datetime(parts[4]),
-                         "ra2000": float(parts[5]),
-                         "dec000": float(parts[6]),
-                         "freq":   float(parts[7])/1e6}
+        if float(parts[7]) == 0.0:
+          # no useful data
+          skip_this_scan = True
+          continue
+        else:
+          scan[scan_ID] = {"start":  DT.ISOtime2datetime(parts[3]),
+                           "stop":   DT.ISOtime2datetime(parts[4]),
+                           "ra2000": float(parts[5]),
+                           "dec000": float(parts[6]),
+                           "freq":   float(parts[7])/1e6}
         scan[scan_ID]['channel'] = {}
-      elif line[0] == "D":
+      elif line[0] == "D" and not skip_this_scan:
         filename = parts[1]
         ch_ptr1 = filename.index('c')
         ch_ptr2 = filename.index('-')

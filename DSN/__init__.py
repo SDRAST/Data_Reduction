@@ -163,10 +163,14 @@ def get_file_metadata(project, dss, year, doy, pattern):
   logger.info("get_file_metadata: files: %s", files)
   header = {}
   metadata = {}
-  options = {'toPrintHeaders': False, 'format': fmt}
+  options = {'toPrintHeaders': False}
   for fname in files:
     fidx = files.index(fname)
     fmt = OLSR.checkFormat(fname)
+    if fidx:
+      pass
+    else:
+      options.update({'format': fmt})
     filename = os.path.basename(fname)
     # get the first header
     if fmt == "RDEF":
@@ -180,32 +184,36 @@ def get_file_metadata(project, dss, year, doy, pattern):
                    filename, fmt)
     # get the metadata
     metadata[fidx] = {"file":   fname,
-              "bpS":    header[filename]["SAMPLE_SIZE"],
-              "bw":     header[filename]["SAMPLE_RATE"]/1e6,
-              "f_ofst":(header[filename]['RF_TO_IF_DOWNCONV']-31950000000\
+                      "bpS":    header[filename]["SAMPLE_SIZE"],
+                      "bw":     header[filename]["SAMPLE_RATE"]/1e6,
+                      "f_ofst":(header[filename]['RF_TO_IF_DOWNCONV']-31950000000\
                        +header[filename]['IF_TO_CHANNEL_DOWNCONV'])/1e6,
           "freq":  (31950000000+header[filename]['IF_TO_CHANNEL_DOWNCONV'])/1e6,
-              "unixtime": DT.VSR_tuple_to_timestamp(
-                    header[filename]['TIME_TAG_YEAR'], 
-                    header[filename]['TIME_TAG_DOY'], 
-                    header[filename]['TIME_TAG_SECOND_OF_DAY']
-                   +header[filename]['TIMETAG_PICOSECONDS_OF_THE_SECOND']/1e12),
+                      "unixtime": DT.VSR_tuple_to_timestamp(
+                                              header[filename]['TIME_TAG_YEAR'], 
+                                               header[filename]['TIME_TAG_DOY'], 
+                                     header[filename]['TIME_TAG_SECOND_OF_DAY']
+                  +header[filename]['TIMETAG_PICOSECONDS_OF_THE_SECOND']//1e12),
                       "year":   header[filename]['TIME_TAG_YEAR'],
                       "DOY":    header[filename]['TIME_TAG_DOY']}
+    metadata[fidx]['size'] = os.path.getsize(fname)
+    Bps = header[filename]["SAMPLE_RATE"]*header[filename]["SAMPLE_SIZE"]*2/8
+    metadata[fidx]['duration'] = metadata[fidx]['size']/Bps
   return header, metadata
   
 def print_file_metadata(project, dss, year, doy, pattern):
   """
   """
   header, metadata = get_file_metadata(project, dss, year, doy, pattern)
-  print(27*" "+" Freq."+4*" "+"BW   File")
+  print(27*" "+" Freq."+4*" "+"BW   File"+32*" "+"duration")
   output = []
   for fidx in list(metadata.keys()):
-    output.append("%24s %7.1f %5.1f %38s"
+    output.append("%24s %7.1f %5.1f %38s %4d"
                                      % (time.ctime(metadata[fidx]['unixtime']),
                                         metadata[fidx]['freq'],
                                         metadata[fidx]['bw'],
-                                        os.path.basename(metadata[fidx]['file'])
+                                        os.path.basename(metadata[fidx]['file']),
+                                        metadata[fidx]['duration']
                                        ))
   output.sort()
   return output
