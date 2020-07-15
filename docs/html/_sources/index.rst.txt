@@ -27,6 +27,7 @@ Context Modules
 .. automodapi:: Data_Reduction.DSN.old_init
 .. automodapi:: Data_Reduction.DSN.old_VSR
 .. automodapi:: Data_Reduction.DSN.OLSR
+.. automodapi:: Data_Reduction.DSN.RSData
 .. automodapi:: Data_Reduction.DSN.STATS
 .. automodapi:: Data_Reduction.DSN.SAO
 .. automodapi:: Data_Reduction.DSN.Tid_ASCII_data
