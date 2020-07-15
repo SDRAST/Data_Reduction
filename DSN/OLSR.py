@@ -45,7 +45,9 @@ their defaults. Each record is a dict which looks like this::
   't0': datetime.datetime(2020, 6, 11, 12, 15, 20, 999979),
   'file': {'f':         [], 
            'curRecord': []}}
-           
+
+
+
 Todo
 ====
   1. Fix the ``timedelta`` and ``datetime`` overflow errors in ``VDR()`` and
@@ -437,6 +439,7 @@ def RDEF(DATAFIL, options):
         timeRange = [options['startTime'],
                      datetime.timedelta.max.total_seconds()-1]
     logger.debug("RDEF: timeRange = %s", timeRange)
+    
     if 'startDate' not in options:
         # this is the start of UNIX time
         options['startDate'] = datetime.datetime.strptime('1970-01-01', '%Y-%m-%d')
@@ -486,12 +489,12 @@ def RDEF(DATAFIL, options):
         #      + datetime.timedelta(
         #          0,headers['TIMETAG_PICOSECONDS_OF_THE_SECOND'])/1000000000000)
         t0 += datetime.timedelta(0,headers['TIME_TAG_SECOND_OF_DAY'])
-        options['startDate'] = t0 + datetime.timedelta(0,timeRange[0])
         if options['fixTime']:
             pass
         else:
             t0 += datetime.timedelta(0,
                      headers['TIMETAG_PICOSECONDS_OF_THE_SECOND'])/1000000000000
+        options['startDate'] = t0 + datetime.timedelta(0,timeRange[0])
     logger.debug("RDEF: t0 = %s", t0)
     # Apply duration (if applicable)
     if 'duration' in options:
@@ -510,12 +513,13 @@ def RDEF(DATAFIL, options):
     f.seek(-176, 1)
 
     # Determine start and stop records
+    #  (why not use ceil()? -- TBHK 2020-07-13)
     startRecord = int(math.floor(timeRange[0]) + 1)
-    stopRecord = int(math.floor(timeRange[1]) + 1)
+    stopRecord  = int(math.floor(timeRange[1]) + 1)
 
-    # Determine start and stop bytes (to nearest word)
+    # Determine start and stop bytes (to nearest word = 4 bytes)
     startByte = int(math.floor(bytesPerSecond*(timeRange[0]%1)//4.0)*4.0)
-    stopByte  = int(math.ceil(bytesPerSecond*(timeRange[1]%1)//4.0)*4.0)
+    stopByte  = int(math.ceil (bytesPerSecond*(timeRange[1]%1)//4.0)*4.0)
 
     if stopByte == 0:
         stopRecord = stopRecord - 1
@@ -523,11 +527,11 @@ def RDEF(DATAFIL, options):
 
     # Start reading data
     output = {'values':[], 'times':[], 'phase':[], 'phCoeff':[],
-                  'LO': headers['RF_TO_IF_DOWNCONV'],
-                  'DDCLO':headers['IF_TO_CHANNEL_DOWNCONV'],
+                  'LO':        headers['RF_TO_IF_DOWNCONV'],
+                  'DDCLO':     headers['IF_TO_CHANNEL_DOWNCONV'],
                   'sampleSize':headers['SAMPLE_SIZE'],
-                  'DATAFIL':DATAFIL,
-                  't0':t0,
+                  'DATAFIL':   DATAFIL,
+                  't0':        t0,
                   'file': {'f':[], 'curRecord':[]}}
 
     if headers['SAMPLE_SIZE'] == 16:
