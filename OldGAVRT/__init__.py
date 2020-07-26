@@ -42,6 +42,7 @@ class Observation(DR.Observation):
     self.logger = logging.getLogger(logger.name+".Observation")
     DR.Observation.__init__(self, name=date, date=date, dss=dss, 
                             project=project)
+    self.extended_init()
     
     #self.obs =Astronomy.Ephem.DSS(dss)
     #y,d = date.split('/')
@@ -52,22 +53,23 @@ class Observation(DR.Observation):
   
   def extended_init(self, channels_names=None):
     datapath = self.sessionpath+'t'+str(self.year)[-2:]+("%03d" % self.DOY)
-    if channel_names:
-      pass
-    else:
+    try:
+      self.channel_names = channel_names
+    except UnboundLocalError:
       channel_names = self.get_channel_names(datapath)
     channel_names.sort()
-    self.logger.debug("processing channels %s", channel_names)
+    self.logger.debug("extended_init: processing channels %s", channel_names)
     # this has created Channel objects which we now want to treat as
     # superclasses for the Channel class defined here
-    for key in list(self.channel.keys()):
-        del(self.channel[key])
+    self.channel = {}
+    for key in channel_names:
         self.channel[key] = self.Channel(self, key)
     self.get_obs_times(datapath)
-    self.logger.info("loading data from files; this takes a while")
+    self.logger.info("extended_init: loading data from files; this takes a while")
     self.data = {'counts': {}}
     for key in list(self.channel.keys()):
-        self.channeldata = self.channel[key].load_tfile_data(datapath, dss=dss,
+        self.channeldata = self.channel[key].load_tfile_data(datapath,
+                                              dss=self.obs.number,
                                               start=self.start,  stop=self.end)
         if 'unixtime' in self.data:
           # then the basic data have read in from the first channel
@@ -79,11 +81,13 @@ class Observation(DR.Observation):
           self.data['diode'] = self.channeldata[0]['Diode']
           self.data['integr'] = self.channeldata[0]['Int']
         self.data['counts'][key] = self.channeldata[0]['Tsys']
-        # del(self.channeldata)  
+    del(self.channeldata)  
  
-    
   def get_channel_names(self, datapath):
     """
+    get the channels for which there is tlog data
+    
+    gets the extents of all the "tYYDDD.*" files
     """
     self.logger.debug("get_channel_names: for %s", datapath)
     names = glob.glob(datapath+".*")
@@ -101,7 +105,7 @@ class Observation(DR.Observation):
     starts = []; ends = []
     for channel in list(self.channel.keys()):
       filename = datapath+"."+str(int(channel))
-      self.logger.debug("get_channel times: from %s", filename)
+      self.logger.debug("get_obs_times: from %s", filename)
       fd = open(filename,'r')
       lines = fd.readlines()
       fd.close()
@@ -121,42 +125,10 @@ class Observation(DR.Observation):
       """
       DR.Observation.Channel.__init__(self, parent, name,
                                       freq=freq, bw=bw, pol=pol)
-        
-    def load_tfile_data(self, path, start=None, stop=None, dss=28):
+  
+    def extract_data_from_recording(self, recording):
       """
-      Load data from a GAVRT t-file
-
-      @param filename : name of data file (t.YYDDD.C)
-      @type  filename : str
-
-      @param start : optional start time, default: beginning of file
-      @type  start : datetime
-
-      @param stop : optional stop time, default: end of file
-      @type  stop : datetime
-
-      @return: (indexed numpy data array,
-                column labels for data array,
-                list of date numbers, one for each row,
-                list of right ascensions (hrs), one for each row,
-                list of declinations (degs),
-                list of Tsys counts (kHz))
       """
-      filename = path+"."+str(int(self.name))
-      datafile = open(filename,"r")
-      labels = datafile.readline().strip().split()
-      logger.debug("load_tfile_data: labels: %s", labels)
-      datafile.close()
-      labels.insert(0,'DOY')
-      labels.insert(0,'Year')
-      logger.debug("load_tfile_data: new labels: %s", labels)
-    
-      # colums are: Year DOY UTC Epoch Chan Tsys Int Az El Diode Level CryoTemp
-      #              i4   i4  S8   f8    S2  f4   f4 f4 f4   i4    f4    f4
-      data = numpy.loadtxt(filename,skiprows=1,
-                     dtype = {'names': tuple(labels),
-                              'formats': ('i4','i4','S8','f8',
-                                     'S2','f4','f4','f4','f4','i4','f4', 'f4')})
       date_nums = []
       ras = []
       decs = []
@@ -188,8 +160,97 @@ class Observation(DR.Observation):
           azs.append(float(azimuth))     # because openpyxl doesn't like
           elevs.append(float(elevation)) # <type 'numpy.float32'>
           tsys.append(data[index]['Tsys'])
-      return data, labels, date_nums, ras, decs, azs, elevs, tsys
-   
+    return data, labels, date_nums, ras, decs, azs, elevs, tsys
+  
+
+class Recording(Data_Reduction.Recording):
+  """
+  This can later be subclassed, when I've worked out the common attributes of
+  all recordings.
+  """
+  def __init__(self, session):
+    """
+    """
+    Data_Reduction.Recording.__init__(self, session)
+    self.logger = logging.getLogger(logger.name+".Recording")
+    pass
+        
+  def load_tfile_data(self, path, start=None, stop=None, dss=28):
+    """
+    Load data from a GAVRT t-file
+
+    @param filename : name of data file (t.YYDDD.C)
+    @type  filename : str
+
+    @param start : optional start time, default: beginning of file
+    @type  start : datetime
+
+    @param stop : optional stop time, default: end of file
+    @type  stop : datetime
+
+    @return: (indexed numpy data array,
+              column labels for data array,
+              list of date numbers, one for each row,
+              list of right ascensions (hrs), one for each row,
+              list of declinations (degs),
+              list of Tsys counts (kHz))
+    """
+    filename = path+"."+str(int(self.name))
+    datafile = open(filename,"r")
+    labels = datafile.readline().strip().split()
+    logger.debug("load_tfile_data: labels: %s", labels)
+    datafile.close()
+    labels.insert(0,'DOY')
+    labels.insert(0,'Year')
+    logger.debug("load_tfile_data: new labels: %s", labels)
+    
+    # colums are: Year DOY UTC Epoch Chan Tsys Int Az El Diode Level CryoTemp
+    #              i4   i4  S8   f8    S2  f4   f4 f4 f4   i4    f4    f4
+    data = numpy.loadtxt(filename,skiprows=1,
+                     dtype = {'names': tuple(labels),
+                              'formats': ('i4','i4','S8','f8',
+                                     'S2','f4','f4','f4','f4','i4','f4', 'f4')})
+    return data
+  
+  def extract_data_from_recording(self):
+    """
+    """
+    date_nums = []
+    ras = []
+    decs = []
+    azs = []
+    elevs = []
+    tsys = []
+    for index in range(len(data)):
+        time = data[index]['Epoch']
+        dt = datetime.datetime.utcfromtimestamp(time).replace(
+                                                   tzinfo=datetime.timezone.utc)
+        if ((start and stop) and (start <= dt and dt <= stop)) \
+            or start == None or stop == None:
+          time_tuple = (dt.year,
+                        DT.day_of_year(dt.year,dt.month,dt.day)
+                        + (  dt.hour
+                           + dt.minute/60.
+                           + dt.second/3600.
+                           + dt.microsecond/3600./1e6)/24.)
+          azimuth = data[index]['Az']
+          elevation = data[index]['El']
+          ra,dec = Astronomy.AzEl_to_RaDec(azimuth,
+                                           elevation,
+                                           self.parent.latitude,
+                                           self.parent.longitude,
+                                           time_tuple)
+          date_nums.append(matplotlib.dates.date2num(dt))
+          ras.append(ra)
+          decs.append(dec)
+          azs.append(float(azimuth))     # because openpyxl doesn't like
+          elevs.append(float(elevation)) # <type 'numpy.float32'>
+          tsys.append(data[index]['Tsys'])
+    return data, labels, date_nums, ras, decs, azs, elevs, tsys
+  
+  
+    
+    
 def zenith_gain(freq):
   """
   Antenna response vs frequency for DSS-28

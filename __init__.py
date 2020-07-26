@@ -2,32 +2,51 @@
 """
 Modules to support data reduction in Python.
 
-The base module is intended for reading data from a text file as a ``numpy``
-structured array.  The function ``examine_text_data_file()`` reveals the
-structure of the file.
+The main purpose of the base module ``Data_Reduction`` is to provide a
+suplerclass with a good set of attributes and methods to cover all common needs.
+
+The base module is also able to read data from a text file as a ``numpy``
+structured array.  This is done with a class called ``DataGetterMixin`` which
+must be invoked after the base class has been initiated.
+
+The module function ``examine_text_data_file()`` reveals the structure of the 
+file(s) that provide the data..
 
 Examples
 ========
-Using the original header line::
 
-  obs = Observation(dss=28, datafile=datadir+'t12127.10', 
-                    delimiter=[17,16,3,11,7,9,8,2,6], skip_header=1,
-                    names="UTC Epoch Chan Tsys Int Az El Diode Level".split())
-                      
-In this case the column "UTC" comprises the first three data columns.
+Here we initiate a base class after mixing in the data getter. The first line o
+the file has column names but the first three columns are all under one
+name ``UTC`` so we specify column widths to consider the first three columns
+to be one column.  We use the names from the first line of the file, which
+could have been done with an ``open()``, ``readline()``, and ``close()``.
 
-Using a new set of headers::
+  mixIn(Observation, DataGetterMixin)
+  obs = Observation(dss=28, date="2012/127", project="SolarPatrol")
+  obs.open_datafile('t12127.10', 
+                          delimiter=[17,16,3,11,7,9,8,2,6], 
+                          skip_header=1,
+                      names="UTC Epoch Chan Tsys Int Az El Diode Level".split())
 
-  obs2 = Observation(dss=28, datafile=datadir+'t12127.10', 
-                     skip_header=1,
+Now the data getter is already mixed in to Observation so we don't need to do
+it again. In this case we specify the names of the columns, changing ``Int`` to
+``Integr``.
+
+  obs2 = Observation(dss=28, date="2012/127", project="SolarPatrol")
+  obs2.open_datafile('t12127.10', skip_header=1,
           names="Year DOY UTC Epoch Chan Tsys Integr Az El Diode Level".split())
 
-This adds names for the first two columns and replaces "Int" with "Integr".
+The class Map inherits from DataGetterMixin, so no explicit mixin required.
 
-Note
-====
+  obsmap = Map(dss=84, date="2020/163", project="SolarPatrol")
+  obsmap.initialize('sim-venus.dat', source="Venus")
 
-Still IN PROGRESS!
+Let's examine ``obsmap``.  We have only one signal column
+
+  In [3]: obsmap.channel.keys()                                                                                          
+  Out[3]: dict_keys(['xl'])
+  In [4]: obsmap.channel['xl'].keys()                                                                                    
+  Out[4]: dict_keys(['freq', 'bw', 'pol', 'ifmode', 'atten', 'power'])
 """
 # standard Python modules
 import datetime
@@ -43,6 +62,7 @@ import scipy.interpolate
 import scipy.fftpack
 
 import Astronomy as A
+import Astronomy.DSN_coordinates as coords
 import Astronomy.Ephem as AE
 import DatesTimes as DT
 import local_dirs
@@ -184,7 +204,7 @@ class Observation(object):
     self.session = parent
     # observatory must be specified
     if dss:
-      self.obs = AE.DSS(dss)
+      self.obs = coords.DSS(dss)
       self.longitude = self.obs.long*180/math.pi # deg
       self.latitude = self.obs.lat*180/math.pi   # deg
     else:
@@ -216,6 +236,7 @@ class Observation(object):
       raise Exception("When were the date taken?")
     # accomodate subclass arguments
     self.aliases = {}
+    
     # what I really want to do here is see if this was called by a subclass,
     # in which case I do not try to get the channel info until this
     # initialization has finished.
@@ -346,6 +367,8 @@ class DataGetterMixin(object):
                               skip_header=skip_header)
     # get the signal columns and names
     metadata, signals = self.get_data_channels(data)
+    # create Channel objects for the signal properties
+    self.make_channels(signals)
     # create the data structure
     self.make_data_struct(data, metadata, signals)
     # compute the offsets from the source center for each data point
@@ -353,9 +376,7 @@ class DataGetterMixin(object):
       self.get_offsets(source=source)
     else:
       self.logger.warning("initialize: no source specified; no offsets")
-    # create Channel objects for the signal properties
-    self.make_channels(signals)
-    
+   
   def open_datafile(self, filename, delimiter=" ", names=True, skip_header=0):
     """
     Opens and reads a data file
@@ -423,56 +444,27 @@ class DataGetterMixin(object):
     
     That means that a column can be extracted using `data[label]`.
 
-    Ideally, there must be a header word for each column and the separator must
-    not be  ambiguous, for example, a space if the column headers also include
-    spaces.  However, the ``numpy`` function ``genfromtxt()`` is very flexible.
-    Here is an example of reading DSS-28 text files from solar observations in
-    2012, 9 columns but 7 header words, when database access was not yet 
-    practical::
-    
-      In [1]: from Data_Reduction import Observation
-      In [2]: from Astronomy.DSN_coordinates import DSS
-      In [3]: import logging
-      In [4]: logger = logging.getLogger()
-      In [5]: logger.setLevel(logging.INFO)
-      In [6]: obs = Observation(dss=28)
-
-    The ``names`` string was just copied by hand from the first line in the
-    file. It could also be done with ``file.readline()``.
-    
-    However, the subclass ``GAVRT.Observation`` will read all the t-files in a
-    directory and instead of ``Tsys`` has ``counts`` which is itself a dict with
-    an item for each receiver channel.
-    
-    By default, columns with unknown names are assumed to be power from the
-    channel whose name is the column name. Columns that have unknown names
-    (i.e. not in 'reserved') must have their names in 'ignore'.
-
-    @param filename : name of the data file
-    @type  filename : str
-
-    @param delimiter : column separator
-    @type  delimiter : str
-
-    @param aliases : alternative names for keywords
-    @type  aliases : dict
-    
-    @return: column headers (str), data array(str)
+    Args
+    ====
+      data:     (ndarray) the data from the text file
+      metadata: (list of str) the column names for metadata
+      signals:  (list of str) the column names for power-like data
     """
     # get the known columns:
     self.data = {}
     self.numdata = len(data)
-    self.logger.debug("make_data_struct: using aliases: %s", self.aliases)
+    #self.logger.debug("make_data_struct: using aliases: %s", self.aliases)
     # get columns that are not metadata; each has power for a channel
     for signal in signals:
-      self.logger.debug("make_data_struct: for signal: %s", signal)
-      if signal in self.aliases.items():
+      #self.logger.debug("make_data_struct: for signal: %s", signal)
+      #if signal in self.aliases.items():
         # get the key in 'data' which matches 'value' in 'aliases'
-        power = data[next(key for key, value in self.aliases.items()
-                                                       if value == signal)][idx]
-      else:
-        power = data[signal]
-      self.data['power'][signal] = power
+      #  power = data[next(key for key, value in self.aliases.items()
+      #                                                if value == signal)][idx]
+      #else:
+      #  power = data[signal]
+      #self.channel[signal]['power'] = power
+      self.channel[signal]['power'] = data[signal]
     # get UNIX time
     if 'unixtime' in metadata:
       if 'unixtime' in data.dtype.names:
@@ -811,6 +803,23 @@ class Map(Observation, GriddingMixin):
     Observation.__init__(self, parent=parent, name=name, dss=dss, date=date,
                                project=project)
 
+class Recording(object):
+  """
+  Class for raw data
+  
+  This is typically the contents of a data file transcribed into a standard
+  format.  It may be the data of one Observation object, or data for multiple
+  Observation objects, or contain part of the data for an Observation object.
+  """
+  def __init__(self, session):
+    """
+    """
+    self.year = session.year
+    self.doy = session.doy
+    self.project = session.project
+    self.session_dir = session.session_dir
+
+
 class Session(object):
   """
   Base class for an observing session on a given year and DOY
@@ -822,7 +831,6 @@ class Session(object):
     project (str)           - 
     session_dir (str)       - path to results from this session
     year (int)              - year for session
-  
   
   """
   def __init__(self, parent=None, year=None, doy=None, project=None):

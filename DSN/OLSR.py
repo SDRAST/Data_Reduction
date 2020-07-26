@@ -2,10 +2,11 @@
 Module OLSR
 ===========
 
-For open loop science recorder files.
+For open loop science recorder files using functions.
 
+Uses module functions to access files.  Object-oriented file access is in
+module ``RSData``.
 Supports data files from the VSR, WVSR, PVSR, OLR, etc.
-
 Recognizes RDEF, VDR, SFDU formats
 
 Option keys are:: 
@@ -20,7 +21,8 @@ Option keys are::
   'toPrintData'     output data
   'leaveFileOpen'   keep reading from the same file
 
-Date formats may be given as ``YYYY-MM-DD-HH:MM:SS.fff`` or UNIX time seconds.
+In ``__main__``, date formats may be given as ``YYYY-MM-DD-HH:MM:SS.fff`` or 
+UNIX time seconds.
 
 Notes
 =====
@@ -46,7 +48,27 @@ their defaults. Each record is a dict which looks like this::
   'file': {'f':         [], 
            'curRecord': []}}
 
+Example
+=======
 
+  In [1]: import Data_Reduction.DSN.OLSR as OLSR
+  In [2]: filename = 'NET4n005tSsMG12rOPc05-20163122527.prd'                                                             
+
+  In [4]: options = {'format': OLSR.checkFormat(filename)}                                                               
+  In [6]: options.update({'toPrintHeaders': False})                                                                      
+  In [7]: hdr = OLSR.readHeaders(filename, options)                                                                      
+
+  In [14]: options.update({'duration':10, 'toPrintData':False,
+                           'lookForDate': True, 'fixTime':True})
+  In [15]: data = OLSR.RDEF(filename,options) 
+  
+  In [18]: data['values'][:20]                                                                                           
+  Out[18]: 
+  array([-21. +5.j,  21.-21.j,  11. -3.j, -31. -5.j, -13. +1.j,   5. -1.j,
+          -3. -7.j,   5.-17.j,  15. +7.j, -17. +9.j,  21. +3.j,  29. +3.j,
+          19. +7.j,  13.-11.j, -11.-11.j,  -1.+43.j, -25.+13.j, -19. -3.j,
+         -17.+17.j,   1.+25.j])
+           
 
 Todo
 ====

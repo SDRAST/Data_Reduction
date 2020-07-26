@@ -21,11 +21,12 @@ This uses:
 import logging
 import numpy as np
 
+import Data_Reduction.DSN as DSN
 import DatesTimes as DT
 
 logger = logging.getLogger(__name__)
 
-class RSData(object):
+class Observation(DSN.Observation):
   """
   class to read and convert data in radio science recorder data files
   """
@@ -74,17 +75,40 @@ class RSData(object):
   headerSize = {"RDEF": 176}
             
             
-  def __init__(self, filename, name=None):
+  def __init__(self, channels, parent=None, name=None, dss=None,
+                     date=None, start=None, end=None,
+                     project=None):
     """
     initiate a RS data set
+    
+    Args
+    ====
+      channels: (dict) associates files with names
+      parent:   (Session) optional
+      name:     (str) optional; defaults to station name + "obs"
+      dss:      (int) required
+      date:     (str) required as "YEAR/DOY"
+      start:    (datetime.datetime) optional
+      end:      (datetime.datetime) optional
+      project:  (str) required; must be known project name
+    
+    Notes
+    =====
+    The project, station and date are used to find the path to the data file.
     """
     self.logger = logging.getLogger(logger.name+".RSData")
     if name:
       self.name = name
     else:
-      self.name = filename
+      self.name = None
+    DSN.Observation.__init__(self, parent=parent, name=name, dss=dss,
+                     date=date, start=start, end=end,
+                     project=project)
+    for key,value in channels:
+      self.channel = self.Channel
     self.file = filename
     self.curRecord = 0
+    # set the ``f`` and ``format`` attributes
     try:
       self.format = self.checkFormat()
     except FileNotFoundError:
@@ -104,7 +128,7 @@ class RSData(object):
     """
     # Open file, read first 4 bytes as string
     try:
-      self.f = open(self.file, 'rb')
+      self.f = open(self.sessionpath+self.file, 'rb')
     except FileNotFoundError:
       raise FileNotFoundError("could not find %s" % self.file)
       self.format = None
@@ -126,8 +150,8 @@ class RSData(object):
     """
     get the header
     """
-    self.f = open(self.file, 'rb')
-    self.f.seek(0,0)
+    self.f = open(self.sessionpath+self.file, 'rb')
+    self.f.seek(0,0) # default file pointer position is start of file
     if record:
         self.f.seek(self.header['RECORD_LENGTH']*record, 0)
         
@@ -258,3 +282,34 @@ class RSData(object):
                                  self.header['TIME_TAG_SECOND_OF_DAY']
                        +self.header['TIMETAG_PICOSECONDS_OF_THE_SECOND']/1.e12))
 
+  # records should be private classes
+  def readRecordData(self, record=0):
+    """
+    read and convert data to array of complex samples
+    
+    The array returned will have records [startRecord:endRecord-1] in the usual
+    Python way of defining ranges.
+    """
+    self.f = open(self.sessionpath+self.file, 'rb')
+    # position to start of record
+    self.f.seek(self.header['RECORD_LENGTH']*record, 0)
+    # read the header
+    headerBytes = np.fromfile(self.f, 
+                              dtype=np.uint8, 
+                              count=self.headerSize[self.format])
+    # read the data
+    dataBytes = self.self.headerSize[self.format]
+    
+    if len(dataBytes) == 0:
+      self.logger.warning("readRecordData: no data read")
+    else:
+      # Get samples per word, etc
+      samplesPerWord = 16/headers['SAMPLE_SIZE']
+      if samplesPerWord in [2,4,8,16]:
+        pass
+      else:
+        logger.error('RDEF: SAMPLE SIZE %d is not currently supported!',
+                     headers['SAMPLE_SIZE'])
+        return None
+    
+    
