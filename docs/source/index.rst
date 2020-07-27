@@ -24,6 +24,7 @@ Context Modules
 .. automodapi:: Data_Reduction.DSN
 .. automodapi:: Data_Reduction.DSN.database
 .. automodapi:: Data_Reduction.DSN.logs
+.. automodapi:: Data_Reduction.DSN.Malargue
 .. automodapi:: Data_Reduction.DSN.old_init
 .. automodapi:: Data_Reduction.DSN.old_VSR
 .. automodapi:: Data_Reduction.DSN.OLSR
@@ -37,7 +38,6 @@ Context Modules
 .. automodapi:: Data_Reduction.GAVRT
 .. automodapi:: Data_Reduction.GAVRT.mysql
 .. automodapi:: Data_Reduction.GAVRT.plotter
-.. automodapi:: Data_Reduction.Malargue
 .. automodapi:: Data_Reduction.OldGAVRT
 .. automodapi:: Data_Reduction.OldGAVRT.plotting
 .. automodapi:: Data_Reduction.OldGAVRT.solar

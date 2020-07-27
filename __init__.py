@@ -51,6 +51,7 @@ Let's examine ``obsmap``.  We have only one signal column
 # standard Python modules
 import datetime
 import glob
+import h5py
 import logging
 import math
 import matplotlib.dates as MPLd
@@ -803,21 +804,49 @@ class Map(Observation, GriddingMixin):
     Observation.__init__(self, parent=parent, name=name, dss=dss, date=date,
                                project=project)
 
-class Recording(object):
+class Recording(h5py.File):
   """
   Class for raw data
   
   This is typically the contents of a data file transcribed into a standard
   format.  It may be the data of one Observation object, or data for multiple
   Observation objects, or contain part of the data for an Observation object.
+  
+  If the data being curated are not in a standard project, and they are not
+  in a standard place, 
   """
-  def __init__(self, session):
+  def __init__(self, session=None, path=None, date=None, dss=None, name=None):
     """
+    Initialize a metadata container and data directory
+    
+    Args
+    ====
+      session (Session): required, unless:
+      path (str)       : location of raw data files
+      date 
     """
-    self.year = session.year
-    self.doy = session.doy
-    self.project = session.project
-    self.session_dir = session.session_dir
+    self.logger = logging.getLogger(logger.name+".Recording")
+    if session:
+      self.session = session
+      if not name:
+        name = session.project + "-" + str(session.year) + "-" + \
+                    ('%03d' % session.doy) + "-dss" + str(session.dss)+".info"
+      self.year = session.year
+      self.doy = session.doy
+      self.dss = session.dss
+      self.project = session.project
+      self.session_dir = session.session_dir
+    elif path and name:
+      self.session = Session() # for its methods and attributes
+      self.session_dir = path
+      self.name = name
+    else:
+      raise RuntimeError("either a session or a path and filename required")
+    h5py.File.__init__(self, name, 'w')
+    self.attrs['project'] = self.project
+    self.attrs['dss'] = self.dss
+    self.attrs['year'] = self.year
+    self.attrs['doy'] = self.doy
 
 
 class Session(object):
@@ -828,31 +857,47 @@ class Session(object):
     doy (int)               - day of year for session
     logger (logging.Logger) - logging.Logger object
     parent (object)         - a data reduction session (mult. observ. sessions)
+    year (int)              -
+    doy (int)               -
     project (str)           - 
     session_dir (str)       - path to results from this session
-    year (int)              - year for session
   
+  A session usually refers to a telescope, date and project.  This will
+  normally define a path to the session directory.
   """
-  def __init__(self, parent=None, year=None, doy=None, project=None):
+  def __init__(self, parent=None, date=None, project=None, dss=None,
+                     path=None):
     """
     initialize data reduction for one observing session
     
-    All arguments are required
+    Args
+    ====
+      parent:  (object) optional class for a data reduction tool
+      date:    (int) required
+      project: (str) required
+      dss      (int) required
+      path     (str) optional
+      
+    If `path` is given for a non-standard observing files location, and it does
+    not exist, it will be created.  Then the Recording and Observation instances
+    must be directed to where the files are.
     """
+    self.logger = logging.getLogger(logger.name+".Session")
     if parent:
-      self.logger = logging.getLogger(parent.logger.name+".Session")
-    else:
-      self.logger = logging.getLogger(logger.name+".Session")
-    if year and doy and project:
-      self.year = year
-      self.doy = doy
+      self.session = parent
+    if date and project and dss:
+      y,d = date.split('/')
+      self.year = int(y); 
+      self.doy = int(d)
       self.project = project
-      self.name = "'%s %4d/%03d'" % (project, year, doy)
+      self.dss = dss
+      self.name = "'%s %4d/%03d'" % (self.project, self.year, self.doy)
     else:
-      self.logger.error("__init__: missing year or DOY or project")
+      self.logger.error("__init__: missing DSS oryear or DOY or project")
       raise Exception("Where and when were the data taken?")
+    self.get_session_dir(path=path)
 
-  def get_session_dir(self, dss=None, path=None):
+  def get_session_dir(self, path=None):
     """
     find or make the sessions directory
     
@@ -862,28 +907,29 @@ class Session(object):
       dss (int)  - station number
       path (str) - explicit path to files
     """
-    if dss:
-      obs_dir = local_dirs.projects_dir+self.project+"/Observations/dss"+str(dss)+"/"
-      self.session_dir = obs_dir + "%4d" % self.year +"/"+ "%03d" % self.doy +"/"
-    elif path:
+    if path:
       self.session_dir = path
     else:
-      self.logger.error("get_session_dir: no path or dss specified")
-      raise Exception("Where are the files?")
+      obs_dir = local_dirs.projects_dir + self.project \
+                                          +"/Observations/dss"+str(self.dss)+"/"
+      self.session_dir = obs_dir+ "%4d" % self.year +"/"+ "%03d" % self.doy +"/"
     if not os.path.exists(self.session_dir):
       os.makedirs(self.session_dir, mode=0o775)
 
-  def select_data_files(self, datapath, name_pattern="", load_hdf=False):
+  def select_data_files(self, datapath=None, name_pattern="", auto=True,
+                              load_hdf=False):
     """
     Provide the user with menu to select data files.
   
     Finding the right data store is complicated as there are many kinds of data
     files::
   
-    * If datapath is ...RA_data/HDF5/... then the files could be .h5 (Ashish) or .hdf5 (Dean).
+    * If datapath is ...RA_data/HDF5/... then the files could be .h5 (Ashish) 
+      or .hdf5 (Dean).
     * If datapath is ...RA_data/FITS/... then the extent is .fits.
     * If datapath is ...project_data/... then the extent is .pkl
-    * If datapath is ...projects/...     then the extent is probably .csv or .dat.
+    * If datapath is ...projects/...     (default) then the extent is probably
+      .csv or .dat or .prd.
   
     @param datapath : path to top of the tree where the DSS subdirectories are
     @type  datapath : str
@@ -894,6 +940,9 @@ class Session(object):
     @param load_hdf : use RA_data/HDF5 directory if True
     @type  load_hdf : bool
   
+    @para auto : take all files found
+    @type auto : bool
+    
     @return: list of str
     """
     # Get the data files to be processed
@@ -910,23 +959,30 @@ class Session(object):
       # no pattern specified.  All files.
       name_pattern = "*"
     self.logger.debug("select_data_files: for pattern %s", name_pattern)
-    if re.search('HDF5', datapath):
-      load_hdf = True
-    elif re.search('project_data', datapath):
-      load_hdf = False
-      datafiles = support.text.select_files(datapath+name_pattern+"[0-9].pkl")
-    elif re.search('FITS', datapath):
-      datafiles = support.text.select_files(datapath+name_pattern+".fits")
-    if load_hdf:
-      full = datapath+name_pattern+".h*5"
+    if datapath:
+      if re.search('HDF5', datapath):
+        load_hdf = True
+      elif re.search('project_data', datapath):
+        load_hdf = False
+        datafiles = support.text.select_files(datapath+name_pattern+"[0-9].pkl")
+      elif re.search('FITS', datapath):
+        datafiles = support.text.select_files(datapath+name_pattern+".fits")
+      if load_hdf:
+        full = datapath+name_pattern+".h*5"
+      else:
+        full = datapath+name_pattern
     else:
-      full = datapath+name_pattern
+      full = self.session_dir + name_pattern
     self.logger.debug("select_data_files: from: %s", full)
-    datafiles = support.text.select_files(full)
+    if auto:
+      datafiles = glob.glob(full)
+    else:
+      datafiles = support.text.select_files(full)
 
     self.logger.debug("select_data_files: found %s", datafiles)
     if datafiles == []:
-      self.logger.error("select_data_files: None found. Is the data directory mounted?")
+      self.logger.error(
+                "select_data_files: None found. Is the data directory mounted?")
       raise RuntimeError('No data files found.')  
     if type(datafiles) == str:
       datafiles = [datafiles]
