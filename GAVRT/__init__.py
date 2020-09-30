@@ -711,9 +711,12 @@ class Session(DR.Session):
                               project="SolarPatrol")
     self.logger = mylogger
     self.logger.info("Getting maps and boresights; this may take a while.")
-    if plotter == False:
-      # instantiating map plotters also gets the maps
-      self.get_maps()
+    #if plotter == False:
+      if issubclass(Session, GAVRT.plotter.SessionPlotter):
+        # instantiating map plotters also gets the maps
+        pass
+      else:
+        self.get_maps()
     self.get_boresights()
     self.get_session_dir()
 

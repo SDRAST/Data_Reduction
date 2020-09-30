@@ -26,7 +26,7 @@ import DatesTimes as DT
 
 logger = logging.getLogger(__name__)
 
-class Observation(DSN.Observation):
+class File(object):
   """
   class to read and convert data in radio science recorder data files
   """
@@ -75,19 +75,13 @@ class Observation(DSN.Observation):
   headerSize = {"RDEF": 176}
             
             
-  def __init__(self, channels, parent=None, name=None, dss=None,
-                     date=None, start=None, end=None,
-                     project=None):
+  def __init__(self, name=None, sessionpath=None, filename=None):
     """
     initiate a RS data set
     
     Args
     ====
-      channels: (dict) associates files with names
-      parent:   (Session) optional
       name:     (str) optional; defaults to station name + "obs"
-      dss:      (int) required
-      date:     (str) required as "YEAR/DOY"
       start:    (datetime.datetime) optional
       end:      (datetime.datetime) optional
       project:  (str) required; must be known project name
@@ -96,17 +90,13 @@ class Observation(DSN.Observation):
     =====
     The project, station and date are used to find the path to the data file.
     """
-    self.logger = logging.getLogger(logger.name+".RSData")
-    if name:
-      self.name = name
+    self.logger = logging.getLogger(logger.name+".File")
+    self.name = name
+    if filename and sessionpath:
+      self.sessionpath=sessionpath
+      self.file = filename
     else:
-      self.name = None
-    DSN.Observation.__init__(self, parent=parent, name=name, dss=dss,
-                     date=date, start=start, end=end,
-                     project=project)
-    for key,value in channels:
-      self.channel = self.Channel
-    self.file = filename
+      raise RuntimeError("filename must be given")
     self.curRecord = 0
     # set the ``f`` and ``format`` attributes
     try:

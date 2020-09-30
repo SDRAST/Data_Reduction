@@ -32,7 +32,7 @@ import DatesTimes as DT
 
 logger =  logging.getLogger(__name__)
 
-class Observation(DSN.RSData.Observation):
+class Observation(DSN.Observation):
   """
   Class for observations based on open-loop recording made as DSA-3 (DSS-84)
   
@@ -211,7 +211,7 @@ class Recording(DSN.Recording):
   """
   Metadata and directory for raw data files from DSA-3.
   """
-  def __init__(self, session=None, name=None, filename=None,
+  def __init__(self, session=None, name=None,
                      dss=84, date=None, project=None):
     """
     Initialize a Recording object
@@ -225,15 +225,81 @@ class Recording(DSN.Recording):
       date:     (str) `"YEAR/DOY"`
       project:  (str) `"SolarPatrol"`
     """
-    DSN.Recording.__init__(self, session=session, name=name, filename=filename,
-                                 dss=dss, date=date, project=project)
+    DSN.Recording.__init__(self, session=session, name=name,
+                                 dss=dss, date=date)
     self.metafiles = self.session.select_data_files(name_pattern="*.obs")
     self.scans = {}
     for mfile in self.metafiles:
-      self.scans[os.path.basename(mfile)] = self.parse_obs_file(filename=mfile)
+      key = os.path.basename(mfile) # the .obs file to parse
+      self.logger.debug("__init__: parsing %s", key)
+      self.scans[key] = self.parse_obs_file(filename=mfile)
+      for scan in self.scans[key].keys():
+        self.logger.debug("__init__: processing scan %s", scan)
+        channels = self.scans[key][scan]['channel'].keys()
+        self.logger.debug("__init__: scan channels: %s", channels)
+        for channel in channels:
+          datafile = self.scans[key][scan]['channel'][channel]['file']
+          self.logger.debug("__init__: processing %s for channel %s",
+                            datafile, channel)
+          OLfile = RSData.File(sessionpath=session.session_dir, filename=datafile)
+          try:
+            self.scans[key][scan]['channel'][channel]['header'] = OLfile.readHeader()
+            self.logger.info("__init__: found header for scan %s, channel %s",
+                             scan, channel)
+          except FileNotFoundError:
+            self.logger.warning("__init__: could not find %s", datafile)
+  
+  def parse_support_report(self, filename=None):
+    """
+    Notes
+    =====
+    
+    # The metadata may not always fall on the same lines.  This that case,
+      search for "OL Sample Rate", get its index, and t
+    """
+    if filename:
+      pass
+    else:
+      filename = glob.glob("MLG*.txt")[0]
+    report = open(self.session.session_dir+filename)
+    lines = report.readlines()                               # starting from 1
+    col2_ofst = lines.index('CONAE\n')                            # line 49
+    # track times
+    start_index = lines.index('BOA\n')                            # line 4
+    keys = [s.strip() for s in lines[start_index:start_index+2]]
+    values = [s.strip() for s in lines[start_index+2:start_index+4]]
+    end_index = lines.index('EOT\n')                              # line 51
+    keys += [s.strip() for s in lines[end_index:end_index+2]]
+    values += [s.strip() for s in lines[end_index+2:end_index+4]]
+    # Frequency Plan
+    frp_index = lines.index('Frequency Plan\n')                   # line 11
+    chn_index = lines.index('Downlink Chains\n')                  # line 14
+    keys += [s.strip() for s in lines[frp_index+1:chn_index]]
+    #      frequency plan value
+    col2_ofst -= 2                                   # line 58
+    first = col2_ofst + frp_index+1; last = first + (chn_index-frp_index-1)
+    values += [s.strip() for s in lines[first:last]]
+    #      for the downlink chains we invent keys
+    tcp_index = lines.index('TTCP Configuration\n')               # line 17
+    links  = [s.strip() for s in lines[chn_index+1:tcp_index]]
+    values += links
+    for i in list(range(len(links))):
+        keys.append("link "+str(i))
+    # open loop configuration parameters
+    pars_index = lines.index("OL Sample Rate\n")                  # line 21
+    fec_index = lines.index('FEC Configuration\n')                # line 41
+    keys += [l.strip() for l in lines[pars_index:fec_index]]
+    col2_ofst -= 5
+    first = col2_ofst + pars_index                                # line 62
+    last = first + (fec_index-pars_index)
+    values += [k.strip() for k in lines[first:last]]
+    return dict(zip(keys, values))
+    
     
   def parse_obs_file(self, filename=None):
     """
+    Extract metadata from a .obs file
+    
     An ``.obs`` file has some preliminary observation followed by a section for
     each ``scan``, which might be a map or series of spectra::
     
@@ -253,6 +319,18 @@ class Recording(DSN.Recording):
       D NET4n001tSsMG12rOPc08-20163114446.prd  F         xxx              +3.00000e+06           0
       Z
       #=========================================================================================================
+    
+    Lines with usable metedata are keyed with::
+    
+      D - datafile and subchannel data
+      R - station 1
+      S - scan
+      T - station 2
+      V - version
+      Z - end of section
+      
+    If no list of filenames is given, it will take the first one, if there are
+    any.
     """
     if filename == None:
       # search for it
@@ -270,31 +348,33 @@ class Recording(DSN.Recording):
       filename = filenames[0]
     fd = open(filename, "rt")
     lines = fd.readlines()
+    fd.close()
     scan = {}
     for line in lines:
       parts = line.strip().split()
       if line[0] == "#":
         pass
       elif line[0] == "S":
-        skip_this_scan = False
+        # a new scan section
         scan_ID = int(parts[1])
         if float(parts[7]) == 0.0:
-          # no useful data
-          skip_this_scan = True
-          continue
+          pass # use previously found frequency
         else:
-          scan[scan_ID] = {"start":  DT.ISOtime2datetime(parts[3]),
-                           "stop":   DT.ISOtime2datetime(parts[4]),
-                           "ra2000": float(parts[5]),
-                           "dec000": float(parts[6]),
-                           "freq":   float(parts[7])/1e6}
-        scan[scan_ID]['channel'] = {}
-      elif line[0] == "D" and not skip_this_scan:
+          freq = float(parts[7]) # use this for subsequent scans if necessary
+        scan[scan_ID] = {"start":  DT.ISOtime2datetime(parts[3]),
+                         "stop":   DT.ISOtime2datetime(parts[4]),
+                         "ra2000": float(parts[5]),
+                         "dec000": float(parts[6]),
+                         "freq":   freq/1e6,
+                         "channel": {}}
+      elif line[0] == "D":
+        # file and channel data
         filename = parts[1]
-        ch_ptr1 = filename.index('c')
-        ch_ptr2 = filename.index('-')
+        ch_ptr1 = filename.index('c') # start of channel number in file name
+        ch_ptr2 = filename.index('-') # end of channel number in file name
         chan = int(filename[ch_ptr1+1:ch_ptr2])
         scan[scan_ID]['channel'][chan] = {'file': filename}
+        scan[scan_ID]['channel'][chan]['offset'] = float(parts[4])
     return scan
 
 
