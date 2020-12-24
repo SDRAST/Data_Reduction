@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Observation &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Recording" href="Data_Reduction.DSN.Malargue.Recording.html" />
+    <link rel="prev" title="Map" href="Data_Reduction.DSN.Malargue.Map.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.Malargue.Recording.html" title="Recording"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.Malargue.Map.html" title="Map"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.Malargue.Map.html"
+                        title="previous chapter">Map</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.Malargue.Recording.html"
+                        title="next chapter">Recording</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.DSN.Malargue.Observation.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="observation">
+<h1>Observation<a class="headerlink" href="#observation" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="Data_Reduction.DSN.Malargue.Observation">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.DSN.Malargue.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param">parent=None</em>, <em class="sig-param">name=None</em>, <em class="sig-param">dss=None</em>, <em class="sig-param">date=None</em>, <em class="sig-param">start=None</em>, <em class="sig-param">end=None</em>, <em class="sig-param">project=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.Malargue.Observation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Data_Reduction.DSN.Observation.html#Data_Reduction.DSN.Observation" title="Data_Reduction.DSN.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.DSN.Observation</span></code></a></p>
+<p>Class for observations based on open-loop recording made as DSA-3 (DSS-84)</p>
+<p>The arguments for the superclass initialization are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>parent  (typically ``self`` or ``None``),
+name    (will be set to a YEAR/DOY default if not provided),
+dss     (required),
+date    (YEAR/DOY required),
+start   (optional, usually taken from file header),
+end     (otional, inferred from header and number of records), and
+project (required).
+</pre></div>
+</div>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.DSN.Malargue.Observation.load_file" title="Data_Reduction.DSN.Malargue.Observation.load_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_file</span></code></a>([num_recs, datafile, schdfile, …])</p></td>
+<td><p>loads data from an OLR file</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="method">
+<dt id="Data_Reduction.DSN.Malargue.Observation.load_file">
+<code class="sig-name descname">load_file</code><span class="sig-paren">(</span><em class="sig-param">num_recs=5</em>, <em class="sig-param">datafile=None</em>, <em class="sig-param">schdfile=None</em>, <em class="sig-param">catlfile=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.Malargue.Observation.load_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>loads data from an OLR file</p>
+<p>This is Malargue soecific because of the catalog and schedule file formats.</p>
+<p>We load five records at a time or poor old Python really bogs down.</p>
+<p>I think we proceed as follows:</p>
+<ol class="arabic simple">
+<li><p>Get a list of data files in the directory.</p></li>
+<li><p>We parse the <code class="docutils literal notranslate"><span class="pre">*.obs</span></code> file in the directory to get:</p>
+<ol class="arabic simple">
+<li><p>a list of scan numbers,</p></li>
+<li><p>the base file name for each scan (without scan or channel number),</p></li>
+<li><p>a list of channel numbers from the first scan.</p></li>
+</ol>
+</li>
+<li><p>For each scan (which is a map):</p>
+<ol class="arabic simple">
+<li><p>Ignore if there is no corresponding data file (<code class="docutils literal notranslate"><span class="pre">NET*.prd</span></code>)</p></li>
+<li><p>Find the corresponding schedule (<code class="docutils literal notranslate"><span class="pre">sch*.txt</span></code>) and load the times and
+position names.</p></li>
+<li><p>Open the matching catalog (<code class="docutils literal notranslate"><span class="pre">cat*.txt</span></code>) and for each position get the
+coordinates.</p></li>
+<li><p>for each channel:</p>
+<ol class="arabic simple">
+<li><p>Form the file name: <code class="docutils literal notranslate"><span class="pre">NET4n%03dtSsMG12rOPc%02d*.prd</span></code> where the
+first formatted item is scan number and the second is channel.</p></li>
+<li><p>Process the ordered list of data files found with the above mask.</p>
+<ol class="arabic simple">
+<li><p>Read and parse the file header.</p></li>
+<li><p>For each record (in groups of five records at a time) for
+efficiency):</p>
+<ol class="arabic simple">
+<li><p>For the first record of the file only</p>
+<ol class="arabic simple">
+<li><p>Put the time and coordinates in the first row of the
+structured numpy array.</p></li>
+</ol>
+</li>
+<li><p>Read the record data from the datafile.</p></li>
+<li><p>Process the data (e.g. sum square average, power spectrum,
+spectrogram, etc.)</p></li>
+<li><p>Save the processed data for each record in the numpy dict
+keyed on channel number.</p></li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li><p>save the numpy array of reduced data.</p></li>
+</ol>
+</li>
+</ol>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.Malargue.Recording.html" title="Recording"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.Malargue.Map.html" title="Map"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
+    </div>
+  </body>
+</html>

@@ -10,6 +10,7 @@ Supports data files from the VSR, WVSR, PVSR, OLR, etc.
 Recognizes RDEF, VDR, SFDU formats
 
 Option keys are:: 
+
   'startDate'       datetime.datetime
   'startTime'       alternate for 'startDate' as UNIX time
   'lookForDate'     set True if using 'startDate'
@@ -35,34 +36,34 @@ their defaults. Each record is a dict which looks like this::
                      9.99997e-01, 9.99998e-01, 9.99999e-01]),
      'phase': array([-885534.63141, -885534.63141, -885534.63141, ...,
                      -885534.63141, -885534.63141, -885534.63141]),
-  'phCoeff': [[-885534.63141,
-               1.1125369292536007e-308, 
-               1.1125369292536007e-308,
-               1.1125369292536007e-308]],
-  'LO': 31960000000.0,
-  'DDCLO': -11500000.0,
-  'sampleSize': 8,
-  'DATAFIL': '/usr/local/projects/SolarPatrol/Observations/dss84/2020/163/\
-              NET4n004tSsMG12rOPc05-20163121517.prd',
-  't0': datetime.datetime(2020, 6, 11, 12, 15, 20, 999979),
-  'file': {'f':         [], 
-           'curRecord': []}}
+     'phCoeff': [[-885534.63141,
+                  1.1125369292536007e-308, 
+                  1.1125369292536007e-308,
+                  1.1125369292536007e-308]],
+     'LO': 31960000000.0,
+     'DDCLO': -11500000.0,
+     'sampleSize': 8,
+     'DATAFIL': '/usr/local/projects/SolarPatrol/Observations/dss84/2020/163/\
+                                         NET4n004tSsMG12rOPc05-20163121517.prd',
+     't0': datetime.datetime(2020, 6, 11, 12, 15, 20, 999979),
+     'file': {'f':[], 
+     'curRecord': []}}
 
 Example
 =======
+``OLSR`` method ``RDEF`` needs options set before being called::
 
   In [1]: import Data_Reduction.DSN.OLSR as OLSR
-  In [2]: filename = 'NET4n005tSsMG12rOPc05-20163122527.prd'                                                             
+  In [2]: filename = 'NET4n005tSsMG12rOPc05-20163122527.prd'                   
 
-  In [4]: options = {'format': OLSR.checkFormat(filename)}                                                               
-  In [6]: options.update({'toPrintHeaders': False})                                                                      
-  In [7]: hdr = OLSR.readHeaders(filename, options)                                                                      
-
+  In [4]: options = {'format': OLSR.checkFormat(filename)}
+  In [6]: options.update({'toPrintHeaders': False})
+  In [7]: hdr = OLSR.readHeaders(filename, options)
   In [14]: options.update({'duration':10, 'toPrintData':False,
                            'lookForDate': True, 'fixTime':True})
   In [15]: data = OLSR.RDEF(filename,options) 
   
-  In [18]: data['values'][:20]                                                                                           
+  In [18]: data['values'][:20]          
   Out[18]: 
   array([-21. +5.j,  21.-21.j,  11. -3.j, -31. -5.j, -13. +1.j,   5. -1.j,
           -3. -7.j,   5.-17.j,  15. +7.j, -17. +9.j,  21. +3.j,  29. +3.j,

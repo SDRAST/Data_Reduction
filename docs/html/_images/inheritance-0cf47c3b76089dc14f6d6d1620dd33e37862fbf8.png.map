@@ -1,0 +1,12 @@
+<map id="inheritance0ca86f5ba7" name="inheritance0ca86f5ba7">
+<area shape="rect" id="node5" title="Mixin class that allows sharing information between objects which" alt="" coords="274,99,377,116"/>
+<area shape="rect" id="node8" title="Base class for high&#45;level interface objects." alt="" coords="436,99,490,116"/>
+<area shape="rect" id="node6" title="Represents an HDF5 file." alt="" coords="628,116,676,133"/>
+<area shape="rect" id="node15" href="api/Data_Reduction.Recording.html#Data_Reduction.Recording" target="_top" title="Class for raw data" alt="" coords="707,116,764,133"/>
+<area shape="rect" id="node7" title="Represents an HDF5 group." alt="" coords="549,116,596,133"/>
+<area shape="rect" id="node9" title="Wraps a Group or AttributeManager object to provide a mutable" alt="" coords="409,132,517,149"/>
+<area shape="rect" id="node10" href="api/Data_Reduction.DSN.Malargue.Map.html#Data_Reduction.DSN.Malargue.Map" target="_top" title="Map" alt="" coords="107,84,154,100"/>
+<area shape="rect" id="node11" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" target="_top" title="superclass for a data structure and methods" alt="" coords="4,84,70,100"/>
+<area shape="rect" id="node13" title="Wraps a Group, AttributeManager or DimensionManager object to provide" alt="" coords="289,132,362,149"/>
+<area shape="rect" id="node16" href="api/Data_Reduction.Session.html#Data_Reduction.Session" target="_top" title="Base class for an observing session on a given year and DOY" alt="" coords="13,19,61,36"/>
+</map>

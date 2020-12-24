@@ -160,10 +160,10 @@ class Observation(DR.Observation):
           azs.append(float(azimuth))     # because openpyxl doesn't like
           elevs.append(float(elevation)) # <type 'numpy.float32'>
           tsys.append(data[index]['Tsys'])
-    return data, labels, date_nums, ras, decs, azs, elevs, tsys
+      return data, labels, date_nums, ras, decs, azs, elevs, tsys
   
 
-class Recording(Data_Reduction.Recording):
+class Recording(DR.Recording):
   """
   This can later be subclassed, when I've worked out the common attributes of
   all recordings.
@@ -171,7 +171,7 @@ class Recording(Data_Reduction.Recording):
   def __init__(self, session):
     """
     """
-    Data_Reduction.Recording.__init__(self, session)
+    DR.Recording.__init__(self, session)
     self.logger = logging.getLogger(logger.name+".Recording")
     pass
         

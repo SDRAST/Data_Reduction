@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>Observation &#8212; Data_Reduction 0.9 documentation</title>
@@ -15,7 +15,7 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="DSS84_beamtaper" href="Data_Reduction.Malargue.DSS84_beamtaper.html" />
+    <link rel="next" title="Recording" href="Data_Reduction.OldGAVRT.Recording.html" />
     <link rel="prev" title="zenith_gain" href="Data_Reduction.OldGAVRT.zenith_gain.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -28,7 +28,7 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.Malargue.DSS84_beamtaper.html" title="DSS84_beamtaper"
+          <a href="Data_Reduction.OldGAVRT.Recording.html" title="Recording"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="Data_Reduction.OldGAVRT.zenith_gain.html" title="zenith_gain"
@@ -42,8 +42,8 @@
   <p class="topless"><a href="Data_Reduction.OldGAVRT.zenith_gain.html"
                         title="previous chapter">zenith_gain</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="Data_Reduction.Malargue.DSS84_beamtaper.html"
-                        title="next chapter">DSS84_beamtaper</a></p>
+  <p class="topless"><a href="Data_Reduction.OldGAVRT.Recording.html"
+                        title="next chapter">Recording</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -71,9 +71,9 @@
             
   <div class="section" id="observation">
 <h1>Observation<a class="headerlink" href="#observation" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
+<dl class="class">
 <dt id="Data_Reduction.OldGAVRT.Observation">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.OldGAVRT.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">28</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">'SolarPatrol'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.OldGAVRT.Observation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.OldGAVRT.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param">name=None</em>, <em class="sig-param">dss=28</em>, <em class="sig-param">date=None</em>, <em class="sig-param">project='SolarPatrol'</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.OldGAVRT.Observation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="Data_Reduction.Observation.html#Data_Reduction.Observation" title="Data_Reduction.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.Observation</span></code></a></p>
 <p>DSS-28 observations from before the <code class="docutils literal notranslate"><span class="pre">tlog</span></code> database table became available.</p>
 <p class="rubric">Methods Summary</p>
@@ -87,7 +87,7 @@
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.OldGAVRT.Observation.get_channel_names" title="Data_Reduction.OldGAVRT.Observation.get_channel_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_channel_names</span></code></a>(datapath)</p></td>
-<td><p></p></td>
+<td><p>get the channels for which there is tlog data</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.OldGAVRT.Observation.get_obs_times" title="Data_Reduction.OldGAVRT.Observation.get_obs_times"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_obs_times</span></code></a>(datapath)</p></td>
 <td><p>returns: (datetime.datetime, datetime.datetime)</p></td>
@@ -95,19 +95,21 @@
 </tbody>
 </table>
 <p class="rubric">Methods Documentation</p>
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.OldGAVRT.Observation.extended_init">
-<code class="sig-name descname">extended_init</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">channels_names</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.OldGAVRT.Observation.extended_init" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">extended_init</code><span class="sig-paren">(</span><em class="sig-param">channels_names=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.OldGAVRT.Observation.extended_init" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.OldGAVRT.Observation.get_channel_names">
-<code class="sig-name descname">get_channel_names</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">datapath</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.OldGAVRT.Observation.get_channel_names" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">get_channel_names</code><span class="sig-paren">(</span><em class="sig-param">datapath</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.OldGAVRT.Observation.get_channel_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the channels for which there is tlog data</p>
+<p>gets the extents of all the “tYYDDD.*” files</p>
+</dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.OldGAVRT.Observation.get_obs_times">
-<code class="sig-name descname">get_obs_times</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">datapath</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.OldGAVRT.Observation.get_obs_times" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_obs_times</code><span class="sig-paren">(</span><em class="sig-param">datapath</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.OldGAVRT.Observation.get_obs_times" title="Permalink to this definition">¶</a></dt>
 <dd><p>returns: (datetime.datetime, datetime.datetime)</p>
 </dd></dl>
 
@@ -131,7 +133,7 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.Malargue.DSS84_beamtaper.html" title="DSS84_beamtaper"
+          <a href="Data_Reduction.OldGAVRT.Recording.html" title="Recording"
              >next</a> |</li>
         <li class="right" >
           <a href="Data_Reduction.OldGAVRT.zenith_gain.html" title="zenith_gain"
@@ -141,7 +143,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, Tom Kuiper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>

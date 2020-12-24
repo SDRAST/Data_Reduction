@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>get_obs_session &#8212; Data_Reduction 0.9 documentation</title>
@@ -14,9 +14,7 @@
     <script src="../_static/doctools.js"></script>
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="DataGetterMixin" href="Data_Reduction.DataGetterMixin.html" />
-    <link rel="prev" title="get_obs_dirs" href="Data_Reduction.get_obs_dirs.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -27,23 +25,11 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.DataGetterMixin.html" title="DataGetterMixin"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.get_obs_dirs.html" title="get_obs_dirs"
-             accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="Data_Reduction.get_obs_dirs.html"
-                        title="previous chapter">get_obs_dirs</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="Data_Reduction.DataGetterMixin.html"
-                        title="next chapter">DataGetterMixin</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -71,30 +57,6 @@
             
   <div class="section" id="get-obs-session">
 <h1>get_obs_session<a class="headerlink" href="#get-obs-session" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="Data_Reduction.get_obs_session">
-<code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">get_obs_session</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">path</span><span class="o">=</span><span class="default_value">'proj'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.get_obs_session" title="Permalink to this definition">¶</a></dt>
-<dd><p>Provides project, station, year and DOY, asking as needed.</p>
-<p>It follows one of several possible paths to get to the session:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">proj</span> <span class="o">-</span> <span class="n">path</span> <span class="n">through</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">projects</span><span class="o">/</span><span class="n">project</span>
-<span class="n">hdf5</span> <span class="o">-</span> <span class="n">path</span> <span class="n">through</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">RA_data</span><span class="o">/</span><span class="n">HDF5</span>
-<span class="n">fits</span> <span class="o">-</span> <span class="n">path</span> <span class="n">through</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">RA_data</span><span class="o">/</span><span class="n">FITS</span>
-<span class="n">wvsr</span> <span class="o">-</span> <span class="n">path</span> <span class="n">through</span> <span class="o">/</span><span class="n">data</span>
-</pre></div>
-</div>
-<p>:param project : optional name as defined in /usr/local/projects
-:type  project : str</p>
-<p>:param dss : optional station number
-:type  dss : int</p>
-<p>:param date : optional YYYY/DDD
-:type  date : str</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>project, DSS, year, DOY.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 
@@ -112,18 +74,12 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.DataGetterMixin.html" title="DataGetterMixin"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.get_obs_dirs.html" title="get_obs_dirs"
-             >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, Tom Kuiper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>

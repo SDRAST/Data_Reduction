@@ -1,0 +1,150 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>ScanFitter &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ammonia_data" href="Data_Reduction.hyperfine_fit.ammonia_data.html" />
+    <link rel="prev" title="open_metadata_spreadsheet" href="Data_Reduction.OldGAVRT.solar.open_metadata_spreadsheet.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.hyperfine_fit.ammonia_data.html" title="ammonia_data"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.OldGAVRT.solar.open_metadata_spreadsheet.html" title="open_metadata_spreadsheet"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.OldGAVRT.solar.open_metadata_spreadsheet.html"
+                        title="previous chapter">open_metadata_spreadsheet</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.hyperfine_fit.ammonia_data.html"
+                        title="next chapter">ammonia_data</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.boresights.boresight_fitter.ScanFitter.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="scanfitter">
+<h1>ScanFitter<a class="headerlink" href="#scanfitter" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="Data_Reduction.boresights.boresight_fitter.ScanFitter">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.boresights.boresight_fitter.</code><code class="sig-name descname">ScanFitter</code><span class="sig-paren">(</span><em class="sig-param">scan</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.boresights.boresight_fitter.ScanFitter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Create an object to fit a scan in one direction to a baseline and a Gaussian</p>
+<p>Public attributes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">atten</span>         <span class="o">-</span> <span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="n">receiver</span> <span class="n">channel</span> <span class="n">attenuation</span> <span class="k">for</span> <span class="n">this</span> <span class="n">can</span>
+<span class="n">baseline_pars</span> <span class="o">-</span> <span class="p">(</span><span class="n">nparray</span><span class="p">)</span> <span class="n">polynomial</span> <span class="n">parameters</span> <span class="k">for</span> <span class="n">baseline</span>
+<span class="n">calibrator</span>    <span class="o">-</span> <span class="p">(</span><span class="n">Astronomy</span><span class="o">.</span><span class="n">Ephem</span><span class="o">.</span><span class="n">calibrator</span><span class="p">)</span> <span class="n">calibrator</span> <span class="n">source</span>
+<span class="n">data</span>          <span class="o">-</span> <span class="p">(</span><span class="n">nparray</span><span class="p">)</span> <span class="n">VFC</span> <span class="n">count</span>
+<span class="n">ddecs</span>         <span class="o">-</span> <span class="p">(</span><span class="n">nparray</span><span class="p">)</span> <span class="n">declination</span> <span class="n">offsets</span>
+<span class="n">direction</span>     <span class="o">-</span> <span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="n">scan</span> <span class="n">axis</span>
+<span class="n">dxdecs</span>        <span class="o">-</span> <span class="p">(</span><span class="n">nparray</span><span class="p">)</span> <span class="n">cross</span><span class="o">-</span><span class="n">declination</span> <span class="n">offsets</span>
+<span class="n">logger</span>        <span class="o">-</span> <span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="p">)</span>
+<span class="n">pars</span>          <span class="o">-</span> <span class="p">(</span><span class="n">nparray</span><span class="p">)</span> <span class="n">Gaussian</span> <span class="n">parameters</span>
+</pre></div>
+</div>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.boresights.boresight_fitter.ScanFitter.fit_gaussian" title="Data_Reduction.boresights.boresight_fitter.ScanFitter.fit_gaussian"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_gaussian</span></code></a>([beam_limit])</p></td>
+<td><p>Extract the appropriate data</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="method">
+<dt id="Data_Reduction.boresights.boresight_fitter.ScanFitter.fit_gaussian">
+<code class="sig-name descname">fit_gaussian</code><span class="sig-paren">(</span><em class="sig-param">beam_limit=2.5</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.boresights.boresight_fitter.ScanFitter.fit_gaussian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract the appropriate data</p>
+<p>For raster scans, <code class="docutils literal notranslate"><span class="pre">xdec</span></code> means that <code class="docutils literal notranslate"><span class="pre">xdec</span></code> stays fixed while the
+antenna moves up and down; <code class="docutils literal notranslate"><span class="pre">dec</span></code> means that ‘dec’ stays fixed while the
+left and right.</p>
+<p>The Gaussian is assumed to fit the inner five beamwidths of the data,
+though that limit can be adjusted.  The baseline is the rest of the data,
+although the lower baseline includes at least <code class="docutils literal notranslate"><span class="pre">data[:5]</span></code> and the upper
+baseline includes <code class="docutils literal notranslate"><span class="pre">data[-5:]</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.hyperfine_fit.ammonia_data.html" title="ammonia_data"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.OldGAVRT.solar.open_metadata_spreadsheet.html" title="open_metadata_spreadsheet"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
+    </div>
+  </body>
+</html>

@@ -19,7 +19,7 @@ Here we initiate a base class after mixing in the data getter. The first line o
 the file has column names but the first three columns are all under one
 name ``UTC`` so we specify column widths to consider the first three columns
 to be one column.  We use the names from the first line of the file, which
-could have been done with an ``open()``, ``readline()``, and ``close()``.
+could have been done with an ``open()``, ``readline()``, and ``close()``::
 
   mixIn(Observation, DataGetterMixin)
   obs = Observation(dss=28, date="2012/127", project="SolarPatrol")
@@ -30,22 +30,22 @@ could have been done with an ``open()``, ``readline()``, and ``close()``.
 
 Now the data getter is already mixed in to Observation so we don't need to do
 it again. In this case we specify the names of the columns, changing ``Int`` to
-``Integr``.
+``Integr``::
 
   obs2 = Observation(dss=28, date="2012/127", project="SolarPatrol")
   obs2.open_datafile('t12127.10', skip_header=1,
           names="Year DOY UTC Epoch Chan Tsys Integr Az El Diode Level".split())
 
-The class Map inherits from DataGetterMixin, so no explicit mixin required.
+The class Map inherits from DataGetterMixin, so no explicit mixin required::
 
   obsmap = Map(dss=84, date="2020/163", project="SolarPatrol")
   obsmap.initialize('sim-venus.dat', source="Venus")
 
-Let's examine ``obsmap``.  We have only one signal column
+Let's examine ``obsmap``.  We have only one signal column::
 
-  In [3]: obsmap.channel.keys()                                                                                          
+  In [3]: obsmap.channel.keys()                               
   Out[3]: dict_keys(['xl'])
-  In [4]: obsmap.channel['xl'].keys()                                                                                    
+  In [4]: obsmap.channel['xl'].keys()                               
   Out[4]: dict_keys(['freq', 'bw', 'pol', 'ifmode', 'atten', 'power'])
 """
 # standard Python modules
@@ -196,12 +196,9 @@ class Observation(object):
       name (str):         an identifier; default is station ID + "obs"
       dss (int):          station number
       date (str):         "YEAR/DOY"
-      start (float):      UNIX time at the start
-      end (float):        UNIX time at the end
       project (str):      directory under /usr/local/projects
     """
     self.logger = logging.getLogger(logger.name+".Observation")
-    self.logger.debug("Observation.__init__: initializing...")
     self.session = parent
     # observatory must be specified
     if dss:
@@ -562,13 +559,24 @@ class GriddingMixin(object):
     step (float):            map step size
     
   """ 
-  def get_grid_stepsize(self):
+  def get_grid_stepsize(self, xy=None):
     """ 
     Determine the stepsize of gridded data
+    
+    This assumes xdec and dec data increase incrementally by 'stepsize'.
+    The sequences may repeat in a sawtooth-like series. The number of
+    'xdec' and 'dec' points is multiple times the gridsize.
+    
+    Arguments:
+      xy (tuple or list) - X-array and Y-array (default Map.data)
     """
     # get the absolute value of coordinate intervals
-    dxdecs = abs(self.data['xdec_offset'][1:]-self.data['xdec_offset'][:-1])
-    ddecs  = abs(self.data['dec_offset'][1:] -self.data['dec_offset'][:-1])
+    if xy:
+      dxdecs = abs(xy[0][1:] - xy[0][:-1])
+      ddecs  = abs(xy[1][1:] - xy[1][:-1])
+    else:
+      dxdecs = abs(self.data['xdec_offset'][1:]-self.data['xdec_offset'][:-1])
+      ddecs  = abs(self.data['dec_offset'][1:] -self.data['dec_offset'][:-1])
     # form array of X,Y pairs
     coords =  NP.array(list(zip(dxdecs,ddecs)))
     # expect two clusters (default)
@@ -592,6 +600,9 @@ class GriddingMixin(object):
     
     @param step : map step size in X and Y in deg
     @type  step : (float, float)
+    
+    @param power_key : dict key of Z-value
+    @type  power_key : str
     """
     # what is the power-like quantity?
     if power_key:
@@ -615,8 +626,10 @@ class GriddingMixin(object):
       self.xstep, self.ystep = self.get_grid_stepsize()
     else:
       self.xstep, self.ystep = step
-    self.data['grid_x'] = NP.arange( -width/2,  width/2 + self.xstep/2, self.xstep/2)
-    self.data['grid_y'] = NP.arange(-height/2, height/2 + self.ystep/2, self.ystep/2)
+    self.data['grid_x'] = NP.arange(
+                                  -width/2, width/2+self.xstep/2, self.xstep/2)
+    self.data['grid_y'] = NP.arange(
+                                 -height/2,height/2+self.ystep/2, self.ystep/2)
     self.logger.debug("regrid: grid shape is %dx%d", len(self.data['grid_x']),
                                                      len(self.data['grid_y']))
     self.data['grid_z'] = {}
@@ -629,7 +642,7 @@ class GriddingMixin(object):
       xi, yi = NP.meshgrid(self.data['grid_x'], self.data['grid_y'])
       try:
         self.data['grid_z'][chnl] = scipy.interpolate.griddata(points, values,
-                                                     (xi, yi), method='nearest')
+                                                    (xi, yi), method='nearest')
       except ValueError as details:
         self.logger.error("regrid: gridding failed: %s", str(details))
         self.logger.debug("regrid: channel %s length of points is %d",
@@ -854,6 +867,7 @@ class Session(object):
   Base class for an observing session on a given year and DOY
   
   Public Attributes::
+  
     doy (int)               - day of year for session
     logger (logging.Logger) - logging.Logger object
     parent (object)         - a data reduction session (mult. observ. sessions)
@@ -873,7 +887,7 @@ class Session(object):
     Args
     ====
       parent:  (object) optional class for a data reduction tool
-      date:    (int) required
+      date:    (str) required, format YEAR/DOY
       project: (str) required
       dss      (int) required
       path     (str) optional
@@ -893,20 +907,18 @@ class Session(object):
       self.dss = dss
       self.name = "'%s %4d/%03d'" % (self.project, self.year, self.doy)
     else:
-      self.logger.error("__init__: missing DSS oryear or DOY or project")
-      raise Exception("Where and when were the data taken?")
-    self.get_session_dir(path=path)
+      self.logger.error("__init__: missing DSS or year or DOY or project")
+      raise Exception("Where and when and for what project were the data taken?")
+    self.find_session_dir(path=path)
 
-  def get_session_dir(self, path=None):
+  def find_session_dir(self, path=None):
     """
     find or make the sessions directory
     
-    Either `dss` or `path` must be given.
-    
     Args:
-      dss (int)  - station number
       path (str) - explicit path to files
     """
+    self.logger.debug("find_session_dir: entered for path=%s", path)
     if path:
       self.session_dir = path
     else:
@@ -922,7 +934,7 @@ class Session(object):
     Provide the user with menu to select data files.
   
     Finding the right data store is complicated as there are many kinds of data
-    files::
+    files
   
     * If datapath is ...RA_data/HDF5/... then the files could be .h5 (Ashish) 
       or .hdf5 (Dean).
@@ -1205,8 +1217,8 @@ def get_obs_dirs(project, station, year, DOY, datafmt=None):
   @param datafmt : raw data format
   @type  datafmt : str
   """
-  logger.debug("get_obs_dirs: type %s for %s, DSS%d, %4d/%03d",
-               datafmt, project, station, year, DOY)
+  #logger.debug("get_obs_dirs: type %s for %s, DSS%d, %4d/%03d",
+  #             datafmt, project, station, year, DOY)
   obspath = "dss%2d/%4d/%03d/" %  (station,year,DOY)
   if project:
     projdatapath = "/usr/local/project_data/"+project+"/"+obspath
@@ -1222,13 +1234,13 @@ def get_obs_dirs(project, station, year, DOY, datafmt=None):
 
 # --------- old stuff to be discarded still needed for now ---------------
 
-def get_obs_session(project=None, dss=None, date=None, path='proj'):
+def old_get_obs_session(project=None, dss=None, date=None, path='proj'):
   """
   Provides project, station, year and DOY, asking as needed.
   
   It follows one of several possible paths to get to the session::
   
-    proj - path through /usr/local/projects/project
+    proj - path through /usr/local/projects/<project>
     hdf5 - path through /usr/local/RA_data/HDF5
     fits - path through /usr/local/RA_data/FITS
     wvsr - path through /data
@@ -1277,6 +1289,7 @@ def get_obs_session(project=None, dss=None, date=None, path='proj'):
   else:
     os.chdir(local_dirs.projects_dir)
     project = get_directory(local_dirs.projects_dir)
+  logger.debug("from_wvsr_dir: project is %s", project)
   projectpath = local_dirs.projects_dir+project
   # get the station
   if path[:4].lower() == 'wvsr':

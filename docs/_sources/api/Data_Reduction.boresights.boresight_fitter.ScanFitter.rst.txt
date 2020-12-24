@@ -1,7 +1,7 @@
 ScanFitter
 ==========
 
-.. currentmodule:: Data_Reduction.boresight_fitter
+.. currentmodule:: Data_Reduction.boresights.boresight_fitter
 
 .. autoclass:: ScanFitter
    :show-inheritance:

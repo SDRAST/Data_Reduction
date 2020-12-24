@@ -44,7 +44,7 @@ Context Modules
 
 Supporting Modules
 ==================
-.. automodapi:: Data_Reduction.boresight_fitter
+.. automodapi:: Data_Reduction.boresights.boresight_fitter
 .. automodapi:: Data_Reduction.hyperfine_fit
 .. automodapi:: Data_Reduction.maps
 .. automodapi:: Data_Reduction.SLATool

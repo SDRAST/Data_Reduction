@@ -8,12 +8,13 @@ import numpy as NP
 import scipy
 
 import Astronomy.Ephem as Aeph
+import Astronomy.DSN_coordinates as Adsn
 import Data_Reduction.maps as DRm
 import Math.least_squares as Mlsq
 import support
 
 logger = logging.getLogger(__name__)
-dss28 = Aeph.DSS(28)
+dss28 = Adsn.DSS(28)
 
 class ScanFitter(object):
   """
@@ -62,14 +63,16 @@ class ScanFitter(object):
     
   def fit_gaussian(self, beam_limit=2.5):
     """
-    Extract the appropriate data::
-        For raster scans, 'xdec' means that 'xdec' stays fixed while the
-        antenna moves up and down; 'dec' means that 'dec' stays fixed while the
-        left and right.
-     The Gaussian is assumed to fit the inner five beamwidths of the data,
-     though that limit can be adjusted.  The baseline is the rest of the data,
-     although the lower baseline includes at least data[:5] and the upper
-     baseline includes data[-5:]
+    Extract the appropriate data
+    
+    For raster scans, ``xdec`` means that ``xdec`` stays fixed while the
+    antenna moves up and down; ``dec`` means that 'dec' stays fixed while the
+    left and right.
+        
+    The Gaussian is assumed to fit the inner five beamwidths of the data,
+    though that limit can be adjusted.  The baseline is the rest of the data,
+    although the lower baseline includes at least ``data[:5]`` and the upper
+    baseline includes ``data[-5:]``
     """
     self.logger.debug("fit_gaussian: direction is %s", self.axis)
     if self.axis.lower() == 'xdec':

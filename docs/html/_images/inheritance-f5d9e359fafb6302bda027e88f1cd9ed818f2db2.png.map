@@ -1,0 +1,11 @@
+<map id="inheritance8c6a3cd760" name="inheritance8c6a3cd760">
+<area shape="rect" id="node1" href="api/Data_Reduction.GAVRT.mysql.BaseDB.html#Data_Reduction.GAVRT.mysql.BaseDB" target="_top" title="This is a database superclass." alt="" coords="25,152,98,177"/>
+<area shape="rect" id="node3" href="api/Data_Reduction.GAVRT.DSS28db.html#Data_Reduction.GAVRT.DSS28db" target="_top" title="subclass for the DSS&#45;28 EAC database" alt="" coords="183,152,263,177"/>
+<area shape="rect" id="node2" href="api/Data_Reduction.GAVRT.plotter.DBPlotter.html#Data_Reduction.GAVRT.plotter.DBPlotter" target="_top" title="Database class with plotting capability." alt="" coords="328,152,412,177"/>
+<area shape="rect" id="node4" href="api/Data_Reduction.GriddingMixin.html#Data_Reduction.GriddingMixin" target="_top" title="Class for all the data and methods associated with a raster scan map" alt="" coords="5,103,117,128"/>
+<area shape="rect" id="node6" href="api/Data_Reduction.Observation.html#Data_Reduction.Observation" target="_top" title="superclass for a data structure and methods" alt="" coords="172,103,273,128"/>
+<area shape="rect" id="node5" href="api/Data_Reduction.GAVRT.Map.html#Data_Reduction.GAVRT.Map" target="_top" title="Class for all the data and methods associated with a raster scan map" alt="" coords="334,103,406,128"/>
+<area shape="rect" id="node7" href="api/Data_Reduction.GAVRT.plotter.MapPlotter.html#Data_Reduction.GAVRT.plotter.MapPlotter" target="_top" title="MapPlotter" alt="" coords="460,103,552,128"/>
+<area shape="rect" id="node8" href="api/Data_Reduction.Session.html#Data_Reduction.Session" target="_top" title="Base class for an observing session on a given year and DOY" alt="" coords="25,29,97,55"/>
+<area shape="rect" id="node9" href="api/Data_Reduction.GAVRT.plotter.SessionPlotter.html#Data_Reduction.GAVRT.plotter.SessionPlotter" target="_top" title="Class to add plotting capability to a Session object" alt="" coords="165,29,280,55"/>
+</map>

@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>RSData &#8212; Data_Reduction 0.9 documentation</title>
@@ -14,9 +14,7 @@
     <script src="../_static/doctools.js"></script>
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="find_STATS_bin_block_times" href="Data_Reduction.DSN.STATS.find_STATS_bin_block_times.html" />
-    <link rel="prev" title="readHeaders" href="Data_Reduction.DSN.OLSR.readHeaders.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -27,23 +25,11 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.DSN.STATS.find_STATS_bin_block_times.html" title="find_STATS_bin_block_times"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.DSN.OLSR.readHeaders.html" title="readHeaders"
-             accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="Data_Reduction.DSN.OLSR.readHeaders.html"
-                        title="previous chapter">readHeaders</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="Data_Reduction.DSN.STATS.find_STATS_bin_block_times.html"
-                        title="next chapter">find_STATS_bin_block_times</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -71,145 +57,6 @@
             
   <div class="section" id="rsdata">
 <h1>RSData<a class="headerlink" href="#rsdata" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
-<dt id="Data_Reduction.DSN.RSData.RSData">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.DSN.RSData.</code><code class="sig-name descname">RSData</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.RSData.RSData" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>class to read and convert data in radio science recorder data files</p>
-<p class="rubric">Attributes Summary</p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.DSN.RSData.RSData.headerFormats" title="Data_Reduction.DSN.RSData.RSData.headerFormats"><code class="xref py py-obj docutils literal notranslate"><span class="pre">headerFormats</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.DSN.RSData.RSData.headerSize" title="Data_Reduction.DSN.RSData.RSData.headerSize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">headerSize</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Methods Summary</p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.DSN.RSData.RSData.checkFormat" title="Data_Reduction.DSN.RSData.RSData.checkFormat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">checkFormat</span></code></a>()</p></td>
-<td><p>check the file format</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.DSN.RSData.RSData.data2float" title="Data_Reduction.DSN.RSData.RSData.data2float"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data2float</span></code></a>(data)</p></td>
-<td><p>data sample to float</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.DSN.RSData.RSData.data2int" title="Data_Reduction.DSN.RSData.RSData.data2int"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data2int</span></code></a>(data)</p></td>
-<td><p>data sample to integer</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.DSN.RSData.RSData.exit" title="Data_Reduction.DSN.RSData.RSData.exit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exit</span></code></a>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.DSN.RSData.RSData.finish" title="Data_Reduction.DSN.RSData.RSData.finish"><code class="xref py py-obj docutils literal notranslate"><span class="pre">finish</span></code></a>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.DSN.RSData.RSData.quit" title="Data_Reduction.DSN.RSData.RSData.quit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quit</span></code></a>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.DSN.RSData.RSData.readHeader" title="Data_Reduction.DSN.RSData.RSData.readHeader"><code class="xref py py-obj docutils literal notranslate"><span class="pre">readHeader</span></code></a>([record])</p></td>
-<td><p>get the header</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.DSN.RSData.RSData.timeOfRecord" title="Data_Reduction.DSN.RSData.RSData.timeOfRecord"><code class="xref py py-obj docutils literal notranslate"><span class="pre">timeOfRecord</span></code></a>()</p></td>
-<td><p>convert time in header to people format</p></td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Attributes Documentation</p>
-<dl class="py attribute">
-<dt id="Data_Reduction.DSN.RSData.RSData.headerFormats">
-<code class="sig-name descname">headerFormats</code><em class="property"> = {'RDEF': {'AGENCY_FLAG': {'Size': 2, 'Type': 'UNSIGNED INTEGER'}, 'CHANNEL_ACCUMULATED_PHASE': {'Size': 8, 'Type': 'FLOATING POINT'}, 'CHANNEL_NUMBER': {'Size': 1, 'Type': 'UNSIGNED INTEGER'}, 'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT0': {'Size': 8, 'Type': 'FLOATING POINT'}, 'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT1': {'Size': 8, 'Type': 'FLOATING POINT'}, 'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT2': {'Size': 8, 'Type': 'FLOATING POINT'}, 'CHANNEL_PHASE_POLYNOMIAL_COEFFICIENT3': {'Size': 8, 'Type': 'FLOATING POINT'}, 'CHANNEL_POWER_CALIBRATION_FACTOR': {'Size': 4, 'Type': 'FLOATING POINT'}, 'DOWNLINK_BAND': {'Size': 1, 'Type': 'UNSIGNED INTEGER'}, 'EMPTY_FIELDS1': {'Size': 36, 'Type': 'EMPTY'}, 'EMPTY_FIELDS2': {'Size': 19, 'Type': 'EMPTY'}, 'END_LABEL': {'Size': 4, 'Type': 'UNSIGNED INTEGER'}, 'IF_TO_CHANNEL_DOWNCONV': {'Size': 8, 'Type': 'FLOATING POINT'}, 'OLR_ID': {'Size': 1, 'Type': 'UNSIGNED INTEGER'}, 'OLR_SOFTWARE_VERSION': {'Size': 1, 'Type': 'UNSIGNED INTEGER'}, 'PREDICT_PASS_NUMBER': {'Size': 2, 'Type': 'UNSIGNED INTEGER'}, 'RECORD_LABEL': {'Size': 4, 'Type': 'CHARACTER'}, 'RECORD_LENGTH': {'Size': 4, 'Type': 'UNSIGNED INTEGER'}, 'RECORD_VERSION_ID': {'Size': 2, 'Type': 'UNSIGNED INTEGER'}, 'RF_TO_IF_DOWNCONV': {'Size': 8, 'Type': 'FLOATING POINT'}, 'SAMPLE_RATE': {'Size': 4, 'Type': 'UNSIGNED INTEGER'}, 'SAMPLE_SIZE': {'Size': 2, 'Type': 'UNSIGNED INTEGER'}, 'SPACECRAFT_ID': {'Size': 2, 'Type': 'UNSIGNED INTEGER'}, 'STATION_ID': {'Size': 2, 'Type': 'UNSIGNED INTEGER'}, 'TIMETAG_PICOSECONDS_OF_THE_SECOND': {'Size': 8, 'Type': 'FLOATING POINT'}, 'TIME_TAG_DOY': {'Size': 2, 'Type': 'UNSIGNED INTEGER'}, 'TIME_TAG_SECOND_OF_DAY': {'Size': 4, 'Type': 'UNSIGNED INTEGER'}, 'TIME_TAG_YEAR': {'Size': 2, 'Type': 'UNSIGNED INTEGER'}, 'TOTAL_FREQUENCY_OFFSET': {'Size': 8, 'Type': 'FLOATING POINT'}, 'TRACK_MODE': {'Size': 1, 'Type': 'UNSIGNED INTEGER'}, 'UPLINK_BAND': {'Size': 1, 'Type': 'UNSIGNED INTEGER'}, 'UPLINK_DSS_ID': {'Size': 1, 'Type': 'UNSIGNED INTEGER'}, 'VALIDITY_FLAG': {'Size': 2, 'Type': 'UNSIGNED INTEGER'}}}</em><a class="headerlink" href="#Data_Reduction.DSN.RSData.RSData.headerFormats" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="Data_Reduction.DSN.RSData.RSData.headerSize">
-<code class="sig-name descname">headerSize</code><em class="property"> = {'RDEF': 176}</em><a class="headerlink" href="#Data_Reduction.DSN.RSData.RSData.headerSize" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<p class="rubric">Methods Documentation</p>
-<dl class="py method">
-<dt id="Data_Reduction.DSN.RSData.RSData.checkFormat">
-<code class="sig-name descname">checkFormat</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.RSData.RSData.checkFormat" title="Permalink to this definition">¶</a></dt>
-<dd><p>check the file format</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.DSN.RSData.RSData.data2float">
-<code class="sig-name descname">data2float</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.RSData.RSData.data2float" title="Permalink to this definition">¶</a></dt>
-<dd><p>data sample to float</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.DSN.RSData.RSData.data2int">
-<code class="sig-name descname">data2int</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.RSData.RSData.data2int" title="Permalink to this definition">¶</a></dt>
-<dd><p>data sample to integer</p>
-<p>The digitizer only tests for &gt; or &lt; some level. This makes a 1s-complement
-notation preferred.  The -0 value is avoided. &gt;0 is represented as 00000000
-and &lt;0 by 11111111.  So then:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">11</span><span class="p">]:</span> <span class="n">bin2sint</span><span class="p">(</span><span class="s1">&#39;00000000&#39;</span><span class="p">)</span>
-<span class="n">Out</span><span class="p">[</span><span class="mi">11</span><span class="p">]:</span> <span class="mi">1</span>
-<span class="n">In</span> <span class="p">[</span><span class="mi">12</span><span class="p">]:</span> <span class="n">bin2sint</span><span class="p">(</span><span class="s1">&#39;11111111&#39;</span><span class="p">)</span>
-<span class="n">Out</span><span class="p">[</span><span class="mi">12</span><span class="p">]:</span> <span class="o">-</span><span class="mi">1</span>
-
-<span class="n">In</span> <span class="p">[</span><span class="mi">13</span><span class="p">]:</span> <span class="n">bin2sint</span><span class="p">(</span><span class="s1">&#39;00000001&#39;</span><span class="p">)</span>
-<span class="n">Out</span><span class="p">[</span><span class="mi">13</span><span class="p">]:</span> <span class="mi">3</span>
-<span class="n">In</span> <span class="p">[</span><span class="mi">14</span><span class="p">]:</span> <span class="n">bin2sint</span><span class="p">(</span><span class="s1">&#39;11111110&#39;</span><span class="p">)</span>
-<span class="n">Out</span><span class="p">[</span><span class="mi">14</span><span class="p">]:</span> <span class="o">-</span><span class="mi">3</span>
-
-<span class="n">In</span> <span class="p">[</span><span class="mi">15</span><span class="p">]:</span> <span class="n">bin2sint</span><span class="p">(</span><span class="s1">&#39;00000011&#39;</span><span class="p">)</span>
-<span class="n">Out</span><span class="p">[</span><span class="mi">15</span><span class="p">]:</span> <span class="mi">7</span>
-<span class="n">In</span> <span class="p">[</span><span class="mi">16</span><span class="p">]:</span> <span class="n">bin2sint</span><span class="p">(</span><span class="s1">&#39;11111100&#39;</span><span class="p">)</span>
-<span class="n">Out</span><span class="p">[</span><span class="mi">16</span><span class="p">]:</span> <span class="o">-</span><span class="mi">7</span>
-
-<span class="n">In</span> <span class="p">[</span><span class="mi">17</span><span class="p">]:</span> <span class="n">bin2sint</span><span class="p">(</span><span class="s1">&#39;10000000&#39;</span><span class="p">)</span>
-<span class="n">Out</span><span class="p">[</span><span class="mi">17</span><span class="p">]:</span> <span class="o">-</span><span class="mi">255</span>
-<span class="n">In</span> <span class="p">[</span><span class="mi">18</span><span class="p">]:</span> <span class="n">bin2sint</span><span class="p">(</span><span class="s1">&#39;01111111&#39;</span><span class="p">)</span>
-<span class="n">Out</span><span class="p">[</span><span class="mi">18</span><span class="p">]:</span> <span class="mi">255</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.DSN.RSData.RSData.exit">
-<code class="sig-name descname">exit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.RSData.RSData.exit" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.DSN.RSData.RSData.finish">
-<code class="sig-name descname">finish</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.RSData.RSData.finish" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.DSN.RSData.RSData.quit">
-<code class="sig-name descname">quit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.RSData.RSData.quit" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.DSN.RSData.RSData.readHeader">
-<code class="sig-name descname">readHeader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">record</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.RSData.RSData.readHeader" title="Permalink to this definition">¶</a></dt>
-<dd><p>get the header</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.DSN.RSData.RSData.timeOfRecord">
-<code class="sig-name descname">timeOfRecord</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.RSData.RSData.timeOfRecord" title="Permalink to this definition">¶</a></dt>
-<dd><p>convert time in header to people format</p>
-<p>Note that the default way of displaying a datetime object is without the
-fractional seconds, and to the nearest integer microsecond if using
-<code class="docutils literal notranslate"><span class="pre">strftime()</span></code>. So anything less than 500,000 ps will be seen as 0.</p>
-</dd></dl>
-
-</dd></dl>
-
 </div>
 
 
@@ -227,18 +74,12 @@ fractional seconds, and to the nearest integer microsecond if using
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.DSN.STATS.find_STATS_bin_block_times.html" title="find_STATS_bin_block_times"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="Data_Reduction.DSN.OLSR.readHeaders.html" title="readHeaders"
-             >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, Tom Kuiper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>

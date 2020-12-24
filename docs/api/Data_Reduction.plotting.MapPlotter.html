@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>MapPlotter &#8212; Data_Reduction 0.9 documentation</title>
@@ -15,7 +15,7 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="backup_one_line" href="Data_Reduction.DSN.backup_one_line.html" />
+    <link rel="next" title="get_file_metadata" href="Data_Reduction.DSN.get_file_metadata.html" />
     <link rel="prev" title="Spectrum" href="Data_Reduction.Spectrum.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -28,7 +28,7 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.DSN.backup_one_line.html" title="backup_one_line"
+          <a href="Data_Reduction.DSN.get_file_metadata.html" title="get_file_metadata"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="Data_Reduction.Spectrum.html" title="Spectrum"
@@ -42,8 +42,8 @@
   <p class="topless"><a href="Data_Reduction.Spectrum.html"
                         title="previous chapter">Spectrum</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="Data_Reduction.DSN.backup_one_line.html"
-                        title="next chapter">backup_one_line</a></p>
+  <p class="topless"><a href="Data_Reduction.DSN.get_file_metadata.html"
+                        title="next chapter">get_file_metadata</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -71,10 +71,10 @@
             
   <div class="section" id="mapplotter">
 <h1>MapPlotter<a class="headerlink" href="#mapplotter" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
+<dl class="class">
 <dt id="Data_Reduction.plotting.MapPlotter">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.plotting.</code><code class="sig-name descname">MapPlotter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mapobj</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.plotting.MapPlotter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.plotting.</code><code class="sig-name descname">MapPlotter</code><span class="sig-paren">(</span><em class="sig-param">mapobj</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.plotting.MapPlotter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p class="rubric">Methods Summary</p>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -97,37 +97,37 @@
 </tbody>
 </table>
 <p class="rubric">Methods Documentation</p>
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.plotting.MapPlotter.contours">
-<code class="sig-name descname">contours</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">chnl</span></em>, <em class="sig-param"><span class="n">width</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">contours</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.plotting.MapPlotter.contours" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">contours</code><span class="sig-paren">(</span><em class="sig-param">chnl</em>, <em class="sig-param">width=None</em>, <em class="sig-param">height=None</em>, <em class="sig-param">contours=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.plotting.MapPlotter.contours" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make contour maps; this calls ‘regrid’ if necessary</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>chnl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – required signal channel name</p></li>
-<li><p><strong>width</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – optional, defaults to data cross-dec range</p></li>
-<li><p><strong>height</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – optional, defaults to data dec range</p></li>
-<li><p><strong>contours</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em> or </em><em>list of int</em>) – number of contours or contour levels</p></li>
+<li><p><strong>chnl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – required signal channel name</p></li>
+<li><p><strong>width</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – optional, defaults to data cross-dec range</p></li>
+<li><p><strong>height</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – optional, defaults to data dec range</p></li>
+<li><p><strong>contours</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em> or </em><em>list of int</em>) – number of contours or contour levels</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.plotting.MapPlotter.plot_azel">
-<code class="sig-name descname">plot_azel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">title_str</span><span class="o">=</span><span class="default_value">'Horizontal Positions'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.plotting.MapPlotter.plot_azel" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plot_azel</code><span class="sig-paren">(</span><em class="sig-param">title_str='Horizontal Positions'</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.plotting.MapPlotter.plot_azel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot elevation vs azimuth</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.plotting.MapPlotter.plot_ra_dec">
-<code class="sig-name descname">plot_ra_dec</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">J2000</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">title_str</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.plotting.MapPlotter.plot_ra_dec" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plot_ra_dec</code><span class="sig-paren">(</span><em class="sig-param">J2000=False</em>, <em class="sig-param">title_str=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.plotting.MapPlotter.plot_ra_dec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot declination vs right ascension</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.plotting.MapPlotter.plot_xdec_dec">
-<code class="sig-name descname">plot_xdec_dec</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">title_str</span><span class="o">=</span><span class="default_value">'Offsets'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.plotting.MapPlotter.plot_xdec_dec" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plot_xdec_dec</code><span class="sig-paren">(</span><em class="sig-param">title_str='Offsets'</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.plotting.MapPlotter.plot_xdec_dec" title="Permalink to this definition">¶</a></dt>
 <dd><p>plots the xdec and dec positions at which data were taken</p>
 <p>These data come from table ‘raster’. These should agree with the grid
 points computed for the channel selected for the Z-plot realtime display.
@@ -157,7 +157,7 @@ compute ‘RA’ and ‘dec’ and then ‘center_map’ can generate relative o
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.DSN.backup_one_line.html" title="backup_one_line"
+          <a href="Data_Reduction.DSN.get_file_metadata.html" title="get_file_metadata"
              >next</a> |</li>
         <li class="right" >
           <a href="Data_Reduction.Spectrum.html" title="Spectrum"
@@ -167,7 +167,7 @@ compute ‘RA’ and ‘dec’ and then ‘center_map’ can generate relative o
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, Tom Kuiper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>

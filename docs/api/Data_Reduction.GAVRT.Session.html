@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>Session &#8212; Data_Reduction 0.9 documentation</title>
@@ -71,9 +71,9 @@
             
   <div class="section" id="session">
 <h1>Session<a class="headerlink" href="#session" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
+<dl class="class">
 <dt id="Data_Reduction.GAVRT.Session">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.</code><code class="sig-name descname">Session</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="n">year</span></em>, <em class="sig-param"><span class="n">doy</span></em>, <em class="sig-param"><span class="n">plotter</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.</code><code class="sig-name descname">Session</code><span class="sig-paren">(</span><em class="sig-param">parent</em>, <em class="sig-param">year</em>, <em class="sig-param">doy</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="Data_Reduction.Session.html#Data_Reduction.Session" title="Data_Reduction.Session"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.Session</span></code></a></p>
 <p>Class for an observing session on a given year and DOY</p>
 <p>Public Attributes:</p>
@@ -132,7 +132,7 @@
 <td><p>Returns maps from the raster configuration IDs for the specified date</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.Session.get_session_dir" title="Data_Reduction.GAVRT.Session.get_session_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_session_dir</span></code></a>()</p></td>
-<td><p>find or make the sessions directory</p></td>
+<td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.GAVRT.Session.list_maps" title="Data_Reduction.GAVRT.Session.list_maps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_maps</span></code></a>([save])</p></td>
 <td><p></p></td>
@@ -150,13 +150,13 @@
 </tbody>
 </table>
 <p class="rubric">Methods Documentation</p>
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.Session.get_boresights">
 <code class="sig-name descname">get_boresights</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.get_boresights" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns boresights from the xpwr configurations</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.Session.get_good_boresights">
 <code class="sig-name descname">get_good_boresights</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.get_good_boresights" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieves data from ‘tlog’ table for boresights with a given channel</p>
@@ -172,56 +172,46 @@
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.Session.get_map_IDs">
 <code class="sig-name descname">get_map_IDs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.get_map_IDs" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.Session.get_maps">
-<code class="sig-name descname">get_maps</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">map_IDs</span><span class="o">=</span><span class="default_value">[]</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.get_maps" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_maps</code><span class="sig-paren">(</span><em class="sig-param">map_IDs=[]</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.get_maps" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns maps from the raster configuration IDs for the specified date</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.Session.get_session_dir">
 <code class="sig-name descname">get_session_dir</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.get_session_dir" title="Permalink to this definition">¶</a></dt>
-<dd><p>find or make the sessions directory</p>
-<p>Either <cite>dss</cite> or <cite>path</cite> must be given.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dss</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – </p></li>
-<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="Data_Reduction.GAVRT.Session.list_maps">
-<code class="sig-name descname">list_maps</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">save</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.list_maps" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
+<dl class="method">
+<dt id="Data_Reduction.GAVRT.Session.list_maps">
+<code class="sig-name descname">list_maps</code><span class="sig-paren">(</span><em class="sig-param">save=False</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.list_maps" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.Session.make_bs_dir">
-<code class="sig-name descname">make_bs_dir</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">good_only</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">save</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.make_bs_dir" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">make_bs_dir</code><span class="sig-paren">(</span><em class="sig-param">good_only=False</em>, <em class="sig-param">save=False</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.make_bs_dir" title="Permalink to this definition">¶</a></dt>
 <dd><p class="rubric">Notes</p>
 <p>Each good boresight consists of two scans</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.Session.save_map_data">
-<code class="sig-name descname">save_map_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mapkeys</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.save_map_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">save_map_data</code><span class="sig-paren">(</span><em class="sig-param">mapkeys=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.save_map_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>create a dict with the map data from the designated images</p>
 <p>This speeds up retrieval of images</p>
 <p>:param mapkeys : numbers of the maps (default: all)
 :type  mapkeys : list of int</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.Session.summary">
-<code class="sig-name descname">summary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">save</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.summary" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">summary</code><span class="sig-paren">(</span><em class="sig-param">save=False</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Session.summary" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -254,7 +244,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, Tom Kuiper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>

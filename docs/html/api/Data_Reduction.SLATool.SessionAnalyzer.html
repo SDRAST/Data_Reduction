@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>SessionAnalyzer &#8212; Data_Reduction 0.9 documentation</title>
@@ -16,7 +16,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Spectrum" href="Data_Reduction.SLATool.Spectrum.html" />
-    <link rel="prev" title="test" href="Data_Reduction.hyperfine_fit.test.html" /> 
+    <link rel="prev" title="show_body_orientation" href="Data_Reduction.maps.show_body_orientation.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -31,7 +31,7 @@
           <a href="Data_Reduction.SLATool.Spectrum.html" title="Spectrum"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.hyperfine_fit.test.html" title="test"
+          <a href="Data_Reduction.maps.show_body_orientation.html" title="show_body_orientation"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
@@ -39,8 +39,8 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="Data_Reduction.hyperfine_fit.test.html"
-                        title="previous chapter">test</a></p>
+  <p class="topless"><a href="Data_Reduction.maps.show_body_orientation.html"
+                        title="previous chapter">show_body_orientation</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="Data_Reduction.SLATool.Spectrum.html"
                         title="next chapter">Spectrum</a></p>
@@ -71,10 +71,10 @@
             
   <div class="section" id="sessionanalyzer">
 <h1>SessionAnalyzer<a class="headerlink" href="#sessionanalyzer" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
+<dl class="class">
 <dt id="Data_Reduction.SLATool.SessionAnalyzer">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.SLATool.</code><code class="sig-name descname">SessionAnalyzer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">year</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">DOY</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLATool.SessionAnalyzer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.SLATool.</code><code class="sig-name descname">SessionAnalyzer</code><span class="sig-paren">(</span><em class="sig-param">project=None</em>, <em class="sig-param">dss=None</em>, <em class="sig-param">year=None</em>, <em class="sig-param">DOY=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLATool.SessionAnalyzer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Tool for reducing multiple data reduction sessions</p>
 <dl class="simple">
 <dt>Attributes::</dt><dd><p>datapath
@@ -126,9 +126,9 @@ In [3]: x, sum_y, sum_Tsys, sum_intgr = sa.get_average()</p>
 </tbody>
 </table>
 <p class="rubric">Methods Documentation</p>
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.SLATool.SessionAnalyzer.Tsys_scaling">
-<code class="sig-name descname">Tsys_scaling</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">weather_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">examiner_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Tatm</span><span class="o">=</span><span class="default_value">250</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLATool.SessionAnalyzer.Tsys_scaling" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">Tsys_scaling</code><span class="sig-paren">(</span><em class="sig-param">weather_data=None</em>, <em class="sig-param">examiner_keys=None</em>, <em class="sig-param">Tatm=250</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLATool.SessionAnalyzer.Tsys_scaling" title="Permalink to this definition">¶</a></dt>
 <dd><p>factors to rescale the system powers or temperatures to K based on FE noise</p>
 <p>:param weather_data : consolidated environmental data
 :type  weather_data : dict</p>
@@ -138,9 +138,9 @@ In [3]: x, sum_y, sum_Tsys, sum_intgr = sa.get_average()</p>
 :type  Tatm : float</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.SLATool.SessionAnalyzer.fit_Tsys_to_airmass">
-<code class="sig-name descname">fit_Tsys_to_airmass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">weather_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">examiner_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Tatm</span><span class="o">=</span><span class="default_value">250</span></em>, <em class="sig-param"><span class="n">linear</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLATool.SessionAnalyzer.fit_Tsys_to_airmass" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">fit_Tsys_to_airmass</code><span class="sig-paren">(</span><em class="sig-param">weather_data=None</em>, <em class="sig-param">examiner_keys=None</em>, <em class="sig-param">Tatm=250</em>, <em class="sig-param">linear=True</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLATool.SessionAnalyzer.fit_Tsys_to_airmass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit tipping curve data implicit in sessions elev and Tsys data</p>
 <p>Returns numpy arrays with indices for sig/ref state, subchannel, beam, IF.
 The first returned value is the zero airmass intercept and the second its
@@ -155,17 +155,17 @@ standard deviation.  The second returned value is K/airmass</p>
 :type  linear : True</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.SLATool.SessionAnalyzer.get_average">
-<code class="sig-name descname">get_average</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">source</span><span class="o">=</span><span class="default_value">'67P_CG_201'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLATool.SessionAnalyzer.get_average" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_average</code><span class="sig-paren">(</span><em class="sig-param">source='67P_CG_201'</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLATool.SessionAnalyzer.get_average" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes average spectrum for a source in the session</p>
 <p>Prints r.m.s. noise for each dataset and all datasets together</p>
 <p>:param source : source for which averaging is done</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.SLATool.SessionAnalyzer.get_good_weather_data">
-<code class="sig-name descname">get_good_weather_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">examiner_keys</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLATool.SessionAnalyzer.get_good_weather_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_good_weather_data</code><span class="sig-paren">(</span><em class="sig-param">examiner_keys=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLATool.SessionAnalyzer.get_good_weather_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get data from specific datasets for analyzing environmental conditions.</p>
 <p>Returns a dict with keys ‘TAMBIENT’, ‘WINDDIRE’, ‘UNIXtime’, ‘TSYS’,
 ‘HUMIDITY’, ‘PRESSURE’, ‘ELEVATIO’, ‘WINDSPEE’.  The data asociated with
@@ -180,28 +180,28 @@ The ‘TSYS’ array has four axes representing:</p>
 <p>The other keys have only a time axis.</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.SLATool.SessionAnalyzer.get_sources">
 <code class="sig-name descname">get_sources</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLATool.SessionAnalyzer.get_sources" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets a list of sources from all the datasets in the session</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.SLATool.SessionAnalyzer.make_session_names">
 <code class="sig-name descname">make_session_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLATool.SessionAnalyzer.make_session_names" title="Permalink to this definition">¶</a></dt>
 <dd><p>creates the directory path to the data from the session</p>
 <p>It is crafted from the name of the first FITS file</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.SLATool.SessionAnalyzer.open_datafiles">
-<code class="sig-name descname">open_datafiles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">datafiles</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLATool.SessionAnalyzer.open_datafiles" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">open_datafiles</code><span class="sig-paren">(</span><em class="sig-param">datafiles</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLATool.SessionAnalyzer.open_datafiles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Opens the files for the session in /usr/local/RA_data/FITS</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.SLATool.SessionAnalyzer.rescale_Tsys">
-<code class="sig-name descname">rescale_Tsys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gain</span></em>, <em class="sig-param"><span class="n">siggain</span></em>, <em class="sig-param"><span class="n">Kpam</span></em>, <em class="sig-param"><span class="n">sigKpam</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLATool.SessionAnalyzer.rescale_Tsys" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">rescale_Tsys</code><span class="sig-paren">(</span><em class="sig-param">gain</em>, <em class="sig-param">siggain</em>, <em class="sig-param">Kpam</em>, <em class="sig-param">sigKpam</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.SLATool.SessionAnalyzer.rescale_Tsys" title="Permalink to this definition">¶</a></dt>
 <dd><p>rescale system temperatures from tipping curve fits</p>
 </dd></dl>
 
@@ -228,14 +228,14 @@ The ‘TSYS’ array has four axes representing:</p>
           <a href="Data_Reduction.SLATool.Spectrum.html" title="Spectrum"
              >next</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.hyperfine_fit.test.html" title="test"
+          <a href="Data_Reduction.maps.show_body_orientation.html" title="show_body_orientation"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, Tom Kuiper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>

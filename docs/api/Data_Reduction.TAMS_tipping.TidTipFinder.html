@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>TidTipFinder &#8212; Data_Reduction 0.9 documentation</title>
@@ -71,10 +71,10 @@
             
   <div class="section" id="tidtipfinder">
 <h1>TidTipFinder<a class="headerlink" href="#tidtipfinder" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
+<dl class="class">
 <dt id="Data_Reduction.TAMS_tipping.TidTipFinder">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.TAMS_tipping.</code><code class="sig-name descname">TidTipFinder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">43</span></em>, <em class="sig-param"><span class="n">remote</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.TAMS_tipping.TidTipFinder" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.TAMS_tipping.</code><code class="sig-name descname">TidTipFinder</code><span class="sig-paren">(</span><em class="sig-param">dss=43</em>, <em class="sig-param">remote=True</em>, <em class="sig-param">date=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.TAMS_tipping.TidTipFinder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <dl class="simple">
 <dt>Attributes::</dt><dd><p>am
 directory
@@ -105,21 +105,21 @@ tsys</p>
 </tbody>
 </table>
 <p class="rubric">Methods Documentation</p>
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.TAMS_tipping.TidTipFinder.get_session_files">
-<code class="sig-name descname">get_session_files</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.TAMS_tipping.TidTipFinder.get_session_files" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_session_files</code><span class="sig-paren">(</span><em class="sig-param">date</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.TAMS_tipping.TidTipFinder.get_session_files" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the files for the specified data</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.TAMS_tipping.TidTipFinder.get_tipping_data">
-<code class="sig-name descname">get_tipping_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.TAMS_tipping.TidTipFinder.get_tipping_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_tipping_data</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.TAMS_tipping.TidTipFinder.get_tipping_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets tipping data from a file made with observatoryCtrl</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.TAMS_tipping.TidTipFinder.plot_elevations">
-<code class="sig-name descname">plot_elevations</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span></em>, <em class="sig-param"><span class="n">tipfiles</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.TAMS_tipping.TidTipFinder.plot_elevations" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plot_elevations</code><span class="sig-paren">(</span><em class="sig-param">index</em>, <em class="sig-param">tipfiles=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.TAMS_tipping.TidTipFinder.plot_elevations" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plots tipping curve data from a specified file</p>
 <p>:param tipfiles : dict keyed on filename with file times
 :type  tipfiles : dict</p>
@@ -127,9 +127,9 @@ tsys</p>
 :type  index : int</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.TAMS_tipping.TidTipFinder.sort_by_time">
-<code class="sig-name descname">sort_by_time</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name_template</span><span class="o">=</span><span class="default_value">'tipping_data'</span></em>, <em class="sig-param"><span class="n">subdir</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.TAMS_tipping.TidTipFinder.sort_by_time" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">sort_by_time</code><span class="sig-paren">(</span><em class="sig-param">name_template='tipping_data'</em>, <em class="sig-param">subdir=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.TAMS_tipping.TidTipFinder.sort_by_time" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a time-ordered dict of tipping files with UNIX times as keys</p>
 <p>:param directory : where the files are
 :type  directory : str</p>
@@ -172,7 +172,7 @@ tsys</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, Tom Kuiper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>

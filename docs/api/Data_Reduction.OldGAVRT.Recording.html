@@ -1,0 +1,156 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Recording &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="plot_tsys" href="Data_Reduction.OldGAVRT.plotting.plot_tsys.html" />
+    <link rel="prev" title="Observation" href="Data_Reduction.OldGAVRT.Observation.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.OldGAVRT.plotting.plot_tsys.html" title="plot_tsys"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.OldGAVRT.Observation.html" title="Observation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.OldGAVRT.Observation.html"
+                        title="previous chapter">Observation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.OldGAVRT.plotting.plot_tsys.html"
+                        title="next chapter">plot_tsys</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.OldGAVRT.Recording.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="recording">
+<h1>Recording<a class="headerlink" href="#recording" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="Data_Reduction.OldGAVRT.Recording">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.OldGAVRT.</code><code class="sig-name descname">Recording</code><span class="sig-paren">(</span><em class="sig-param">session</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.OldGAVRT.Recording" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Data_Reduction.Recording.html#Data_Reduction.Recording" title="Data_Reduction.Recording"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.Recording</span></code></a></p>
+<p>This can later be subclassed, when I’ve worked out the common attributes of
+all recordings.</p>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.OldGAVRT.Recording.extract_data_from_recording" title="Data_Reduction.OldGAVRT.Recording.extract_data_from_recording"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_data_from_recording</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.OldGAVRT.Recording.load_tfile_data" title="Data_Reduction.OldGAVRT.Recording.load_tfile_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_tfile_data</span></code></a>(path[, start, stop, dss])</p></td>
+<td><p>Load data from a GAVRT t-file</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="method">
+<dt id="Data_Reduction.OldGAVRT.Recording.extract_data_from_recording">
+<code class="sig-name descname">extract_data_from_recording</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.OldGAVRT.Recording.extract_data_from_recording" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Data_Reduction.OldGAVRT.Recording.load_tfile_data">
+<code class="sig-name descname">load_tfile_data</code><span class="sig-paren">(</span><em class="sig-param">path</em>, <em class="sig-param">start=None</em>, <em class="sig-param">stop=None</em>, <em class="sig-param">dss=28</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.OldGAVRT.Recording.load_tfile_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load data from a GAVRT t-file</p>
+<p>:param filename : name of data file (t.YYDDD.C)
+:type  filename : str</p>
+<p>:param start : optional start time, default: beginning of file
+:type  start : datetime</p>
+<p>:param stop : optional stop time, default: end of file
+:type  stop : datetime</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(indexed numpy data array,
+column labels for data array,
+list of date numbers, one for each row,
+list of right ascensions (hrs), one for each row,
+list of declinations (degs),
+list of Tsys counts (kHz))</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.OldGAVRT.plotting.plot_tsys.html" title="plot_tsys"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.OldGAVRT.Observation.html" title="Observation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
+    </div>
+  </body>
+</html>

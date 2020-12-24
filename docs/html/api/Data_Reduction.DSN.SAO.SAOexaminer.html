@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>SAOexaminer &#8212; Data_Reduction 0.9 documentation</title>
@@ -71,10 +71,10 @@
             
   <div class="section" id="saoexaminer">
 <h1>SAOexaminer<a class="headerlink" href="#saoexaminer" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
+<dl class="class">
 <dt id="Data_Reduction.DSN.SAO.SAOexaminer">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.DSN.SAO.</code><code class="sig-name descname">SAOexaminer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.DSN.SAO.</code><code class="sig-name descname">SAOexaminer</code><span class="sig-paren">(</span><em class="sig-param">project=None</em>, <em class="sig-param">dss=None</em>, <em class="sig-param">date=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Class for examining SAOdataset objects</p>
 <p class="rubric">Methods Summary</p>
 <table class="longtable docutils align-default">
@@ -104,9 +104,9 @@
 </tbody>
 </table>
 <p class="rubric">Methods Documentation</p>
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.DSN.SAO.SAOexaminer.beam_switched_average">
-<code class="sig-name descname">beam_switched_average</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'LINE-PBSW'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer.beam_switched_average" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">beam_switched_average</code><span class="sig-paren">(</span><em class="sig-param">index=None</em>, <em class="sig-param">mode='LINE-PBSW'</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer.beam_switched_average" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns pol average spectrum and total integration of given dataset(s)</p>
 <p>Also computes the average spectrum and total integration time for each pol
 and accumulates them in the SAOexaminer attributes avg_diff and tau.</p>
@@ -116,15 +116,15 @@ and accumulates them in the SAOexaminer attributes avg_diff and tau.</p>
 :type  mode : str</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.DSN.SAO.SAOexaminer.extract_window">
-<code class="sig-name descname">extract_window</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">xlimits</span></em>, <em class="sig-param"><span class="n">dsetidx</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">frame</span><span class="o">=</span><span class="default_value">'RADI-LSR'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer.extract_window" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">extract_window</code><span class="sig-paren">(</span><em class="sig-param">xlimits</em>, <em class="sig-param">dsetidx=None</em>, <em class="sig-param">frame='RADI-LSR'</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer.extract_window" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extracts a subset of a avg_diff spectrum</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.DSN.SAO.SAOexaminer.get_datasets">
-<code class="sig-name descname">get_datasets</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer.get_datasets" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_datasets</code><span class="sig-paren">(</span><em class="sig-param">project=None</em>, <em class="sig-param">dss=None</em>, <em class="sig-param">date=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer.get_datasets" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads selected datasets and defines additional attributes.</p>
 <p>:param project : the project for which the observations were made
 :type  project : str</p>
@@ -134,9 +134,9 @@ and accumulates them in the SAOexaminer attributes avg_diff and tau.</p>
 :type  data : str</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.DSN.SAO.SAOexaminer.get_obs_dirs">
-<code class="sig-name descname">get_obs_dirs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rawfmt</span><span class="o">=</span><span class="default_value">'HDF5'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer.get_obs_dirs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_obs_dirs</code><span class="sig-paren">(</span><em class="sig-param">project=None</em>, <em class="sig-param">dss=None</em>, <em class="sig-param">date=None</em>, <em class="sig-param">rawfmt='HDF5'</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer.get_obs_dirs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets the directories used for an observing session.</p>
 <p>If the session details are not provided, a menu-based inquiry is made</p>
 <p>The attribute rawdatapath is also computed but not returned.</p>
@@ -150,14 +150,14 @@ and accumulates them in the SAOexaminer attributes avg_diff and tau.</p>
 :type  raw : bool</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.DSN.SAO.SAOexaminer.load_HDF5_files">
-<code class="sig-name descname">load_HDF5_files</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer.load_HDF5_files" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">load_HDF5_files</code><span class="sig-paren">(</span><em class="sig-param">project=None</em>, <em class="sig-param">dss=None</em>, <em class="sig-param">date=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer.load_HDF5_files" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.DSN.SAO.SAOexaminer.load_ephemeris">
-<code class="sig-name descname">load_ephemeris</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sourcename</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer.load_ephemeris" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">load_ephemeris</code><span class="sig-paren">(</span><em class="sig-param">sourcename</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOexaminer.load_ephemeris" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads the ephemeris and returns a spline for the radial velocity with date</p>
 </dd></dl>
 
@@ -191,7 +191,7 @@ and accumulates them in the SAOexaminer attributes avg_diff and tau.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, Tom Kuiper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>

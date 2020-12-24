@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Recording &#8212; Data_Reduction 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Session" href="Data_Reduction.DSN.Malargue.Session.html" />
+    <link rel="prev" title="Observation" href="Data_Reduction.DSN.Malargue.Observation.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.Malargue.Session.html" title="Session"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.Malargue.Observation.html" title="Observation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.Malargue.Observation.html"
+                        title="previous chapter">Observation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Data_Reduction.DSN.Malargue.Session.html"
+                        title="next chapter">Session</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/Data_Reduction.DSN.Malargue.Recording.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="recording">
+<h1>Recording<a class="headerlink" href="#recording" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="Data_Reduction.DSN.Malargue.Recording">
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.DSN.Malargue.</code><code class="sig-name descname">Recording</code><span class="sig-paren">(</span><em class="sig-param">session=None</em>, <em class="sig-param">name=None</em>, <em class="sig-param">dss=84</em>, <em class="sig-param">date=None</em>, <em class="sig-param">project=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.Malargue.Recording" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Data_Reduction.DSN.Recording.html#Data_Reduction.DSN.Recording" title="Data_Reduction.DSN.Recording"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.DSN.Recording</span></code></a></p>
+<p>Metadata and directory for raw data files from DSA-3.</p>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.DSN.Malargue.Recording.parse_obs_file" title="Data_Reduction.DSN.Malargue.Recording.parse_obs_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_obs_file</span></code></a>([filename])</p></td>
+<td><p>Extract metadata from a .obs file</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.DSN.Malargue.Recording.parse_support_report" title="Data_Reduction.DSN.Malargue.Recording.parse_support_report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_support_report</span></code></a>([filename])</p></td>
+<td><p><p class="rubric">Notes</p>
+</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="method">
+<dt id="Data_Reduction.DSN.Malargue.Recording.parse_obs_file">
+<code class="sig-name descname">parse_obs_file</code><span class="sig-paren">(</span><em class="sig-param">filename=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.Malargue.Recording.parse_obs_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract metadata from a .obs file</p>
+<p>An <code class="docutils literal notranslate"><span class="pre">.obs</span></code> file has some preliminary observation followed by a section for
+each <code class="docutils literal notranslate"><span class="pre">scan</span></code>, which might be a map or series of spectra:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#=========================================================================================================</span>
+<span class="c1"># SCAN_NUM  SRC_ID            START_TIME         STOP_TIME                  RA         DEC      TFREQ</span>
+<span class="c1"># --------  ----------------  -----------------  -----------------  ----------  ----------  ----------</span>
+<span class="n">S</span> <span class="mi">001</span>       <span class="o">...</span>               <span class="mi">2020</span><span class="o">-</span><span class="mi">163</span><span class="n">T11</span><span class="p">:</span><span class="mi">44</span><span class="p">:</span><span class="mi">46</span>  <span class="mi">2020</span><span class="o">-</span><span class="mi">163</span><span class="n">T11</span><span class="p">:</span><span class="mi">54</span><span class="p">:</span><span class="mi">49</span>  <span class="mf">999.000000</span>  <span class="mf">999.000000</span>  <span class="mf">31950000000.000000</span>
+<span class="c1"># DATAFILE                               COH_FLAG  DOR_MULT                 FSUB    HARMONIC</span>
+<span class="c1"># -------------------------------------  --------  -----------  ----------------  ----------</span>
+<span class="n">D</span> <span class="n">NET4n001tSsMG12rOPc01</span><span class="o">-</span><span class="mf">20163114446.</span><span class="n">prd</span>  <span class="n">F</span>         <span class="n">xxx</span>              <span class="o">-</span><span class="mf">3.00000e+06</span>           <span class="mi">0</span>
+<span class="n">D</span> <span class="n">NET4n001tSsMG12rOPc02</span><span class="o">-</span><span class="mf">20163114446.</span><span class="n">prd</span>  <span class="n">F</span>         <span class="n">xxx</span>              <span class="o">-</span><span class="mf">1.00000e+06</span>           <span class="mi">0</span>
+<span class="n">D</span> <span class="n">NET4n001tSsMG12rOPc03</span><span class="o">-</span><span class="mf">20163114446.</span><span class="n">prd</span>  <span class="n">F</span>         <span class="n">xxx</span>              <span class="o">+</span><span class="mf">1.00000e+06</span>           <span class="mi">0</span>
+<span class="n">D</span> <span class="n">NET4n001tSsMG12rOPc04</span><span class="o">-</span><span class="mf">20163114446.</span><span class="n">prd</span>  <span class="n">F</span>         <span class="n">xxx</span>              <span class="o">+</span><span class="mf">3.00000e+06</span>           <span class="mi">0</span>
+<span class="n">D</span> <span class="n">NET4n001tSsMG12rOPc05</span><span class="o">-</span><span class="mf">20163114446.</span><span class="n">prd</span>  <span class="n">F</span>         <span class="n">xxx</span>              <span class="o">-</span><span class="mf">3.00000e+06</span>           <span class="mi">0</span>
+<span class="n">D</span> <span class="n">NET4n001tSsMG12rOPc06</span><span class="o">-</span><span class="mf">20163114446.</span><span class="n">prd</span>  <span class="n">F</span>         <span class="n">xxx</span>              <span class="o">-</span><span class="mf">1.00000e+06</span>           <span class="mi">0</span>
+<span class="n">D</span> <span class="n">NET4n001tSsMG12rOPc07</span><span class="o">-</span><span class="mf">20163114446.</span><span class="n">prd</span>  <span class="n">F</span>         <span class="n">xxx</span>              <span class="o">+</span><span class="mf">1.00000e+06</span>           <span class="mi">0</span>
+<span class="n">D</span> <span class="n">NET4n001tSsMG12rOPc08</span><span class="o">-</span><span class="mf">20163114446.</span><span class="n">prd</span>  <span class="n">F</span>         <span class="n">xxx</span>              <span class="o">+</span><span class="mf">3.00000e+06</span>           <span class="mi">0</span>
+<span class="n">Z</span>
+<span class="c1">#=========================================================================================================</span>
+</pre></div>
+</div>
+<p>Lines with usable metedata are keyed with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">D</span> <span class="o">-</span> <span class="n">datafile</span> <span class="ow">and</span> <span class="n">subchannel</span> <span class="n">data</span>
+<span class="n">R</span> <span class="o">-</span> <span class="n">station</span> <span class="mi">1</span>
+<span class="n">S</span> <span class="o">-</span> <span class="n">scan</span>
+<span class="n">T</span> <span class="o">-</span> <span class="n">station</span> <span class="mi">2</span>
+<span class="n">V</span> <span class="o">-</span> <span class="n">version</span>
+<span class="n">Z</span> <span class="o">-</span> <span class="n">end</span> <span class="n">of</span> <span class="n">section</span>
+</pre></div>
+</div>
+<p>If no list of filenames is given, it will take the first one, if there are
+any.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Data_Reduction.DSN.Malargue.Recording.parse_support_report">
+<code class="sig-name descname">parse_support_report</code><span class="sig-paren">(</span><em class="sig-param">filename=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.Malargue.Recording.parse_support_report" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Notes</p>
+<dl class="simple">
+<dt># The metadata may not always fall on the same lines.  This that case,</dt><dd><p>search for “OL Sample Rate”, get its index, and t</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.Malargue.Session.html" title="Session"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data_Reduction.DSN.Malargue.Observation.html" title="Observation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Tom Kuiper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
+    </div>
+  </body>
+</html>

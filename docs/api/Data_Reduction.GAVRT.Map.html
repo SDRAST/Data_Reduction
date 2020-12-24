@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>Map &#8212; Data_Reduction 0.9 documentation</title>
@@ -71,30 +71,32 @@
             
   <div class="section" id="map">
 <h1>Map<a class="headerlink" href="#map" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
+<dl class="class">
 <dt id="Data_Reduction.GAVRT.Map">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.</code><code class="sig-name descname">Map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="n">raster_cfg_id</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Map" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.</code><code class="sig-name descname">Map</code><span class="sig-paren">(</span><em class="sig-param">parent</em>, <em class="sig-param">raster_cfg_id</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Map" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="Data_Reduction.GAVRT.Observation.html#Data_Reduction.GAVRT.Observation" title="Data_Reduction.GAVRT.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.GAVRT.Observation</span></code></a></p>
 <p>Class for all the data and methods associated with a raster scan map</p>
-<dl class="simple">
-<dt>Public attributes::</dt><dd><p>cfg         - raster configuration
-cfg_id      - entry in the raster configuration tableshape
-channels    - list of channels which took tlog data
-map_data    - dict of data from tlog table; ‘tsrc’ is dict keyed on channel
-logger      - logging.Logger object
-name        - map identifier
-raster_data - data from the raster table
-regrid      - computes map data onto a rectangular grid
-rss_cfg     - receiver configuration
-session     - observing session to which this map belongs
-start       - UNIX time at start of map
-end         - UNIX time at end of map</p>
-</dd>
-<dt>Public methods::</dt><dd><p>get_map_config      - returns a dict with the raster map configuration
-get_raster_data     - gets the data for a raster scan map used for Zplot
-get_raster_keys     - returns rasters associated with a given configuration</p>
-</dd>
-</dl>
+<p>Public attributes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span>         <span class="o">-</span> <span class="n">raster</span> <span class="n">configuration</span>
+<span class="n">cfg_id</span>      <span class="o">-</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">raster</span> <span class="n">configuration</span> <span class="n">tableshape</span>
+<span class="n">channels</span>    <span class="o">-</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">channels</span> <span class="n">which</span> <span class="n">took</span> <span class="n">tlog</span> <span class="n">data</span>
+<span class="n">map_data</span>    <span class="o">-</span> <span class="nb">dict</span> <span class="n">of</span> <span class="n">data</span> <span class="kn">from</span> <span class="nn">tlog</span> <span class="n">table</span><span class="p">;</span> <span class="s1">&#39;tsrc&#39;</span> <span class="ow">is</span> <span class="nb">dict</span> <span class="n">keyed</span> <span class="n">on</span> <span class="n">channel</span>
+<span class="n">logger</span>      <span class="o">-</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="nb">object</span>
+<span class="n">name</span>        <span class="o">-</span> <span class="nb">map</span> <span class="n">identifier</span>
+<span class="n">raster_data</span> <span class="o">-</span> <span class="n">data</span> <span class="kn">from</span> <span class="nn">the</span> <span class="n">raster</span> <span class="n">table</span>
+<span class="n">regrid</span>      <span class="o">-</span> <span class="n">computes</span> <span class="nb">map</span> <span class="n">data</span> <span class="n">onto</span> <span class="n">a</span> <span class="n">rectangular</span> <span class="n">grid</span>
+<span class="n">rss_cfg</span>     <span class="o">-</span> <span class="n">receiver</span> <span class="n">configuration</span>
+<span class="n">session</span>     <span class="o">-</span> <span class="n">observing</span> <span class="n">session</span> <span class="n">to</span> <span class="n">which</span> <span class="n">this</span> <span class="nb">map</span> <span class="n">belongs</span>
+<span class="n">start</span>       <span class="o">-</span> <span class="n">UNIX</span> <span class="n">time</span> <span class="n">at</span> <span class="n">start</span> <span class="n">of</span> <span class="nb">map</span>
+<span class="n">end</span>         <span class="o">-</span> <span class="n">UNIX</span> <span class="n">time</span> <span class="n">at</span> <span class="n">end</span> <span class="n">of</span> <span class="nb">map</span>
+</pre></div>
+</div>
+<p>Public methods:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">get_map_config</span>      <span class="o">-</span> <span class="n">returns</span> <span class="n">a</span> <span class="nb">dict</span> <span class="k">with</span> <span class="n">the</span> <span class="n">raster</span> <span class="nb">map</span> <span class="n">configuration</span>
+<span class="n">get_raster_data</span>     <span class="o">-</span> <span class="n">gets</span> <span class="n">the</span> <span class="n">data</span> <span class="k">for</span> <span class="n">a</span> <span class="n">raster</span> <span class="n">scan</span> <span class="nb">map</span> <span class="n">used</span> <span class="k">for</span> <span class="n">Zplot</span>
+<span class="n">get_raster_keys</span>     <span class="o">-</span> <span class="n">returns</span> <span class="n">rasters</span> <span class="n">associated</span> <span class="k">with</span> <span class="n">a</span> <span class="n">given</span> <span class="n">configuration</span>
+</pre></div>
+</div>
 <p class="rubric">Methods Summary</p>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -114,7 +116,7 @@ get_raster_keys     - returns rasters associated with a given configuration</p>
 </tbody>
 </table>
 <p class="rubric">Methods Documentation</p>
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.Map.get_map_config">
 <code class="sig-name descname">get_map_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Map.get_map_config" title="Permalink to this definition">¶</a></dt>
 <dd><p>returns a dict with the raster map configuration</p>
@@ -139,13 +141,13 @@ for the channels enabled.</p>
 </div>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.Map.get_raster_data">
 <code class="sig-name descname">get_raster_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Map.get_raster_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>gets the data for a raster scan map extracted for Zplot</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.Map.get_raster_keys">
 <code class="sig-name descname">get_raster_keys</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Map.get_raster_keys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the rasters associated with a given configuration</p>
@@ -181,7 +183,7 @@ for the channels enabled.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, Tom Kuiper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>

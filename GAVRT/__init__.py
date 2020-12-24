@@ -150,10 +150,12 @@ import time
 
 import local_dirs
 import Astronomy as A
+import Astronomy.DSN_coordinates as Adsn
 import Astronomy.Ephem as AE
 import Data_Reduction as DR
-import Data_Reduction.GAVRT as GAVRT
 import Data_Reduction.GAVRT.mysql as mysql
+#from . import plotter
+#import .plotter as plotter
 import DatesTimes as DT
 import Math.least_squares as Mlsq
 import Radio_Astronomy as RA
@@ -162,7 +164,7 @@ import support
 logger = logging.getLogger(__name__)
 
 _host,_user,_pw = pickle.load(open(os.environ['HOME']+"/.GAVRTlogin.p", "rb" ))
-dss28        = AE.DSS(28)
+dss28        = Adsn.DSS(28)
 longitude    = -dss28.long*180/math.pi
 latitude     = dss28.lat*180/math.pi
 f_max        = 16. # GHz
@@ -212,7 +214,6 @@ class Observation(DR.Observation, DR.GriddingMixin):
     """
     if parent:
         mylogger = logging.getLogger(parent.logger.name+".Observation")
-        mylogger.debug("__init__: logger is %s", mylogger.name)
         self.session = parent
         date = "%4d/%03d" % (self.session.year, self.session.doy)
         dss=28
@@ -221,12 +222,12 @@ class Observation(DR.Observation, DR.GriddingMixin):
         self.logger = logging.getLogger(logger.name+".Observation")
         self.logger.error("__init__: no parent session specified")
         raise Exception("You must initialize a session first")
-    if start and end:
-      self.start = start
-      self.end = end
-    else:
-      self.logger.error("__init__: no 'start' and/or 'end' attributes")
-      raise Exception("'start' and 'end' can be arguments or subclass attrs")
+    #if start and end:
+    #  self.start = start
+    #  self.end = end
+    #else:
+    #  self.logger.error("__init__: no 'start' and/or 'end' attributes")
+    #  raise Exception("'start' and 'end' can be arguments or subclass attrs")
     DR.Observation.__init__(self, parent=parent, name=name, dss=dss, date=date,
                                   project=project)
     self.logger = mylogger
@@ -367,6 +368,7 @@ class Map(Observation):
   Class for all the data and methods associated with a raster scan map
   
   Public attributes::
+  
     cfg         - raster configuration
     cfg_id      - entry in the raster configuration tableshape
     channels    - list of channels which took tlog data
@@ -381,6 +383,7 @@ class Map(Observation):
     end         - UNIX time at end of map
     
   Public methods::
+  
     get_map_config      - returns a dict with the raster map configuration
     get_raster_data     - gets the data for a raster scan map used for Zplot
     get_raster_keys     - returns rasters associated with a given configuration
@@ -400,20 +403,23 @@ class Map(Observation):
                       self.session.name, self.name)
     # this applies to the default channel.
     self.cfg = self.get_map_config()
-    self.source = self.session.db.get_source_names([self.cfg['source_id']])['source'][0]
+    self.source = self.session.db.get_source_names(
+                                          [self.cfg['source_id']])['source'][0]
     # this is used by get_raster_data
     self.get_raster_keys()
-    if self.raster_keys.any():
-      # this defines 'start' and 'end'
-      self.get_raster_data()
-      self.logger.debug("__init__: from %s to %s",
+    try:
+      if self.raster_keys == None:
+        pass
+      else:
+        self.get_raster_data()
+        self.logger.debug("__init__: from %s to %s",
                         time.ctime(self.start), time.ctime(self.end))
-      Observation.__init__(self, parent=parent, name=self.name)
-      # gets from 'tlog' the channels used between 'start' and 'end'
-      channels = self.get_data_channels()
-      self.make_channels(channels)
-    else:
-      self.logger.warning("__init__: no rasters found")
+        Observation.__init__(self, parent=parent, name=self.name)
+        # gets from 'tlog' the channels used between 'start' and 'end'
+        channels = self.get_data_channels()
+        self.make_channels(channels)
+    except ValueError as details:
+        self.logger.warning("__init__: no rasters found for map %s", self.name)
          
   def get_map_config(self):
     """
@@ -454,7 +460,7 @@ class Map(Observation):
     Returns the rasters associated with a given configuration
     """
     rasterkeys = self.session.db.get(
-                        "select raster_id from raster where raster_cfg_id = " + 
+                        "select raster_id from raster where raster_cfg_id = "+ 
                                                           str(self.cfg_id)+";")
     if rasterkeys.any():
       rasterkeys.sort()
@@ -467,17 +473,18 @@ class Map(Observation):
     """
     gets the data for a raster scan map extracted for Zplot
     """
-    data = self.session.db.get(
+    self.raster_data = {}
+    if type(self.raster_keys) == NP.ndarray:
+      data = self.session.db.get(
           "select epoch, xdecoff,decoff,tsrc from raster where raster_id >= " +
           str(self.raster_keys[0]) + " and raster_id <= " + 
           str(self.raster_keys[-1]) + ";")
-    self.raster_data = {}
-    self.raster_data['unixtime'] = data[:,0].astype(float)
-    self.raster_data['xdec']     = data[:,1].astype(float)
-    self.raster_data['dec']      = data[:,2].astype(float)
-    self.raster_data['tsrc']     = data[:,3].astype(float)
-    self.start = self.raster_data['unixtime'][0]
-    self.end   = self.raster_data['unixtime'][-1]
+      self.raster_data['unixtime'] = data[:,0].astype(float)
+      self.raster_data['xdec']     = data[:,1].astype(float)
+      self.raster_data['dec']      = data[:,2].astype(float)
+      self.raster_data['tsrc']     = data[:,3].astype(float)
+      self.start = self.raster_data['unixtime'][0]
+      self.end   = self.raster_data['unixtime'][-1]
     return self.raster_data
 
 
@@ -695,7 +702,7 @@ class Session(DR.Session):
         4 - axis, and
         5 - chan
   """
-  def __init__(self, parent, year, doy, plotter=False):
+  def __init__(self, parent, year, doy):
     """
     """
     if parent:
@@ -707,20 +714,27 @@ class Session(DR.Session):
       self.db = parent
     else:
       self.db = DSS28db() # default is GAVRT
-    DR.Session.__init__(self, parent=parent, year=year, doy=doy, 
+    datestr = "%4d/%03d" % (year, doy)
+    #DR.Session.__init__(self, parent=parent, year=year, doy=doy, 
+    #                          project="SolarPatrol")
+    DR.Session.__init__(self, parent=parent, date=datestr, dss=28,
                               project="SolarPatrol")
     self.logger = mylogger
     self.logger.info("Getting maps and boresights; this may take a while.")
-    #if plotter == False:
-      if issubclass(Session, GAVRT.plotter.SessionPlotter):
-        # instantiating map plotters also gets the maps
-        pass
-      else:
-        self.get_maps()
+    self.logger.debug("__init__: subclasses: %s", Session.__subclasses__())
+    self.logger.debug("__init__: has attribute 'maps'? %s", hasattr(self, "maps"))
+    if hasattr(self, "maps"):
+      # instantiating map plotters also gets the maps
+      pass
+    else:
+      self.get_maps()
     self.get_boresights()
     self.get_session_dir()
 
   def get_session_dir(self):
+      """
+      """
+      self.logger.debug("get_session_dir: entered")
       obs_dir = local_dirs.projects_dir+"SolarPatrol/Observations/dss28/"
       self.session_dir = obs_dir + "%4d" % self.year +"/"+ "%03d" % self.doy +"/"
       if not os.path.exists(self.session_dir):
@@ -751,7 +765,6 @@ class Session(DR.Session):
       map_cfg_ids = self.get_map_IDs()
     else:
       map_cfg_ids = NP.array(map_IDs)
-    self.logger.debug("get_maps: map IDs: %s", map_cfg_ids)
     if map_cfg_ids.any():
       self.maps = {}
       for map_id in map_cfg_ids[:,0]:
@@ -791,8 +804,10 @@ class Session(DR.Session):
       fileobj = sys.stdout
     print("----------------- Session Maps for %4d/%03d -------------------" %\
           (self.year, self.doy), file=fileobj)
-    print(" ID start-stop ch  freq.  pol.  b.w. IFmode attn.        source", file=fileobj)
-    print("--- ---------- -- ------ ----- ----- ------ ----- -------------", file=fileobj)
+    print(" ID start-stop ch  freq.  pol.  b.w. IFmode attn.        source",
+          file=fileobj)
+    print("--- ---------- -- ------ ----- ----- ------ ----- -------------",
+          file=fileobj)
     mapkeys = list(self.maps.keys())
     mapkeys.sort()
     if mapkeys == []:
@@ -918,22 +933,25 @@ class Session(DR.Session):
       print("\nNo valid boresights with tlog data found", file=fileobj)
       return False
     print(" Boresight Summary for %4d/%03d" % (self.year, self.doy), file=fileobj)
-    print("  ID   date          ch axis  freq.  pol IF bw   source         Top   diode   az    el", file=fileobj)
-    print("------ ------------- -- ---- ------ ---- ---- ---------------- ------ ------ ----- ----", file=fileobj)
+    print("  ID   date          ch axis  freq.  pol IF bw   source         Top   diode   az    el",
+          file=fileobj)
+    print("------ ------------- -- ---- ------ ---- ---- ---------------- ------ ------ ----- ----",
+          file=fileobj)
     for bs in bs_keys:
       source =  self.boresights[bs].source
       try:
         bs_channels = self.boresights[bs].channels
       except AttributeError:
         print("%6d has no channels" % bs, file=fileobj)
+      try:
+        top = self.boresights[bs].bs_data['tsys'][0]
+      except AttributeError:
+        print("%6d has no data" % bs, file=fileobj)
       else:
         bs_channels.sort()
-        #self.logger.debug("make_bs_dir: boresight %d channels: %s", bs, bs_channels)
-        #self.logger.debug("make_bs_dir: boresight %d channels is %s", bs, bool(bs_channels))
         if bool(bs_channels.any()):
           for ch in bs_channels:
-            UNIXtime = self.boresights[bs].epoch
-            top =      self.boresights[bs].bs_data['tsys'][0]
+            UNIXtime = self.boresights[bs].epoch   
             axis =     self.boresights[bs].axis
             az =       self.boresights[bs].bs_data['az'][0]
             el =       self.boresights[bs].bs_data['el'][0]  

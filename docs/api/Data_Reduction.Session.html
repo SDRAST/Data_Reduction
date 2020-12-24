@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>Session &#8212; Data_Reduction 0.9 documentation</title>
@@ -16,7 +16,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Spectrum" href="Data_Reduction.Spectrum.html" />
-    <link rel="prev" title="Observation" href="Data_Reduction.Observation.html" /> 
+    <link rel="prev" title="Recording" href="Data_Reduction.Recording.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -31,7 +31,7 @@
           <a href="Data_Reduction.Spectrum.html" title="Spectrum"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.Observation.html" title="Observation"
+          <a href="Data_Reduction.Recording.html" title="Recording"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
@@ -39,8 +39,8 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="Data_Reduction.Observation.html"
-                        title="previous chapter">Observation</a></p>
+  <p class="topless"><a href="Data_Reduction.Recording.html"
+                        title="previous chapter">Recording</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="Data_Reduction.Spectrum.html"
                         title="next chapter">Spectrum</a></p>
@@ -71,20 +71,23 @@
             
   <div class="section" id="session">
 <h1>Session<a class="headerlink" href="#session" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
+<dl class="class">
 <dt id="Data_Reduction.Session">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">Session</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">year</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">doy</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Session" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">Session</code><span class="sig-paren">(</span><em class="sig-param">parent=None</em>, <em class="sig-param">date=None</em>, <em class="sig-param">project=None</em>, <em class="sig-param">dss=None</em>, <em class="sig-param">path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Base class for an observing session on a given year and DOY</p>
-<dl class="simple">
-<dt>Public Attributes::</dt><dd><p>doy (int)               - day of year for session
-logger (logging.Logger) - logging.Logger object
-parent (object)         - a data reduction session (mult. observ. sessions)
-project (str)           -
-session_dir (str)       - path to results from this session
-year (int)              - year for session</p>
-</dd>
-</dl>
+<p>Public Attributes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">doy</span> <span class="p">(</span><span class="nb">int</span><span class="p">)</span>               <span class="o">-</span> <span class="n">day</span> <span class="n">of</span> <span class="n">year</span> <span class="k">for</span> <span class="n">session</span>
+<span class="n">logger</span> <span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="p">)</span> <span class="o">-</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="nb">object</span>
+<span class="n">parent</span> <span class="p">(</span><span class="nb">object</span><span class="p">)</span>         <span class="o">-</span> <span class="n">a</span> <span class="n">data</span> <span class="n">reduction</span> <span class="n">session</span> <span class="p">(</span><span class="n">mult</span><span class="o">.</span> <span class="n">observ</span><span class="o">.</span> <span class="n">sessions</span><span class="p">)</span>
+<span class="n">year</span> <span class="p">(</span><span class="nb">int</span><span class="p">)</span>              <span class="o">-</span>
+<span class="n">doy</span> <span class="p">(</span><span class="nb">int</span><span class="p">)</span>               <span class="o">-</span>
+<span class="n">project</span> <span class="p">(</span><span class="nb">str</span><span class="p">)</span>           <span class="o">-</span>
+<span class="n">session_dir</span> <span class="p">(</span><span class="nb">str</span><span class="p">)</span>       <span class="o">-</span> <span class="n">path</span> <span class="n">to</span> <span class="n">results</span> <span class="kn">from</span> <span class="nn">this</span> <span class="n">session</span>
+</pre></div>
+</div>
+<p>A session usually refers to a telescope, date and project.  This will
+normally define a path to the session directory.</p>
 <p class="rubric">Methods Summary</p>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -92,48 +95,48 @@ year (int)              - year for session</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Session.get_session_dir" title="Data_Reduction.Session.get_session_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_session_dir</span></code></a>([dss, path])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Data_Reduction.Session.find_session_dir" title="Data_Reduction.Session.find_session_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_session_dir</span></code></a>([path])</p></td>
 <td><p>find or make the sessions directory</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Session.select_data_files" title="Data_Reduction.Session.select_data_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_data_files</span></code></a>(datapath[, name_pattern, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#Data_Reduction.Session.select_data_files" title="Data_Reduction.Session.select_data_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_data_files</span></code></a>([datapath, name_pattern, …])</p></td>
 <td><p>Provide the user with menu to select data files.</p></td>
 </tr>
 </tbody>
 </table>
 <p class="rubric">Methods Documentation</p>
-<dl class="py method">
-<dt id="Data_Reduction.Session.get_session_dir">
-<code class="sig-name descname">get_session_dir</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">path</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Session.get_session_dir" title="Permalink to this definition">¶</a></dt>
+<dl class="method">
+<dt id="Data_Reduction.Session.find_session_dir">
+<code class="sig-name descname">find_session_dir</code><span class="sig-paren">(</span><em class="sig-param">path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Session.find_session_dir" title="Permalink to this definition">¶</a></dt>
 <dd><p>find or make the sessions directory</p>
-<p>Either <cite>dss</cite> or <cite>path</cite> must be given.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dss</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – </p></li>
-<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – </p></li>
-</ul>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – </p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.Session.select_data_files">
-<code class="sig-name descname">select_data_files</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">datapath</span></em>, <em class="sig-param"><span class="n">name_pattern</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">load_hdf</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Session.select_data_files" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">select_data_files</code><span class="sig-paren">(</span><em class="sig-param">datapath=None</em>, <em class="sig-param">name_pattern=''</em>, <em class="sig-param">auto=True</em>, <em class="sig-param">load_hdf=False</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Session.select_data_files" title="Permalink to this definition">¶</a></dt>
 <dd><p>Provide the user with menu to select data files.</p>
 <p>Finding the right data store is complicated as there are many kinds of data
-files:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span> <span class="n">If</span> <span class="n">datapath</span> <span class="ow">is</span> <span class="o">...</span><span class="n">RA_data</span><span class="o">/</span><span class="n">HDF5</span><span class="o">/...</span> <span class="n">then</span> <span class="n">the</span> <span class="n">files</span> <span class="n">could</span> <span class="n">be</span> <span class="o">.</span><span class="n">h5</span> <span class="p">(</span><span class="n">Ashish</span><span class="p">)</span> <span class="ow">or</span> <span class="o">.</span><span class="n">hdf5</span> <span class="p">(</span><span class="n">Dean</span><span class="p">)</span><span class="o">.</span>
-<span class="o">*</span> <span class="n">If</span> <span class="n">datapath</span> <span class="ow">is</span> <span class="o">...</span><span class="n">RA_data</span><span class="o">/</span><span class="n">FITS</span><span class="o">/...</span> <span class="n">then</span> <span class="n">the</span> <span class="n">extent</span> <span class="ow">is</span> <span class="o">.</span><span class="n">fits</span><span class="o">.</span>
-<span class="o">*</span> <span class="n">If</span> <span class="n">datapath</span> <span class="ow">is</span> <span class="o">...</span><span class="n">project_data</span><span class="o">/...</span> <span class="n">then</span> <span class="n">the</span> <span class="n">extent</span> <span class="ow">is</span> <span class="o">.</span><span class="n">pkl</span>
-<span class="o">*</span> <span class="n">If</span> <span class="n">datapath</span> <span class="ow">is</span> <span class="o">...</span><span class="n">projects</span><span class="o">/...</span>     <span class="n">then</span> <span class="n">the</span> <span class="n">extent</span> <span class="ow">is</span> <span class="n">probably</span> <span class="o">.</span><span class="n">csv</span> <span class="ow">or</span> <span class="o">.</span><span class="n">dat</span><span class="o">.</span>
-</pre></div>
-</div>
+files</p>
+<ul class="simple">
+<li><p>If datapath is …RA_data/HDF5/… then the files could be .h5 (Ashish)
+or .hdf5 (Dean).</p></li>
+<li><p>If datapath is …RA_data/FITS/… then the extent is .fits.</p></li>
+<li><p>If datapath is …project_data/… then the extent is .pkl</p></li>
+<li><p>If datapath is …projects/…     (default) then the extent is probably
+.csv or .dat or .prd.</p></li>
+</ul>
 <p>:param datapath : path to top of the tree where the DSS subdirectories are
 :type  datapath : str</p>
 <p>:param name_pattern : pattern for selecting file names, e.g. source
 :type  name_pattern : str</p>
 <p>:param load_hdf : use RA_data/HDF5 directory if True
 :type  load_hdf : bool</p>
+<p>&#64;para auto : take all files found
+:type auto : bool</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>list of str</p>
@@ -164,14 +167,14 @@ files:</p>
           <a href="Data_Reduction.Spectrum.html" title="Spectrum"
              >next</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.Observation.html" title="Observation"
+          <a href="Data_Reduction.Recording.html" title="Recording"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Data_Reduction 0.9 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, Tom Kuiper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>

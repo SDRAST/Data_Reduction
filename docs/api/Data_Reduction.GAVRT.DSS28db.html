@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>DSS28db &#8212; Data_Reduction 0.9 documentation</title>
@@ -71,9 +71,9 @@
             
   <div class="section" id="dss28db">
 <h1>DSS28db<a class="headerlink" href="#dss28db" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
+<dl class="class">
 <dt id="Data_Reduction.GAVRT.DSS28db">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.</code><code class="sig-name descname">DSS28db</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">host</span><span class="o">=</span><span class="default_value">'kraken.gavrt.org'</span></em>, <em class="sig-param"><span class="n">user</span><span class="o">=</span><span class="default_value">'ops'</span></em>, <em class="sig-param"><span class="n">pw</span><span class="o">=</span><span class="default_value">'v3H!cle'</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">'dss28_eac'</span></em>, <em class="sig-param"><span class="n">port</span><span class="o">=</span><span class="default_value">3306</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.</code><code class="sig-name descname">DSS28db</code><span class="sig-paren">(</span><em class="sig-param">host='kraken.gavrt.org'</em>, <em class="sig-param">user='ops'</em>, <em class="sig-param">pw='v3H!cle'</em>, <em class="sig-param">name='dss28_eac'</em>, <em class="sig-param">port=3306</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="Data_Reduction.GAVRT.mysql.BaseDB.html#Data_Reduction.GAVRT.mysql.BaseDB" title="Data_Reduction.GAVRT.mysql.BaseDB"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.GAVRT.mysql.BaseDB</span></code></a></p>
 <p>subclass for the DSS-28 EAC database</p>
 <p>provides methods for handling tables</p>
@@ -114,9 +114,9 @@ sessions - dict of sessions obtained with ‘get_session’</p>
 </tbody>
 </table>
 <p class="rubric">Methods Documentation</p>
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.DSS28db.extract_boresight_data">
-<code class="sig-name descname">extract_boresight_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">year</span></em>, <em class="sig-param"><span class="n">doy</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.extract_boresight_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">extract_boresight_data</code><span class="sig-paren">(</span><em class="sig-param">year</em>, <em class="sig-param">doy</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.extract_boresight_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the metadata for the boresights on the designated day.</p>
 <p>The boresights are extracted from table ‘xscan’.  Missing ‘el’ data are
 obtained from table ‘xpwr’.  The source, scan axis and channel are obtained
@@ -158,9 +158,9 @@ from table ‘xpwr_cfg’.  The receiver data are obtained from table ‘rss_cfg
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.DSS28db.get_Tsys">
-<code class="sig-name descname">get_Tsys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">chan</span></em>, <em class="sig-param"><span class="n">start</span></em>, <em class="sig-param"><span class="n">stop</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.get_Tsys" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_Tsys</code><span class="sig-paren">(</span><em class="sig-param">chan</em>, <em class="sig-param">start</em>, <em class="sig-param">stop</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.get_Tsys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get system temperatures from tlog</p>
 <p>:param start : UNIXtime at start of selection
 :type  start : float</p>
@@ -168,9 +168,9 @@ from table ‘xpwr_cfg’.  The receiver data are obtained from table ‘rss_cfg
 :type  stop :float</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.DSS28db.get_receiver_data">
-<code class="sig-name descname">get_receiver_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">year</span></em>, <em class="sig-param"><span class="n">doy</span></em>, <em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">columns</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.get_receiver_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_receiver_data</code><span class="sig-paren">(</span><em class="sig-param">year</em>, <em class="sig-param">doy</em>, <em class="sig-param">time</em>, <em class="sig-param">columns</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.get_receiver_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the receiver state at a given time</p>
 <p>This creates a dictionary keyed with channel number and returns a dictionary
 of the receiver configuration, keyed with specified in the columns, that was
@@ -197,28 +197,28 @@ configuration change and assume that the IDs are sequential in date/time.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.DSS28db.get_session">
-<code class="sig-name descname">get_session</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">year</span></em>, <em class="sig-param"><span class="n">doy</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.get_session" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_session</code><span class="sig-paren">(</span><em class="sig-param">year</em>, <em class="sig-param">doy</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.get_session" title="Permalink to this definition">¶</a></dt>
 <dd><p>get IDs for an observing session</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.DSS28db.get_source_names">
-<code class="sig-name descname">get_source_names</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">source_IDs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.get_source_names" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_source_names</code><span class="sig-paren">(</span><em class="sig-param">source_IDs</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.get_source_names" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the source information from gavrt_sources.source</p>
 <p>Returns a dict with source names for the source IDs provided</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.DSS28db.insertRecord">
-<code class="sig-name descname">insertRecord</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">table</span></em>, <em class="sig-param"><span class="n">rec</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.insertRecord" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">insertRecord</code><span class="sig-paren">(</span><em class="sig-param">table</em>, <em class="sig-param">rec</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.insertRecord" title="Permalink to this definition">¶</a></dt>
 <dd><p>not allowed for subclass</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.DSS28db.updateValues">
-<code class="sig-name descname">updateValues</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vald</span></em>, <em class="sig-param"><span class="n">table</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.updateValues" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateValues</code><span class="sig-paren">(</span><em class="sig-param">vald</em>, <em class="sig-param">table</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.DSS28db.updateValues" title="Permalink to this definition">¶</a></dt>
 <dd><p>not allowed for subclass</p>
 </dd></dl>
 
@@ -252,7 +252,7 @@ configuration change and assume that the IDs are sequential in date/time.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, Tom Kuiper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>

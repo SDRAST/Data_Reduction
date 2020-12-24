@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>Spectrum &#8212; Data_Reduction 0.9 documentation</title>
@@ -71,7 +71,7 @@
             
   <div class="section" id="spectrum">
 <h1>Spectrum<a class="headerlink" href="#spectrum" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
+<dl class="class">
 <dt id="Data_Reduction.Spectrum">
 <em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">Spectrum</code><a class="headerlink" href="#Data_Reduction.Spectrum" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="Data_Reduction.Observation.html#Data_Reduction.Observation" title="Data_Reduction.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.Observation</span></code></a></p>
@@ -101,9 +101,9 @@
 </tbody>
 </table>
 <p class="rubric">Methods Documentation</p>
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.Spectrum.freq_to_chan">
-<code class="sig-name descname">freq_to_chan</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandwidth</span></em>, <em class="sig-param"><span class="n">n_chans</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Spectrum.freq_to_chan" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">freq_to_chan</code><span class="sig-paren">(</span><em class="sig-param">bandwidth</em>, <em class="sig-param">n_chans</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Spectrum.freq_to_chan" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the channel number where a given frequency is to be found.</p>
 <p>:param frequency : frequency of channel in sane units as bandwidth.
 :type  frequency : float</p>
@@ -118,9 +118,9 @@
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.Spectrum.get_freq_array">
-<code class="sig-name descname">get_freq_array</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandwidth</span></em>, <em class="sig-param"><span class="n">n_chans</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Spectrum.get_freq_array" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_freq_array</code><span class="sig-paren">(</span><em class="sig-param">bandwidth</em>, <em class="sig-param">n_chans</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Spectrum.get_freq_array" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an array of frequencies for the channels of a backend</p>
 <p>:param bandwidth : bandwidth
 :type  bandwidth : float</p>
@@ -133,15 +133,15 @@
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.Spectrum.get_num_chans">
-<code class="sig-name descname">get_num_chans</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">linefreq</span></em>, <em class="sig-param"><span class="n">bandwidth</span></em>, <em class="sig-param"><span class="n">max_vel_width</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Spectrum.get_num_chans" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_num_chans</code><span class="sig-paren">(</span><em class="sig-param">linefreq</em>, <em class="sig-param">bandwidth</em>, <em class="sig-param">max_vel_width</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Spectrum.get_num_chans" title="Permalink to this definition">¶</a></dt>
 <dd><p>compute the base 2 number of output channels for the specified resolution</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.Spectrum.get_smoothed_bandshape">
-<code class="sig-name descname">get_smoothed_bandshape</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">degree</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">poly_order</span><span class="o">=</span><span class="default_value">15</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Spectrum.get_smoothed_bandshape" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_smoothed_bandshape</code><span class="sig-paren">(</span><em class="sig-param">degree=None</em>, <em class="sig-param">poly_order=15</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Spectrum.get_smoothed_bandshape" title="Permalink to this definition">¶</a></dt>
 <dd><p>Do a Gaussian smoothing of the spectrum and then fit a polynomial.
 Optionally, the raw and smoothed data and the fitted polynomial can be
 plotted.</p>
@@ -171,9 +171,9 @@ Returns a vector of coefficients p that minimises the squared error.</p>
 </div>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.Spectrum.reduce_spectrum_channels">
-<code class="sig-name descname">reduce_spectrum_channels</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">refval</span></em>, <em class="sig-param"><span class="n">refpix</span></em>, <em class="sig-param"><span class="n">delta</span></em>, <em class="sig-param"><span class="n">num_chan</span><span class="o">=</span><span class="default_value">1024</span></em>, <em class="sig-param"><span class="n">axis</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Spectrum.reduce_spectrum_channels" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">reduce_spectrum_channels</code><span class="sig-paren">(</span><em class="sig-param">refval</em>, <em class="sig-param">refpix</em>, <em class="sig-param">delta</em>, <em class="sig-param">num_chan=1024</em>, <em class="sig-param">axis=0</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Spectrum.reduce_spectrum_channels" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reduce the number of channels in the spectrum.</p>
 <p>The default option is to reduce the spectrum to a specified number of
 channels with a default of 1024. The input spectrum is presumed to have
@@ -228,7 +228,7 @@ which defaults to 0.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, Tom Kuiper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>

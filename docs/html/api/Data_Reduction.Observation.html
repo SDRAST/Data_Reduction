@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>Observation &#8212; Data_Reduction 0.9 documentation</title>
@@ -15,7 +15,7 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Session" href="Data_Reduction.Session.html" />
+    <link rel="next" title="Recording" href="Data_Reduction.Recording.html" />
     <link rel="prev" title="Map" href="Data_Reduction.Map.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -28,7 +28,7 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.Session.html" title="Session"
+          <a href="Data_Reduction.Recording.html" title="Recording"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="Data_Reduction.Map.html" title="Map"
@@ -42,8 +42,8 @@
   <p class="topless"><a href="Data_Reduction.Map.html"
                         title="previous chapter">Map</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="Data_Reduction.Session.html"
-                        title="next chapter">Session</a></p>
+  <p class="topless"><a href="Data_Reduction.Recording.html"
+                        title="next chapter">Recording</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -71,82 +71,82 @@
             
   <div class="section" id="observation">
 <h1>Observation<a class="headerlink" href="#observation" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
+<dl class="class">
 <dt id="Data_Reduction.Observation">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param">parent=None</em>, <em class="sig-param">name=None</em>, <em class="sig-param">dss=None</em>, <em class="sig-param">date=None</em>, <em class="sig-param">project=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>superclass for a data structure and methods</p>
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">aliases      - (dict) data keys to replace those in original data</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">channel      - (dict) signal paths, e.g., different freqs and pols</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">data         - (dict) original data, e.g., read from file or database</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">DOY          - (int) day of year of observation</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">end          - (float) UNIX time at the end</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">latitude     - (float) from obs</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">logger       - (logging.Logger)</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">longitude    - (float) from obs</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">name         - (str) user assigned, defaults to YEAR/DOY</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">numdata      - (int) number of data samples</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">obs          - (AE.DSS) observatory</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">session      - (Session) set of observations, parent to Observation</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">session_path - (str) directory for session files</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">start        - (float) UNIX time at the beginning</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">year         - (int) year of observation</code></dt>
 <dd></dd></dl>
@@ -261,49 +261,49 @@ never get one without the other.)</p></li>
 </tbody>
 </table>
 <p class="rubric">Attributes Documentation</p>
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="Data_Reduction.Observation.power_keys">
 <code class="sig-name descname">power_keys</code><em class="property"> = ['tsys', 'top', 'vfc_counts', 'power']</em><a class="headerlink" href="#Data_Reduction.Observation.power_keys" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="Data_Reduction.Observation.reserved">
 <code class="sig-name descname">reserved</code><em class="property"> = ['unixtime', 'chan_name', 'integr', 'az', 'el', 'year', 'doy', 'utc', 'timestr', 'chan', 'tsys', 'top', 'diode', 'level', 'cryotemp', 'windspeed', 'winddir', 'ambtemp', 'pressure', 'ra', 'dec', 'ra1950', 'dec1950', 'ra2000', 'dec2000']</em><a class="headerlink" href="#Data_Reduction.Observation.reserved" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <p class="rubric">Methods Documentation</p>
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.Observation.check_for">
-<code class="sig-name descname">check_for</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">longlat</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.check_for" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">check_for</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">longlat</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.check_for" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks for separate coordinates and splits if coord pairs</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a>) – attribute <code class="docutils literal notranslate"><span class="pre">data</span></code></p></li>
-<li><p><strong>longlat</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – “azel”, or “radec”, or “radecEPOC”</p></li>
+<li><p><strong>data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – attribute <code class="docutils literal notranslate"><span class="pre">data</span></code></p></li>
+<li><p><strong>longlat</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – “azel”, or “radec”, or “radecEPOC”</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.Observation.sideband_separate">
-<code class="sig-name descname">sideband_separate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.sideband_separate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">sideband_separate</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.sideband_separate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts a complex spectrum array and returns two reals with USB and LSB</p>
 <p>This applies a Hilbert transform to the complex data.</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.Observation.splitkey">
-<code class="sig-name descname">splitkey</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">longlat</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.splitkey" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">splitkey</code><span class="sig-paren">(</span><em class="sig-param">longlat</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.splitkey" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks for presence of coordinates in pairs or singles</p>
 <p>:param longlat : “azel”, or “radec”, or “radecEPOC”
 :type  longlat : str</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.Observation.unpack_to_complex">
-<code class="sig-name descname">unpack_to_complex</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rawdata</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.unpack_to_complex" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">unpack_to_complex</code><span class="sig-paren">(</span><em class="sig-param">rawdata</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.Observation.unpack_to_complex" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts a sequence of alternating real/imag samples to complex</p>
 <p>:param rawdata : alternating real and imaginary bytes
 :type  rawdata : numpy array of signed int8</p>
@@ -334,7 +334,7 @@ never get one without the other.)</p></li>
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.Session.html" title="Session"
+          <a href="Data_Reduction.Recording.html" title="Recording"
              >next</a> |</li>
         <li class="right" >
           <a href="Data_Reduction.Map.html" title="Map"
@@ -344,7 +344,7 @@ never get one without the other.)</p></li>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, Tom Kuiper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>

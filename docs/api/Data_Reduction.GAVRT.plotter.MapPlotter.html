@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>MapPlotter &#8212; Data_Reduction 0.9 documentation</title>
@@ -71,9 +71,9 @@
             
   <div class="section" id="mapplotter">
 <h1>MapPlotter<a class="headerlink" href="#mapplotter" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
+<dl class="class">
 <dt id="Data_Reduction.GAVRT.plotter.MapPlotter">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.plotter.</code><code class="sig-name descname">MapPlotter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="n">raster_cfg_id</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.plotter.MapPlotter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.plotter.</code><code class="sig-name descname">MapPlotter</code><span class="sig-paren">(</span><em class="sig-param">parent</em>, <em class="sig-param">raster_cfg_id</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.plotter.MapPlotter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="Data_Reduction.GAVRT.Map.html#Data_Reduction.GAVRT.Map" title="Data_Reduction.GAVRT.Map"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.GAVRT.Map</span></code></a></p>
 <p class="rubric">Methods Summary</p>
 <table class="longtable docutils align-default">
@@ -94,19 +94,19 @@
 </tbody>
 </table>
 <p class="rubric">Methods Documentation</p>
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.plotter.MapPlotter.contours">
-<code class="sig-name descname">contours</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">channel</span></em>, <em class="sig-param"><span class="n">width</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">contours</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.plotter.MapPlotter.contours" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">contours</code><span class="sig-paren">(</span><em class="sig-param">channel</em>, <em class="sig-param">width=1.0</em>, <em class="sig-param">height=1.0</em>, <em class="sig-param">contours=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.plotter.MapPlotter.contours" title="Permalink to this definition">¶</a></dt>
 <dd><p>make contour maps; this calls ‘regrid’</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.plotter.MapPlotter.plot_centered_offsets">
 <code class="sig-name descname">plot_centered_offsets</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.plotter.MapPlotter.plot_centered_offsets" title="Permalink to this definition">¶</a></dt>
 <dd><p>shows relative positions computed from tlog az and el data</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.plotter.MapPlotter.plot_xdec_dec">
 <code class="sig-name descname">plot_xdec_dec</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.plotter.MapPlotter.plot_xdec_dec" title="Permalink to this definition">¶</a></dt>
 <dd><p>plots the xdec and dec positions at which data were taken</p>
@@ -148,7 +148,7 @@ compute ‘RA’ and ‘dec’ and then ‘get_offsets’ can generate relative 
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, Tom Kuiper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>

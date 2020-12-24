@@ -2,15 +2,19 @@
 plots data from the DSS-28 EAC database
 """
 import logging
+import matplotlib.pyplot as plt
 import numpy
 import os
 import pickle
 import pylab as PL
+import scipy
 import time
 
+import Data_Reduction.SLAPlotter as DRplot
 import Data_Reduction.GAVRT as DB
 import Data_Reduction.maps as DRm
 import DatesTimes as DT
+import Math
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +45,7 @@ class DBPlotter(DB.DSS28db):
     """
     if (year in self.sessions) == False:
       self.sessions[year] = {}
-    self.sessions[year][doy] = DB.SessionPlotter(self, year, doy)
+    self.sessions[year][doy] = DRplot.SessionPlotter(self, year, doy)
     return self.sessions[year][doy]
 
 
@@ -60,7 +64,7 @@ class SessionPlotter(DB.Session):
     @type  parent : DSS28db object
     """
     mylogger = logging.getLogger(logger.name+".SessionPlotter")
-    DB.Session.__init__(self, parent, year, doy, plotter=True)
+    DB.Session.__init__(self, parent, year, doy)
     self.logger = mylogger
     self.get_map_plotters()
       
@@ -103,7 +107,7 @@ class SessionPlotter(DB.Session):
       except AttributeError:
         # there is no map data yet
         self.logger.info("plot_centered_offsets: getting maps for %s", key)
-        if self.maps[key].maps_from_tlogs():
+        if self.maps[key].get_data_from_tlogs():
           good_maps.append(key)
         else:
           self.logger.error("plot_centered_offsets: no valid tlog data")
@@ -150,15 +154,17 @@ class SessionPlotter(DB.Session):
     last_map = mapkeys[-1]
     for key in mapkeys:
       self.logger.debug("show_images: for map %d", key)
-      try:
-        list(self.maps[key].map_data.keys())
-      except AttributeError:
-        if self.maps[key].raster_keys == None:
-          self.logger.error("show_images: map has no data")
-          continue
-        else:
-          self.maps[key].maps_from_tlogs()
-    
+      if self.maps[key].raster_keys.any():
+        try:
+          list(self.maps[key].map_data.keys())
+        except AttributeError:
+          if any(self.maps[key].raster_keys) == False:
+            self.logger.error("show_images: map has no data")
+            continue
+          else:
+            self.maps[key].get_data_from_tlogs()
+      else:
+        self.logger.error("show_images: there is no map for %d", key)
     for mapno in mapkeys:
       try:
         num_chan = len(self.maps[mapno].channels)
@@ -169,12 +175,17 @@ class SessionPlotter(DB.Session):
         continue
       if num_chan == 0:
         continue
-      if num_chan <= 4:
-        fig, axis = subplots(nrows=1, ncols=num_chan)
-        ax = [axis] # needs to be a list to be compatible
+      elif num_chan == 1:
+        fig, axes = PL.subplots(nrows=1, ncols=num_chan)
+        self.logger.debug("show_images: 'axes' is %s", axes)
+        ax = [[axes]] # needs to be 2D list
+      elif num_chan <= 4:
+        fig, axes = PL.subplots(nrows=1, ncols=num_chan)
+        self.logger.debug("show_images: 'axes' is %s", axes)
+        ax = [axes] # needs to be 2D list
       else:
         fig, ax = PL.subplots(nrows=2, ncols=num_chan-4)
-      fig.set_size_inches(16,10,forward=True)
+      self.logger.debug("show_images: 'ax' is %s", ax)
       width = 0.8; height = 0.8
       self.logger.debug("show_images: processing map %d", mapno)
       Map = self.maps[mapno]
@@ -183,13 +194,23 @@ class SessionPlotter(DB.Session):
       except AttributeError:
         continue
       Map.get_offsets()
-      x,y,z = Map.regrid(width=width, height=height)
+      Map.regrid(width=width, height=height)
+      x, y, z = Map.data['grid_x'], Map.data['grid_y'], Map.data['grid_z']
+      num_chan = len(channels)
+      if num_chan <= 2:
+        fig.set_size_inches(8,6,forward=True)
+      elif num_chan <= 4:
+        fig.set_size_inches(16,6,forward=True)
+      else:
+        fig.set_size_inches(16,10,forward=True)
       for chan in channels:
+        self.logger.debug("show_images: processing map %d channel %d",
+                          mapno, chan)
         if chan in z:
           index = list(channels).index(chan)
           col = index % 4
           row = index//4
-          self.logger.debug("show_images: processing map %d channel %d", mapno, chan)
+          self.logger.debug("show_images: doing row %d, column %d", row, col)
           mapimg = ax[row][col].contourf(x, y, z[chan], cmap=plt.cm.jet)
           fig.colorbar(mappable=mapimg, ax=ax[row][col])
           ax[row][col].grid(True)
@@ -198,16 +219,20 @@ class SessionPlotter(DB.Session):
           ax[row][col].set_ylim(-height/2., height/2.)
           ax[row][col].set_xlabel("Cross-declination offset")
           ax[row][col].set_ylabel("Declination offset")
-          ax[row][col].set_title(
-                      Map.name+" at " + str(Map.rss_cfg[chan]['sky_freq'][0]) +
-                               " MHz " + Map.rss_cfg[chan]['pol'][0].upper())
-          self.logger.debug("show_images: finished row %d, column %d for map %d ch %d",
+          #ax[row][col].set_title(
+          #            Map.name+" at " + str(Map.rss_cfg[chan]['sky_freq'][0]) +
+          #                     " MHz " + Map.rss_cfg[chan]['pol'][0].upper())
+          ax[row][col].set_title(self.name +
+                                 " at " + str(Map.channel[chan]['freq']) +
+                               " MHz " + Map.channel[chan]['pol'][0].upper())
+          self.logger.debug(
+                     "show_images: finished row %d, column %d for map %d ch %d",
                           row, col, mapno, chan)
         else:
           continue
       fig.suptitle(str(self.year)+"/"+str(self.doy))
       fig.savefig(self.session_dir+"map"+ ("%04d" % mapno) +".png")
-    show() 
+    PL.show() 
   
   def show_boresights(self, bs_keys=None, channel=None):
     """
@@ -274,8 +299,8 @@ class SessionPlotter(DB.Session):
         ax[rowidx,colidx].plot(self.boresights[key].data['ha'],
                        self.boresights[key].data['dec'], label="ha-dec")
         ax[rowidx,colidx].set_title("Chan " + str(ch)
-                            + "(" + str(self.boresights[key].logdata[ch]['freq'])
-                            + "-" + str(self.boresights[key].logdata[ch]['pol']) +")")
+                           + "(" + str(self.boresights[key].logdata[ch]['freq'])
+                      + "-" + str(self.boresights[key].logdata[ch]['pol']) +")")
         ax[rowidx,colidx].grid(True)
         ax[rowidx,colidx].set_xlabel("Hour Angle")
         ax[rowidx,colidx].set_ylabel("Declination")
@@ -285,19 +310,23 @@ class SessionPlotter(DB.Session):
         datalen = len(self.boresights[key].data['epoch'])
         logdatalen = len(self.boresights[key].logdata[ch]['epoch'])
         offset = datalen - logdatalen
-        self.logger.debug("show_good_boresights: %d ch %d offset is %d", key, ch, offset)
+        self.logger.debug("show_good_boresights: %d ch %d offset is %d",
+                          key, ch, offset)
         if offset > 0:
-          ax[rowidx,colidx].plot(self.boresights[key].data[scanaxis[axis]][offset:],
+          ax[rowidx,colidx].plot(
+                       self.boresights[key].data[scanaxis[axis]][offset:],
                        self.boresights[key].logdata[ch]['top'], label="Tsys")
         elif offset < 0:
-          self.logger.debug("show_good_boresights: %d ch %d data length mismatch: %d", key, ch, offset)
+          self.logger.debug(
+                     "show_good_boresights: %d ch %d data length mismatch: %d", 
+                     key, ch, offset)
           continue
         else:
           ax[rowidx,colidx].plot(self.boresights[key].data[scanaxis[axis]],
                        self.boresights[key].logdata[ch]['top'], label="Tsys")
         ax[rowidx,colidx].set_title("Chan " + str(ch)
-                            + " (" + str(self.boresights[key].logdata[ch]['freq'])
-                            + "-" + str(self.boresights[key].logdata[ch]['pol']) +")")
+                          + " (" + str(self.boresights[key].logdata[ch]['freq'])
+                      + "-" + str(self.boresights[key].logdata[ch]['pol']) +")")
         ax[rowidx,colidx].grid(True)
         ax[rowidx,colidx].set_xlabel(xlabel[axis])
         ax[rowidx,colidx].legend()
@@ -305,6 +334,52 @@ class SessionPlotter(DB.Session):
       fig.show()
       fig.savefig(self.session_dir+"boresight-"+str(key)+".png")
   
+  def raster_summary(self):
+    """
+    shows raster maps for the session
+    """
+    mapkeys = list(self.maps.keys())
+    mapkeys.sort()
+    for key in mapkeys:
+      try: 
+        numpix = len(self.maps[key].raster_data['tsrc'])
+      except Exception as details:
+        self.logger.info("raster_summary: loading raster for map %d", key)
+        self.maps[key].get_raster_data()
+        numpix = len(self.maps[key].raster_data['tsrc'])
+      if not Math.find_factors(numpix):
+        self.logger.error("raster_summary: map %d is incomplete", key)
+        continue
+      elif Math.sqrt(numpix) % 1:
+        self.logger.warning("raster_summary: may %d is not square", key)
+        continue
+      else:
+        mapsize = int(Math.sqrt(numpix))
+      fig = PL.figure() 
+      fixed = numpy.zeros((mapsize, mapsize)) 
+      img = self.maps[key].raster_data['tsrc'].reshape(mapsize, mapsize) 
+      index = 0 
+      for row in img: 
+        if index % 2: 
+          fixed[index] = row 
+        else: 
+          fixed[index] = row[::-1] 
+        index += 1 
+      PL.imshow(fixed)
+      chan = int(self.maps[key].conv_cfg['converter'])
+      try:
+        freq = float(self.maps[key].channel[chan]['freq'])
+        pol = str(self.maps[key].channel[chan]['pol'])
+      except KeyError:
+        self.logger.debug("raster_summary: map %d raster channel %d not active",
+                          key, chan)
+        freq = 0
+        pol = "pol?"
+      PL.title("Map "+str(key) + " ch "+str(chan) + str(freq)+" MHz " + pol)
+      fig.show()
+      fig.savefig(self.session_dir+"raster-"+str(key)+".png")
+      
+
   def summary(self, save=False):
     if not self.list_maps(save=save):
       print("no usable maps found")
@@ -342,6 +417,84 @@ class MapPlotter(DB.Map):
     DRm.plot_xdec_dec(self.raster_data['xdec'],
                   self.raster_data['dec'], self.name)
   
+  def quick_plot(self):
+    """
+    """
+    # this overrides the default data, which is 'self.data'
+    XY =[self.raster_data['xdec'], self.raster_data['dec']]
+    extent = [self.raster_data['xdec'].min(), self.raster_data['xdec'].max(),
+              self.raster_data['dec'].min(),  self.raster_data['dec'].max() ]
+    if (self.raster_data['tsrc'].shape[0] != 441 and 
+      self.raster_data['tsrc'].shape[0] != 2809) : 
+      print("Map",map,"shape is", self.raster_data['tsrc'].shape) 
+      return 
+    fig = PL.figure() 
+    if self.raster_data['tsrc'].shape[0] == 441: 
+      fixed = numpy.zeros((21,21)) 
+      img = self.raster_data['tsrc'].reshape(21,21) 
+    elif self.raster_data['tsrc'].shape[0] == 2809: 
+      fixed = numpy.zeros((53,53)) 
+      img = self.raster_data['tsrc'].reshape(53,53) 
+    else: 
+      print("Map is not 21x21 or 53x53") 
+      return 
+    index = 0 
+    for row in img: 
+      if index % 2: 
+        fixed[index] = row 
+      else: 
+        fixed[index] = row[::-1] 
+      index += 1 
+    PL.imshow(fixed, extent=extent)
+    PL.grid()
+    PL.colorbar()
+    mapnum = self.name.split()[1]
+    PL.title("Map "+mapnum)
+    fig.show()
+   
+  def plot_raster(self, contours=None):
+    """
+    plot data shown on observer's Z-plot
+    """
+    XY =[self.raster_data['xdec'], self.raster_data['dec']]
+    # this overrides the default data, which is 'self.data'
+    xstep, ystep = self.get_grid_stepsize(xy=XY)
+    self.logger.debug("plot_raster: step sizes: %s, %s", xstep, ystep)
+    Xrange = self.raster_data['xdec'].max()-self.raster_data['xdec'].min()
+    Yrange = self.raster_data['dec'].max()-self.raster_data['dec'].min()
+    self.logger.debug("plot_raster: X,Y ranges: %s, %s", Xrange, Yrange)
+    num_X = round(Xrange/xstep)+1
+    num_Y = round(Yrange/xstep)+1
+    self.logger.debug("plot_raster: number of X,Y: %s, %s", num_X, num_Y)
+    height = ystep*num_Y
+    width  = xstep*num_X
+    self.logger.debug("plot_raster: map size: %s, %s", height, width)
+    grid_x = numpy.arange( -width/2,  width/2 + xstep/2, xstep/2)
+    grid_y = numpy.arange(-height/2, height/2 + ystep/2, ystep/2)
+    points = list(zip(self.raster_data['xdec'],self.raster_data['dec']))
+    self.logger.debug("plot_raster: points: %s", points[:5])
+    values = self.raster_data['tsrc']
+    self.logger.debug("plot_raster: values: %s", values[:5])
+    xi, yi = numpy.meshgrid(grid_x, grid_y)
+    grid_z = scipy.interpolate.griddata(points, values,
+                                                     (xi, yi), method='nearest')
+    self.logger.debug("plot_raster: grid Z shape is %s", grid_z.shape)
+    self.logger.debug("plot_raster: grid X: %s", grid_x[:5])
+    self.logger.debug("plot_raster: grid Y: %s", grid_y[:5])
+    self.logger.debug("plot_raster: grid Z: %s", grid_z[:5])
+    fig, ax = PL.subplots(nrows=1, ncols=1)
+    PL.contour( grid_x, grid_y, grid_z, contours, linewidths=0.5, colors='k')
+    #PL.contourf(grid_x, grid_y, grid_z, contours, cmap=plt.cm.jet)
+    ax.grid()
+    ax.set_aspect('equal')
+    ax.set_xlim(-width/2., width/2.)
+    ax.set_ylim(-height/2., height/2.)
+    ax.set_xlabel("Cross-declination offset")
+    ax.set_ylabel("Declination offset")
+    ax.set_title('raster data for ' + self.name)
+    #PL.colorbar(shrink=0.6) # draw colorbar
+    PL.show()
+    
   def plot_centered_offsets(self):
     """
     shows relative positions computed from tlog az and el data
@@ -353,22 +506,25 @@ class MapPlotter(DB.Map):
     """
     make contour maps; this calls 'regrid'
     """
-    x,y,z = self.regrid(width=width, height=height)
+    self.regrid(width=width, height=height)
+    x, y, z = self.data['grid_x'], self.data['grid_y'], self.data['grid_z']
     fig, ax = PL.subplots(nrows=1, ncols=1)
     if contours:
       PL.contour( x, y, z[channel], contours, linewidths=0.5, colors='k')
       PL.contourf(x, y, z[channel], contours, cmap=plt.cm.jet)
     else:
       PL.contourf(x, y, z[channel], cmap=plt.cm.jet)
-    grid()
+    ax.grid()
     ax.set_aspect('equal')
     ax.set_xlim(-width/2., width/2.)
     ax.set_ylim(-height/2., height/2.)
     ax.set_xlabel("Cross-declination offset")
     ax.set_ylabel("Declination offset")
-    ax.set_title(self.name+" at " + str(self.rss_cfg[channel]['sky_freq']) + 
-                 " MHz " + self.rss_cfg[channel]['pol'][0].upper())
-    colorbar(shrink=0.6) # draw colorbar
+    #ax.set_title(self.name+" at " + str(self.rss_cfg[channel]['sky_freq']) + 
+    #             " MHz " + self.rss_cfg[channel]['pol'][0].upper())
+    ax.set_title(self.name+" at " + str(self.channel[channel]['freq']) + 
+                 " MHz " + self.channel[channel]['pol'][0].upper())
+    PL.colorbar(shrink=0.6) # draw colorbar
     #hh = self.cfg['utc'].seconds/3600
     #mm = (self.cfg['utc'].seconds-3600*hh)/60
     timestruct = time.gmtime(self.start)

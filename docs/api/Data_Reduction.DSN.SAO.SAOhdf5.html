@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>SAOhdf5 &#8212; Data_Reduction 0.9 documentation</title>
@@ -15,7 +15,7 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="save_scan_data" href="Data_Reduction.FITS.save_scan_data.html" />
+    <link rel="next" title="check_backend" href="Data_Reduction.DSN.Tid_ASCII_data.check_backend.html" />
     <link rel="prev" title="SAOexaminer" href="Data_Reduction.DSN.SAO.SAOexaminer.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -28,7 +28,7 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.FITS.save_scan_data.html" title="save_scan_data"
+          <a href="Data_Reduction.DSN.Tid_ASCII_data.check_backend.html" title="check_backend"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="Data_Reduction.DSN.SAO.SAOexaminer.html" title="SAOexaminer"
@@ -42,8 +42,8 @@
   <p class="topless"><a href="Data_Reduction.DSN.SAO.SAOexaminer.html"
                         title="previous chapter">SAOexaminer</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="Data_Reduction.FITS.save_scan_data.html"
-                        title="next chapter">save_scan_data</a></p>
+  <p class="topless"><a href="Data_Reduction.DSN.Tid_ASCII_data.check_backend.html"
+                        title="next chapter">check_backend</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -71,10 +71,10 @@
             
   <div class="section" id="saohdf5">
 <h1>SAOhdf5<a class="headerlink" href="#saohdf5" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
+<dl class="class">
 <dt id="Data_Reduction.DSN.SAO.SAOhdf5">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.DSN.SAO.</code><code class="sig-name descname">SAOhdf5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em>, <em class="sig-param"><span class="n">clobber_0</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">clobber_center</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOhdf5" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.DSN.SAO.</code><code class="sig-name descname">SAOhdf5</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">clobber_0=True</em>, <em class="sig-param">clobber_center=True</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOhdf5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Container for data in SAOspec HDF5 data files</p>
 <p class="rubric">Notes</p>
 <p><strong>SAO HDF5 File Structure</strong></p>
@@ -168,87 +168,87 @@ The ‘spec’ axes are:</p>
 <span class="n">beam</span>        <span class="o">-</span>     <span class="mi">2</span> <span class="k">for</span> <span class="mi">1</span><span class="p">,</span><span class="mi">2</span>
 </pre></div>
 </div>
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">clobber_0      - set 0th value to 1st value if True</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">clobber_center - set 16384th value to mean of 16383th and 16385th if True</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">container      - SAOdataset object in which the reformatted data are stored</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">data           - HDF5 file contents (temporary)</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">filename       - name of HDF5 file</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">logger         - logging.Logger instance</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">meta           - metadata from HDF5 file</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">num_DSP        - number of signal processors</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">num_uniq       - number of unique records for each scan and beam and pol</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">PROJID         - identifier string for project</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">SITEELEV       - elevation of telescope (m)</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">SITELAT        - latitude of telescope (deg)</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">SITELONG       - east longitude of telescope (deg)</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">spec           - nparray of spectra</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt>
 <code class="sig-name descname">uniq_recs      - dict with number of unique records for each pol and beam</code></dt>
 <dd></dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt>
 <code class="sig-name descname">extract_valid_records - gets non-duplicate, non-zero records</code></dt>
 <dd></dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt>
 <code class="sig-name descname">to_dataset            - returns an SAOdataset instance</code></dt>
 <dd></dd></dl>
@@ -269,14 +269,14 @@ The ‘spec’ axes are:</p>
 </tbody>
 </table>
 <p class="rubric">Methods Documentation</p>
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.DSN.SAO.SAOhdf5.extract_valid_records">
 <code class="sig-name descname">extract_valid_records</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOhdf5.extract_valid_records" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove duplicate and empty records from each scan.</p>
 <p>Returns nparray of valid records, number of valid records for each pol,beam</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.DSN.SAO.SAOhdf5.to_dataset">
 <code class="sig-name descname">to_dataset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.DSN.SAO.SAOhdf5.to_dataset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fills container with data in format suitable for pickling (saving to disk)</p>
@@ -304,7 +304,7 @@ put the data in a FITS-like format that can be put in a pickle file.</p>
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Data_Reduction.FITS.save_scan_data.html" title="save_scan_data"
+          <a href="Data_Reduction.DSN.Tid_ASCII_data.check_backend.html" title="check_backend"
              >next</a> |</li>
         <li class="right" >
           <a href="Data_Reduction.DSN.SAO.SAOexaminer.html" title="SAOexaminer"
@@ -314,7 +314,7 @@ put the data in a FITS-like format that can be put in a pickle file.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, Tom Kuiper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>

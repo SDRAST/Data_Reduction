@@ -10,10 +10,10 @@ Session
 
    .. autosummary::
 
-      ~Session.get_session_dir
+      ~Session.find_session_dir
       ~Session.select_data_files
 
    .. rubric:: Methods Documentation
 
-   .. automethod:: get_session_dir
+   .. automethod:: find_session_dir
    .. automethod:: select_data_files

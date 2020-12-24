@@ -37,14 +37,15 @@ class Observation(DSN.Observation):
   Class for observations based on open-loop recording made as DSA-3 (DSS-84)
   
   The arguments for the superclass initialization are::
-    ``parent`` (typically ``self`` or ``None``),
-    ``name``   (will be set to a YEAR/DOY default if not provided),
-    ``dss``    (required),
-    ``date``   (YEAR/DOY required),
-    ``start``  (optional, usually taken from file header), 
-    ``end``    (otional, inferred from header and number of records), and
-    ``project`` (required).
-    """
+  
+    parent  (typically ``self`` or ``None``),
+    name    (will be set to a YEAR/DOY default if not provided),
+    dss     (required),
+    date    (YEAR/DOY required),
+    start   (optional, usually taken from file header), 
+    end     (otional, inferred from header and number of records), and
+    project (required).
+  """
   def __init__(self, parent=None, name=None, dss=None,
                      date=None, start=None, end=None,
                      project=None):
@@ -61,14 +62,14 @@ class Observation(DSN.Observation):
     bandwidth, ``RF_TO_IF_DOWNCONV`` for the band and receiver center frequency,
     ``IF_TO_CHANNEL_DOWNCONV`` for the channel center frequency.
     
-  Args:
-    parent (Session): (optional) session to which this observation belongs
-    name (str):       (optional) an identifier; default is station ID + "obs"
-    dss (int):        (required) station number
-    date (str):       (required) "YEAR/DOY"
-    start (float):    (optional) UNIX time at the start
-    end (float):      (optional) UNIX time at the end
-    project (str):    (required) directory under /usr/local/projects
+    Args:
+      parent (Session): (optional) session to which this observation belongs
+      name (str):       (optional) an identifier; default is station ID + "obs"
+      dss (int):        (required) station number
+      date (str):       (required) "YEAR/DOY"
+      start (float):    (optional) UNIX time at the start
+      end (float):      (optional) UNIX time at the end
+      project (str):    (required) directory under /usr/local/projects
     
     """
     mylogger = logging.getLogger(logger.name+".Observation")
@@ -110,7 +111,8 @@ class Observation(DSN.Observation):
              #. For each record (in groups of five records at a time) for 
                 efficiency):
           
-                #. For the first record of the file only:
+                #. For the first record of the file only
+                
                    #. Put the time and coordinates in the first row of the 
                       structured numpy array.
                 #. Read the record data from the datafile.

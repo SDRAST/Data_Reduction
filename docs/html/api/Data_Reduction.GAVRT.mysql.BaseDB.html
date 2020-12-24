@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>BaseDB &#8212; Data_Reduction 0.9 documentation</title>
@@ -71,10 +71,10 @@
             
   <div class="section" id="basedb">
 <h1>BaseDB<a class="headerlink" href="#basedb" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
+<dl class="class">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.mysql.</code><code class="sig-name descname">BaseDB</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">host</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">user</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pw</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">port</span><span class="o">=</span><span class="default_value">3306</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.mysql.</code><code class="sig-name descname">BaseDB</code><span class="sig-paren">(</span><em class="sig-param">host=None</em>, <em class="sig-param">user=None</em>, <em class="sig-param">pw=None</em>, <em class="sig-param">name=None</em>, <em class="sig-param">port=3306</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>This is a database superclass.</p>
 <dl class="simple">
 <dt>Public attributes::</dt><dd><p>db -   the database connection object
@@ -156,25 +156,25 @@ cursor   -</p>
 </tbody>
 </table>
 <p class="rubric">Methods Documentation</p>
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.checkDB">
 <code class="sig-name descname">checkDB</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.checkDB" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reconnects to the database if the connection has been lost.</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.close">
 <code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.close" title="Permalink to this definition">¶</a></dt>
 <dd><p>Close a connection</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.commit">
 <code class="sig-name descname">commit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.commit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Commits the most recent database transaction</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.connect">
 <code class="sig-name descname">connect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.connect" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make a connection to the database. Creates a cursor object.</p>
@@ -182,16 +182,16 @@ cursor   -</p>
 again if the connection is closed but the database object persists.</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.cursor">
 <code class="sig-name descname">cursor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.cursor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a database cursor object; same as BaseDB.c but this
 is better because it handles disconnected a database</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.get" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">*args</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Executes a query of the database</p>
 <p>:param args : query to be executed</p>
 <dl class="field-list simple">
@@ -201,9 +201,9 @@ is better because it handles disconnected a database</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.getLastId">
-<code class="sig-name descname">getLastId</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">table</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.getLastId" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getLastId</code><span class="sig-paren">(</span><em class="sig-param">table</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.getLastId" title="Permalink to this definition">¶</a></dt>
 <dd><p>ID of the last record</p>
 <p>:param table : the name of the table
 :type  table : str</p>
@@ -214,9 +214,9 @@ is better because it handles disconnected a database</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.getLastRecord">
-<code class="sig-name descname">getLastRecord</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">table</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.getLastRecord" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getLastRecord</code><span class="sig-paren">(</span><em class="sig-param">table</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.getLastRecord" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the last record as a dictionary</p>
 <p>:param table : name of the table (string)</p>
 <dl class="field-list simple">
@@ -226,9 +226,9 @@ is better because it handles disconnected a database</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.getRecordById">
-<code class="sig-name descname">getRecordById</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">table</span></em>, <em class="sig-param"><span class="n">rec_id</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.getRecordById" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getRecordById</code><span class="sig-paren">(</span><em class="sig-param">table</em>, <em class="sig-param">rec_id</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.getRecordById" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the record with the given ID</p>
 <p>:param table : table name
 :type  table : str</p>
@@ -241,9 +241,9 @@ is better because it handles disconnected a database</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.get_as_dict">
-<code class="sig-name descname">get_as_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.get_as_dict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_as_dict</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.get_as_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Executes a query of the database and returns the result as a dict</p>
 <p>At present, only keyword {‘asfloat’: True} is recognized and is the default
 if not given.  It will convert to float any values for which it is possible.</p>
@@ -259,18 +259,18 @@ be a list. If nothing was found, an empty dictionary is returned.</p>
 <p>&#64;eturn: the record as a dictionary.</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.get_columns">
-<code class="sig-name descname">get_columns</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">table</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.get_columns" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_columns</code><span class="sig-paren">(</span><em class="sig-param">table</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.get_columns" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns information about the columns of a table</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.get_data_index">
 <code class="sig-name descname">get_data_index</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.get_data_index" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.get_public_tables">
 <code class="sig-name descname">get_public_tables</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.get_public_tables" title="Permalink to this definition">¶</a></dt>
 <dd><p>List the table names in the database.</p>
@@ -281,9 +281,9 @@ be a list. If nothing was found, an empty dictionary is returned.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.get_rows_by_date">
-<code class="sig-name descname">get_rows_by_date</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">table</span></em>, <em class="sig-param"><span class="n">columns</span></em>, <em class="sig-param"><span class="n">year</span></em>, <em class="sig-param"><span class="n">doy</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.get_rows_by_date" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_rows_by_date</code><span class="sig-paren">(</span><em class="sig-param">table</em>, <em class="sig-param">columns</em>, <em class="sig-param">year</em>, <em class="sig-param">doy</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.get_rows_by_date" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets data from a table</p>
 <p>:param table : table name
 :type  table : str</p>
@@ -299,9 +299,9 @@ be a list. If nothing was found, an empty dictionary is returned.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.get_rows_by_time">
-<code class="sig-name descname">get_rows_by_time</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">table</span></em>, <em class="sig-param"><span class="n">columns</span></em>, <em class="sig-param"><span class="n">year</span></em>, <em class="sig-param"><span class="n">doy</span></em>, <em class="sig-param"><span class="n">utcs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.get_rows_by_time" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_rows_by_time</code><span class="sig-paren">(</span><em class="sig-param">table</em>, <em class="sig-param">columns</em>, <em class="sig-param">year</em>, <em class="sig-param">doy</em>, <em class="sig-param">utcs</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.get_rows_by_time" title="Permalink to this definition">¶</a></dt>
 <dd><p>Queries a table for quantities in columns at designated times</p>
 <p>This loops over a list of UTs.  For each, it takes the first row it finds
 matching the date and time.  So it has an effective resolution of one second.</p>
@@ -321,9 +321,9 @@ matching the date and time.  So it has an effective resolution of one second.</p
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.insertRecord">
-<code class="sig-name descname">insertRecord</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">table</span></em>, <em class="sig-param"><span class="n">rec</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.insertRecord" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">insertRecord</code><span class="sig-paren">(</span><em class="sig-param">table</em>, <em class="sig-param">rec</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.insertRecord" title="Permalink to this definition">¶</a></dt>
 <dd><p>Inserts a record into the database; handles a disconnected database</p>
 <p>:param table : table name
 :type  table : str</p>
@@ -335,9 +335,9 @@ matching the date and time.  So it has an effective resolution of one second.</p
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.report_table">
-<code class="sig-name descname">report_table</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">table</span></em>, <em class="sig-param"><span class="n">columns</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.report_table" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">report_table</code><span class="sig-paren">(</span><em class="sig-param">table</em>, <em class="sig-param">columns</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.report_table" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reports on the columns in a table</p>
 <p>Response has keys: Extra, Default, Field, Key, Null, Type</p>
 <p>:param table : table name
@@ -351,9 +351,9 @@ matching the date and time.  So it has an effective resolution of one second.</p
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.send_query">
-<code class="sig-name descname">send_query</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">query</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.send_query" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">send_query</code><span class="sig-paren">(</span><em class="sig-param">query</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.send_query" title="Permalink to this definition">¶</a></dt>
 <dd><p>Send a MySQL query</p>
 <p>:param crsr : cursor object for a database</p>
 <p>:param query : MySQL query
@@ -365,9 +365,9 @@ matching the date and time.  So it has an effective resolution of one second.</p
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.mysql.BaseDB.updateValues">
-<code class="sig-name descname">updateValues</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vald</span></em>, <em class="sig-param"><span class="n">table</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.updateValues" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateValues</code><span class="sig-paren">(</span><em class="sig-param">vald</em>, <em class="sig-param">table</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.mysql.BaseDB.updateValues" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add row with updated values</p>
 <p>Add a new row to table with same values as previous row,
 except for keys in vald, which are updated with provided
@@ -408,7 +408,7 @@ values.  This is useful for keeping logs.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, Tom Kuiper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>

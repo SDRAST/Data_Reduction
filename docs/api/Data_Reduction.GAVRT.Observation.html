@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>Observation &#8212; Data_Reduction 0.9 documentation</title>
@@ -71,9 +71,9 @@
             
   <div class="section" id="observation">
 <h1>Observation<a class="headerlink" href="#observation" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
+<dl class="class">
 <dt id="Data_Reduction.GAVRT.Observation">
-<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Observation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">Data_Reduction.GAVRT.</code><code class="sig-name descname">Observation</code><span class="sig-paren">(</span><em class="sig-param">parent=None</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Observation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="Data_Reduction.Observation.html#Data_Reduction.Observation" title="Data_Reduction.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.Observation</span></code></a>, <a class="reference internal" href="Data_Reduction.GriddingMixin.html#Data_Reduction.GriddingMixin" title="Data_Reduction.GriddingMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data_Reduction.GriddingMixin</span></code></a></p>
 <p>Class for any group of data for a single purpose.</p>
 <dl class="simple">
@@ -118,19 +118,19 @@ get_channel_attenuation</p>
 </tbody>
 </table>
 <p class="rubric">Methods Documentation</p>
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.Observation.get_channel_attenuation">
-<code class="sig-name descname">get_channel_attenuation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">channel</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Observation.get_channel_attenuation" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_channel_attenuation</code><span class="sig-paren">(</span><em class="sig-param">time</em>, <em class="sig-param">channel</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Observation.get_channel_attenuation" title="Permalink to this definition">¶</a></dt>
 <dd><p>get last configuration change for this channel</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.Observation.get_conv_config">
-<code class="sig-name descname">get_conv_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">converter</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Observation.get_conv_config" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_conv_config</code><span class="sig-paren">(</span><em class="sig-param">time</em>, <em class="sig-param">converter</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Observation.get_conv_config" title="Permalink to this definition">¶</a></dt>
 <dd><p>get last configuration change for this converter</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.Observation.get_data_channels">
 <code class="sig-name descname">get_data_channels</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Observation.get_data_channels" title="Permalink to this definition">¶</a></dt>
 <dd><p>returns the receiver channels that were active between ‘start’ and ‘end’</p>
@@ -143,15 +143,15 @@ Out[5]: [2, 4]</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.Observation.get_data_from_tlogs">
 <code class="sig-name descname">get_data_from_tlogs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Observation.get_data_from_tlogs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets the data for the specified channel and polarization for this observation</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="Data_Reduction.GAVRT.Observation.make_channels">
-<code class="sig-name descname">make_channels</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">channels</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Observation.make_channels" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">make_channels</code><span class="sig-paren">(</span><em class="sig-param">channels</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_Reduction.GAVRT.Observation.make_channels" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -184,7 +184,7 @@ Out[5]: [2, 4]</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, Tom Kuiper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>

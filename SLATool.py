@@ -78,12 +78,17 @@ class SessionAnalyzer(object):
     self.logger = logging.getLogger(logger.name+".SessionAnalyzer")
     
     # get the session details
-    if year and DOY:
-      date = "%4d/%03d" % (year, DOY)
-    else:
-      date = None
-    self.project, self.DSS, self.year, self.DOY = DR.get_obs_session(dss=dss,
-                                                    project=project, date=date)
+    #if year and DOY:
+    #  date = "%4d/%03d" % (year, DOY)
+    #  date = None
+    #  self.project, self.DSS, self.year, self.DOY = DR.get_obs_session(dss=dss,
+    #                                                project=project, date=date)
+    #else:
+    if True:
+      self.project = project
+      self.DSS = dss
+      self.year = year
+      self.DOY = DOY
     self.projectdatapath, self.projworkpath, self.datapath = \
       DR.get_obs_dirs(self.project, self.DSS, self.year, self.DOY, datafmt="FITS")
     # get the datafiles to be processed     
